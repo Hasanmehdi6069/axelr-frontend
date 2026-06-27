@@ -1814,18 +1814,8 @@ function viewPastLogById(logId) {
             injectActionButtons(bubble.querySelector('.bubble-content'), msg.text, true);
         } else { 
             let rawResponse = msg.text || "";
-            const thinkMatch = rawResponse.match(/<think>([\s\S]*?)<\/think>/i);
-            let thinkingHtml = '';
-            if (thinkMatch) {
-                thinkingHtml = `<details class="think-block"><summary>🧠 View AI Reasoning Process</summary><div class="think-content">${DOMPurify.sanitize(marked.parse(thinkMatch[1].trim()))}</div></details>`;
-                rawResponse = rawResponse.replace(/<think>[\s\S]*?<\/think>/i, '').trim();
-            }
-
-            if (rawResponse.trim() === "") {
-                rawResponse = "Intelligence matrix execution complete.";
-            }
-
-            bubble.innerHTML = `<div class="ai-avatar-bubble">${AXELR_AVATAR_SVG}</div><div class="bubble-content" style="flex:1;">${thinkingHtml}${DOMPurify.sanitize(marked.parse(rawResponse))}</div>`;
+            // No think parsing – directly render markdown
+            bubble.innerHTML = `<div class="ai-avatar-bubble">${AXELR_AVATAR_SVG}</div><div class="bubble-content" style="flex:1;">${DOMPurify.sanitize(marked.parse(rawResponse))}</div>`;
             appendPayloadDownload(bubble.querySelector('.bubble-content'));
             
             const rawCode = extractHtmlCode(rawResponse);
@@ -1998,53 +1988,63 @@ async function switchVariant(logId, msgId, newIndex) {
                     }
                     return;
                 }
-
                 const reader = response.body.getReader();
-                const decoder = new TextDecoder();
-                let fullResponse = "";
+const decoder = new TextDecoder();
+let fullResponse = "";
 
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
+while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
 
-                    const chunks = decoder.decode(value, { stream: true }).split('\n\n');
-                    for (const chunk of chunks) {
-                        if (chunk.startsWith('data: ')) {
-                            try {
-                                const data = JSON.parse(chunk.substring(6));
-if (data.type === 'chunk') {
-    fullResponse += data.text;
-    nexusBubble.querySelector('.bubble-content').innerHTML = DOMPurify.sanitize(marked.parse(fullResponse));
-} else if (data.type === 'progress') {
-    // 🟢 UI FIX: Shows live backend status (e.g., "Extracting and structuring data...")
-    nexusBubble.querySelector('.bubble-content').innerHTML = `<span style="color:var(--text-muted); font-size: 13px;">${data.text}</span>`;
-} else if (data.type === 'error') {
-    // 🟢 CRITICAL BUG FIX: Stops the infinite loading state and shows the error to the user
-    nexusBubble.querySelector('.bubble-content').innerHTML = `⚠️ <strong style="color:#ef4444;">System Alert:</strong> ${data.message}`;
-    globalAbortController = null;
-    sendBtn.classList.remove('btn-stop-active');
-    sendBtn.innerHTML = originalBtnHtml;
-    return; // Kills the loop safely
-} else if (data.type === 'done') {
-                                    const isBrandNewChat = !activeSessionId;
-                                    activeSessionId = data.sessionId;
-
-                                    localStorage.setItem('axelr_active_session', activeSessionId);
-                                    localStorage.removeItem('axelr_draft_prompt');
-
-                                    runningStructuredCache = data.structuredData;
-                                    runningFileTitle = data.filename;
-                                    
-                                    loadUserProfile();
-
-                                    // 🟢 FIX: We force a 500ms delay to allow MongoDB to complete the write 
-                                    // before we fetch the history, ensuring the response doesn't "disappear".
-                                    setTimeout(async () => {
-                                        await loadArchiveLogs();
-                                        viewPastLogById(activeSessionId);
-                                    }, 500); 
-                                }
-                            } catch (e) { }
+    const chunk = decoder.decode(value, { stream: true });
+    const lines = chunk.split('\n\n');
+    for (const line of lines) {
+        if (line.startsWith('data: ')) {
+            try {
+                const data = JSON.parse(line.substring(6));
+                
+                if (data.type === 'chunk') {
+                    fullResponse += data.text;
+                    // 🟢 ULTRA-FAST MARKDOWN RENDER – NO THINK PARSE
+                    const bubbleContent = nexusBubble.querySelector('.bubble-content');
+                    if (bubbleContent) {
+                        // Simple render: markdown sanitized
+                        bubbleContent.innerHTML = DOMPurify.sanitize(marked.parse(fullResponse));
+                    }
+                } else if (data.type === 'progress') {
+                    // Show progress messages
+                    const bubbleContent = nexusBubble.querySelector('.bubble-content');
+                    if (bubbleContent) {
+                        bubbleContent.innerHTML = `<span style="color:var(--text-muted); font-size: 13px;">${data.text}</span>`;
+                    }
+                } else if (data.type === 'error') {
+                    // Critical: stop the stream and show error
+                    nexusBubble.querySelector('.bubble-content').innerHTML = `⚠️ <strong style="color:#ef4444;">System Alert:</strong> ${data.message}`;
+                    // Clean up
+                    globalAbortController = null;
+                    sendBtn.classList.remove('btn-stop-active');
+                    sendBtn.innerHTML = originalBtnHtml;
+                    return; // exit the function entirely
+                } else if (data.type === 'done') {
+                    // Update session state
+                    const isBrandNewChat = !activeSessionId;
+                    activeSessionId = data.sessionId;
+                    localStorage.setItem('axelr_active_session', activeSessionId);
+                    localStorage.removeItem('axelr_draft_prompt');
+                    runningStructuredCache = data.structuredData;
+                    runningFileTitle = data.filename;
+                    
+                    loadUserProfile();
+                    
+                    // Reload history and re-render the chat with the final persisted message
+                    setTimeout(async () => {
+                        await loadArchiveLogs();
+                        viewPastLogById(activeSessionId);
+                    }, 500);
+                }
+            } catch (e) {
+                // ignore parse errors for incomplete JSON
+            }
                         }
                     }
                 }
