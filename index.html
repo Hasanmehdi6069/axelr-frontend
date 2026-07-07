@@ -311,7 +311,7 @@
         @keyframes fadePulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
 
         /* ===== COMMAND WRAPPER ===== */
-        .command-wrapper { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 780px; padding: 20px 20px 30px 20px; z-index: 100; background: linear-gradient(to top, var(--bg-deep) 70%, transparent); }
+        .command-wrapper { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 780px; padding: 20px 20px 30px 20px; z-index: 100; background: linear-gradient(to top, var(--bg-deep) 70%, transparent); transition: bottom 0.2s ease; }
         .input-frame { background: var(--bg-sidebar); border: 1px solid var(--border-muted); border-radius: 24px; padding: 12px 16px; display: flex; flex-direction: column; transition: 0.3s; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
         .input-frame:focus-within { border-color: var(--text-muted); box-shadow: 0 0 30px rgba(255,255,255,0.05); }
         #file-staging { display: none; flex-wrap: wrap; gap: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--border-muted); margin-bottom: 8px; width: 100%; }
@@ -1234,34 +1234,27 @@
         });
 
         // ============================================================
-        // VISUAL VIEWPORT KEYBOARD FIX
+        // VISUAL VIEWPORT KEYBOARD FIX - only moves command bar
         // ============================================================
         if (window.visualViewport) {
             window.visualViewport.addEventListener('resize', () => {
                 const vv = window.visualViewport;
-                // Calculate height difference caused by keyboard
                 const offset = window.innerHeight - vv.height;
-                // Adjust the command-wrapper's bottom padding to stay above keyboard
                 const wrapper = document.querySelector('.command-wrapper');
                 if (wrapper) {
-                    // If keyboard is open (offset > some threshold), push wrapper up
                     if (offset > 100) {
                         wrapper.style.bottom = offset + 'px';
                     } else {
                         wrapper.style.bottom = '0';
                     }
                 }
-                // Also adjust viewport padding-bottom to avoid content being hidden
-                const viewportEl = document.getElementById('viewport');
-                if (viewportEl) {
-                    const wrapperHeight = wrapper ? wrapper.offsetHeight : 120;
-                    const extraPadding = offset > 100 ? offset + 20 : 20;
-                    viewportEl.style.paddingBottom = (wrapperHeight + extraPadding) + 'px';
+                // Do not adjust viewport padding; keep it fixed.
+                // Scroll to bottom if needed
+                if (offset > 100) {
+                    setTimeout(() => {
+                        viewport.scrollTop = viewport.scrollHeight;
+                    }, 100);
                 }
-                // Scroll to bottom to show latest message
-                setTimeout(() => {
-                    viewport.scrollTop = viewport.scrollHeight;
-                }, 100);
             });
         }
 
@@ -1780,7 +1773,7 @@
             const command = promptInput.value.trim();
             window.lastUserCommand = command;
 
-            // Hide hero
+            // Hide hero immediately
             document.getElementById('hero-display').style.display = 'none';
 
             if (!command && stagedFiles.length === 0 && !isRetry) return;
@@ -1931,6 +1924,8 @@
                                     fullResponse += data.text;
                                     const cleanResponse = fullResponse.replace(/<think>[\s\S]*?<\/think>/g, '');
                                     contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(cleanResponse));
+                                    // scroll on each chunk
+                                    viewport.scrollTop = viewport.scrollHeight;
                                 } else if (data.type === 'done') {
                                     sessionId = data.sessionId;
                                     structuredData = data.structuredData;
@@ -1964,12 +1959,22 @@
                                     if (regenerateTimer) { clearTimeout(regenerateTimer);
                                         regenerateTimer = null; }
                                     injectActionButtons(contentDiv, fullResponse, false, true);
+                                    // scroll to bottom
+                                    viewport.scrollTop = viewport.scrollHeight;
                                 } else if (data.type === 'error') {
                                     contentDiv.innerHTML += `<br><br><em style="color:#ef4444;">Error: ${data.message || 'Unknown error'}</em>`;
                                 }
                             } catch (e) { /* ignore malformed JSON */ }
                         }
                     }
+                }
+                // If we never got a done event, but we have some response, treat as done
+                if (!sessionId && fullResponse) {
+                    // simulate done
+                    contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(fullResponse));
+                    appendPayloadDownload(contentDiv);
+                    injectActionButtons(contentDiv, fullResponse, false, true);
+                    viewport.scrollTop = viewport.scrollHeight;
                 }
             } catch (error) {
                 clearTimeout(extendedTimeout);
