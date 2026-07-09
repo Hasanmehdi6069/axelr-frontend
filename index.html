@@ -60,6 +60,7 @@
             overflow: hidden;
             background-image: radial-gradient(circle at 50% 30%, rgba(0, 242, 254, 0.02), transparent 60%);
             -webkit-font-smoothing: antialiased;
+            padding-bottom: env(safe-area-inset-bottom);
         }
 
         /* ===== AUTH WALL ===== */
@@ -160,48 +161,19 @@
 
         /* ===== HEADER ===== */
         .workspace-header { position: absolute; top: 0; left: 0; right: 0; height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px 0 50px; border-bottom: 1px solid var(--border-muted); z-index: 150; background: rgba(5,5,5,0.8); backdrop-filter: blur(10px); }
-        .model-hub {
-            position: relative;
-        }
-        #model-selector {
-            background: transparent;
-            border: none;
-            color: #fff;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 12px;
-            border-radius: 8px;
-            transition: 0.2s;
-        }
-        #model-selector:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
-        #model-selector .badge {
-            color: var(--accent-glow);
-            font-size: 11px;
-            font-weight: 700;
-            background: rgba(0, 242, 254, 0.1);
-            padding: 2px 6px;
-            border-radius: 4px;
-        }
-        body.pro-tier #model-selector .badge {
-            color: var(--accent-glow-pro);
-            background: rgba(139, 92, 246, 0.1);
-        }
-        body.designer-tier #model-selector .badge {
-            color: var(--accent-glow-designer);
-            background: rgba(244, 63, 94, 0.1);
-        }
+        .model-hub { position: relative; }
+        #model-selector { background: transparent; border: none; color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 8px; transition: 0.2s; }
+        #model-selector:hover { background: rgba(255, 255, 255, 0.05); }
+        #model-selector .badge { color: var(--accent-glow); font-size: 11px; font-weight: 700; background: rgba(0, 242, 254, 0.1); padding: 2px 6px; border-radius: 4px; }
+        body.pro-tier #model-selector .badge { color: var(--accent-glow-pro); background: rgba(139, 92, 246, 0.1); }
+        body.designer-tier #model-selector .badge { color: var(--accent-glow-designer); background: rgba(244, 63, 94, 0.1); }
 
         #model-dropdown-card {
             position: absolute;
             top: 45px;
             left: 0;
             width: 280px;
+            max-width: calc(100vw - 20px);
             background: var(--bg-card);
             border: 1px solid var(--border-muted);
             border-radius: 12px;
@@ -212,55 +184,16 @@
             z-index: 210;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
-        .model-option {
-            padding: 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: 0.2s;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            border: 1px solid transparent;
-        }
-        .model-option:hover {
-            background: rgba(255, 255, 255, 0.03);
-        }
-        .model-option.active {
-            background: rgba(0, 242, 254, 0.05);
-            border-color: rgba(0, 242, 254, 0.2);
-        }
-        .model-option.pro {
-            background: rgba(139, 92, 246, 0.05);
-            border-color: rgba(139, 92, 246, 0.2);
-        }
-        .model-option.pro:hover {
-            background: rgba(139, 92, 246, 0.1);
-        }
-        .model-option.designer {
-            background: rgba(244, 63, 94, 0.05);
-            border-color: rgba(244, 63, 94, 0.2);
-        }
-        .model-option.designer:hover {
-            background: rgba(244, 63, 94, 0.1);
-        }
-        .model-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .model-title span {
-            font-size: 10px;
-            font-weight: 700;
-            padding: 2px 6px;
-            border-radius: 4px;
-        }
-        .model-desc {
-            font-size: 11px;
-            color: var(--text-muted);
-        }
+        .model-option { padding: 12px; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; gap: 4px; border: 1px solid transparent; }
+        .model-option:hover { background: rgba(255, 255, 255, 0.03); }
+        .model-option.active { background: rgba(0, 242, 254, 0.05); border-color: rgba(0, 242, 254, 0.2); }
+        .model-option.pro { background: rgba(139, 92, 246, 0.05); border-color: rgba(139, 92, 246, 0.2); }
+        .model-option.pro:hover { background: rgba(139, 92, 246, 0.1); }
+        .model-option.designer { background: rgba(244, 63, 94, 0.05); border-color: rgba(244, 63, 94, 0.2); }
+        .model-option.designer:hover { background: rgba(244, 63, 94, 0.1); }
+        .model-title { font-size: 14px; font-weight: 600; color: #fff; display: flex; align-items: center; justify-content: space-between; }
+        .model-title span { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+        .model-desc { font-size: 11px; color: var(--text-muted); }
 
         .account-hub { position: relative; display: flex; align-items: center; gap: 12px; }
         .user-avatar { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--border-muted); cursor: pointer; display: none; object-fit: cover; }
@@ -311,7 +244,18 @@
         @keyframes fadePulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
 
         /* ===== COMMAND WRAPPER ===== */
-        .command-wrapper { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 780px; padding: 20px 20px 30px 20px; z-index: 100; background: linear-gradient(to top, var(--bg-deep) 70%, transparent); transition: bottom 0.2s ease; }
+        .command-wrapper {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 780px;
+            padding: 20px 20px 30px 20px;
+            z-index: 100;
+            background: linear-gradient(to top, var(--bg-deep) 70%, transparent);
+            transition: bottom 0.2s ease;
+        }
         .input-frame { background: var(--bg-sidebar); border: 1px solid var(--border-muted); border-radius: 24px; padding: 12px 16px; display: flex; flex-direction: column; transition: 0.3s; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
         .input-frame:focus-within { border-color: var(--text-muted); box-shadow: 0 0 30px rgba(255,255,255,0.05); }
         #file-staging { display: none; flex-wrap: wrap; gap: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--border-muted); margin-bottom: 8px; width: 100%; }
@@ -347,7 +291,13 @@
         body.workspace-design .input-frame:focus-within { border-color: #ef4444 !important; box-shadow: 0 0 30px rgba(239,68,68,0.2) !important; }
         body.workspace-design .ai-avatar-bubble svg path:nth-child(2) { stroke: #ef4444 !important; }
 
-        /* ===== MOBILE ===== */
+        /* ===== RESPONSIVE – ALL DEVICES ===== */
+        @media (max-width: 1250px) {
+            .axelr-pricing-container > div[style*="display: grid"] {
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+                gap: 16px !important;
+            }
+        }
         @media (max-width: 768px) {
             #sidebar-container-node { left: -100%; width: 85%; }
             #sidebar-container-node.open { left: 0; box-shadow: 10px 0 30px rgba(0,0,0,0.8); }
@@ -368,460 +318,49 @@
         @media (max-width: 480px) {
             .workspace-card { width: 100% !important; max-width: 320px !important; padding: 24px 16px !important; }
             .tier-card { padding: 20px 14px !important; }
-            .axelr-pricing-container>div[style*="display: grid"] { display: flex !important; flex-direction: column !important; }
             .user-avatar { width: 28px !important; height: 28px !important; }
             .command-wrapper { padding-left: 38px !important; padding-right: 10px !important; padding-bottom: 15px !important; }
             .input-frame { padding: 8px 10px !important; border-radius: 18px !important; }
             .action-btn { width: 30px !important; height: 30px !important; }
-        }
-/* =========================================================
-           ULTRA-MOBILE MASTERPIECE FIX (Up to 480px)
-           ========================================================= */
-        @media (max-width: 480px) {
-            .axelr-pricing-container>div[style*="display: grid"] {
+            .axelr-pricing-container > div[style*="display: grid"] {
                 display: flex !important;
                 flex-direction: column !important;
                 width: 100% !important;
-                overflow-x: hidden !important;
             }
-            .tier-card,
-            .pro-premium,
-            .business-premium {
+            .tier-card, .pro-premium, .business-premium {
                 width: 100% !important;
-                max-width: 100vw !important;
+                max-width: 100% !important;
                 min-width: 0 !important;
                 padding: 20px 15px !important;
                 box-sizing: border-box !important;
             }
-
-            .user-avatar,
-            img[referrerpolicy="no-referrer"] {
-                width: 32px !important;
-                height: 32px !important;
-                min-width: 32px !important;
-                min-height: 32px !important;
-                flex-shrink: 0 !important;
-                object-fit: cover !important;
-                border-radius: 50% !important;
-            }
-
-            div[onclick*="signIn"],
-            .auth-card button {
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                gap: 12px !important;
-                flex-wrap: nowrap !important;
-                white-space: nowrap !important;
-                width: 100% !important;
-                box-sizing: border-box !important;
-            }
-            div[onclick*="signIn"] img,
-            div[onclick*="signIn"] svg {
-                flex-shrink: 0 !important;
-                width: 22px !important;
-                height: 22px !important;
-            }
-
-            .tier-card label>div>div:first-child {
-                flex-wrap: wrap !important;
-                gap: 5px !important;
-            }
-            .tier-card label {
-                padding: 10px !important;
-            }
+            .tier-card h3 { font-size: 16px !important; }
+            div[id$="-base-price-output"] { font-size: 28px !important; margin-bottom: 16px !important; }
+            .tier-card label { padding: 10px !important; }
+            .tier-card label span { font-size: 12px !important; }
+            .tier-card label .sub-box-desc { font-size: 10px !important; }
+            .workspace-header { padding: 0 10px 0 40px !important; }
+            #model-selector { font-size: 12px !important; padding: 4px 8px !important; }
+            #model-selector .badge { font-size: 9px !important; }
+            .auth-card { padding: 25px 15px !important; }
+            .auth-logo svg { width: 28px !important; height: 28px !important; }
+            .auth-logo span { font-size: 22px !important; }
+            .action-btn svg, .enhance-btn .material-symbols-rounded { width: 16px !important; height: 16px !important; font-size: 16px !important; }
         }
 
-        /* =========================================================
-           ULTRA-MOBILE MASTERPIECE OPTIMIZATION (280px - 480px)
-           ========================================================= */
-        @media (max-width: 480px) {
-            .workspace-card {
-                width: 100% !important;
-                max-width: 320px !important;
-                padding: 24px 16px !important;
-                box-sizing: border-box !important;
-            }
-            .ws-icon {
-                font-size: 36px !important;
-                margin-bottom: 12px !important;
-            }
-            .ws-title {
-                font-size: 18px !important;
-            }
-
-            .axelr-pricing-container {
-                padding: 10px !important;
-            }
-            .tier-card {
-                padding: 20px 14px !important;
-            }
-            .tier-card h3 {
-                font-size: 16px !important;
-            }
-            div[id$="-base-price-output"] {
-                font-size: 28px !important;
-                margin-bottom: 16px !important;
-            }
-
-            .tier-card label>div>div:first-child {
-                flex-wrap: wrap !important;
-                gap: 4px !important;
-            }
-            .tier-card label span {
-                font-size: 12px !important;
-            }
-            .tier-card label .sub-box-desc,
-            .tier-card label div[style*="color: #888"],
-            .tier-card label div[style*="color: #666"] {
-                font-size: 10px !important;
-            }
-
-            .workspace-header {
-                padding: 0 10px 0 40px !important;
-            }
-            #model-selector {
-                font-size: 12px !important;
-                padding: 4px 8px !important;
-            }
-            #model-selector .badge {
-                font-size: 9px !important;
-            }
-            .user-avatar {
-                width: 28px !important;
-                height: 28px !important;
-            }
-
-            .auth-card {
-                padding: 25px 15px !important;
-            }
-            .auth-logo svg {
-                width: 28px !important;
-                height: 28px !important;
-            }
-            .auth-logo span {
-                font-size: 22px !important;
-            }
-
-            .command-wrapper {
-                padding-left: 38px !important;
-                padding-right: 10px !important;
-                padding-bottom: 15px !important;
-            }
-            .input-frame {
-                padding: 8px 10px !important;
-                border-radius: 18px !important;
-            }
-            .action-btn {
-                width: 30px !important;
-                height: 30px !important;
-            }
-
-            .action-btn svg,
-            .enhance-btn .material-symbols-rounded {
-                width: 16px !important;
-                height: 16px !important;
-                font-size: 16px !important;
-            }
-        }
-
-        .command-wrapper {
-            position: fixed !important;
-            bottom: env(safe-area-inset-bottom) !important;
+        @media (max-width: 380px) {
+            .tier-card label > div > div:first-child { flex-wrap: wrap !important; gap: 4px !important; }
+            .tier-card label .sub-box-desc, .tier-card label div[style*="color: #888"] { font-size: 9px !important; }
+            #model-dropdown-card { width: calc(100vw - 20px) !important; left: 10px !important; right: 10px !important; }
+            .model-title { font-size: 12px !important; }
+            .model-desc { font-size: 10px !important; }
+            .command-wrapper { padding-left: 30px !important; padding-right: 5px !important; }
+            .input-frame { padding: 6px 8px !important; }
+            textarea { font-size: 14px !important; }
         }
 
         .material-symbols-rounded { font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24; vertical-align: middle; font-size: 24px; }
-
-        /* =========================================================
-   🟢 MOBILE UI & RESPONSIVENESS (Strictly Insulated) 
-   ========================================================= */
-@media (max-width: 768px) {
-    :root { --viewport-height: 100dvh; }
-    body { height: var(--viewport-height); overflow: hidden; }
-
-    /* 1. Sidebar & Viewport Formatting */
-    #sidebar-container-node { left: -100%; width: 85%; }
-    #sidebar-container-node.open { left: 0; box-shadow: 10px 0 30px rgba(0,0,0,0.8); }
-    #viewport { padding: 80px 15px 140px 15px !important; height: var(--viewport-height); }
-    .workspace-header { padding-left: 40px !important; }
-    .brand-logo { font-size: 16px; }
-    .chat-bubble { max-width: 95% !important; padding: 12px 14px !important; }
-
-    /* 2. Hero Section (Protect from Vault overlap) */
-    .hero-text { 
-        padding-left: 42px !important; 
-        padding-right: 15px !important;
-        margin-top: 15vh !important; 
-    }
-    .hero-text h1 { font-size: 24px !important; }
-    .hero-text p { font-size: 13px !important; padding: 0; }
-
-    /* 3. Command Bar (Fix right gap, protect left from Vault) */
-    .command-wrapper { 
-        width: 100% !important; 
-        max-width: 100% !important;
-        padding-left: 42px !important; 
-        padding-right: 15px !important; 
-        padding-bottom: 20px !important;
-        left: 0 !important;
-        transform: none !important;
-    }
-
-    /* 4. True Gemini Native Input (One line, grows UP) */
-    .input-row {
-        flex-wrap: nowrap !important; /* NEVER breaks into two rows */
-        align-items: flex-end !important; /* Buttons stay on the bottom line */
-        gap: 6px !important;
-    }
-    textarea {
-        font-size: 16px !important; /* Stops iOS zoom */
-        padding: 6px 4px !important;
-        max-height: 35vh !important; /* Expands upward naturally via JS */
-        margin-bottom: 0 !important;
-    }
-    .action-btn { width: 36px !important; height: 36px !important; }
-
-    /* 5. Gemini Mic/Send Swap Logic */
-    .input-frame:not(.has-text) #send-trigger:not(.btn-stop-active) { display: none !important; }
-    .input-frame.has-text #mic-trigger { display: none !important; }
-    .input-frame:has(#send-trigger.btn-stop-active) #mic-trigger { display: none !important; }
-}
-
-/* =========================================================
-   🟢 ULTRA-SLIM DEVICE OPTIMIZATION (Below 385px) 
-   ========================================================= */
-@media (max-width: 385px) {
-    .command-wrapper { padding-left: 38px !important; padding-right: 10px !important; padding-bottom: 15px !important; }
-    .input-frame { padding: 6px 8px !important; }
-    .action-btn { width: 32px !important; height: 32px !important; }
-}
-
-/* =========================================================
-   🟢 EXTREME NARROW PROTECTION (Galaxy Fold / iPhone SE) 
-   ========================================================= */
-@media (max-width: 320px) {
-    .hero-text h1 { font-size: 20px !important; }
-    .hero-text p { font-size: 11px !important; }
-    .workspace-header { padding-left: 35px !important; }
-}
-.tab-content svg { width: 25px; height: 25x; margin-right: 8px; vertical-align: middle; margin-bottom: 8px ; }
-.material-symbols-rounded {
-  font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
-  vertical-align: middle;
-  font-size: 35px;
-  margin-right: 6px;
-  color: #10B981; /* Your neon green brand color */
-}
-
-/* Base Workspace Color Mappings */
-:root, :root.theme-data {
-    --brand-accent: #10B981;          /* High-Vibrancy Neon Emerald */
-    --brand-accent-glow: rgba(16, 185, 129, 0.25);
-    --workspace-bg-surface: #0A0F0D;   /* Dark Emerald Base Tint */
-}
-
-:root.theme-design {
-    --brand-accent: #EF4444;          /* High-Vibrancy Electric Crimson */
-    --brand-accent-glow: rgba(239, 68, 68, 0.25);
-    --workspace-bg-surface: #0F0A0A;   /* Dark Crimson Base Tint */
-}
-/* Dynamic Percentage Tracking Bar Wrapper */
-.quota-progress-container {
-    width: 100%;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
-    padding: 12px;
-    margin: 10px 0;
-}
-
-.quota-progress-track {
-    width: 100%;
-    height: 6px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 4px;
-    overflow: hidden;
-    position: relative;
-}
-
-.quota-progress-fill {
-    height: 100%;
-    width: 0%; /* Populated via runtime runtime JS execution */
-    background: linear-gradient(90deg, var(--brand-accent), #FFFFFF);
-    box-shadow: 0 0 8px var(--brand-accent-glow);
-    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-/* ==========================================================================
-   AXELR ENGINE VISUAL IDENTITY PLATFORM - PLACE AT THE BOTTOM OF YOUR <style> TAG
-   ========================================================================== */
-
-/* 1. Global Dynamic Variable Anchors */
-:root, .workspace-mode-data {
-    --axelr-brand-dynamic: #10B981;          /* Neon Green */
-    --axelr-glow-dynamic: rgba(16, 185, 129, 0.2);
-}
-
-.workspace-mode-design {
-    --axelr-brand-dynamic: #EF4444;          /* Crimson Red */
-    --axelr-glow-dynamic: rgba(239, 68, 68, 0.2);
-}
-
-/* 2. Workspace Select Button Symbols Fix */
-.workspace-btn-data.active-state .material-symbols-rounded {
-    color: #10B981 !important;
-    text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
-}
-
-.workspace-btn-design.active-state .material-symbols-rounded {
-    color: #EF4444 !important;
-    text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
-}
-
-/* 3. Prompt Enhancer Dynamic Custom Skin */
-.prompt-enhancer-btn {
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    background: rgba(10, 10, 10, 0.8) !important;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* Hover effects driven directly by active engine state */
-.prompt-enhancer-btn:hover {
-    border-color: var(--axelr-brand-dynamic) !important;
-    box-shadow: 0 0 14px var(--axelr-glow-dynamic) !important;
-}
-
-/* CRITICAL: Keeps your icon size exactly the same as original, only changes color */
-.prompt-enhancer-btn .material-symbols-rounded {
-    color: var(--axelr-brand-dynamic) !important;
-    font-size: 20px !important; /* Preserves your exact layout size */
-    transition: color 0.2s ease !important;
-}
-/* =========================================================
-   📱 THE ULTIMATE MOBILE MASTERPIECE FIX (Up to 480px)
-   ========================================================= */
-@media (max-width: 480px) {
-    /* 1. SMASH THE PRICING TIER OVERFLOW */
-    /* Overrides the inline minmax(320px) grid that breaks 280px phones */
-    .axelr-pricing-container > div[style*="display: grid"] {
-        display: flex !important;
-        flex-direction: column !important;
-        width: 100% !important;
-        overflow-x: hidden !important;
-    }
-    .tier-card, .pro-premium, .business-premium {
-        width: 100% !important;
-        max-width: 100vw !important;
-        min-width: 0 !important;
-        padding: 20px 15px !important;
-        box-sizing: border-box !important;
-    }
-
-    /* 2. FIX THE SQUISHED AVATAR ICON */
-    /* Prevents flexbox from crushing the profile picture into an oval */
-    .user-avatar, img[referrerpolicy="no-referrer"] {
-        width: 32px !important;
-        height: 32px !important;
-        min-width: 32px !important;
-        min-height: 32px !important;
-        flex-shrink: 0 !important;
-        object-fit: cover !important;
-        border-radius: 50% !important;
-    }
-
-    /* 3. FIX THE GOOGLE LOGIN BUTTON ALIGNMENT */
-    /* Forces the icon and text to align cleanly without wrapping */
-    div[onclick*="signIn"], .auth-card button {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        gap: 12px !important;
-        flex-wrap: nowrap !important;
-        white-space: nowrap !important;
-        width: 100% !important;
-        box-sizing: border-box !important;
-    }
-    div[onclick*="signIn"] img, div[onclick*="signIn"] svg {
-        flex-shrink: 0 !important;
-        width: 22px !important;
-        height: 22px !important;
-    }
-
-    /* 4. SUB-TIER TEXT WRAP FIX */
-    .tier-card label > div > div:first-child {
-        flex-wrap: wrap !important;
-        gap: 5px !important;
-    }
-    .tier-card label { padding: 10px !important; }
-}
-/* =========================================================
-   📱 ULTRA-MOBILE MASTERPIECE OPTIMIZATION (280px - 480px)
-   ========================================================= */
-@media (max-width: 480px) {
-    /* 1. Fix Workspace Selector Cards (Stop them from bleeding off screen) */
-    .workspace-card {
-        width: 100% !important;
-        max-width: 320px !important;
-        padding: 24px 16px !important; /* Reclaim internal padding space */
-        box-sizing: border-box !important;
-    }
-    .ws-icon { font-size: 36px !important; margin-bottom: 12px !important; }
-    .ws-title { font-size: 18px !important; }
-
-    /* 2. Fix Pricing Tiers & Sub-tier Matrix Collisions */
-    .axelr-pricing-container {
-        padding: 10px !important;
-    }
-    .tier-card {
-        padding: 20px 14px !important; /* Tighten the outer box */
-    }
-    .tier-card h3 { font-size: 16px !important; }
-    div[id$="-base-price-output"] { font-size: 28px !important; margin-bottom: 16px !important; }
-    
-    /* Force inner text rows to wrap gracefully instead of overlapping */
-    .tier-card label > div > div:first-child {
-        flex-wrap: wrap !important;
-        gap: 4px !important;
-    }
-    .tier-card label span { font-size: 12px !important; }
-    .tier-card label .sub-box-desc, 
-    .tier-card label div[style*="color: #888"],
-    .tier-card label div[style*="color: #666"] {
-        font-size: 10px !important; /* Shrink descriptions so they fit */
-    }
-
-    /* 3. Header Hubs (Prevent Avatar and Model Selector from colliding) */
-    .workspace-header { padding: 0 10px 0 40px !important; }
-    #model-selector { font-size: 12px !important; padding: 4px 8px !important; }
-    #model-selector .badge { font-size: 9px !important; }
-    .user-avatar { width: 28px !important; height: 28px !important; }
-
-    /* 4. Auth Wall Shrink */
-    .auth-card { padding: 25px 15px !important; }
-    .auth-logo svg { width: 28px !important; height: 28px !important; }
-    .auth-logo span { font-size: 22px !important; }
-
-    /* 5. Command Bar & Input Squeezing */
-    .command-wrapper { padding-left: 38px !important; padding-right: 10px !important; padding-bottom: 15px !important; }
-    .input-frame { padding: 8px 10px !important; border-radius: 18px !important; }
-    .action-btn { width: 30px !important; height: 30px !important; }
-    
-    /* Scale down the SVG icons inside the tiny buttons */
-    .action-btn svg, .enhance-btn .material-symbols-rounded { 
-        width: 16px !important; 
-        height: 16px !important; 
-        font-size: 16px !important; 
-    }
-}
-.command-wrapper { 
-    /* Keep your existing rules, but add these: */
-    position: fixed !important; 
-    bottom: env(safe-area-inset-bottom) !important;
-}
     </style>
-
 </head>
 <body class="workspace-data">
 
@@ -1207,27 +746,7 @@
         let regenerateTimer = null;
         let lastMessageTimestamp = 0;
         let hasRegenerated = false;
-        let currentUserId = null; // will be set after auth
-
-        // ============================================================
-        // USER-SCOPED LOCAL STORAGE HELPERS
-        // ============================================================
-        function getLocalStorageKey(baseKey) {
-            if (!currentUserId) return baseKey; // fallback (should not happen)
-            return `${baseKey}_${currentUserId}`;
-        }
-
-        function setUserStorage(key, value) {
-            localStorage.setItem(getLocalStorageKey(key), value);
-        }
-
-        function getUserStorage(key) {
-            return localStorage.getItem(getLocalStorageKey(key));
-        }
-
-        function removeUserStorage(key) {
-            localStorage.removeItem(getLocalStorageKey(key));
-        }
+        let currentUserId = null; // for user-scoped storage
 
         // ============================================================
         // UTILITY FUNCTIONS
@@ -1248,7 +767,12 @@
             return null;
         }
 
-        function getWorkspace() { return getUserStorage('Axelr_workspace') || 'data'; }
+        function getWorkspace() { return localStorage.getItem('Axelr_workspace') || 'data'; }
+
+        // User-scoped draft key
+        function getDraftKey() {
+            return `Axelr_prompt_draft_${currentUserId || 'anonymous'}`;
+        }
 
         // ============================================================
         // FILE HANDLING
@@ -1389,15 +913,28 @@
                 window.history.replaceState({}, document.title, window.location.pathname);
                 if (googleAuthUserToken) loadUserProfile();
             }
+            // Keyboard visual viewport listener
+            if (window.visualViewport) {
+                function adjustForKeyboard() {
+                    const vv = window.visualViewport;
+                    const diff = window.innerHeight - vv.height;
+                    const wrapper = document.querySelector('.command-wrapper');
+                    if (wrapper) {
+                        wrapper.style.bottom = Math.max(0, diff) + 'px';
+                    }
+                }
+                window.visualViewport.addEventListener('resize', adjustForKeyboard);
+                window.visualViewport.addEventListener('scroll', adjustForKeyboard);
+                setTimeout(adjustForKeyboard, 100);
+            }
         };
 
         async function initializeSecureWorkspace(payload, token) {
             googleAuthUserToken = token;
-            currentUserId = payload.sub; // set user ID for storage scoping
-
+            currentUserId = payload.sub; // store user ID
             const authWallEl = document.getElementById('auth-wall');
             if (authWallEl) authWallEl.style.display = 'none';
-            const savedWorkspace = getUserStorage('Axelr_workspace');
+            const savedWorkspace = localStorage.getItem('Axelr_workspace');
             if (savedWorkspace) {
                 activateWorkspace(savedWorkspace, true);
             } else {
@@ -1417,11 +954,6 @@
 
         function executeGlobalLogout() {
             localStorage.removeItem('google_auth_token');
-            // Clear user-specific storage (optional)
-            if (currentUserId) {
-                const keysToRemove = ['Axelr_draft_prompt', 'Axelr_workspace', 'Axelr_active_session'];
-                keysToRemove.forEach(k => removeUserStorage(k));
-            }
             location.reload();
         }
 
@@ -1433,7 +965,7 @@
         }
 
         function selectWorkspace(type) {
-            setUserStorage('Axelr_workspace', type);
+            localStorage.setItem('Axelr_workspace', type);
             document.getElementById('workspace-selector').style.display = 'none';
             activateWorkspace(type);
         }
@@ -1466,7 +998,7 @@
             runningStructuredCache = null;
             stagedFiles = [];
             renderFileChips();
-            removeUserStorage('Axelr_active_session');
+            localStorage.removeItem('Axelr_active_session');
             document.querySelectorAll('.chat-bubble').forEach(bubble => bubble.remove());
             const hero = document.getElementById('hero-display');
             hero.style.display = 'none';
@@ -1475,9 +1007,9 @@
             if (!isBoot) {
                 promptInput.value = '';
                 promptInput.style.height = 'auto';
-                removeUserStorage('Axelr_draft_prompt');
+                localStorage.removeItem(getDraftKey()); // user-scoped
             } else {
-                const savedDraft = getUserStorage('Axelr_draft_prompt');
+                const savedDraft = localStorage.getItem(getDraftKey());
                 if (savedDraft) {
                     promptInput.value = savedDraft;
                     setTimeout(() => {
@@ -1488,6 +1020,7 @@
             }
             validateSendCommand();
             if (window.innerWidth <= 768) sidebarNode.classList.remove('open');
+            // Clear regenerate state
             hasRegenerated = false;
             if (regenerateTimer) { clearTimeout(regenerateTimer);
                 regenerateTimer = null; }
@@ -1511,7 +1044,7 @@
             promptInput.style.height = 'auto';
             promptInput.style.height = promptInput.scrollHeight + 'px';
             validateSendCommand();
-            setUserStorage('Axelr_draft_prompt', promptInput.value);
+            localStorage.setItem(getDraftKey(), promptInput.value);
         });
 
         window.addEventListener('offline', () => {
@@ -1522,31 +1055,6 @@
             document.getElementById('offline-banner').style.display = 'none';
             validateSendCommand();
         });
-
-        // ============================================================
-        // VISUAL VIEWPORT KEYBOARD FIX - only moves command bar
-        // ============================================================
-        if (window.visualViewport) {
-            window.visualViewport.addEventListener('resize', () => {
-                const vv = window.visualViewport;
-                const offset = window.innerHeight - vv.height;
-                const wrapper = document.querySelector('.command-wrapper');
-                if (wrapper) {
-                    if (offset > 100) {
-                        wrapper.style.bottom = offset + 'px';
-                    } else {
-                        wrapper.style.bottom = '0';
-                    }
-                }
-                // Do not adjust viewport padding; keep it fixed.
-                // Scroll to bottom if needed
-                if (offset > 100) {
-                    setTimeout(() => {
-                        viewport.scrollTop = viewport.scrollHeight;
-                    }, 100);
-                }
-            });
-        }
 
         // ============================================================
         // VOICE INPUT
@@ -1587,7 +1095,7 @@
                 promptInput.style.height = 'auto';
                 promptInput.style.height = promptInput.scrollHeight + 'px';
                 validateSendCommand();
-                setUserStorage('Axelr_draft_prompt', promptInput.value);
+                localStorage.setItem(getDraftKey(), promptInput.value);
             };
         } else {
             micBtn.style.display = 'none';
@@ -1710,11 +1218,11 @@
                     </div>`).join('');
                 if (isInitialAppLoad) {
                     isInitialAppLoad = false;
-                    const savedSession = getUserStorage('Axelr_active_session');
+                    const savedSession = localStorage.getItem('axelr_active_session');
                     if (savedSession && cachedLogHistory.some(l => l._id === savedSession)) {
                         viewPastLogById(savedSession);
                     }
-                    const savedDraft = getUserStorage('Axelr_draft_prompt');
+                    const savedDraft = localStorage.getItem(getDraftKey());
                     if (savedDraft) {
                         promptInput.value = savedDraft;
                         promptInput.style.height = 'auto';
@@ -1789,7 +1297,7 @@
             document.getElementById('hero-display').style.display = 'none';
             document.querySelectorAll('.chat-bubble').forEach(b => b.remove());
             activeSessionId = logId;
-            setUserStorage('Axelr_active_session', activeSessionId);
+            localStorage.setItem('axelr_active_session', activeSessionId);
             runningFileTitle = log.filename;
             runningStructuredCache = log.structuredData;
 
@@ -1802,17 +1310,19 @@
                 viewport.appendChild(trashMsg);
             }
 
+            // Reset regenerate state when viewing old chat
             hasRegenerated = false;
             if (regenerateTimer) { clearTimeout(regenerateTimer);
                 regenerateTimer = null; }
 
             log.messages.forEach((msg, idx) => {
-                // Safety: ensure required fields exist
-                msg.text = msg.text || '';
-                msg.attachedFiles = msg.attachedFiles || [];
-                msg.variants = msg.variants || [];
-                msg.activeVariant = msg.activeVariant || 0;
-
+                // Fallback for missing message arrays
+                if (!msg.variants || !Array.isArray(msg.variants)) {
+                    msg.variants = [msg.text];
+                }
+                if (msg.activeVariant === undefined || msg.activeVariant === null) {
+                    msg.activeVariant = 0;
+                }
                 const bubble = document.createElement('div');
                 bubble.className = `chat-bubble ${msg.role === 'user' ? 'user-bubble' : 'nexus-bubble'}`;
 
@@ -1862,6 +1372,7 @@
                         injectDeployButton(contentDiv, rawCode);
                     }
 
+                    // Only show regenerate on the LAST message
                     const isLast = idx === log.messages.length - 1;
                     injectActionButtons(contentDiv, msg.text, false, isLast);
 
@@ -1956,12 +1467,12 @@
                 actionBar.appendChild(likeBtn);
                 actionBar.appendChild(dislikeBtn);
 
-                // Regenerate - only on last message, and only if not already regenerated
+                // Regenerate - ONLY on last message, icon only, auto-remove after 30s
                 if (isLast && !hasRegenerated && rawText) {
                     const regenBtn = document.createElement('button');
                     regenBtn.className = 'action-icon-btn regen-active';
                     regenBtn.title = "Regenerate response (available for 30s)";
-                    regenBtn.innerHTML = ICONS.regenerate; // icon only, no text
+                    regenBtn.innerHTML = ICONS.regenerate; // icon only
                     regenBtn.onclick = function(e) {
                         if (window.lastUserCommand) {
                             document.getElementById('prompt-input').value = window.lastUserCommand;
@@ -1969,7 +1480,7 @@
                             document.getElementById('prompt-input').style.height = document.getElementById(
                                 'prompt-input').scrollHeight + 'px';
                             hasRegenerated = true;
-                            this.remove(); // remove immediately to prevent double-click
+                            this.remove();
                             if (regenerateTimer) { clearTimeout(regenerateTimer);
                                 regenerateTimer = null; }
                             executeCommand(true);
@@ -2034,7 +1545,7 @@
                     promptInput.style.height = 'auto';
                     promptInput.style.height = promptInput.scrollHeight + 'px';
                     validateSendCommand();
-                    setUserStorage('Axelr_draft_prompt', promptInput.value);
+                    localStorage.setItem(getDraftKey(), promptInput.value);
                 }
             } catch (e) {
                 alert("⚠️ Prompt Enhancer timeout. Payload too large or network dropped.");
@@ -2057,13 +1568,13 @@
             if (currentTab === 'trashed') {
                 switchSidebarTab('active');
                 activeSessionId = null;
-                removeUserStorage('Axelr_active_session');
+                localStorage.removeItem('axelr_active_session');
             }
 
             const command = promptInput.value.trim();
             window.lastUserCommand = command;
 
-            // Hide hero immediately
+            // Hide hero
             document.getElementById('hero-display').style.display = 'none';
 
             if (!command && stagedFiles.length === 0 && !isRetry) return;
@@ -2106,6 +1617,7 @@
                         lastBubble.remove();
                     }
                 }
+                // Reset regenerate state for retry
                 hasRegenerated = true; // Prevent regenerate spam
                 if (regenerateTimer) { clearTimeout(regenerateTimer);
                     regenerateTimer = null; }
@@ -2213,16 +1725,15 @@
                                 if (data.type === 'chunk') {
                                     fullResponse += data.text;
                                     const cleanResponse = fullResponse.replace(/<think>[\s\S]*?<\/think>/g, '');
+                                    // Remove loader and show response
                                     contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(cleanResponse));
-                                    // scroll on each chunk
-                                    viewport.scrollTop = viewport.scrollHeight;
                                 } else if (data.type === 'done') {
                                     sessionId = data.sessionId;
                                     structuredData = data.structuredData;
                                     filename = data.filename || 'Export.csv';
                                     if (sessionId) {
                                         activeSessionId = sessionId;
-                                        setUserStorage('Axelr_active_session', activeSessionId);
+                                        localStorage.setItem('axelr_active_session', activeSessionId);
                                         runningStructuredCache = structuredData;
                                         runningFileTitle = filename;
                                         loadArchiveLogs();
@@ -2245,26 +1756,15 @@
                                     }
                                     appendPayloadDownload(contentDiv);
                                     // Inject action buttons - with regenerate on last message
+                                    // Reset regenerate state for new response
                                     hasRegenerated = false;
                                     if (regenerateTimer) { clearTimeout(regenerateTimer);
                                         regenerateTimer = null; }
                                     injectActionButtons(contentDiv, fullResponse, false, true);
-                                    // scroll to bottom
-                                    viewport.scrollTop = viewport.scrollHeight;
-                                } else if (data.type === 'error') {
-                                    contentDiv.innerHTML += `<br><br><em style="color:#ef4444;">Error: ${data.message || 'Unknown error'}</em>`;
                                 }
                             } catch (e) { /* ignore malformed JSON */ }
                         }
                     }
-                }
-                // If we never got a done event, but we have some response, treat as done
-                if (!sessionId && fullResponse) {
-                    // simulate done
-                    contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(fullResponse));
-                    appendPayloadDownload(contentDiv);
-                    injectActionButtons(contentDiv, fullResponse, false, true);
-                    viewport.scrollTop = viewport.scrollHeight;
                 }
             } catch (error) {
                 clearTimeout(extendedTimeout);
@@ -2280,6 +1780,7 @@
                 sendBtn.innerHTML = originalBtnHtml;
                 sendBtn.disabled = false;
                 validateSendCommand();
+                // Force scroll
                 setTimeout(() => {
                     viewport.scrollTop = viewport.scrollHeight;
                 }, 50);
