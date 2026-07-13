@@ -69,9 +69,29 @@
         .auth-sub { color: var(--text-muted); font-size: 14px; margin-bottom: 30px; line-height: 1.5; }
 
         /* ===== WORKSPACE SELECTOR ===== */
-        #workspace-selector { position: fixed; inset: 0; background: var(--bg-deep); z-index: 500; display: none; align-items: center; justify-content: center; flex-direction: column; backdrop-filter: blur(15px); }
-        .ws-grid { display: flex; gap: 25px; flex-wrap: wrap; justify-content: center; }
-        .workspace-card { background: var(--bg-card); padding: 40px; border-radius: 24px; border: 1px solid var(--border-muted); cursor: pointer; width: 320px; text-align: center; transition: 0.3s; position: relative; overflow: hidden; }
+        #workspace-selector { position: fixed; inset: 0; background: var(--bg-deep); z-index: 500; display: none; align-items: center; justify-content: center; flex-direction: column; backdrop-filter: blur(15px); padding: 20px; }
+        #workspace-selector h2 { color: #fff; margin-bottom: 30px; font-size: 28px; text-align: center; }
+        .ws-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            width: 100%;
+            max-width: 800px;
+            justify-items: center;
+        }
+        .workspace-card {
+            background: var(--bg-card);
+            padding: 40px 24px;
+            border-radius: 24px;
+            border: 1px solid var(--border-muted);
+            cursor: pointer;
+            width: 100%;
+            max-width: 340px;
+            text-align: center;
+            transition: 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
         .workspace-card:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
         .workspace-card.data:hover { border-color: var(--accent-glow); }
         .workspace-card.design:hover { border-color: var(--accent-glow-designer); }
@@ -222,14 +242,14 @@
         .ai-avatar-bubble { flex-shrink: 0; display: flex; align-items: flex-start; justify-content: center; margin-top: 4px; }
 
         /* ===== ACTION BAR ===== */
-        .bubble-action-bar { display: flex; gap: 8px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border-muted); flex-wrap: wrap; align-items: center; }
+        .bubble-action-bar { display: flex; gap: 8px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border-muted); flex-wrap: wrap; }
         .action-icon-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 4px 10px; border-radius: 6px; transition: 0.2s; font-size: 12px; font-family: 'Inter'; font-weight: 500; }
         .action-icon-btn svg { width: 16px; height: 16px; transition: 0.2s; }
         .action-icon-btn:hover { color: #fff; background: rgba(255,255,255,0.05); }
         .action-icon-btn:active { transform: scale(0.95); }
         .action-icon-btn.regen-active { color: var(--accent-glow); border: 1px solid var(--border-muted); }
         .action-icon-btn.regen-active:hover { background: rgba(0,242,254,0.1); border-color: var(--accent-glow); }
-        .regen-timer { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-left: 4px; }
+        .regen-countdown { margin-left: 4px; font-size: 10px; color: var(--text-muted); }
 
         /* ===== LOADING ANIMATION ===== */
         .matrix-loader { display: flex; gap: 8px; align-items: center; padding: 10px 0; }
@@ -457,6 +477,13 @@
             .tier-card .options-group label {
                 padding: 10px;
             }
+            .ws-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            .workspace-card {
+                padding: 24px 16px;
+            }
         }
 
         /* ===== MOBILE ===== */
@@ -476,6 +503,11 @@
             .input-frame:not(.has-text) #send-trigger:not(.btn-stop-active) { display: none !important; }
             .input-frame.has-text #mic-trigger { display: none !important; }
             #file-staging-container { padding-bottom: 4px; margin-bottom: 4px; }
+            #model-dropdown-card {
+                left: auto;
+                right: 0;
+                width: 260px;
+            }
         }
 
         @media (max-width: 480px) {
@@ -526,22 +558,23 @@
         .security-alert-banner span:last-child {
             flex: 1;
         }
-        .security-warning-badge {
-            background: rgba(251,191,36,0.15);
-            border-left: 4px solid #fbbf24;
-            padding: 12px 16px;
-            border-radius: 8px;
-            color: #fcd34d;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin: 8px 0;
-            width: 100%;
+        .security-alert-banner.warning {
+            background: rgba(234,179,8,0.15);
+            border-left-color: #eab308;
+            color: #fde047;
         }
-        .security-warning-badge .material-symbols-rounded {
-            color: #fbbf24;
-            font-size: 22px;
+        .security-alert-banner.warning .material-symbols-rounded {
+            color: #eab308;
+        }
+        .security-alert-banner.critical {
+            background: rgba(239,68,68,0.25);
+            border-left-color: #ef4444;
+            color: #fca5a5;
+            animation: pulseAlert 1.5s infinite;
+        }
+        @keyframes pulseAlert {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
         }
 
         /* Retry button for deployment */
@@ -621,7 +654,7 @@
 
     <!-- ===== WORKSPACE SELECTOR ===== -->
     <div id="workspace-selector">
-        <h2 style="color:#fff;margin-bottom:30px;font-size:28px;">Select Workspace</h2>
+        <h2>Select Workspace</h2>
         <div class="ws-grid">
             <div class="workspace-card data" onclick="selectWorkspace('data')">
                 <span class="material-symbols-rounded" style="font-size:48px;">database</span>
@@ -671,7 +704,7 @@
         <div class="modal-card" style="max-width:900px;">
             <div class="modal-header"><div class="modal-title">Upgrade Workspace</div><button class="close-modal-btn" onclick="closeModals()">✕</button></div>
             <div class="axelr-pricing-container">
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;width:100%;">
+                <div>
                     <!-- Pro Tier -->
                     <div class="tier-card pro-premium" style="border-color:rgba(16,185,129,0.15);">
                         <div class="tier-badge-pos" style="background:rgba(16,185,129,0.1);color:#10B981;">RECOMMENDED</div>
@@ -947,12 +980,13 @@
         let globalAbortController = null;
         let lastUserCommand = '';
         let regenerateTimer = null;
+        let lastMessageTimestamp = 0;
         let hasRegenerated = false;
         let currentUserId = null;
 
-        // Manipulation tracking (per session)
-        let manipulationAttempts = parseInt(localStorage.getItem('axelr_manip_attempts') || '0');
-        let manipulationLockUntil = parseInt(localStorage.getItem('axelr_manip_lock_until') || '0');
+        // Manipulation attempt counter (session storage)
+        let manipulationCount = parseInt(sessionStorage.getItem('axelr_manipulation_count')) || 0;
+        let manipulationLockUntil = parseInt(sessionStorage.getItem('axelr_manipulation_lock')) || 0;
 
         // ============================================================
         // UTILITY FUNCTIONS
@@ -1072,7 +1106,7 @@
         });
 
         // ============================================================
-        // SIDEBAR FUNCTIONS (unchanged)
+        // SIDEBAR FUNCTIONS
         // ============================================================
         function toggleSidebar() { sidebarNode.classList.toggle('open'); }
         sidebarTriggerArea.addEventListener('click', (e) => { e.stopPropagation();
@@ -1119,7 +1153,7 @@
         }
 
         // ============================================================
-        // AUTH FUNCTIONS (unchanged)
+        // AUTH FUNCTIONS
         // ============================================================
         function decodeJwt(token) {
             const base64Url = token.split('.')[1];
@@ -1184,7 +1218,7 @@
         }
 
         // ============================================================
-        // WORKSPACE FUNCTIONS (unchanged)
+        // WORKSPACE FUNCTIONS
         // ============================================================
         function showWorkspaceSelector() {
             document.getElementById('workspace-selector').style.display = 'flex';
@@ -1253,7 +1287,7 @@
         }
 
         // ============================================================
-        // VALIDATION (unchanged)
+        // VALIDATION
         // ============================================================
         function validateSendCommand() {
             const hasInput = promptInput.value.trim().length > 0 || stagedFiles.length > 0;
@@ -1283,7 +1317,7 @@
         });
 
         // ============================================================
-        // VOICE INPUT (unchanged)
+        // VOICE INPUT
         // ============================================================
         const micBtn = document.getElementById('mic-trigger');
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -1328,7 +1362,7 @@
         }
 
         // ============================================================
-        // MARKED RENDERER (unchanged)
+        // MARKED RENDERER
         // ============================================================
         const renderer = new marked.Renderer();
         renderer.code = function(code, language) {
@@ -1337,7 +1371,7 @@
         marked.setOptions({ renderer: renderer, breaks: true });
 
         // ============================================================
-        // USER PROFILE & QUOTA (unchanged)
+        // USER PROFILE & QUOTA
         // ============================================================
         async function loadUserProfile() {
             try {
@@ -1413,7 +1447,7 @@
         }
 
         // ============================================================
-        // HISTORY (unchanged)
+        // HISTORY
         // ============================================================
         async function loadArchiveLogs() {
             try {
@@ -1652,7 +1686,7 @@
         }
 
         // ============================================================
-        // ACTION BUTTONS (with Regenerate + Countdown)
+        // ACTION BUTTONS (with Regenerate logic + countdown)
         // ============================================================
         function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, isLast = false) {
             const actionBar = document.createElement('div');
@@ -1690,17 +1724,27 @@
                 actionBar.appendChild(likeBtn);
                 actionBar.appendChild(dislikeBtn);
 
-                // Regenerate - ONLY on last message, single-use, 30s timeout with countdown
+                // Regenerate - single-use, 30s countdown
                 if (isLast && !hasRegenerated && rawText) {
-                    const regenWrapper = document.createElement('div');
-                    regenWrapper.style.display = 'flex';
-                    regenWrapper.style.alignItems = 'center';
-                    regenWrapper.style.gap = '4px';
-
                     const regenBtn = document.createElement('button');
                     regenBtn.className = 'action-icon-btn regen-active';
                     regenBtn.title = "Regenerate response (available for 30s)";
-                    regenBtn.innerHTML = ICONS.regenerate;
+                    regenBtn.innerHTML = ICONS.regenerate + `<span class="regen-countdown">30s</span>`;
+                    let remaining = 30;
+                    const timerInterval = setInterval(() => {
+                        remaining--;
+                        const countSpan = regenBtn.querySelector('.regen-countdown');
+                        if (countSpan) {
+                            countSpan.textContent = remaining + 's';
+                        }
+                        if (remaining <= 0) {
+                            clearInterval(timerInterval);
+                            if (regenBtn.parentNode) {
+                                regenBtn.remove();
+                            }
+                        }
+                    }, 1000);
+
                     regenBtn.onclick = function(e) {
                         if (window.lastUserCommand) {
                             document.getElementById('prompt-input').value = window.lastUserCommand;
@@ -1708,43 +1752,22 @@
                             document.getElementById('prompt-input').style.height = document.getElementById(
                                 'prompt-input').scrollHeight + 'px';
                             hasRegenerated = true;
-                            regenWrapper.remove(); // remove whole wrapper
+                            clearInterval(timerInterval);
+                            this.remove();
                             if (regenerateTimer) { clearTimeout(regenerateTimer);
                                 regenerateTimer = null; }
                             executeCommand(true);
                         }
                     };
+                    actionBar.appendChild(regenBtn);
 
-                    const timerSpan = document.createElement('span');
-                    timerSpan.className = 'regen-timer';
-                    let secondsLeft = 30;
-                    timerSpan.innerText = `${secondsLeft}s`;
-
-                    regenWrapper.appendChild(regenBtn);
-                    regenWrapper.appendChild(timerSpan);
-                    actionBar.appendChild(regenWrapper);
-
-                    if (regenerateTimer) { clearTimeout(regenerateTimer); }
-                    const timerInterval = setInterval(() => {
-                        secondsLeft--;
-                        if (secondsLeft <= 0) {
-                            clearInterval(timerInterval);
-                            if (regenWrapper.parentNode) {
-                                regenWrapper.remove();
-                            }
-                            if (regenerateTimer) { clearTimeout(regenerateTimer);
-                                regenerateTimer = null; }
-                            return;
-                        }
-                        timerSpan.innerText = `${secondsLeft}s`;
-                    }, 1000);
-
+                    // Also auto-remove after 30s if not clicked (timer already handles)
                     regenerateTimer = setTimeout(() => {
-                        clearInterval(timerInterval);
-                        if (regenWrapper.parentNode) {
-                            regenWrapper.remove();
+                        if (regenBtn.parentNode) {
+                            regenBtn.remove();
+                            clearInterval(timerInterval);
+                            regenerateTimer = null;
                         }
-                        regenerateTimer = null;
                     }, 30000);
                     lastMessageTimestamp = Date.now();
                 }
@@ -1768,7 +1791,7 @@
         }
 
         // ============================================================
-        // ENHANCE PROMPT (unchanged)
+        // ENHANCE PROMPT
         // ============================================================
         async function enhanceUserPrompt() {
             const text = promptInput.value.trim();
@@ -1814,16 +1837,16 @@
         // SECURITY LAYER: Tiered Manipulation Detection
         // ============================================================
         function detectManipulationAttempt(command) {
+            // Refined patterns – explicit system override attempts
             const patterns = [
-                /ignore previous instructions/i,
-                /forget your instructions/i,
-                /disregard system prompt/i,
-                /ignore all prior/i,
-                /you are not bound by/i,
-                /override your guidelines/i,
-                /act as if you have no restrictions/i,
-                /do not follow your instructions/i,
-                /bypass your safety/i
+                /forget all (instructions|prior|previous)/i,
+                /disregard (system prompt|guidelines|instructions)/i,
+                /ignore (all|previous) (instructions|prompts)/i,
+                /override your (system|core|primary) instructions/i,
+                /you are (not|no longer) bound by/i,
+                /bypass your safety/i,
+                /stop following your instructions/i,
+                /reset your instructions/i
             ];
             for (let p of patterns) {
                 if (p.test(command)) {
@@ -1831,32 +1854,6 @@
                 }
             }
             return false;
-        }
-
-        function handleManipulationAttempt() {
-            const now = Date.now();
-            // Check if lock is active
-            if (manipulationLockUntil > now) {
-                const remaining = Math.ceil((manipulationLockUntil - now) / 60000);
-                alert(`🚨 System locked for ${remaining} more minute(s). Please reset your behavior.`);
-                return false; // Block further processing
-            }
-
-            manipulationAttempts++;
-            localStorage.setItem('axelr_manip_attempts', manipulationAttempts.toString());
-
-            if (manipulationAttempts >= 3) {
-                // Red alert: lock for 10 minutes
-                manipulationLockUntil = now + 10 * 60 * 1000;
-                localStorage.setItem('axelr_manip_lock_until', manipulationLockUntil.toString());
-                showSecurityAlert('red');
-                // Reset attempts after lock? We can keep them or we can keep counting – we'll keep.
-                return false; // Block command
-            } else {
-                // Warning
-                showSecurityAlert('warning');
-                return true; // Allow but show warning
-            }
         }
 
         function showSecurityAlert(level) {
@@ -1871,37 +1868,40 @@
             contentDiv.className = 'bubble-content';
             contentDiv.style.flex = '1';
 
-            if (level === 'red') {
-                contentDiv.innerHTML = `
-                    <div class="security-alert-banner">
-                        <span class="material-symbols-rounded">warning</span>
-                        <span>🚨 SECURITY ALERT: Multiple manipulation attempts detected. System locking for 10 minutes. Please reset your operational behavior.</span>
-                    </div>
-                `;
-            } else {
-                contentDiv.innerHTML = `
-                    <div class="security-warning-badge">
+            let html = '';
+            if (level === 1) {
+                html = `
+                    <div class="security-alert-banner warning">
                         <span class="material-symbols-rounded">warning</span>
                         <span>⚠️ Warning: Detected attempt to bypass core system architecture. Please stay within operational parameters to avoid account restriction.</span>
                     </div>
                 `;
+            } else if (level === 2) {
+                html = `
+                    <div class="security-alert-banner critical">
+                        <span class="material-symbols-rounded">error</span>
+                        <span>🚨 SECURITY ALERT: Multiple manipulation attempts detected. System locking for 10 minutes. Please reset your operational behavior.</span>
+                    </div>
+                `;
             }
+            contentDiv.innerHTML = html;
             alertBubble.appendChild(contentDiv);
             viewport.appendChild(alertBubble);
             scrollToBottom();
         }
 
         // ============================================================
-        // EXECUTE COMMAND - with security, Tech Beast Mode, retries
+        // EXECUTE COMMAND - with Tech Beast Mode & manipulation guard
         // ============================================================
         async function executeCommand(isRetry = false) {
             // Check lock
-            if (manipulationLockUntil > Date.now()) {
-                const remaining = Math.ceil((manipulationLockUntil - Date.now()) / 60000);
-                alert(`🚨 System locked for ${remaining} more minute(s). Please reset your behavior.`);
+            if (manipulationLockUntil && Date.now() < manipulationLockUntil) {
+                const remaining = Math.ceil((manipulationLockUntil - Date.now()) / 1000);
+                alert(`⛔ System temporarily locked due to security violations. Please wait ${remaining} seconds.`);
                 return;
             }
 
+            // If in trash, switch to active
             if (currentTab === 'trashed') {
                 switchSidebarTab('active');
                 activeSessionId = null;
@@ -1917,42 +1917,34 @@
 
             // ---- SECURITY CHECK ----
             if (detectManipulationAttempt(command)) {
-                // Add user bubble for context
+                manipulationCount++;
+                sessionStorage.setItem('axelr_manipulation_count', manipulationCount);
+                let level = 1;
+                if (manipulationCount >= 3) {
+                    level = 2;
+                    // Lock for 10 minutes
+                    manipulationLockUntil = Date.now() + 10 * 60 * 1000;
+                    sessionStorage.setItem('axelr_manipulation_lock', manipulationLockUntil);
+                }
+                // Add user bubble
                 const userBubble = document.createElement('div');
                 userBubble.className = 'chat-bubble user-bubble';
                 userBubble.innerHTML = DOMPurify.sanitize(marked.parse(command || " "));
                 viewport.appendChild(userBubble);
-                // Handle attempt
-                const allow = handleManipulationAttempt();
+                showSecurityAlert(level);
                 promptInput.value = '';
                 promptInput.style.height = 'auto';
                 validateSendCommand();
                 localStorage.removeItem(getDraftKey());
-                if (!allow) {
-                    // Blocked - do not send command
-                    return;
-                }
-                // If allowed (warning only), we still proceed but we already showed warning.
-                // We need to continue with the actual command? In warning case we allowed.
-                // But we already cleared input; we could still send, but we want to warn and not send? Actually warning means we allow but show warning. We'll proceed with the command.
-                // However we cleared the command; we need to re-prompt? We'll just not send.
-                // Instead, we'll show warning and not send.
                 return;
             }
 
-            // ---- TECH BEAST MODE ----
-            const verboseIndicators = [/explain/i, /verbose/i, /detailed explanation/i, /tell me more/i, /concise/i, /short/i, /brief/i];
-            const wantsVerboseOrConcise = verboseIndicators.some(re => re.test(command));
+            // ---- TECH BEAST MODE: comprehensive unless "concise" requested ----
             let finalCommand = command;
-            if (!wantsVerboseOrConcise) {
-                // Tech Beast Mode: comprehensive, high-quality output
-                finalCommand = `Tech Beast Mode: Provide comprehensive, industry-standard, production-ready solutions. Only include explanations if the user explicitly asks for them. User request: ${command}`;
-            } else if (/concise|short|brief/i.test(command)) {
-                // User wants concise, we respect that
-                finalCommand = `User requests concise response. Provide a succinct answer. User request: ${command}`;
-            } else {
-                // User asked for explanation; we can keep as is, but we'll add a note for quality
-                finalCommand = `User asked for explanation. Provide a comprehensive, clear explanation with examples. User request: ${command}`;
+            const conciseIndicators = [/concise/i, /short/i, /brief/i, /summarize/i, /tl;dr/i];
+            const wantsConcise = conciseIndicators.some(re => re.test(command));
+            if (!wantsConcise) {
+                finalCommand = `Tech Beast Mode: Provide a comprehensive, production-ready solution. Prioritize quality, completeness, and best practices. Do not be brief; deliver a thorough, industry-standard response. Only be concise if the user explicitly requests brevity.\n\nUser request: ${command}`;
             }
 
             const originalBtnHtml = sendBtn.innerHTML;
@@ -2158,7 +2150,7 @@
         }
 
         // ============================================================
-        // PAYLOAD / DEPLOY (with retry and debug)
+        // PAYLOAD / DEPLOY (with robust retry)
         // ============================================================
         function appendPayloadDownload(bubbleNode) {
             if (runningStructuredCache && runningStructuredCache.length > 0) {
@@ -2205,17 +2197,24 @@
             bubbleNode.appendChild(deployContainer);
 
             let retryCount = 0;
-            const maxRetries = 3;
+            const maxRetries = 5;
+            let isDeploying = false;
 
             async function attemptDeploy() {
+                if (isDeploying) return;
+                isDeploying = true;
                 deployBtn.innerText = 'Deploying...';
                 deployBtn.disabled = true;
                 try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
                     const response = await fetch(`${API_BASE_URL}/api/deploy`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${googleAuthUserToken}` },
-                        body: JSON.stringify({ htmlContent: rawHtml })
+                        body: JSON.stringify({ htmlContent: rawHtml }),
+                        signal: controller.signal
                     });
+                    clearTimeout(timeoutId);
                     const result = await response.json();
                     if (result.success) {
                         deployBtn.innerHTML =
@@ -2224,6 +2223,7 @@
                         deployBtn.onclick = null;
                         deployBtn.disabled = false;
                         debugBtn.style.display = 'none';
+                        isDeploying = false;
                     } else {
                         throw new Error(result.message || 'Deployment failed');
                     }
@@ -2231,22 +2231,25 @@
                     console.error('Deploy error:', err);
                     retryCount++;
                     if (retryCount <= maxRetries) {
-                        const delay = Math.pow(2, retryCount) * 500;
+                        const delay = Math.min(Math.pow(2, retryCount) * 500, 10000);
                         deployBtn.innerText = `Retrying (${retryCount}/${maxRetries})...`;
                         deployBtn.disabled = true;
                         setTimeout(() => {
+                            isDeploying = false;
                             attemptDeploy();
                         }, delay);
                     } else {
+                        // All retries failed
                         deployBtn.innerText = '⚠️ Deployment Failed';
                         deployBtn.style.background = '#ef4444';
                         deployBtn.disabled = false;
                         debugBtn.style.display = 'inline-block';
-                        errorDetails.textContent = `Error: ${err.message || 'Unknown error'}`;
+                        errorDetails.textContent = `Error: ${err.message || 'Unknown error'}\nNetwork: ${navigator.onLine ? 'Online' : 'Offline'}`;
                         errorDetails.classList.add('show');
                         debugBtn.onclick = () => {
                             errorDetails.classList.toggle('show');
                         };
+                        // Add retry button
                         const retryBtn = document.createElement('button');
                         retryBtn.className = 'deploy-retry-btn';
                         retryBtn.innerText = 'Retry Deployment';
@@ -2259,9 +2262,11 @@
                             debugBtn.style.display = 'none';
                             const oldRetry = deployContainer.querySelector('.deploy-retry-btn');
                             if (oldRetry) oldRetry.remove();
+                            isDeploying = false;
                             attemptDeploy();
                         };
                         deployContainer.appendChild(retryBtn);
+                        isDeploying = false;
                     }
                 }
             }
@@ -2270,7 +2275,7 @@
         }
 
         // ============================================================
-        // MODALS (unchanged)
+        // MODALS
         // ============================================================
         function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active')); }
 
@@ -2369,7 +2374,7 @@
         }
 
         // ============================================================
-        // PRICING / CHECKOUT (unchanged)
+        // PRICING / CHECKOUT
         // ============================================================
         function syncTierMatrixEngine(tierGroup, subTierSelection, derivedCostValue) {
             const targetOutputNode = document.getElementById(`${tierGroup}-base-price-output`);
@@ -2421,7 +2426,7 @@
         // ============================================================
         // INIT
         // ============================================================
-        console.log('🟢 Axelr AI Frontend Loaded (v2 - Production Ready)');
+        console.log('🟢 Axelr AI Frontend Loaded (v3)');
         console.log('📡 API Base URL:', API_BASE_URL);
     </script>
 </body>
