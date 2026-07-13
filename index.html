@@ -161,7 +161,7 @@
         .action-list-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
         .action-list-item.danger:hover { background: rgba(239,68,68,0.1); color: #ef4444; }
 
-        .sidebar-footer { padding: 15px; border-top: 1px solid var(--border-muted); display: flex; flex-direction: column; gap: 5px; }
+        .sidebar-footer { padding: 15px; border-top: 1px solid var(--border-muted); display: flex; flex-direction: column; gap: 5px; margin-top: auto; flex-shrink: 0; }
         .footer-opt { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 10px; color: var(--text-muted); font-size: 13px; cursor: pointer; transition: 0.2s; }
         .footer-opt:hover { background: rgba(255,255,255,0.05); color: #fff; }
 
@@ -191,7 +191,11 @@
             position: absolute;
             top: 45px;
             left: 0;
-            width: 280px;
+            width: auto;
+            min-width: 200px;
+            max-width: 90vw;
+            right: 0;
+            left: auto;
             background: var(--bg-card);
             border: 1px solid var(--border-muted);
             border-radius: 12px;
@@ -318,7 +322,18 @@
         .send-btn { background: #fff; color: #000; }
         .send-btn:hover { opacity: 0.8; }
         .send-btn:disabled { background: var(--bg-card); color: #4b5563; cursor: not-allowed; }
-        .send-btn.btn-stop-active { background: var(--bg-card) !important; color: var(--text-main) !important; border: 1px solid var(--border-muted) !important; width: auto !important; padding: 0 12px !important; border-radius: 12px !important; }
+
+        /* ===== STOP BUTTON COLOUR FIX (workspace-specific) ===== */
+        .send-btn.btn-stop-active {
+            background: var(--bg-card) !important;
+            color: var(--text-main) !important;
+            border: 1px solid var(--border-muted) !important;
+            width: auto !important;
+            padding: 0 12px !important;
+            border-radius: 12px !important;
+        }
+        body.workspace-data .send-btn.btn-stop-active { color: #10B981 !important; border-color: rgba(16,185,129,0.4) !important; }
+        body.workspace-design .send-btn.btn-stop-active { color: #EF4444 !important; border-color: rgba(239,68,68,0.4) !important; }
 
         .download-btn-bubble { background: var(--accent-glow); color: #000; border: none; padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; margin-top: 15px; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; }
         .download-btn-bubble:hover { opacity: 0.9; transform: translateY(-1px); }
@@ -333,7 +348,7 @@
         body.workspace-design .input-frame:focus-within { border-color: #ef4444 !important; box-shadow: 0 0 30px rgba(239,68,68,0.2) !important; }
         body.workspace-design .ai-avatar-bubble svg path:nth-child(2) { stroke: #ef4444 !important; }
 
-        /* ===== UPGRADE MODAL RESPONSIVENESS ===== */
+        /* ===== UPGRADE MODAL – STATIC TIER COLOURS & RESPONSIVE LAYOUT ===== */
         .axelr-pricing-container {
             display: flex;
             flex-direction: column;
@@ -344,15 +359,15 @@
             padding: 20px;
             box-sizing: border-box;
         }
-        .axelr-pricing-container > div[style*="display: grid"] {
+        /* Desktop: two columns */
+        .axelr-pricing-container > div {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(2, 1fr);
             gap: 24px;
             width: 100%;
         }
         .tier-card {
             background: #0A0F0D;
-            border: 1px solid rgba(16,185,129,0.15);
             border-radius: 16px;
             padding: 28px;
             display: flex;
@@ -363,6 +378,9 @@
             width: 100%;
             box-sizing: border-box;
         }
+        .tier-card.pro-premium { border: 1px solid rgba(16,185,129,0.15); }
+        .tier-card.business-premium { border: 1px solid rgba(239,68,68,0.15); }
+
         .tier-card .tier-badge-pos {
             position: absolute;
             top: 16px;
@@ -372,32 +390,68 @@
             padding: 4px 10px;
             border-radius: 20px;
             letter-spacing: 1px;
+            z-index: 2;
         }
-        .tier-card h3 { margin: 0 0 4px 0; font-size: 18px; color: #FFF; font-weight: 600; }
-        .tier-card p.sub-desc { margin: 0 0 20px 0; font-size: 13px; color: #888; line-height: 1.4; }
-        .tier-card .price-output { font-size: 36px; font-weight: 700; color: #FFF; margin-bottom: 24px; }
-        .tier-card .price-output span { font-size: 14px; color: #555; font-weight: 400; }
-        .tier-card .options-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+        .pro-premium .tier-badge-pos { background: rgba(16,185,129,0.1); color: #10B981; }
+        .business-premium .tier-badge-pos { background: rgba(239,68,68,0.1); color: #EF4444; }
+
+        .tier-card h3 {
+            margin: 0 0 4px 0;
+            font-size: 22px;
+            color: #FFF;
+            font-weight: 700;
+            padding-right: 90px; /* space for badge */
+        }
+        .tier-card p.sub-desc {
+            margin: 0 0 20px 0;
+            font-size: 14px;
+            color: #888;
+            line-height: 1.5;
+        }
+        .tier-card .price-output {
+            font-size: 36px;
+            font-weight: 700;
+            color: #FFF;
+            margin-bottom: 24px;
+        }
+        .tier-card .price-output span {
+            font-size: 14px;
+            color: #555;
+            font-weight: 400;
+        }
+        .tier-card .options-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 28px;
+        }
         .tier-card .options-group label {
             display: flex;
             align-items: flex-start;
             gap: 12px;
             padding: 14px;
             background: rgba(255,255,255,0.02);
-            border: 1px solid rgba(255,255,255,0.04);
             border-radius: 10px;
             cursor: pointer;
             transition: all 0.2s ease;
+            border: 1px solid rgba(255,255,255,0.04);
         }
-        .tier-card .options-group label:has(input:checked) {
-            border-color: var(--accent-glow);
-            background: rgba(255,255,255,0.04);
+        .pro-premium .options-group label:has(input:checked) {
+            border-color: rgba(16,185,129,0.5);
+            background: rgba(16,185,129,0.05);
         }
+        .business-premium .options-group label:has(input:checked) {
+            border-color: rgba(239,68,68,0.5);
+            background: rgba(239,68,68,0.05);
+        }
+
         .tier-card .options-group label input[type="radio"] {
             margin-top: 3px;
-            accent-color: var(--accent-glow);
             flex-shrink: 0;
         }
+        .pro-premium .options-group label input[type="radio"] { accent-color: #10B981; }
+        .business-premium .options-group label input[type="radio"] { accent-color: #EF4444; }
+
         .tier-card .options-group label .opt-content {
             flex: 1;
             min-width: 0;
@@ -412,17 +466,20 @@
         }
         .tier-card .options-group label .opt-content .opt-row .opt-name {
             color: #FFF;
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 600;
         }
         .tier-card .options-group label .opt-content .opt-row .opt-price {
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 700;
         }
+        .pro-premium .options-group label .opt-content .opt-row .opt-price { color: #10B981; }
+        .business-premium .options-group label .opt-content .opt-row .opt-price { color: #EF4444; }
+
         .tier-card .options-group label .opt-content .opt-desc {
             color: #888;
-            font-size: 11px;
-            line-height: 1.3;
+            font-size: 12px;
+            line-height: 1.4;
         }
         .tier-card .upgrade-btn {
             width: 100%;
@@ -436,26 +493,60 @@
             margin-top: auto;
             color: #000;
         }
+        .pro-premium .upgrade-btn { background: #10B981; }
+        .business-premium .upgrade-btn { background: #EF4444; color: #FFF; }
         .tier-card .upgrade-btn:hover { opacity: 0.9; }
 
-        /* Mobile responsiveness for upgrade modal */
+        /* Mobile: single column, spacious */
         @media (max-width: 768px) {
-            .axelr-pricing-container > div[style*="display: grid"] {
+            .axelr-pricing-container > div {
                 grid-template-columns: 1fr;
                 gap: 20px;
             }
             .tier-card {
-                padding: 20px 16px;
+                padding: 24px 18px;
+            }
+            .tier-card h3 {
+                font-size: 20px;
+                padding-right: 80px;
             }
             .tier-card .price-output {
-                font-size: 28px;
-                margin-bottom: 16px;
+                font-size: 30px;
+                margin-bottom: 18px;
             }
             .tier-card .options-group label {
                 padding: 12px;
             }
-            .tier-card .options-group label .opt-content .opt-row {
-                flex-wrap: wrap;
+            .tier-card .options-group label .opt-content .opt-row .opt-name {
+                font-size: 13px;
+            }
+            .tier-card .options-group label .opt-content .opt-row .opt-price {
+                font-size: 13px;
+            }
+            .tier-card .options-group label .opt-content .opt-desc {
+                font-size: 11px;
+            }
+            .tier-card .tier-badge-pos {
+                top: 14px;
+                right: 14px;
+                font-size: 9px;
+                padding: 3px 8px;
+            }
+        }
+        @media (max-width: 480px) {
+            .tier-card {
+                padding: 18px 14px;
+            }
+            .tier-card h3 {
+                font-size: 18px;
+                padding-right: 70px;
+            }
+            .tier-card .price-output {
+                font-size: 26px;
+                margin-bottom: 14px;
+            }
+            .tier-card .options-group label {
+                padding: 10px;
             }
             .tier-card .options-group label .opt-content .opt-row .opt-name {
                 font-size: 12px;
@@ -466,75 +557,95 @@
             .tier-card .options-group label .opt-content .opt-desc {
                 font-size: 10px;
             }
+            .tier-card .tier-badge-pos {
+                top: 12px;
+                right: 12px;
+                font-size: 8px;
+                padding: 2px 6px;
+            }
         }
+
+        /* Mobile workspace selector */
         @media (max-width: 480px) {
-            .tier-card {
-                padding: 16px 12px;
-            }
-            .tier-card .price-output {
-                font-size: 24px;
-            }
-            .tier-card .options-group label {
-                padding: 10px;
+            .workspace-card {
+                padding: 24px 16px;
             }
             .ws-grid {
                 grid-template-columns: 1fr;
                 gap: 16px;
             }
-            .workspace-card {
-                padding: 24px 16px;
-            }
         }
 
-        /* ===== MOBILE ===== */
+        /* ===== MOBILE UI & RESPONSIVENESS (merged from Recovery.html) ===== */
         @media (max-width: 768px) {
+            :root { --viewport-height: 100dvh; }
+            body { height: var(--viewport-height); overflow: hidden; }
+
             #sidebar-container-node { left: -100%; width: 85%; }
             #sidebar-container-node.open { left: 0; box-shadow: 10px 0 30px rgba(0,0,0,0.8); }
-            #viewport { padding: 80px 15px 140px 15px !important; }
+            #viewport { padding: 80px 15px 140px 15px !important; height: var(--viewport-height); }
             .workspace-header { padding-left: 40px !important; }
+            .brand-logo { font-size: 16px; }
             .chat-bubble { max-width: 95% !important; padding: 12px 14px !important; }
-            .hero-text { padding-left: 42px !important; padding-right: 15px !important; margin-top: 15vh !important; }
+
+            .hero-text {
+                padding-left: 42px !important;
+                padding-right: 15px !important;
+                margin-top: 15vh !important;
+            }
             .hero-text h1 { font-size: 24px !important; }
-            .hero-text p { font-size: 13px !important; }
-            .command-wrapper { width: 100% !important; max-width: 100% !important; padding-left: 42px !important; padding-right: 15px !important; padding-bottom: 20px !important; left: 0 !important; transform: none !important; }
-            .input-row { flex-wrap: nowrap !important; align-items: flex-end !important; gap: 6px !important; }
-            textarea { font-size: 16px !important; padding: 6px 4px !important; max-height: 35vh !important; }
+            .hero-text p { font-size: 13px !important; padding: 0; }
+
+            .command-wrapper {
+                width: 100% !important;
+                max-width: 100% !important;
+                padding-left: 42px !important;
+                padding-right: 15px !important;
+                padding-bottom: 20px !important;
+                left: 0 !important;
+                transform: none !important;
+                position: fixed !important;
+                bottom: env(safe-area-inset-bottom) !important;
+            }
+
+            .input-row {
+                flex-wrap: nowrap !important;
+                align-items: flex-end !important;
+                gap: 6px !important;
+            }
+            textarea {
+                font-size: 16px !important;
+                padding: 6px 4px !important;
+                max-height: 35vh !important;
+                margin-bottom: 0 !important;
+            }
             .action-btn { width: 36px !important; height: 36px !important; }
+
             .input-frame:not(.has-text) #send-trigger:not(.btn-stop-active) { display: none !important; }
             .input-frame.has-text #mic-trigger { display: none !important; }
-            #file-staging-container { padding-bottom: 4px; margin-bottom: 4px; }
+            .input-frame:has(#send-trigger.btn-stop-active) #mic-trigger { display: none !important; }
+
             #model-dropdown-card {
-                left: auto;
-                right: 0;
-                width: 260px;
+                right: 10px;
+                left: 10px;
+                width: auto;
+                max-width: 100%;
             }
+
+            .sidebar-footer { margin-top: auto; flex-shrink: 0; }
         }
 
-        @media (max-width: 480px) {
-            .workspace-card { width: 100% !important; max-width: 320px !important; padding: 24px 16px !important; }
-            .user-avatar { width: 28px !important; height: 28px !important; }
+        @media (max-width: 385px) {
             .command-wrapper { padding-left: 38px !important; padding-right: 10px !important; padding-bottom: 15px !important; }
-            .input-frame { padding: 8px 10px !important; border-radius: 18px !important; }
-            .action-btn { width: 30px !important; height: 30px !important; }
-            .action-btn svg, .enhance-btn .material-symbols-rounded { width: 16px !important; height: 16px !important; font-size: 16px !important; }
-            .modal-card { padding: 15px; }
+            .input-frame { padding: 6px 8px !important; }
+            .action-btn { width: 32px !important; height: 32px !important; }
         }
 
-        /* Ensure command-wrapper stays above keyboard without compressing viewport */
-        .command-wrapper {
-            position: fixed !important;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100%;
-            max-width: 780px;
-            padding: 20px 20px 30px 20px;
-            z-index: 100;
-            background: linear-gradient(to top, var(--bg-deep) 70%, transparent);
-            transition: bottom 0.2s ease;
+        @media (max-width: 320px) {
+            .hero-text h1 { font-size: 20px !important; }
+            .hero-text p { font-size: 11px !important; }
+            .workspace-header { padding-left: 35px !important; }
         }
-        /* When keyboard is open, we'll adjust bottom via JS */
-        .material-symbols-rounded { font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24; vertical-align: middle; font-size: 24px; }
 
         /* Security alert banner */
         .security-alert-banner {
@@ -613,6 +724,9 @@
             display: none;
         }
         .deploy-error-details.show { display: block; }
+
+        /* ===== IMPORTANT: material-symbols-rounded base ===== */
+        .material-symbols-rounded { font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24; vertical-align: middle; font-size: 24px; }
     </style>
 </head>
 <body class="workspace-data">
@@ -706,8 +820,8 @@
             <div class="axelr-pricing-container">
                 <div>
                     <!-- Pro Tier -->
-                    <div class="tier-card pro-premium" style="border-color:rgba(16,185,129,0.15);">
-                        <div class="tier-badge-pos" style="background:rgba(16,185,129,0.1);color:#10B981;">RECOMMENDED</div>
+                    <div class="tier-card pro-premium">
+                        <div class="tier-badge-pos">RECOMMENDED</div>
                         <h3>Pro</h3>
                         <p class="sub-desc">Perfect for solo developers and freelancers who need reliable daily usage limits.</p>
                         <div class="price-output" id="pro-base-price-output">$15<span>/mo</span></div>
@@ -715,7 +829,7 @@
                             <label>
                                 <input type="radio" name="pro-sub-selector" value="full" checked onclick="syncTierMatrixEngine('pro','full',15)">
                                 <div class="opt-content">
-                                    <div class="opt-row"><span class="opt-name">Full Stack Bundle</span><span class="opt-price" style="color:#10B981;">$15</span></div>
+                                    <div class="opt-row"><span class="opt-name">Full Stack Bundle</span><span class="opt-price">$15</span></div>
                                     <div class="opt-desc">20 Data Extractions / 15 UI Generations / 7 Enhancements per day.</div>
                                 </div>
                             </label>
@@ -734,12 +848,12 @@
                                 </div>
                             </label>
                         </div>
-                        <button class="upgrade-btn" style="background:#10B981;" onclick="dispatchCheckoutPipeline('pro')">Upgrade to Pro</button>
+                        <button class="upgrade-btn" onclick="dispatchCheckoutPipeline('pro')">Upgrade to Pro</button>
                     </div>
 
                     <!-- Business Tier -->
-                    <div class="tier-card business-premium" style="border-color:rgba(239,68,68,0.15);">
-                        <div class="tier-badge-pos" style="background:rgba(239,68,68,0.1);color:#EF4444;">HEAVY HITTERS</div>
+                    <div class="tier-card business-premium">
+                        <div class="tier-badge-pos">HEAVY HITTERS</div>
                         <h3>Business</h3>
                         <p class="sub-desc">Built for agencies and power users who need maximum daily outputs.</p>
                         <div class="price-output" id="business-base-price-output">$29<span>/mo</span></div>
@@ -747,7 +861,7 @@
                             <label>
                                 <input type="radio" name="business-sub-selector" value="full" checked onclick="syncTierMatrixEngine('business','full',29)">
                                 <div class="opt-content">
-                                    <div class="opt-row"><span class="opt-name">Full Stack Bundle</span><span class="opt-price" style="color:#EF4444;">$29</span></div>
+                                    <div class="opt-row"><span class="opt-name">Full Stack Bundle</span><span class="opt-price">$29</span></div>
                                     <div class="opt-desc">30 Data Extractions / 25 UI Generations / 15 Enhancements per day.</div>
                                 </div>
                             </label>
@@ -766,7 +880,7 @@
                                 </div>
                             </label>
                         </div>
-                        <button class="upgrade-btn" style="background:#EF4444;color:#FFF;" onclick="dispatchCheckoutPipeline('business')">Upgrade to Business</button>
+                        <button class="upgrade-btn" onclick="dispatchCheckoutPipeline('business')">Upgrade to Business</button>
                     </div>
                 </div>
                 <div style="font-size:12px;color:var(--text-muted);margin-top:10px;text-align:center;">Cancel anytime. Secure processing via Stripe.</div>
@@ -1012,7 +1126,7 @@
         function getDraftKey() { return `Axelr_prompt_draft_${currentUserId || 'anonymous'}`; }
 
         // ============================================================
-        // VISUAL VIEWPORT / COMMAND BAR RESPONSIVENESS
+        // VISUAL VIEWPORT / COMMAND BAR RESPONSIVENESS (with cap)
         // ============================================================
         function adjustViewportPadding() {
             const wrapperHeight = commandWrapper.offsetHeight;
@@ -1024,13 +1138,13 @@
             viewport.scrollTop = viewport.scrollHeight;
         }
 
-        // Observe viewport changes and adjust padding
         if (window.visualViewport) {
             function adjustCommandWrapperAndViewport() {
                 const vv = window.visualViewport;
                 if (!vv) return;
                 const offsetY = window.innerHeight - vv.height;
-                commandWrapper.style.bottom = Math.max(0, offsetY) + 'px';
+                const maxBottom = window.innerHeight * 0.6; // never go above 60%
+                commandWrapper.style.bottom = Math.min(offsetY, maxBottom) + 'px';
                 setTimeout(adjustViewportPadding, 50);
                 if (viewport.querySelector('.chat-bubble')) {
                     scrollToBottom();
