@@ -222,13 +222,14 @@
         .ai-avatar-bubble { flex-shrink: 0; display: flex; align-items: flex-start; justify-content: center; margin-top: 4px; }
 
         /* ===== ACTION BAR ===== */
-        .bubble-action-bar { display: flex; gap: 8px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border-muted); flex-wrap: wrap; }
+        .bubble-action-bar { display: flex; gap: 8px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border-muted); flex-wrap: wrap; align-items: center; }
         .action-icon-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 4px 10px; border-radius: 6px; transition: 0.2s; font-size: 12px; font-family: 'Inter'; font-weight: 500; }
         .action-icon-btn svg { width: 16px; height: 16px; transition: 0.2s; }
         .action-icon-btn:hover { color: #fff; background: rgba(255,255,255,0.05); }
         .action-icon-btn:active { transform: scale(0.95); }
         .action-icon-btn.regen-active { color: var(--accent-glow); border: 1px solid var(--border-muted); }
         .action-icon-btn.regen-active:hover { background: rgba(0,242,254,0.1); border-color: var(--accent-glow); }
+        .regen-timer { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-left: 4px; }
 
         /* ===== LOADING ANIMATION ===== */
         .matrix-loader { display: flex; gap: 8px; align-items: center; padding: 10px 0; }
@@ -325,7 +326,7 @@
         }
         .axelr-pricing-container > div[style*="display: grid"] {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 24px;
             width: 100%;
         }
@@ -525,6 +526,23 @@
         .security-alert-banner span:last-child {
             flex: 1;
         }
+        .security-warning-badge {
+            background: rgba(251,191,36,0.15);
+            border-left: 4px solid #fbbf24;
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: #fcd34d;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 8px 0;
+            width: 100%;
+        }
+        .security-warning-badge .material-symbols-rounded {
+            color: #fbbf24;
+            font-size: 22px;
+        }
 
         /* Retry button for deployment */
         .deploy-retry-btn {
@@ -653,7 +671,7 @@
         <div class="modal-card" style="max-width:900px;">
             <div class="modal-header"><div class="modal-title">Upgrade Workspace</div><button class="close-modal-btn" onclick="closeModals()">✕</button></div>
             <div class="axelr-pricing-container">
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px;width:100%;">
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;width:100%;">
                     <!-- Pro Tier -->
                     <div class="tier-card pro-premium" style="border-color:rgba(16,185,129,0.15);">
                         <div class="tier-badge-pos" style="background:rgba(16,185,129,0.1);color:#10B981;">RECOMMENDED</div>
@@ -929,9 +947,12 @@
         let globalAbortController = null;
         let lastUserCommand = '';
         let regenerateTimer = null;
-        let lastMessageTimestamp = 0;
         let hasRegenerated = false;
         let currentUserId = null;
+
+        // Manipulation tracking (per session)
+        let manipulationAttempts = parseInt(localStorage.getItem('axelr_manip_attempts') || '0');
+        let manipulationLockUntil = parseInt(localStorage.getItem('axelr_manip_lock_until') || '0');
 
         // ============================================================
         // UTILITY FUNCTIONS
@@ -960,7 +981,6 @@
         // VISUAL VIEWPORT / COMMAND BAR RESPONSIVENESS
         // ============================================================
         function adjustViewportPadding() {
-            // Dynamically set viewport bottom padding to avoid overlap with command bar
             const wrapperHeight = commandWrapper.offsetHeight;
             const bottomPadding = Math.max(wrapperHeight + 20, 160);
             viewport.style.paddingBottom = bottomPadding + 'px';
@@ -977,20 +997,16 @@
                 if (!vv) return;
                 const offsetY = window.innerHeight - vv.height;
                 commandWrapper.style.bottom = Math.max(0, offsetY) + 'px';
-                // Adjust viewport padding after a small delay to let layout settle
                 setTimeout(adjustViewportPadding, 50);
-                // Also scroll to bottom if there are messages
                 if (viewport.querySelector('.chat-bubble')) {
                     scrollToBottom();
                 }
             }
             window.visualViewport.addEventListener('resize', adjustCommandWrapperAndViewport);
             window.visualViewport.addEventListener('scroll', adjustCommandWrapperAndViewport);
-            // Initial adjustment
             setTimeout(adjustCommandWrapperAndViewport, 100);
         }
 
-        // Also adjust on input focus/expand
         promptInput.addEventListener('focus', () => {
             setTimeout(() => {
                 adjustViewportPadding();
@@ -998,14 +1014,13 @@
             }, 200);
         });
 
-        // MutationObserver to auto-scroll when new content appears
         const viewportObserver = new MutationObserver(() => {
             scrollToBottom();
         });
         viewportObserver.observe(viewport, { childList: true, subtree: true, characterData: true });
 
         // ============================================================
-        // FILE HANDLING (now using separate container)
+        // FILE HANDLING
         // ============================================================
         function renderFileChips() {
             if (stagedFiles.length === 0) {
@@ -1019,7 +1034,6 @@
                     <span style="cursor:pointer;color:#ef4444;font-weight:bold;font-size:14px;flex-shrink:0;padding-left:4px;" onclick="removeStagedFile(${idx})">✕</span>
                 </div>`
             ).join('');
-            // Ensure container is visible
             fileStagingContainer.style.display = 'flex';
         }
 
@@ -1638,7 +1652,7 @@
         }
 
         // ============================================================
-        // ACTION BUTTONS (with Regenerate logic)
+        // ACTION BUTTONS (with Regenerate + Countdown)
         // ============================================================
         function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, isLast = false) {
             const actionBar = document.createElement('div');
@@ -1676,12 +1690,17 @@
                 actionBar.appendChild(likeBtn);
                 actionBar.appendChild(dislikeBtn);
 
-                // Regenerate - ONLY on last message, single-use, 30s timeout
+                // Regenerate - ONLY on last message, single-use, 30s timeout with countdown
                 if (isLast && !hasRegenerated && rawText) {
+                    const regenWrapper = document.createElement('div');
+                    regenWrapper.style.display = 'flex';
+                    regenWrapper.style.alignItems = 'center';
+                    regenWrapper.style.gap = '4px';
+
                     const regenBtn = document.createElement('button');
                     regenBtn.className = 'action-icon-btn regen-active';
                     regenBtn.title = "Regenerate response (available for 30s)";
-                    regenBtn.innerHTML = ICONS.regenerate; // icon only
+                    regenBtn.innerHTML = ICONS.regenerate;
                     regenBtn.onclick = function(e) {
                         if (window.lastUserCommand) {
                             document.getElementById('prompt-input').value = window.lastUserCommand;
@@ -1689,20 +1708,43 @@
                             document.getElementById('prompt-input').style.height = document.getElementById(
                                 'prompt-input').scrollHeight + 'px';
                             hasRegenerated = true;
-                            this.remove();
+                            regenWrapper.remove(); // remove whole wrapper
                             if (regenerateTimer) { clearTimeout(regenerateTimer);
                                 regenerateTimer = null; }
                             executeCommand(true);
                         }
                     };
-                    actionBar.appendChild(regenBtn);
+
+                    const timerSpan = document.createElement('span');
+                    timerSpan.className = 'regen-timer';
+                    let secondsLeft = 30;
+                    timerSpan.innerText = `${secondsLeft}s`;
+
+                    regenWrapper.appendChild(regenBtn);
+                    regenWrapper.appendChild(timerSpan);
+                    actionBar.appendChild(regenWrapper);
 
                     if (regenerateTimer) { clearTimeout(regenerateTimer); }
-                    regenerateTimer = setTimeout(() => {
-                        if (regenBtn.parentNode) {
-                            regenBtn.remove();
-                            regenerateTimer = null;
+                    const timerInterval = setInterval(() => {
+                        secondsLeft--;
+                        if (secondsLeft <= 0) {
+                            clearInterval(timerInterval);
+                            if (regenWrapper.parentNode) {
+                                regenWrapper.remove();
+                            }
+                            if (regenerateTimer) { clearTimeout(regenerateTimer);
+                                regenerateTimer = null; }
+                            return;
                         }
+                        timerSpan.innerText = `${secondsLeft}s`;
+                    }, 1000);
+
+                    regenerateTimer = setTimeout(() => {
+                        clearInterval(timerInterval);
+                        if (regenWrapper.parentNode) {
+                            regenWrapper.remove();
+                        }
+                        regenerateTimer = null;
                     }, 30000);
                     lastMessageTimestamp = Date.now();
                 }
@@ -1769,7 +1811,7 @@
         }
 
         // ============================================================
-        // SECURITY LAYER: Client-side manipulation detection
+        // SECURITY LAYER: Tiered Manipulation Detection
         // ============================================================
         function detectManipulationAttempt(command) {
             const patterns = [
@@ -1791,7 +1833,33 @@
             return false;
         }
 
-        function showSecurityAlertBubble() {
+        function handleManipulationAttempt() {
+            const now = Date.now();
+            // Check if lock is active
+            if (manipulationLockUntil > now) {
+                const remaining = Math.ceil((manipulationLockUntil - now) / 60000);
+                alert(`🚨 System locked for ${remaining} more minute(s). Please reset your behavior.`);
+                return false; // Block further processing
+            }
+
+            manipulationAttempts++;
+            localStorage.setItem('axelr_manip_attempts', manipulationAttempts.toString());
+
+            if (manipulationAttempts >= 3) {
+                // Red alert: lock for 10 minutes
+                manipulationLockUntil = now + 10 * 60 * 1000;
+                localStorage.setItem('axelr_manip_lock_until', manipulationLockUntil.toString());
+                showSecurityAlert('red');
+                // Reset attempts after lock? We can keep them or we can keep counting – we'll keep.
+                return false; // Block command
+            } else {
+                // Warning
+                showSecurityAlert('warning');
+                return true; // Allow but show warning
+            }
+        }
+
+        function showSecurityAlert(level) {
             const alertBubble = document.createElement('div');
             alertBubble.className = 'chat-bubble nexus-bubble';
             const avatarDiv = document.createElement('div');
@@ -1802,22 +1870,38 @@
             const contentDiv = document.createElement('div');
             contentDiv.className = 'bubble-content';
             contentDiv.style.flex = '1';
-            contentDiv.innerHTML = `
-                <div class="security-alert-banner">
-                    <span class="material-symbols-rounded">warning</span>
-                    <span>⚠️ SECURITY ALERT: Attempted system manipulation detected. This action is logged. Unauthorized manipulation will lead to immediate account suspension.</span>
-                </div>
-            `;
+
+            if (level === 'red') {
+                contentDiv.innerHTML = `
+                    <div class="security-alert-banner">
+                        <span class="material-symbols-rounded">warning</span>
+                        <span>🚨 SECURITY ALERT: Multiple manipulation attempts detected. System locking for 10 minutes. Please reset your operational behavior.</span>
+                    </div>
+                `;
+            } else {
+                contentDiv.innerHTML = `
+                    <div class="security-warning-badge">
+                        <span class="material-symbols-rounded">warning</span>
+                        <span>⚠️ Warning: Detected attempt to bypass core system architecture. Please stay within operational parameters to avoid account restriction.</span>
+                    </div>
+                `;
+            }
             alertBubble.appendChild(contentDiv);
             viewport.appendChild(alertBubble);
             scrollToBottom();
         }
 
         // ============================================================
-        // EXECUTE COMMAND - FIXED with security, tech beast mode, retries
+        // EXECUTE COMMAND - with security, Tech Beast Mode, retries
         // ============================================================
         async function executeCommand(isRetry = false) {
-            // If in trash, switch to active
+            // Check lock
+            if (manipulationLockUntil > Date.now()) {
+                const remaining = Math.ceil((manipulationLockUntil - Date.now()) / 60000);
+                alert(`🚨 System locked for ${remaining} more minute(s). Please reset your behavior.`);
+                return;
+            }
+
             if (currentTab === 'trashed') {
                 switchSidebarTab('active');
                 activeSessionId = null;
@@ -1827,43 +1911,52 @@
             const command = promptInput.value.trim();
             window.lastUserCommand = command;
 
-            // Hide hero
             document.getElementById('hero-display').style.display = 'none';
 
             if (!command && stagedFiles.length === 0 && !isRetry) return;
 
             // ---- SECURITY CHECK ----
             if (detectManipulationAttempt(command)) {
-                // Show security alert and do NOT send command
                 // Add user bubble for context
                 const userBubble = document.createElement('div');
                 userBubble.className = 'chat-bubble user-bubble';
                 userBubble.innerHTML = DOMPurify.sanitize(marked.parse(command || " "));
                 viewport.appendChild(userBubble);
-                showSecurityAlertBubble();
+                // Handle attempt
+                const allow = handleManipulationAttempt();
                 promptInput.value = '';
                 promptInput.style.height = 'auto';
                 validateSendCommand();
                 localStorage.removeItem(getDraftKey());
+                if (!allow) {
+                    // Blocked - do not send command
+                    return;
+                }
+                // If allowed (warning only), we still proceed but we already showed warning.
+                // We need to continue with the actual command? In warning case we allowed.
+                // But we already cleared input; we could still send, but we want to warn and not send? Actually warning means we allow but show warning. We'll proceed with the command.
+                // However we cleared the command; we need to re-prompt? We'll just not send.
+                // Instead, we'll show warning and not send.
                 return;
             }
 
-            // ---- TECH BEAST MODE: prepend instruction if not verbose ----
+            // ---- TECH BEAST MODE ----
+            const verboseIndicators = [/explain/i, /verbose/i, /detailed explanation/i, /tell me more/i, /concise/i, /short/i, /brief/i];
+            const wantsVerboseOrConcise = verboseIndicators.some(re => re.test(command));
             let finalCommand = command;
-            // Check if user explicitly asks for explanation (verbose)
-            const verboseIndicators = [/explain/i, /verbose/i, /detailed explanation/i, /tell me more/i];
-            const wantsVerbose = verboseIndicators.some(re => re.test(command));
-            if (!wantsVerbose) {
-                // Add Tech Beast Mode prefix
-                finalCommand = `Tech Beast Mode: Provide concise, high-density production code. Only provide verbose explanation if the user explicitly asks for explanation. User request: ${command}`;
+            if (!wantsVerboseOrConcise) {
+                // Tech Beast Mode: comprehensive, high-quality output
+                finalCommand = `Tech Beast Mode: Provide comprehensive, industry-standard, production-ready solutions. Only include explanations if the user explicitly asks for them. User request: ${command}`;
+            } else if (/concise|short|brief/i.test(command)) {
+                // User wants concise, we respect that
+                finalCommand = `User requests concise response. Provide a succinct answer. User request: ${command}`;
             } else {
-                // User asked for explanation, we can keep as is or add a note
-                // but we can still set a flag; we'll just pass as is.
+                // User asked for explanation; we can keep as is, but we'll add a note for quality
+                finalCommand = `User asked for explanation. Provide a comprehensive, clear explanation with examples. User request: ${command}`;
             }
 
             const originalBtnHtml = sendBtn.innerHTML;
 
-            // Handle abort
             if (globalAbortController) {
                 globalAbortController.abort();
                 globalAbortController = null;
@@ -1872,13 +1965,11 @@
                 return;
             }
 
-            // Clear input after capture (but we need to keep finalCommand for storage)
             promptInput.value = '';
             promptInput.style.height = 'auto';
             validateSendCommand();
             sendBtn.disabled = true;
 
-            // Add user bubble with original command (not the prefixed one)
             const userBubble = document.createElement('div');
             userBubble.className = 'chat-bubble user-bubble';
             let filesHtml = '';
@@ -1890,7 +1981,6 @@
             userBubble.innerHTML = `${filesHtml}${DOMPurify.sanitize(marked.parse(command || " "))}`;
             viewport.appendChild(userBubble);
 
-            // If retry, remove last AI bubble
             if (isRetry) {
                 const allBubbles = viewport.querySelectorAll('.chat-bubble');
                 if (allBubbles.length >= 2) {
@@ -1908,7 +1998,6 @@
             stagedFiles = [];
             renderFileChips();
 
-            // Create AI bubble with loading animation
             const nexusBubble = document.createElement('div');
             nexusBubble.className = 'chat-bubble nexus-bubble';
             const avatarDiv = document.createElement('div');
@@ -1920,7 +2009,6 @@
             contentDiv.className = 'bubble-content';
             contentDiv.style.flex = '1';
 
-            // Loading animation
             const loader = document.createElement('div');
             loader.className = 'matrix-loader';
             for (let i = 0; i < 3; i++) {
@@ -1941,9 +2029,8 @@
             viewport.appendChild(nexusBubble);
             scrollToBottom();
 
-            // Prepare form data
             const formData = new FormData();
-            formData.append('command', finalCommand); // Send the modified command
+            formData.append('command', finalCommand);
             formData.append('workspace', getWorkspace());
             formData.append('isRetry', isRetry ? 'true' : 'false');
             if (activeSessionId) formData.append('sessionId', activeSessionId);
@@ -2008,7 +2095,7 @@
                                     fullResponse += data.text;
                                     const cleanResponse = fullResponse.replace(/<think>[\s\S]*?<\/think>/g, '');
                                     contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(cleanResponse));
-                                    scrollToBottom(); // auto-scroll on each chunk
+                                    scrollToBottom();
                                 } else if (data.type === 'done') {
                                     sessionId = data.sessionId;
                                     structuredData = data.structuredData;
@@ -2144,7 +2231,6 @@
                     console.error('Deploy error:', err);
                     retryCount++;
                     if (retryCount <= maxRetries) {
-                        // Retry with exponential backoff
                         const delay = Math.pow(2, retryCount) * 500;
                         deployBtn.innerText = `Retrying (${retryCount}/${maxRetries})...`;
                         deployBtn.disabled = true;
@@ -2152,7 +2238,6 @@
                             attemptDeploy();
                         }, delay);
                     } else {
-                        // All retries failed
                         deployBtn.innerText = '⚠️ Deployment Failed';
                         deployBtn.style.background = '#ef4444';
                         deployBtn.disabled = false;
@@ -2162,7 +2247,6 @@
                         debugBtn.onclick = () => {
                             errorDetails.classList.toggle('show');
                         };
-                        // Also add a retry button
                         const retryBtn = document.createElement('button');
                         retryBtn.className = 'deploy-retry-btn';
                         retryBtn.innerText = 'Retry Deployment';
@@ -2173,7 +2257,6 @@
                             deployBtn.innerText = 'Deploy Live';
                             deployBtn.disabled = false;
                             debugBtn.style.display = 'none';
-                            // Remove any existing retry button (if re-added)
                             const oldRetry = deployContainer.querySelector('.deploy-retry-btn');
                             if (oldRetry) oldRetry.remove();
                             attemptDeploy();
@@ -2327,7 +2410,7 @@
         }
 
         // ============================================================
-        // RESIZE HANDLER (updated)
+        // RESIZE HANDLER
         // ============================================================
         window.addEventListener('resize', () => {
             const currentWorkspace = getWorkspace();
@@ -2338,7 +2421,7 @@
         // ============================================================
         // INIT
         // ============================================================
-        console.log('🟢 Axelr AI Frontend Loaded (v2)');
+        console.log('🟢 Axelr AI Frontend Loaded (v2 - Production Ready)');
         console.log('📡 API Base URL:', API_BASE_URL);
     </script>
 </body>
