@@ -126,26 +126,27 @@
         .trigger-text { writing-mode: vertical-rl; transform: rotate(180deg); letter-spacing: 3px; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--text-muted); font-weight: 600; text-transform: uppercase; transition: 0.3s; white-space: nowrap; }
         #sidebar-trigger-area:hover .trigger-text { color: var(--text-main); }
 
-        #sidebar-container-node { position: absolute; left: -320px; top: 0; bottom: 0; width: 320px; background: var(--bg-sidebar); display: flex; flex-direction: column; transition: all 0.3s ease; z-index: 200; border-right: 1px solid var(--border-muted); }
+        #sidebar-container-node { position: absolute; left: -320px; top: 0; bottom: 0; width: 320px; background: var(--bg-sidebar); display: flex; flex-direction: column; transition: all 0.3s ease; z-index: 200; border-right: 1px solid var(--border-muted); max-height: 100vh; }
         #sidebar-container-node.open { left: 0; }
 
-        .sidebar-header { padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-muted); }
+        .sidebar-header { padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-muted); flex-shrink: 0; }
         .brand-logo { font-size: 19px; font-weight: 700; color: #fff; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
         body.workspace-data .brand-logo { color: var(--accent-glow); text-shadow: 0 0 15px var(--accent-glow); }
         body.workspace-design .brand-logo { color: var(--accent-glow-designer); text-shadow: 0 0 15px var(--accent-glow-designer); }
-        .new-chat-btn { background: transparent; border: 1px solid var(--border-muted); color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; transition: 0.2s; }
+        .new-chat-btn { background: transparent; border: 1px solid var(--border-muted); color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; transition: 0.2s; flex-shrink: 0; }
         .new-chat-btn:hover { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.1); }
 
-        .sidebar-tabs { display: flex; gap: 5px; margin: 0 15px 5px 15px; background: var(--bg-deep); padding: 4px; border-radius: 8px; }
+        .sidebar-tabs { display: flex; gap: 5px; margin: 0 15px 5px 15px; background: var(--bg-deep); padding: 4px; border-radius: 8px; flex-shrink: 0; }
         .tab-btn { flex: 1; background: transparent; color: var(--text-muted); border: none; border-radius: 6px; padding: 6px; font-size: 11px; font-weight: 600; cursor: pointer; transition: 0.2s; }
         .tab-btn.active { background: var(--bg-card); color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.5); }
 
-        .sidebar-search-box { margin: 10px 15px; background: var(--bg-input); border: 1px solid var(--border-muted); border-radius: 10px; display: flex; align-items: center; padding: 8px 12px; gap: 8px; transition: 0.2s; }
+        .sidebar-search-box { margin: 10px 15px; background: var(--bg-input); border: 1px solid var(--border-muted); border-radius: 10px; display: flex; align-items: center; padding: 8px 12px; gap: 8px; transition: 0.2s; flex-shrink: 0; }
         .sidebar-search-box:focus-within { border-color: var(--text-muted); }
         .sidebar-search-box input { background: transparent; border: none; color: #fff; font-size: 13px; width: 100%; outline: none; }
         .sidebar-search-box input::placeholder { color: var(--text-muted); }
 
-        #sidebar-content { flex: 1; overflow-y: auto; padding: 0 15px 15px 15px; display: flex; flex-direction: column; gap: 8px; }
+        #sidebar-content { flex: 1; overflow-y: auto; padding: 0 15px 15px 15px; display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+
         .sidebar-section-label { font-size: 11px; text-transform: uppercase; color: #4b5563; font-weight: 600; letter-spacing: 1px; margin: 10px 5px 5px 5px; }
 
         .history-item { padding: 12px 14px; border-radius: 12px; background: rgba(255,255,255,0.01); border: 1px solid transparent; cursor: pointer; transition: 0.2s; display: flex; justify-content: space-between; align-items: center; position: relative; }
@@ -161,7 +162,16 @@
         .action-list-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
         .action-list-item.danger:hover { background: rgba(239,68,68,0.1); color: #ef4444; }
 
-        .sidebar-footer { padding: 15px; border-top: 1px solid var(--border-muted); display: flex; flex-direction: column; gap: 5px; margin-top: auto; flex-shrink: 0; }
+        .sidebar-footer {
+            padding: 15px;
+            border-top: 1px solid var(--border-muted);
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex-shrink: 0;
+            background: var(--bg-sidebar);
+            z-index: 10;
+        }
         .footer-opt { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 10px; color: var(--text-muted); font-size: 13px; cursor: pointer; transition: 0.2s; }
         .footer-opt:hover { background: rgba(255,255,255,0.05); color: #fff; }
 
@@ -179,7 +189,7 @@
         .axelr-quota-box .quota-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--axelr-brand-dynamic, #10b981), #FFF); transition: width 0.4s ease; }
 
         /* ===== HEADER ===== */
-        .workspace-header { position: absolute; top: 0; left: 0; right: 0; height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px 0 50px; border-bottom: 1px solid var(--border-muted); z-index: 150; background: rgba(5,5,5,0.8); backdrop-filter: blur(10px); }
+        .workspace-header { position: absolute; top: 0; left: 0; right: 0; height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px 0 50px; border-bottom: 1px solid var(--border-muted); z-index: 150; background: rgba(5,5,5,0.8); backdrop-filter: blur(10px); flex-shrink: 0; }
         .model-hub { position: relative; }
         #model-selector { background: transparent; border: none; color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 8px; transition: 0.2s; }
         #model-selector:hover { background: rgba(255, 255, 255, 0.05); }
@@ -235,7 +245,7 @@
         .model-title { font-size: 14px; font-weight: 600; color: #fff; display: flex; align-items: center; justify-content: space-between; }
         .model-title span { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
         .model-desc { font-size: 11px; color: var(--text-muted); }
-        .account-hub { position: relative; display: flex; align-items: center; gap: 12px; }
+        .account-hub { position: relative; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
         .user-avatar { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--border-muted); cursor: pointer; display: none; object-fit: cover; }
         #account-dropdown-card { position: absolute; top: 45px; right: 0; width: 260px; background: var(--bg-card); border: 1px solid var(--border-muted); border-radius: 16px; padding: 15px; display: none; flex-direction: column; gap: 10px; z-index: 210; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .dropdown-email { color: var(--text-muted); font-size: 12px; font-family: 'JetBrains Mono'; overflow: hidden; text-overflow: ellipsis; }
@@ -245,7 +255,9 @@
 
         /* ===== VIEWPORT ===== */
         #viewport { flex: 1; overflow-y: auto; padding: 100px 20px 160px 20px; display: flex; flex-direction: column; align-items: center; gap: 25px; width: 100%; max-width: 850px; margin: 0 auto; scroll-behavior: smooth; }
+
         .hero-text { text-align: center; margin-top: 20vh; width: 100%; display: flex; flex-direction: column; align-items: center; }
+        .hero-text.hidden { display: none !important; }  /* FIX #4 & #6: permanent hide when chat is active */
         .hero-text h1 { font-size: 32px; font-weight: 700; color: #fff; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
         .hero-text p { color: var(--text-muted); font-size: 14px; max-width: 400px; margin: 0 auto; }
 
@@ -297,7 +309,7 @@
             background: linear-gradient(to top, var(--bg-deep) 70%, transparent);
             transition: bottom 0.2s ease;
         }
-        /* New container for file chips above input */
+        /* Container for file chips – FIX #1: no sticky, rely on wrapper */
         #file-staging-container {
             width: 100%;
             min-height: 0;
@@ -307,7 +319,8 @@
             padding-bottom: 8px;
             margin-bottom: 8px;
             border-bottom: 1px solid var(--border-muted);
-            flex-shrink: 0;  /* FIX #1: prevent compression on mobile */
+            flex-shrink: 0;
+            background: var(--bg-deep);
         }
         #file-staging-container:empty {
             display: none;
@@ -341,13 +354,13 @@
         .send-btn:hover { opacity: 0.8; }
         .send-btn:disabled { background: var(--bg-card); color: #4b5563; cursor: not-allowed; }
 
-        /* ===== STOP BUTTON COLOUR FIX (workspace-specific) ===== */
+        /* ===== STOP BUTTON COLOUR FIX (workspace-specific) – FIX #5 ===== */
         .send-btn.btn-stop-active {
             background: var(--bg-card) !important;
             color: var(--text-main) !important;
             border: 1px solid var(--border-muted) !important;
             width: auto !important;
-            padding: 0 12px !important;
+            padding: 0 12px !important; 
             border-radius: 12px !important;
         }
         body.workspace-data .send-btn.btn-stop-active { color: #00FF00 !important; border-color: rgba(0,255,0,0.4) !important; }
@@ -594,7 +607,7 @@
             }
         }
 
-        /* ===== MOBILE UI & RESPONSIVENESS (merged from Recovery.html) ===== */
+        /* ===== MOBILE UI & RESPONSIVENESS ===== */
         @media (max-width: 768px) {
             :root { --viewport-height: 100dvh; }
             body { height: var(--viewport-height); overflow: hidden; }
@@ -650,10 +663,11 @@
                 max-width: 100%;
             }
 
-            .sidebar-footer { margin-top: auto; flex-shrink: 0; }
-            /* FIX #3: ensure Help & Feedback is visible on mobile */
+            .sidebar-footer {
+                padding: 10px 15px;
+            }
             .sidebar-footer .footer-opt { font-size: 12px; padding: 8px; }
-            .sidebar-footer .sidebar-sub-box { padding: 10px; }
+            .sidebar-footer .sidebar-sub-box { padding: 8px; }
         }
 
         @media (max-width: 385px) {
@@ -826,7 +840,8 @@
     <div class="modal-overlay" id="feedback-modal">
         <div class="modal-card">
             <div class="modal-header"><div class="modal-title">System Report</div><button class="close-modal-btn" onclick="closeModals()">✕</button></div>
-            <select id="report-type" class="modal-input" style="min-height:auto;margin-bottom:5px;">
+            <!-- FIX #7: replaced emojis with Material Symbols -->
+            <select id="report-type" class="modal-input" style="min-height: auto; margin-bottom: 5px;">
                 <option value="help"><span class="material-symbols-rounded" style="font-size:18px;">error</span> Report an Error/Bug</option>
                 <option value="feedback"><span class="material-symbols-rounded" style="font-size:18px;">lightbulb</span> Submit UX Feedback</option>
             </select>
@@ -1099,6 +1114,7 @@
         const sidebarNode = document.getElementById('sidebar-container-node');
         const sendBtn = document.getElementById('send-trigger');
         const commandWrapper = document.getElementById('command-wrapper');
+        const heroDisplay = document.getElementById('hero-display');
 
         // ============================================================
         // STATE
@@ -1258,9 +1274,13 @@
         function toggleSidebar() { sidebarNode.classList.toggle('open'); }
         sidebarTriggerArea.addEventListener('click', (e) => { e.stopPropagation();
             sidebarNode.classList.toggle('open'); });
-        window.addEventListener('click', (e) => {
-            if (ignoreSidebarClose) return; // Fix #8
-            if (!sidebarNode.contains(e.target) && e.target !== sidebarTriggerArea) sidebarNode.classList.remove('open');
+
+        // FIX #8: use mousedown to detect clicks, and respect ignoreSidebarClose
+        document.addEventListener('mousedown', (e) => {
+            if (ignoreSidebarClose) return;
+            if (!sidebarNode.contains(e.target) && e.target !== sidebarTriggerArea) {
+                sidebarNode.classList.remove('open');
+            }
             if (!document.querySelector('.account-hub').contains(e.target)) accountDropdownCard.style.display = 'none';
             if (!document.querySelector('.model-hub').contains(e.target)) modelDropdownCard.style.display = 'none';
             if (!e.target.closest('.history-options-btn')) document.querySelectorAll('.actions-dropdown-list').forEach(d =>
@@ -1414,12 +1434,11 @@
             renderFileChips();
             localStorage.removeItem('Axelr_active_session');
             document.querySelectorAll('.chat-bubble').forEach(bubble => bubble.remove());
-            const hero = document.getElementById('hero-display');
-            // Fix #6: only show hero if no active chat
+            // FIX #4 & #6: only show hero if no active chat, and use class to ensure hiding
             if (!activeSessionId) {
-                hero.style.display = 'flex';
+                heroDisplay.classList.remove('hidden');
             } else {
-                hero.style.display = 'none';
+                heroDisplay.classList.add('hidden');
             }
             if (!isBoot) {
                 promptInput.value = '';
@@ -1711,7 +1730,8 @@
         function viewPastLogById(logId) {
             const log = cachedLogHistory.find(l => l._id === logId);
             if (!log) return;
-            document.getElementById('hero-display').style.display = 'none';
+            // FIX #4 & #6: hide hero permanently
+            heroDisplay.classList.add('hidden');
             document.querySelectorAll('.chat-bubble').forEach(b => b.remove());
             activeSessionId = logId;
             localStorage.setItem('axelr_active_session', activeSessionId);
@@ -1788,32 +1808,8 @@
                     }
 
                     const isLast = idx === log.messages.length - 1;
-                    // Pass the message's createdAt to injectActionButtons
-                    injectActionButtons(contentDiv, msg.text, false, isLast, msg.createdAt);
-
-                    if (msg.variants && msg.variants.length > 1) {
-                        const currentIdx = msg.activeVariant || 0;
-                        const variantBar = document.createElement('div');
-                        variantBar.style.cssText =
-                            "display:flex;align-items:center;gap:12px;margin-top:15px;padding-top:10px;border-top:1px solid var(--border-muted);font-size:12px;color:var(--text-muted);font-weight:600;";
-                        const prevBtn = document.createElement('button');
-                        prevBtn.innerHTML = '◀';
-                        prevBtn.style.cssText =
-                            `background:transparent;border:none;cursor:${currentIdx === 0 ? 'default' : 'pointer'};color:${currentIdx === 0 ? 'var(--border-muted)' : 'var(--text-main)'};font-size:14px;`;
-                        if (currentIdx > 0) prevBtn.onclick = () => switchVariant(logId, msg._id, currentIdx - 1);
-                        const nextBtn = document.createElement('button');
-                        nextBtn.innerHTML = '▶';
-                        nextBtn.style.cssText =
-                            `background:transparent;border:none;cursor:${currentIdx === msg.variants.length - 1 ? 'default' : 'pointer'};color:${currentIdx === msg.variants.length - 1 ? 'var(--border-muted)' : 'var(--text-main)'};font-size:14px;`;
-                        if (currentIdx < msg.variants.length - 1) nextBtn.onclick = () => switchVariant(logId, msg
-                            ._id, currentIdx + 1);
-                        variantBar.appendChild(prevBtn);
-                        const countSpan = document.createElement('span');
-                        countSpan.innerText = `${currentIdx + 1} / ${msg.variants.length}`;
-                        variantBar.appendChild(countSpan);
-                        variantBar.appendChild(nextBtn);
-                        contentDiv.appendChild(variantBar);
-                    }
+                    // FIX #10: only show regenerate if this is the active session
+                    injectActionButtons(contentDiv, msg.text, false, isLast, msg.createdAt, logId);
                 }
                 viewport.appendChild(bubble);
             });
@@ -1824,29 +1820,10 @@
             if (window.innerWidth <= 768) sidebarNode.classList.remove('open');
         }
 
-        async function switchVariant(logId, msgId, newIndex) {
-            try {
-                await fetch(`${API_BASE_URL}/api/history/${logId}/variant`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${googleAuthUserToken}` },
-                    body: JSON.stringify({ msgId, variantIndex: newIndex })
-                });
-                const log = cachedLogHistory.find(l => l._id === logId);
-                if (log) {
-                    const msg = log.messages.find(m => m._id === msgId);
-                    if (msg) {
-                        msg.activeVariant = newIndex;
-                        msg.text = msg.variants[newIndex];
-                    }
-                }
-                viewPastLogById(logId);
-            } catch (e) { console.error("Switch failed", e); }
-        }
-
         // ============================================================
         // ACTION BUTTONS (with Regenerate logic + countdown) - FIX #10
         // ============================================================
-        function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, isLast = false, createdAt = null) {
+        function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, isLast = false, createdAt = null, chatId = null) {
             const actionBar = document.createElement('div');
             actionBar.className = 'bubble-action-bar';
 
@@ -1883,15 +1860,16 @@
                 actionBar.appendChild(dislikeBtn);
 
                 // Regenerate - single-use, 30s countdown, only for last message of active session
-                const chatId = activeSessionId;
-                const alreadyRegenerated = regeneratedMap[chatId] || false;
-                const isActiveChat = chatId && chatId === activeSessionId;
+                const currentChat = activeSessionId;
+                const alreadyRegenerated = regeneratedMap[currentChat] || false;
+                const isActiveChat = currentChat && currentChat === chatId; // only if this message's chat is the active one
 
                 if (isLast && !alreadyRegenerated && rawText && isActiveChat && createdAt) {
                     const now = Date.now();
                     const msgTime = new Date(createdAt).getTime();
                     const elapsed = now - msgTime;
-                    if (elapsed < 30000) {
+                    // If createdAt is missing or >30s, don't show
+                    if (!isNaN(msgTime) && elapsed < 30000) {
                         const regenBtn = document.createElement('button');
                         regenBtn.className = 'action-icon-btn regen-active';
                         regenBtn.title = "Regenerate response (available for 30s)";
@@ -1918,7 +1896,7 @@
                                 document.getElementById('prompt-input').style.height = document.getElementById(
                                     'prompt-input').scrollHeight + 'px';
                                 // Mark as regenerated for this chat
-                                regeneratedMap[chatId] = true;
+                                regeneratedMap[currentChat] = true;
                                 clearInterval(timerInterval);
                                 this.remove();
                                 if (regenerateTimer) { clearTimeout(regenerateTimer);
@@ -2084,7 +2062,8 @@
             const command = promptInput.value.trim();
             window.lastUserCommand = command;
 
-            document.getElementById('hero-display').style.display = 'none';
+            // FIX #4: hide hero immediately
+            heroDisplay.classList.add('hidden');
 
             if (!command && stagedFiles.length === 0 && !isRetry) {
                 isProcessing = false;
@@ -2269,7 +2248,7 @@
                                     contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(cleanResponse));
                                     scrollToBottom();
                                 } else if (data.type === 'done') {
-                                    // Fix #2: process done event even if sessionId is null
+                                    // FIX #2: process done event even if sessionId is null
                                     sessionId = data.sessionId;
                                     structuredData = data.structuredData;
                                     filename = data.filename || 'Export.csv';
@@ -2279,6 +2258,11 @@
                                         runningStructuredCache = structuredData;
                                         runningFileTitle = filename;
                                         loadArchiveLogs();
+                                    }
+                                    // Ensure the response is displayed even if empty
+                                    if (!fullResponse.trim()) {
+                                        fullResponse = "I am Axelr AI. How can I help you?";
+                                        contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(fullResponse));
                                     }
                                     const rawCode = extractHtmlCode(fullResponse);
                                     if (rawCode) {
@@ -2300,9 +2284,10 @@
                                     hasRegenerated = false;
                                     if (regenerateTimer) { clearTimeout(regenerateTimer);
                                         regenerateTimer = null; }
-                                    // Pass the response createdAt (now) for regenerate countdown
+                                    // Pass the response createdAt (now) for regenerate countdown, and the chatId
                                     const now = new Date().toISOString();
-                                    injectActionButtons(contentDiv, fullResponse, false, true, now);
+                                    const currentChatId = activeSessionId;
+                                    injectActionButtons(contentDiv, fullResponse, false, true, now, currentChatId);
                                     scrollToBottom();
                                 }
                             } catch (e) { /* ignore malformed JSON */ }
@@ -2357,105 +2342,6 @@
             a.href = url;
             a.download = runningFileTitle;
             a.click();
-        }
-
-        function injectDeployButton(bubbleNode, rawHtml) {
-            const deployContainer = document.createElement('div');
-            deployContainer.style.marginTop = '15px';
-
-            const deployBtn = document.createElement('button');
-            deployBtn.className = 'download-btn-bubble';
-            deployBtn.style.background = 'var(--accent-secondary)';
-            deployBtn.innerHTML = `<span class="material-symbols-rounded" style="font-size:18px;">rocket_launch</span> Deploy Live`;
-
-            const debugBtn = document.createElement('button');
-            debugBtn.className = 'deploy-debug-btn';
-            debugBtn.innerText = 'Debug';
-            debugBtn.style.display = 'none';
-            const errorDetails = document.createElement('div');
-            errorDetails.className = 'deploy-error-details';
-
-            deployContainer.appendChild(deployBtn);
-            deployContainer.appendChild(debugBtn);
-            deployContainer.appendChild(errorDetails);
-            bubbleNode.appendChild(deployContainer);
-
-            let retryCount = 0;
-            const maxRetries = 5;
-            let isDeploying = false;
-
-            async function attemptDeploy() {
-                if (isDeploying) return;
-                isDeploying = true;
-                deployBtn.innerText = 'Deploying...';
-                deployBtn.disabled = true;
-                try {
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
-                    const response = await fetch(`${API_BASE_URL}/api/deploy`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${googleAuthUserToken}` },
-                        body: JSON.stringify({ htmlContent: rawHtml }),
-                        signal: controller.signal
-                    });
-                    clearTimeout(timeoutId);
-                    const result = await response.json();
-                    if (result.success) {
-                        deployBtn.innerHTML =
-                            `<a href="${result.liveUrl}" target="_blank" style="color:#000;text-decoration:none;display:flex;align-items:center;gap:8px;"><span class="material-symbols-rounded" style="font-size:18px;">open_in_new</span> View Live Website</a>`;
-                        deployBtn.style.background = '#3b82f6';
-                        deployBtn.onclick = null;
-                        deployBtn.disabled = false;
-                        debugBtn.style.display = 'none';
-                        isDeploying = false;
-                    } else {
-                        throw new Error(result.message || 'Deployment failed');
-                    }
-                } catch (err) {
-                    console.error('Deploy error:', err);
-                    retryCount++;
-                    if (retryCount <= maxRetries) {
-                        const delay = Math.min(Math.pow(2, retryCount) * 500, 10000);
-                        deployBtn.innerText = `Retrying (${retryCount}/${maxRetries})...`;
-                        deployBtn.disabled = true;
-                        setTimeout(() => {
-                            isDeploying = false;
-                            attemptDeploy();
-                        }, delay);
-                    } else {
-                        // All retries failed
-                        deployBtn.innerText = '⚠️ Deployment Failed';
-                        deployBtn.style.background = '#ef4444';
-                        deployBtn.disabled = false;
-                        debugBtn.style.display = 'inline-block';
-                        errorDetails.textContent = `Error: ${err.message || 'Unknown error'}\nNetwork: ${navigator.onLine ? 'Online' : 'Offline'}`;
-                        errorDetails.classList.add('show');
-                        debugBtn.onclick = () => {
-                            errorDetails.classList.toggle('show');
-                        };
-                        // Add retry button
-                        const retryBtn = document.createElement('button');
-                        retryBtn.className = 'deploy-retry-btn';
-                        retryBtn.innerText = 'Retry Deployment';
-                        retryBtn.onclick = () => {
-                            retryCount = 0;
-                            errorDetails.classList.remove('show');
-                            deployBtn.style.background = 'var(--accent-secondary)';
-                            deployBtn.innerText = 'Deploy Live';
-                            deployBtn.disabled = false;
-                            debugBtn.style.display = 'none';
-                            const oldRetry = deployContainer.querySelector('.deploy-retry-btn');
-                            if (oldRetry) oldRetry.remove();
-                            isDeploying = false;
-                            attemptDeploy();
-                        };
-                        deployContainer.appendChild(retryBtn);
-                        isDeploying = false;
-                    }
-                }
-            }
-
-            deployBtn.onclick = attemptDeploy;
         }
 
         // ============================================================
