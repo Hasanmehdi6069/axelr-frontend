@@ -138,7 +138,7 @@
             transition: all 0.3s ease;
             z-index: 200;
             border-right: 1px solid var(--border-muted);
-            height: 100dvh;
+            height: 100dvh; /* dynamic viewport height */
         }
         #sidebar-container-node.open { left: 0; }
 
@@ -327,7 +327,6 @@
             max-height: 100vh;
             overflow-y: auto;
         }
-        /* Container for file chips – sticky */
         #file-staging-container {
             width: 100%;
             min-height: 0;
@@ -375,7 +374,7 @@
         .send-btn:hover { opacity: 0.8; }
         .send-btn:disabled { background: var(--bg-card); color: #4b5563; cursor: not-allowed; }
 
-        /* ===== STOP BUTTON COLOUR FIX ===== */
+        /* ===== STOP BUTTON COLOUR FIX (workspace-specific) ===== */
         .send-btn.btn-stop-active {
             background: var(--bg-card) !important;
             color: var(--text-main) !important;
@@ -410,7 +409,7 @@
         body.workspace-design .input-frame:focus-within { border-color: #ef4444 !important; box-shadow: 0 0 30px rgba(239,68,68,0.2) !important; }
         body.workspace-design .ai-avatar-bubble svg path:nth-child(2) { stroke: #ef4444 !important; }
 
-        /* ===== UPGRADE MODAL ===== */
+        /* ===== UPGRADE MODAL – STATIC TIER COLOURS & RESPONSIVE LAYOUT ===== */
         .axelr-pricing-container {
             display: flex;
             flex-direction: column;
@@ -558,7 +557,7 @@
         .business-premium .upgrade-btn { background: #EF4444; color: #FFF; }
         .tier-card .upgrade-btn:hover { opacity: 0.9; }
 
-        /* Mobile: single column */
+        /* Mobile: single column, spacious */
         @media (max-width: 768px) {
             .axelr-pricing-container > div {
                 grid-template-columns: 1fr;
@@ -637,7 +636,7 @@
             }
         }
 
-        /* ===== MOBILE UI ===== */
+        /* ===== MOBILE UI & RESPONSIVENESS ===== */
         @media (max-width: 768px) {
             :root { --viewport-height: 100dvh; }
             body { height: var(--viewport-height); overflow: hidden; }
@@ -758,7 +757,6 @@
             50% { opacity: 0.7; }
         }
 
-        /* Retry button for deployment */
         .deploy-retry-btn {
             background: #3b82f6;
             color: #fff;
@@ -795,7 +793,6 @@
         }
         .deploy-error-details.show { display: block; }
 
-        /* ===== MATERIAL SYMBOLS BASE ===== */
         .material-symbols-rounded { font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24; vertical-align: middle; font-size: 24px; }
     </style>
 </head>
@@ -953,7 +950,7 @@
                         <button class="upgrade-btn" onclick="dispatchCheckoutPipeline('business')">Upgrade to Business</button>
                     </div>
                 </div>
-                <!-- FIX #3: Center alignment -->
+                <!-- FIX #3: center the cancel text -->
                 <div style="font-size:12px;color:var(--text-muted);margin-top:10px;text-align:center;width:100%;">Cancel anytime. Secure processing via Stripe.</div>
             </div>
         </div>
@@ -1096,7 +1093,6 @@
 
         <!-- Command Input -->
         <div class="command-wrapper" id="command-wrapper">
-            <!-- File staging container outside input-frame -->
             <div id="file-staging-container"></div>
             <div class="input-frame" id="data-drop-zone">
                 <div class="input-row">
@@ -1127,29 +1123,20 @@
         const AXELR_AVATAR_SVG =
             `<svg viewBox="0 0 100 100" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M50 15 L20 32.5 L20 67.5 L50 85" stroke="#ffffff" stroke-width="6" stroke-linejoin="bevel" fill="rgba(255,255,255,0.05)"/><path d="M50 15 L80 32.5 L50 50 L80 67.5 L50 85" stroke="currentColor" stroke-width="6" stroke-linejoin="bevel" fill="none"/><path d="M20 32.5 L50 50 L20 67.5" stroke="#ffffff" stroke-width="3" stroke-linejoin="bevel" opacity="0.5"/></svg>`;
 
-        // ============================================================
-        // ICONS – Lucide professional icons for actions (FIX #7)
-        // ============================================================
+        // FIX #6: Professional Lucide icons for all actions
         const ICONS = {
             copy: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`,
             edit: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>`,
             thumbsUp: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v12M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4M7 10H4a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h3"/></svg>`,
             thumbsDown: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 14V2M7 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20M17 14h3a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2h-3"/></svg>`,
-            regenerate: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3v6h-6"/><path d="M3 21v-6h6"/><path d="M18.364 5.636a9 9 0 1 1-12.728 12.728"/></svg>`
-        };
-
-        // ============================================================
-        // SIDEBAR ICONS – Lucide SVG for professional look (FIX #6)
-        // ============================================================
-        const SIDEBAR_ICONS = {
-            edit: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>`,
+            regenerate: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3v6h-6"/><path d="M3 21v-6h6"/><path d="M18.364 5.636a9 9 0 1 1-12.728 12.728"/></svg>`,
+            pin: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.5a2.5 2.5 0 0 0-2.5-2.5h-9A2.5 2.5 0 0 0 5 15.5V17z"/><path d="M12 12V8"/><path d="M8 8h8"/></svg>`,
             link: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`,
-            delete: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>`,
-            inventory: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>`,
+            archive: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg>`,
+            trash: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>`,
             undo: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>`,
-            restore: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-3a5 5 0 0 0-5-5 5 5 0 0 0-5 5H4"/><path d="M4 7v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="8" y1="12" x2="8" y2="16"/></svg>`,
-            delete_forever: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>`,
-            push_pin: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 12h14"/><path d="M7 12v-2a5 5 0 0 1 10 0v2"/><circle cx="12" cy="7" r="4"/></svg>`
+            restore: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0"/><polyline points="12 8 12 12 15 15"/></svg>`,
+            delete_forever: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/><path d="M10 4h4"/></svg>`
         };
 
         // ============================================================
@@ -1186,14 +1173,8 @@
         let hasRegenerated = false;
         let currentUserId = null;
         let isProcessing = false;
-
-        // Regenerate per chat tracking
         let regeneratedMap = {};
-
-        // Sidebar close ignore flag (FIX #5)
         let ignoreSidebarClose = false;
-
-        // Manipulation attempt counter (session storage)
         let manipulationCount = parseInt(sessionStorage.getItem('axelr_manipulation_count')) || 0;
         let manipulationLockUntil = parseInt(sessionStorage.getItem('axelr_manipulation_lock')) || 0;
 
@@ -1241,7 +1222,6 @@
                 const maxBottom = window.innerHeight * 0.6;
                 const bottom = Math.min(offsetY, maxBottom);
                 commandWrapper.style.bottom = bottom + 'px';
-                // FIX #8: dynamically set max-height to avoid clipping
                 const availableHeight = window.innerHeight - bottom - 20;
                 commandWrapper.style.maxHeight = availableHeight + 'px';
                 setTimeout(adjustViewportPadding, 50);
@@ -1328,12 +1308,12 @@
         function toggleSidebar() { sidebarNode.classList.toggle('open'); }
         sidebarTriggerArea.addEventListener('click', (e) => { e.stopPropagation();
             sidebarNode.classList.toggle('open'); });
+
+        // FIX #5 & #8: prevent sidebar close when input is focused
         window.addEventListener('click', (e) => {
             if (ignoreSidebarClose) return;
-            // FIX #5: if the click is inside the search input, do not close sidebar
-            if (e.target.closest('#sidebar-search-box') || e.target.closest('#sidebar-search-box input')) {
-                e.stopPropagation();
-                return;
+            if (document.activeElement && document.activeElement.closest('#sidebar-container-node')) {
+                return; // do not close if an input inside sidebar is active
             }
             if (!sidebarNode.contains(e.target) && e.target !== sidebarTriggerArea) sidebarNode.classList.remove('open');
             if (!document.querySelector('.account-hub').contains(e.target)) accountDropdownCard.style.display = 'none';
@@ -1342,14 +1322,9 @@
                 d.classList.remove('active'));
         });
 
-        // FIX #5: increase timeout and clear on blur
-        const searchInput = document.getElementById('sidebar-search-input');
-        searchInput.addEventListener('focus', () => {
+        document.getElementById('sidebar-search-input').addEventListener('focus', () => {
             ignoreSidebarClose = true;
             setTimeout(() => { ignoreSidebarClose = false; }, 500);
-        });
-        searchInput.addEventListener('blur', () => {
-            ignoreSidebarClose = false;
         });
 
         function toggleAccountDropdown(e) { e.stopPropagation();
@@ -1695,21 +1670,27 @@
                 if (cachedLogHistory.length === 0) { historyListContainer.innerHTML =
                         `<div style="color:#4b5563;font-size:12px;text-align:center;padding:15px;">No ${currentTab} chats.</div>`;
                     return; }
-                // FIX #6: Use Lucide SVG icons in sidebar actions
+                // FIX #6: Use Lucide icons for history actions
                 historyListContainer.innerHTML = cachedLogHistory.map(log => `
                     <div class="history-item" onclick="viewPastLogById('${log._id}')">
-                        <div class="history-info"><div class="history-title" id="title-${log._id}">${log.isPinned ? '<span style="display:inline-flex;vertical-align:middle;">' + SIDEBAR_ICONS.push_pin + '</span>' : ''}${escapeHtmlEntities(log.filename)}</div></div>
+                        <div class="history-info"><div class="history-title" id="title-${log._id}">${log.isPinned ? `<span style="margin-right:4px;">${ICONS.pin}</span>` : ''}${escapeHtmlEntities(log.filename)}</div></div>
                         <button class="history-options-btn" onclick="toggleHistoryOptions(event, '${log._id}')">⋮</button>
                         <div class="actions-dropdown-list" id="options-${log._id}">
                             ${currentTab === 'active' ? `
-                                <div class="action-list-item" onclick="renameChat('${log._id}', '${escapeHtmlEntities(log.filename)}', event)"><span style="display:inline-flex;vertical-align:middle;">${SIDEBAR_ICONS.edit}</span> Rename</div>
-                                <div class="action-list-item" onclick="pinChat('${log._id}', event)"><span style="display:inline-flex;vertical-align:middle;">${SIDEBAR_ICONS.push_pin}</span> ${log.isPinned ? 'Unpin' : 'Pin'}</div>
-                                <div class="action-list-item" onclick="shareChat('${log._id}', event)"><span style="display:inline-flex;vertical-align:middle;">${SIDEBAR_ICONS.link}</span> Share Text</div>
-                                <div class="action-list-item" onclick="changeChatStatus('${log._id}', 'archived', event)"><span style="display:inline-flex;vertical-align:middle;">${SIDEBAR_ICONS.inventory}</span> Archive</div>
-                                <div class="action-list-item danger" onclick="changeChatStatus('${log._id}', 'trashed', event)"><span style="display:inline-flex;vertical-align:middle;">${SIDEBAR_ICONS.delete}</span> Trash</div>
+                                <div class="action-list-item" onclick="renameChat('${log._id}', '${escapeHtmlEntities(log.filename)}', event)">${ICONS.edit} Rename</div>
+                                <div class="action-list-item" onclick="pinChat('${log._id}', event)">${ICONS.pin} ${log.isPinned ? 'Unpin' : 'Pin'}</div>
+                                <div class="action-list-item" onclick="shareChat('${log._id}', event)">${ICONS.link} Share Text</div>
+                                <div class="action-list-item" onclick="changeChatStatus('${log._id}', 'archived', event)">${ICONS.archive} Archive</div>
+                                <div class="action-list-item danger" onclick="changeChatStatus('${log._id}', 'trashed', event)">${ICONS.trash} Trash</div>
                             ` : ''}
-                            ${currentTab === 'archived' ? `<div class="action-list-item" onclick="changeChatStatus('${log._id}', 'active', event)"><span style="display:inline-flex;vertical-align:middle;">${SIDEBAR_ICONS.undo}</span> Unarchive</div><div class="action-list-item danger" onclick="changeChatStatus('${log._id}', 'trashed', event)"><span style="display:inline-flex;vertical-align:middle;">${SIDEBAR_ICONS.delete}</span> Trash</div>` : ''}
-                            ${currentTab === 'trashed' ? `<div class="action-list-item" onclick="changeChatStatus('${log._id}', 'active', event)"><span style="display:inline-flex;vertical-align:middle;">${SIDEBAR_ICONS.restore}</span> Restore</div><div class="action-list-item danger" onclick="deleteLogPermanently('${log._id}', event)"><span style="display:inline-flex;vertical-align:middle;">${SIDEBAR_ICONS.delete_forever}</span> Delete Forever</div>` : ''}
+                            ${currentTab === 'archived' ? `
+                                <div class="action-list-item" onclick="changeChatStatus('${log._id}', 'active', event)">${ICONS.undo} Unarchive</div>
+                                <div class="action-list-item danger" onclick="changeChatStatus('${log._id}', 'trashed', event)">${ICONS.trash} Trash</div>
+                            ` : ''}
+                            ${currentTab === 'trashed' ? `
+                                <div class="action-list-item" onclick="changeChatStatus('${log._id}', 'active', event)">${ICONS.restore} Restore</div>
+                                <div class="action-list-item danger" onclick="deleteLogPermanently('${log._id}', event)">${ICONS.delete_forever} Delete Forever</div>
+                            ` : ''}
                         </div>
                     </div>`).join('');
                 if (isInitialAppLoad) {
@@ -1787,6 +1768,9 @@
                     loadArchiveLogs(); } } catch (e) {}
         }
 
+        // ============================================================
+        // viewPastLogById – FIX #4: pass isRegenerated flag
+        // ============================================================
         function viewPastLogById(logId) {
             const log = cachedLogHistory.find(l => l._id === logId);
             if (!log) return;
@@ -1867,11 +1851,9 @@
                     }
 
                     const isLast = idx === log.messages.length - 1;
-                    // FIX #4: compute showRegenerate flag
-                    const alreadyRegenerated = msg.variants && msg.variants.length > 1;
-                    const isActive = log.status === 'active';
-                    const showRegenerate = isLast && isActive && !alreadyRegenerated && (new Date() - new Date(msg.createdAt) < 30000);
-                    injectActionButtons(contentDiv, msg.text, false, showRegenerate, msg.createdAt);
+                    // FIX #4: check if this message already has variants > 1 (regenerated)
+                    const isRegenerated = msg.variants && msg.variants.length > 1;
+                    injectActionButtons(contentDiv, msg.text, false, isLast, msg.createdAt, isRegenerated);
 
                     if (msg.variants && msg.variants.length > 1) {
                         const currentIdx = msg.activeVariant || 0;
@@ -1928,7 +1910,7 @@
         // ============================================================
         // ACTION BUTTONS – FIX #4 & #7
         // ============================================================
-        function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRegenerate = false, createdAt = null) {
+        function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, isLast = false, createdAt = null, isRegenerated = false) {
             const actionBar = document.createElement('div');
             actionBar.className = 'bubble-action-bar';
 
@@ -1964,8 +1946,10 @@
                 actionBar.appendChild(likeBtn);
                 actionBar.appendChild(dislikeBtn);
 
-                // Regenerate – only if showRegenerate is true
-                if (showRegenerate && createdAt) {
+                // Regenerate – only if isLast, not regenerated, and within 30s
+                const chatId = activeSessionId;
+                const isActiveChat = chatId && chatId === activeSessionId;
+                if (isLast && !isRegenerated && rawText && isActiveChat && createdAt) {
                     const now = Date.now();
                     const msgTime = new Date(createdAt).getTime();
                     const elapsed = now - msgTime;
@@ -1995,7 +1979,7 @@
                                 document.getElementById('prompt-input').style.height = 'auto';
                                 document.getElementById('prompt-input').style.height = document.getElementById(
                                     'prompt-input').scrollHeight + 'px';
-                                regeneratedMap[activeSessionId] = true;
+                                regeneratedMap[chatId] = true;
                                 clearInterval(timerInterval);
                                 this.remove();
                                 if (regenerateTimer) { clearTimeout(regenerateTimer);
@@ -2078,7 +2062,7 @@
         }
 
         // ============================================================
-        // SECURITY LAYER
+        // SECURITY LAYER: Tiered Manipulation Detection
         // ============================================================
         function detectManipulationAttempt(command) {
             const patterns = [
@@ -2134,9 +2118,10 @@
         }
 
         // ============================================================
-        // EXECUTE COMMAND
+        // EXECUTE COMMAND – FIX #1, #2, #4, #5
         // ============================================================
         async function executeCommand(isRetry = false) {
+            // Immediately hide hero and prevent concurrent
             document.getElementById('hero-display').style.display = 'none';
             if (isProcessing) return;
             isProcessing = true;
@@ -2162,6 +2147,7 @@
                 return;
             }
 
+            // ---- SECURITY CHECK ----
             if (detectManipulationAttempt(command)) {
                 manipulationCount++;
                 sessionStorage.setItem('axelr_manipulation_count', manipulationCount);
@@ -2184,11 +2170,13 @@
                 return;
             }
 
+            // ---- TECH BEAST MODE – but adaptive length (FIX #7) ----
             let finalCommand = command;
             const conciseIndicators = [/concise/i, /short/i, /brief/i, /summarize/i, /tl;dr/i];
             const wantsConcise = conciseIndicators.some(re => re.test(command));
             if (!wantsConcise) {
-                finalCommand = `Tech Beast Mode: Provide a comprehensive, production-ready solution. Prioritize quality, completeness, and best practices. Do not be brief; deliver a thorough, industry-standard response. Only be concise if the user explicitly requests brevity.\n\nUser request: ${command}`;
+                // Add adaptive instruction: if complex, provide full; else concise
+                finalCommand = `Tech Beast Mode: Provide a comprehensive, production-ready solution for complex tasks. For simple questions, keep it concise (≤3 paragraphs). \n\nUser request: ${command}`;
             }
 
             const originalBtnHtml = sendBtn.innerHTML;
@@ -2207,6 +2195,7 @@
             validateSendCommand();
             sendBtn.disabled = true;
 
+            // User bubble
             const userBubble = document.createElement('div');
             userBubble.className = 'chat-bubble user-bubble';
             let filesHtml = '';
@@ -2217,6 +2206,7 @@
             }
             userBubble.innerHTML = `${filesHtml}${DOMPurify.sanitize(marked.parse(command || " "))}`;
             viewport.appendChild(userBubble);
+            scrollToBottom(); // FIX #2: ensure bubble is visible
 
             if (isRetry) {
                 const allBubbles = viewport.querySelectorAll('.chat-bubble');
@@ -2235,6 +2225,7 @@
             stagedFiles = [];
             renderFileChips();
 
+            // AI bubble
             const nexusBubble = document.createElement('div');
             nexusBubble.className = 'chat-bubble nexus-bubble';
             const avatarDiv = document.createElement('div');
@@ -2336,7 +2327,7 @@
                                     contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(cleanResponse));
                                     scrollToBottom();
                                 } else if (data.type === 'done') {
-                                    // FIX #1: if fullResponse empty, use finalResponse
+                                    // FIX #1: if fullResponse is empty, use finalResponse
                                     if (!fullResponse && data.finalResponse) {
                                         fullResponse = data.finalResponse;
                                         contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(fullResponse));
@@ -2349,7 +2340,6 @@
                                         localStorage.setItem('axelr_active_session', activeSessionId);
                                         runningStructuredCache = structuredData;
                                         runningFileTitle = filename;
-                                        // FIX #1: refresh history to show new chat
                                         loadArchiveLogs();
                                     }
                                     const rawCode = extractHtmlCode(fullResponse);
@@ -2373,8 +2363,8 @@
                                     if (regenerateTimer) { clearTimeout(regenerateTimer);
                                         regenerateTimer = null; }
                                     const now = new Date().toISOString();
-                                    // Show regenerate for this new message
-                                    injectActionButtons(contentDiv, fullResponse, false, true, now);
+                                    // New message, not regenerated
+                                    injectActionButtons(contentDiv, fullResponse, false, true, now, false);
                                     scrollToBottom();
                                 }
                             } catch (e) { /* ignore malformed JSON */ }
