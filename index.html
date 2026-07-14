@@ -307,7 +307,7 @@
             padding-bottom: 8px;
             margin-bottom: 8px;
             border-bottom: 1px solid var(--border-muted);
-            transition: min-height 0.2s;
+            flex-shrink: 0;  /* FIX #1: prevent compression on mobile */
         }
         #file-staging-container:empty {
             display: none;
@@ -350,8 +350,8 @@
             padding: 0 12px !important;
             border-radius: 12px !important;
         }
-        body.workspace-data .send-btn.btn-stop-active { color: #10B981 !important; border-color: rgba(16,185,129,0.4) !important; }
-        body.workspace-design .send-btn.btn-stop-active { color: #EF4444 !important; border-color: rgba(239,68,68,0.4) !important; }
+        body.workspace-data .send-btn.btn-stop-active { color: #00FF00 !important; border-color: rgba(0,255,0,0.4) !important; }
+        body.workspace-design .send-btn.btn-stop-active { color: #DC143C !important; border-color: rgba(220,20,60,0.4) !important; }
 
         .download-btn-bubble { background: var(--accent-glow); color: #000; border: none; padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; margin-top: 15px; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; }
         .download-btn-bubble:hover { opacity: 0.9; transform: translateY(-1px); }
@@ -651,6 +651,9 @@
             }
 
             .sidebar-footer { margin-top: auto; flex-shrink: 0; }
+            /* FIX #3: ensure Help & Feedback is visible on mobile */
+            .sidebar-footer .footer-opt { font-size: 12px; padding: 8px; }
+            .sidebar-footer .sidebar-sub-box { padding: 10px; }
         }
 
         @media (max-width: 385px) {
@@ -901,8 +904,8 @@
                         <button class="upgrade-btn" onclick="dispatchCheckoutPipeline('business')">Upgrade to Business</button>
                     </div>
                 </div>
-                <div style="font-size:12px;color:var(--text-muted);margin-top:10px;text-align:center;">Cancel anytime. Secure processing via Stripe.</div>
-            </div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 10px; text-align: center;">Cancel anytime. Secure processing via Stripe.</div>
+        </div>
         </div>
     </div>
 
@@ -1115,6 +1118,13 @@
         let lastMessageTimestamp = 0;
         let hasRegenerated = false;
         let currentUserId = null;
+        let isProcessing = false; // Fix #4: prevent concurrent submits
+
+        // Regenerate per chat tracking
+        let regeneratedMap = {};
+
+        // Sidebar close ignore flag (Fix #8)
+        let ignoreSidebarClose = false;
 
         // Manipulation attempt counter (session storage)
         let manipulationCount = parseInt(sessionStorage.getItem('axelr_manipulation_count')) || 0;
@@ -1190,17 +1200,22 @@
         // ============================================================
         function renderFileChips() {
             if (stagedFiles.length === 0) {
+                fileStagingContainer.style.display = 'none';
                 fileStagingContainer.innerHTML = '';
                 return;
             }
+            fileStagingContainer.style.display = 'flex';
             fileStagingContainer.innerHTML = stagedFiles.map((file, idx) =>
-                `<div class="file-chip" style="display:flex;align-items:center;gap:8px;max-width:100%;">
+                `<div class="file-chip" style="display:flex;align-items:center;gap:8px;max-width:100%;flex-shrink:0;">
                     <span class="material-symbols-rounded" style="font-size:16px;">description</span>
                     <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;display:inline-block;vertical-align:middle;">${escapeHtmlEntities(file.name)}</span>
                     <span style="cursor:pointer;color:#ef4444;font-weight:bold;font-size:14px;flex-shrink:0;padding-left:4px;" onclick="removeStagedFile(${idx})">✕</span>
                 </div>`
             ).join('');
-            fileStagingContainer.style.display = 'flex';
+            // Force reflow to ensure visibility on mobile
+            requestAnimationFrame(() => {
+                fileStagingContainer.style.display = 'flex';
+            });
         }
 
         function removeStagedFile(idx) { stagedFiles.splice(idx, 1);
@@ -1244,11 +1259,18 @@
         sidebarTriggerArea.addEventListener('click', (e) => { e.stopPropagation();
             sidebarNode.classList.toggle('open'); });
         window.addEventListener('click', (e) => {
+            if (ignoreSidebarClose) return; // Fix #8
             if (!sidebarNode.contains(e.target) && e.target !== sidebarTriggerArea) sidebarNode.classList.remove('open');
             if (!document.querySelector('.account-hub').contains(e.target)) accountDropdownCard.style.display = 'none';
             if (!document.querySelector('.model-hub').contains(e.target)) modelDropdownCard.style.display = 'none';
             if (!e.target.closest('.history-options-btn')) document.querySelectorAll('.actions-dropdown-list').forEach(d =>
                 d.classList.remove('active'));
+        });
+
+        // Fix #8: ignore sidebar close when search input is focused
+        document.getElementById('sidebar-search-input').addEventListener('focus', () => {
+            ignoreSidebarClose = true;
+            setTimeout(() => { ignoreSidebarClose = false; }, 300);
         });
 
         function toggleAccountDropdown(e) { e.stopPropagation();
@@ -1393,9 +1415,12 @@
             localStorage.removeItem('Axelr_active_session');
             document.querySelectorAll('.chat-bubble').forEach(bubble => bubble.remove());
             const hero = document.getElementById('hero-display');
-            hero.style.display = 'none';
-            void hero.offsetWidth;
-            hero.style.display = 'flex';
+            // Fix #6: only show hero if no active chat
+            if (!activeSessionId) {
+                hero.style.display = 'flex';
+            } else {
+                hero.style.display = 'none';
+            }
             if (!isBoot) {
                 promptInput.value = '';
                 promptInput.style.height = 'auto';
@@ -1594,18 +1619,18 @@
                     return; }
                 historyListContainer.innerHTML = cachedLogHistory.map(log => `
                     <div class="history-item" onclick="viewPastLogById('${log._id}')">
-                        <div class="history-info"><div class="history-title" id="title-${log._id}">${log.isPinned ? '📌 ' : ''}${escapeHtmlEntities(log.filename)}</div></div>
+                        <div class="history-info"><div class="history-title" id="title-${log._id}">${log.isPinned ? '<span class="material-symbols-rounded" style="font-size:14px;">push_pin</span>' : ''}${escapeHtmlEntities(log.filename)}</div></div>
                         <button class="history-options-btn" onclick="toggleHistoryOptions(event, '${log._id}')">⋮</button>
                         <div class="actions-dropdown-list" id="options-${log._id}">
                             ${currentTab === 'active' ? `
-                                <div class="action-list-item" onclick="renameChat('${log._id}', '${escapeHtmlEntities(log.filename)}', event)">✏️ Rename</div>
-                                <div class="action-list-item" onclick="pinChat('${log._id}', event)">📌 ${log.isPinned ? 'Unpin' : 'Pin'}</div>
-                                <div class="action-list-item" onclick="shareChat('${log._id}', event)">🔗 Share Text</div>
-                                <div class="action-list-item" onclick="changeChatStatus('${log._id}', 'archived', event)">📦 Archive</div>
-                                <div class="action-list-item danger" onclick="changeChatStatus('${log._id}', 'trashed', event)">🗑️ Trash</div>
+                                <div class="action-list-item" onclick="renameChat('${log._id}', '${escapeHtmlEntities(log.filename)}', event)"><span class="material-symbols-rounded" style="font-size:16px;">edit</span> Rename</div>
+                                <div class="action-list-item" onclick="pinChat('${log._id}', event)"><span class="material-symbols-rounded" style="font-size:16px;">push_pin</span> ${log.isPinned ? 'Unpin' : 'Pin'}</div>
+                                <div class="action-list-item" onclick="shareChat('${log._id}', event)"><span class="material-symbols-rounded" style="font-size:16px;">link</span> Share Text</div>
+                                <div class="action-list-item" onclick="changeChatStatus('${log._id}', 'archived', event)"><span class="material-symbols-rounded" style="font-size:16px;">inventory</span> Archive</div>
+                                <div class="action-list-item danger" onclick="changeChatStatus('${log._id}', 'trashed', event)"><span class="material-symbols-rounded" style="font-size:16px;">delete</span> Trash</div>
                             ` : ''}
-                            ${currentTab === 'archived' ? `<div class="action-list-item" onclick="changeChatStatus('${log._id}', 'active', event)">↩️ Unarchive</div><div class="action-list-item danger" onclick="changeChatStatus('${log._id}', 'trashed', event)">🗑️ Trash</div>` : ''}
-                            ${currentTab === 'trashed' ? `<div class="action-list-item" onclick="changeChatStatus('${log._id}', 'active', event)">↩️ Restore</div><div class="action-list-item danger" onclick="deleteLogPermanently('${log._id}', event)">💀 Delete Forever</div>` : ''}
+                            ${currentTab === 'archived' ? `<div class="action-list-item" onclick="changeChatStatus('${log._id}', 'active', event)"><span class="material-symbols-rounded" style="font-size:16px;">undo</span> Unarchive</div><div class="action-list-item danger" onclick="changeChatStatus('${log._id}', 'trashed', event)"><span class="material-symbols-rounded" style="font-size:16px;">delete</span> Trash</div>` : ''}
+                            ${currentTab === 'trashed' ? `<div class="action-list-item" onclick="changeChatStatus('${log._id}', 'active', event)"><span class="material-symbols-rounded" style="font-size:16px;">restore</span> Restore</div><div class="action-list-item danger" onclick="deleteLogPermanently('${log._id}', event)"><span class="material-symbols-rounded" style="font-size:16px;">delete_forever</span> Delete Forever</div>` : ''}
                         </div>
                     </div>`).join('');
                 if (isInitialAppLoad) {
@@ -1698,7 +1723,7 @@
                 trashMsg.className = 'chat-bubble';
                 trashMsg.style.cssText =
                     "background:rgba(239,68,68,0.1);color:#ef4444;padding:15px;text-align:center;border-radius:8px;margin-bottom:20px;width:100%;";
-                trashMsg.innerHTML = `🗑️ This chat is in the trash. Restore it to continue chatting.`;
+                trashMsg.innerHTML = `<span class="material-symbols-rounded" style="font-size:20px;">delete</span> This chat is in the trash. Restore it to continue chatting.`;
                 viewport.appendChild(trashMsg);
             }
 
@@ -1763,7 +1788,8 @@
                     }
 
                     const isLast = idx === log.messages.length - 1;
-                    injectActionButtons(contentDiv, msg.text, false, isLast);
+                    // Pass the message's createdAt to injectActionButtons
+                    injectActionButtons(contentDiv, msg.text, false, isLast, msg.createdAt);
 
                     if (msg.variants && msg.variants.length > 1) {
                         const currentIdx = msg.activeVariant || 0;
@@ -1818,9 +1844,9 @@
         }
 
         // ============================================================
-        // ACTION BUTTONS (with Regenerate logic + countdown)
+        // ACTION BUTTONS (with Regenerate logic + countdown) - FIX #10
         // ============================================================
-        function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, isLast = false) {
+        function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, isLast = false, createdAt = null) {
             const actionBar = document.createElement('div');
             actionBar.className = 'bubble-action-bar';
 
@@ -1856,52 +1882,62 @@
                 actionBar.appendChild(likeBtn);
                 actionBar.appendChild(dislikeBtn);
 
-                // Regenerate - single-use, 30s countdown
-                if (isLast && !hasRegenerated && rawText) {
-                    const regenBtn = document.createElement('button');
-                    regenBtn.className = 'action-icon-btn regen-active';
-                    regenBtn.title = "Regenerate response (available for 30s)";
-                    regenBtn.innerHTML = ICONS.regenerate + `<span class="regen-countdown">30s</span>`;
-                    let remaining = 30;
-                    const timerInterval = setInterval(() => {
-                        remaining--;
-                        const countSpan = regenBtn.querySelector('.regen-countdown');
-                        if (countSpan) {
-                            countSpan.textContent = remaining + 's';
-                        }
-                        if (remaining <= 0) {
-                            clearInterval(timerInterval);
+                // Regenerate - single-use, 30s countdown, only for last message of active session
+                const chatId = activeSessionId;
+                const alreadyRegenerated = regeneratedMap[chatId] || false;
+                const isActiveChat = chatId && chatId === activeSessionId;
+
+                if (isLast && !alreadyRegenerated && rawText && isActiveChat && createdAt) {
+                    const now = Date.now();
+                    const msgTime = new Date(createdAt).getTime();
+                    const elapsed = now - msgTime;
+                    if (elapsed < 30000) {
+                        const regenBtn = document.createElement('button');
+                        regenBtn.className = 'action-icon-btn regen-active';
+                        regenBtn.title = "Regenerate response (available for 30s)";
+                        regenBtn.innerHTML = ICONS.regenerate + `<span class="regen-countdown">${Math.ceil((30000 - elapsed)/1000)}s</span>`;
+                        let remaining = Math.ceil((30000 - elapsed)/1000);
+                        const timerInterval = setInterval(() => {
+                            remaining--;
+                            const countSpan = regenBtn.querySelector('.regen-countdown');
+                            if (countSpan) {
+                                countSpan.textContent = remaining + 's';
+                            }
+                            if (remaining <= 0) {
+                                clearInterval(timerInterval);
+                                if (regenBtn.parentNode) {
+                                    regenBtn.remove();
+                                }
+                            }
+                        }, 1000);
+
+                        regenBtn.onclick = function(e) {
+                            if (window.lastUserCommand) {
+                                document.getElementById('prompt-input').value = window.lastUserCommand;
+                                document.getElementById('prompt-input').style.height = 'auto';
+                                document.getElementById('prompt-input').style.height = document.getElementById(
+                                    'prompt-input').scrollHeight + 'px';
+                                // Mark as regenerated for this chat
+                                regeneratedMap[chatId] = true;
+                                clearInterval(timerInterval);
+                                this.remove();
+                                if (regenerateTimer) { clearTimeout(regenerateTimer);
+                                    regenerateTimer = null; }
+                                executeCommand(true);
+                            }
+                        };
+                        actionBar.appendChild(regenBtn);
+
+                        // Auto-remove after remaining time
+                        regenerateTimer = setTimeout(() => {
                             if (regenBtn.parentNode) {
                                 regenBtn.remove();
+                                clearInterval(timerInterval);
+                                regenerateTimer = null;
                             }
-                        }
-                    }, 1000);
-
-                    regenBtn.onclick = function(e) {
-                        if (window.lastUserCommand) {
-                            document.getElementById('prompt-input').value = window.lastUserCommand;
-                            document.getElementById('prompt-input').style.height = 'auto';
-                            document.getElementById('prompt-input').style.height = document.getElementById(
-                                'prompt-input').scrollHeight + 'px';
-                            hasRegenerated = true;
-                            clearInterval(timerInterval);
-                            this.remove();
-                            if (regenerateTimer) { clearTimeout(regenerateTimer);
-                                regenerateTimer = null; }
-                            executeCommand(true);
-                        }
-                    };
-                    actionBar.appendChild(regenBtn);
-
-                    // Also auto-remove after 30s if not clicked (timer already handles)
-                    regenerateTimer = setTimeout(() => {
-                        if (regenBtn.parentNode) {
-                            regenBtn.remove();
-                            clearInterval(timerInterval);
-                            regenerateTimer = null;
-                        }
-                    }, 30000);
-                    lastMessageTimestamp = Date.now();
+                        }, 30000 - elapsed);
+                        lastMessageTimestamp = Date.now();
+                    }
                 }
             }
             bubbleNode.appendChild(actionBar);
@@ -1936,7 +1972,7 @@
             promptInput.disabled = true;
             inputFrame.style.filter = 'blur(4px) brightness(0.8)';
             inputFrame.style.pointerEvents = 'none';
-            enhanceBtn.innerHTML = '<span style="font-size:12px;font-weight:bold;letter-spacing:1px;color:var(--accent-glow);">✨ PROCESSING...</span>';
+            enhanceBtn.innerHTML = '<span style="font-size:12px;font-weight:bold;letter-spacing:1px;color:var(--accent-glow);"><span class="material-symbols-rounded" style="font-size:16px;">auto_awesome</span> PROCESSING...</span>';
             try {
                 const response = await fetch(`${API_BASE_URL}/api/enhance-prompt`, {
                     method: 'POST',
@@ -2026,10 +2062,15 @@
         // EXECUTE COMMAND - with Tech Beast Mode & manipulation guard
         // ============================================================
         async function executeCommand(isRetry = false) {
+            // Fix #4: prevent concurrent submits
+            if (isProcessing) return;
+            isProcessing = true;
+
             // Check lock
             if (manipulationLockUntil && Date.now() < manipulationLockUntil) {
                 const remaining = Math.ceil((manipulationLockUntil - Date.now()) / 1000);
                 alert(`⛔ System temporarily locked due to security violations. Please wait ${remaining} seconds.`);
+                isProcessing = false;
                 return;
             }
 
@@ -2045,7 +2086,10 @@
 
             document.getElementById('hero-display').style.display = 'none';
 
-            if (!command && stagedFiles.length === 0 && !isRetry) return;
+            if (!command && stagedFiles.length === 0 && !isRetry) {
+                isProcessing = false;
+                return;
+            }
 
             // ---- SECURITY CHECK ----
             if (detectManipulationAttempt(command)) {
@@ -2068,6 +2112,7 @@
                 promptInput.style.height = 'auto';
                 validateSendCommand();
                 localStorage.removeItem(getDraftKey());
+                isProcessing = false;
                 return;
             }
 
@@ -2086,6 +2131,7 @@
                 globalAbortController = null;
                 sendBtn.classList.remove('btn-stop-active');
                 sendBtn.innerHTML = originalBtnHtml;
+                isProcessing = false;
                 return;
             }
 
@@ -2189,12 +2235,14 @@
                         contentDiv.innerHTML = `💥 Error: ${errorData.message || 'Pipeline failed.'}`;
                     }
                     scrollToBottom();
+                    isProcessing = false;
                     return;
                 }
 
                 if (!response.body) {
                     contentDiv.innerHTML = `⚠️ No response body.`;
                     scrollToBottom();
+                    isProcessing = false;
                     return;
                 }
 
@@ -2221,6 +2269,7 @@
                                     contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(cleanResponse));
                                     scrollToBottom();
                                 } else if (data.type === 'done') {
+                                    // Fix #2: process done event even if sessionId is null
                                     sessionId = data.sessionId;
                                     structuredData = data.structuredData;
                                     filename = data.filename || 'Export.csv';
@@ -2251,7 +2300,9 @@
                                     hasRegenerated = false;
                                     if (regenerateTimer) { clearTimeout(regenerateTimer);
                                         regenerateTimer = null; }
-                                    injectActionButtons(contentDiv, fullResponse, false, true);
+                                    // Pass the response createdAt (now) for regenerate countdown
+                                    const now = new Date().toISOString();
+                                    injectActionButtons(contentDiv, fullResponse, false, true, now);
                                     scrollToBottom();
                                 }
                             } catch (e) { /* ignore malformed JSON */ }
@@ -2278,6 +2329,7 @@
                     adjustViewportPadding();
                 }, 50);
                 await loadUserProfile();
+                isProcessing = false; // Fix #4
             }
         }
 
