@@ -161,19 +161,7 @@
         .action-list-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
         .action-list-item.danger:hover { background: rgba(239,68,68,0.1); color: #ef4444; }
 
-        .sidebar-footer {
-            padding: 15px;
-            border-top: 1px solid var(--border-muted);
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            margin-top: auto;
-            flex-shrink: 0;
-            position: sticky;  /* FIX #3: keep footer visible on mobile */
-            bottom: 0;
-            background: var(--bg-sidebar);
-            z-index: 10;
-        }
+        .sidebar-footer { padding: 15px; border-top: 1px solid var(--border-muted); display: flex; flex-direction: column; gap: 5px; margin-top: auto; flex-shrink: 0; }
         .footer-opt { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 10px; color: var(--text-muted); font-size: 13px; cursor: pointer; transition: 0.2s; }
         .footer-opt:hover { background: rgba(255,255,255,0.05); color: #fff; }
 
@@ -309,7 +297,7 @@
             background: linear-gradient(to top, var(--bg-deep) 70%, transparent);
             transition: bottom 0.2s ease;
         }
-        /* Container for file chips – FIX #1: ensure it stays visible */
+        /* New container for file chips above input */
         #file-staging-container {
             width: 100%;
             min-height: 0;
@@ -319,11 +307,7 @@
             padding-bottom: 8px;
             margin-bottom: 8px;
             border-bottom: 1px solid var(--border-muted);
-            flex-shrink: 0;
-            position: sticky;  /* keep it above the keyboard */
-            top: 0;
-            background: var(--bg-deep);
-            z-index: 5;
+            flex-shrink: 0;  /* FIX #1: prevent compression on mobile */
         }
         #file-staging-container:empty {
             display: none;
@@ -357,17 +341,17 @@
         .send-btn:hover { opacity: 0.8; }
         .send-btn:disabled { background: var(--bg-card); color: #4b5563; cursor: not-allowed; }
 
-        /* ===== STOP BUTTON COLOUR FIX (workspace-specific) – FIX #5 ===== */
+        /* ===== STOP BUTTON COLOUR FIX (workspace-specific) ===== */
         .send-btn.btn-stop-active {
             background: var(--bg-card) !important;
             color: var(--text-main) !important;
             border: 1px solid var(--border-muted) !important;
             width: auto !important;
-            padding: 0 12px !important; 
+            padding: 0 12px !important;
             border-radius: 12px !important;
         }
-        body.workspace-data .send-btn.btn-stop-active { color:#10b981 !important; border-color: rgba(16,185,129,0.4) !important; }
-        body.workspace-design .send-btn.btn-stop-active { color: #ef4444 !important; border-color: rgba(220,20,60,0.4) !important; }
+        body.workspace-data .send-btn.btn-stop-active { color: #00FF00 !important; border-color: rgba(0,255,0,0.4) !important; }
+        body.workspace-design .send-btn.btn-stop-active { color: #DC143C !important; border-color: rgba(220,20,60,0.4) !important; }
 
         .download-btn-bubble { background: var(--accent-glow); color: #000; border: none; padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; margin-top: 15px; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; }
         .download-btn-bubble:hover { opacity: 0.9; transform: translateY(-1px); }
@@ -610,7 +594,7 @@
             }
         }
 
-        /* ===== MOBILE UI & RESPONSIVENESS ===== */
+        /* ===== MOBILE UI & RESPONSIVENESS (merged from Recovery.html) ===== */
         @media (max-width: 768px) {
             :root { --viewport-height: 100dvh; }
             body { height: var(--viewport-height); overflow: hidden; }
@@ -666,13 +650,10 @@
                 max-width: 100%;
             }
 
-            .sidebar-footer {
-                margin-top: auto;
-                flex-shrink: 0;
-                padding: 10px 15px;
-            }
+            .sidebar-footer { margin-top: auto; flex-shrink: 0; }
+            /* FIX #3: ensure Help & Feedback is visible on mobile */
             .sidebar-footer .footer-opt { font-size: 12px; padding: 8px; }
-            .sidebar-footer .sidebar-sub-box { padding: 8px; }
+            .sidebar-footer .sidebar-sub-box { padding: 10px; }
         }
 
         @media (max-width: 385px) {
@@ -845,9 +826,9 @@
     <div class="modal-overlay" id="feedback-modal">
         <div class="modal-card">
             <div class="modal-header"><div class="modal-title">System Report</div><button class="close-modal-btn" onclick="closeModals()">✕</button></div>
-            <select id="report-type" class="modal-input" style="min-height: auto; margin-bottom: 5px;">
-                <option value="help">🔴 Report an Error/Bug</option>
-                <option value="feedback">💡 Submit UX Feedback</option>
+            <select id="report-type" class="modal-input" style="min-height:auto;margin-bottom:5px;">
+                <option value="help"><span class="material-symbols-rounded" style="font-size:18px;">error</span> Report an Error/Bug</option>
+                <option value="feedback"><span class="material-symbols-rounded" style="font-size:18px;">lightbulb</span> Submit UX Feedback</option>
             </select>
             <textarea class="modal-input" id="feedback-input" placeholder="Describe the anomaly or feedback..."></textarea>
             <button class="modal-submit-btn" onclick="submitTelemetryReport()">Dispatch Log</button>
@@ -2103,7 +2084,7 @@
             const command = promptInput.value.trim();
             window.lastUserCommand = command;
 
-            document.getElementById('hero-display').style.display = 'none'; // FIX #4: hide hero immediately
+            document.getElementById('hero-display').style.display = 'none';
 
             if (!command && stagedFiles.length === 0 && !isRetry) {
                 isProcessing = false;
