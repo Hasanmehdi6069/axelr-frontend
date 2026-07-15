@@ -120,7 +120,7 @@
         /* ===== MAIN WRAPPER ===== */
         .main-wrapper { flex: 1; display: none; flex-direction: column; position: relative; height: 100vh; width: 100%; overflow: hidden; opacity: 0; transition: opacity 0.4s ease; }
 
-        /* ===== SIDEBAR – FIX #3: overflow scroll, footer relative ===== */
+        /* ===== SIDEBAR ===== */
         #sidebar-trigger-area { position: absolute; left: 0; top: 0; bottom: 0; width: 32px; z-index: 199; cursor: pointer; background: rgba(255,255,255,0.02); border-right: 1px solid var(--border-muted); display: flex; align-items: center; justify-content: center; transition: 0.3s; }
         #sidebar-trigger-area:hover { background: rgba(255,255,255,0.05); width: 40px; box-shadow: 2px 0 15px rgba(0,0,0,0.5); }
         .trigger-text { writing-mode: vertical-rl; transform: rotate(180deg); letter-spacing: 3px; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--text-muted); font-weight: 600; text-transform: uppercase; transition: 0.3s; white-space: nowrap; }
@@ -139,7 +139,7 @@
             z-index: 200;
             border-right: 1px solid var(--border-muted);
             height: 100dvh;
-            overflow-y: auto; /* allow scrolling of entire sidebar */
+            overflow-y: auto;
         }
         #sidebar-container-node.open { left: 0; }
 
@@ -159,7 +159,7 @@
         .sidebar-search-box input { background: transparent; border: none; color: #fff; font-size: 13px; width: 100%; outline: none; }
         .sidebar-search-box input::placeholder { color: var(--text-muted); }
 
-        #sidebar-content { flex: 1; overflow-y: auto; padding: 0 15px 15px 15px; display: flex; flex-direction: column; gap: 8px; }
+        #sidebar-content { flex: 1; overflow-y: auto; padding: 0 15px 15px 15px; display: flex; flex-direction: column; gap: 8px; padding-bottom: 80px; /* space for sticky footer */ }
         .sidebar-section-label { font-size: 11px; text-transform: uppercase; color: #4b5563; font-weight: 600; letter-spacing: 1px; margin: 10px 5px 5px 5px; }
 
         .history-item { padding: 12px 14px; border-radius: 12px; background: rgba(255,255,255,0.01); border: 1px solid transparent; cursor: pointer; transition: 0.2s; display: flex; justify-content: space-between; align-items: center; position: relative; }
@@ -181,12 +181,12 @@
             display: flex;
             flex-direction: column;
             gap: 5px;
-            margin-top: auto;
             flex-shrink: 0;
-            position: relative; /* not sticky to avoid cutoff */
+            position: sticky;
+            bottom: 0;
             background: var(--bg-sidebar);
             z-index: 10;
-            min-height: 60px;
+            min-height: 80px;
         }
         .footer-opt { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 10px; color: var(--text-muted); font-size: 13px; cursor: pointer; transition: 0.2s; }
         .footer-opt:hover { background: rgba(255,255,255,0.05); color: #fff; }
@@ -291,7 +291,7 @@
 
         /* ===== ACTION BAR ===== */
         .bubble-action-bar { display: flex; gap: 8px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border-muted); flex-wrap: wrap; }
-        .action-icon-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 4px 10px; border-radius: 6px; transition: 0.2s; font-size: 12px; font-family: 'Inter'; font-weight: 500; }
+        .action-icon-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 4px 10px; border-radius: 6px; transition: 0.2s; font-size: 12px; font-family: 'Inter'; font-weight: 500; }
         .action-icon-btn svg { width: 16px; height: 16px; transition: 0.2s; }
         .action-icon-btn:hover { color: #fff; background: rgba(255,255,255,0.05); }
         .action-icon-btn:active { transform: scale(0.95); }
@@ -327,10 +327,9 @@
             max-height: 100vh;
             overflow-y: auto;
         }
-        /* Container for file chips – sticky */
         #file-staging-container {
             width: 100%;
-            min-height: 0;
+            min-height: 40px;
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
@@ -343,9 +342,7 @@
             background: var(--bg-deep);
             z-index: 5;
         }
-        #file-staging-container:empty {
-            display: none;
-        }
+        #file-staging-container:empty { display: none; min-height: 0; }
         .input-frame {
             background: var(--bg-sidebar);
             border: 1px solid var(--border-muted);
@@ -375,7 +372,7 @@
         .send-btn:hover { opacity: 0.8; }
         .send-btn:disabled { background: var(--bg-card); color: #4b5563; cursor: not-allowed; }
 
-        /* ===== STOP BUTTON COLOUR FIX – FLAW #5 ===== */
+        /* ===== STOP BUTTON COLOUR – HARDENED ===== */
         .send-btn.btn-stop-active {
             background: var(--bg-card) !important;
             color: var(--text-main) !important;
@@ -385,13 +382,13 @@
             border-radius: 12px !important;
         }
         body.workspace-data .send-btn.btn-stop-active {
-            color: #00ff88 !important; /* neon green */
+            color: #00ff88 !important;
             border-color: rgba(0, 255, 136, 0.6) !important;
             background: rgba(0, 255, 136, 0.15) !important;
             box-shadow: 0 0 20px rgba(0, 255, 136, 0.4) !important;
         }
         body.workspace-design .send-btn.btn-stop-active {
-            color: #ff1a4a !important; /* crimson red */
+            color: #ff1a4a !important;
             border-color: rgba(255, 26, 74, 0.6) !important;
             background: rgba(255, 26, 74, 0.15) !important;
             box-shadow: 0 0 20px rgba(255, 26, 74, 0.4) !important;
@@ -637,7 +634,7 @@
             }
         }
 
-        /* ===== MOBILE UI ===== */
+        /* ===== MOBILE UI – HARDENED ===== */
         @media (max-width: 768px) {
             :root { --viewport-height: 100dvh; }
             body { height: var(--viewport-height); overflow: hidden; }
@@ -699,7 +696,7 @@
                 margin-top: auto;
                 flex-shrink: 0;
                 padding: 10px 15px;
-                min-height: 50px;
+                min-height: 70px;
             }
             .sidebar-footer .footer-opt { font-size: 12px; padding: 8px; }
             .sidebar-footer .sidebar-sub-box { padding: 8px; }
@@ -795,8 +792,9 @@
         }
         .deploy-error-details.show { display: block; }
 
-        /* ===== MATERIAL SYMBOLS BASE ===== */
         .material-symbols-rounded { font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24; vertical-align: middle; font-size: 24px; }
+        /* Ensure icons are inline-flex */
+        .action-icon-btn span, .action-list-item span, .footer-opt span, .sidebar-sub-box span { display: inline-flex !important; align-items: center !important; vertical-align: middle !important; }
     </style>
 </head>
 <body class="workspace-data">
@@ -1097,7 +1095,6 @@
 
         <!-- Command Input -->
         <div class="command-wrapper" id="command-wrapper">
-            <!-- File staging container outside input-frame -->
             <div id="file-staging-container"></div>
             <div class="input-frame" id="data-drop-zone">
                 <div class="input-row">
@@ -1128,9 +1125,7 @@
         const AXELR_AVATAR_SVG =
             `<svg viewBox="0 0 100 100" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M50 15 L20 32.5 L20 67.5 L50 85" stroke="#ffffff" stroke-width="6" stroke-linejoin="bevel" fill="rgba(255,255,255,0.05)"/><path d="M50 15 L80 32.5 L50 50 L80 67.5 L50 85" stroke="currentColor" stroke-width="6" stroke-linejoin="bevel" fill="none"/><path d="M20 32.5 L50 50 L20 67.5" stroke="#ffffff" stroke-width="3" stroke-linejoin="bevel" opacity="0.5"/></svg>`;
 
-        // ============================================================
-        // ICONS – Lucide professional icons (FIX #7)
-        // ============================================================
+        // Professional Lucide icons
         const ICONS = {
             copy: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`,
             edit: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>`,
@@ -1139,9 +1134,6 @@
             regenerate: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3v6h-6"/><path d="M3 21v-6h6"/><path d="M18.364 5.636a9 9 0 1 1-12.728 12.728"/></svg>`
         };
 
-        // ============================================================
-        // SIDEBAR ICONS – Lucide SVG (FIX #7)
-        // ============================================================
         const SIDEBAR_ICONS = {
             edit: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>`,
             link: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`,
@@ -1217,7 +1209,7 @@
         function getDraftKey() { return `Axelr_prompt_draft_${currentUserId || 'anonymous'}`; }
 
         // ============================================================
-        // VISUAL VIEWPORT / COMMAND BAR RESPONSIVENESS – FLAW #1 FIX
+        // VISUAL VIEWPORT / COMMAND BAR RESPONSIVENESS (FLAW #1, #6)
         // ============================================================
         function adjustViewportPadding() {
             const wrapperHeight = commandWrapper.offsetHeight;
@@ -1236,7 +1228,7 @@
                 const offsetY = window.innerHeight - vv.height;
                 const maxBottom = Math.min(offsetY, window.innerHeight * 0.5);
                 commandWrapper.style.bottom = maxBottom + 'px';
-                const fileChipsHeight = document.getElementById('file-staging-container').offsetHeight || 50;
+                const fileChipsHeight = document.getElementById('file-staging-container').offsetHeight || 40;
                 const availableHeight = window.innerHeight - maxBottom - 20 - fileChipsHeight;
                 commandWrapper.style.maxHeight = Math.min(availableHeight, window.innerHeight * 0.8) + 'px';
                 setTimeout(adjustViewportPadding, 50);
@@ -1249,7 +1241,7 @@
             setTimeout(adjustCommandWrapperAndViewport, 100);
         }
 
-        // FLAW #6 FIX – do not scroll to top on focus
+        // Do not scroll to top on focus
         promptInput.addEventListener('focus', () => {
             setTimeout(() => {
                 adjustViewportPadding();
@@ -1321,7 +1313,7 @@
         });
 
         // ============================================================
-        // SIDEBAR FUNCTIONS – FLAW #8 FIX (search input protection)
+        // SIDEBAR FUNCTIONS (FLAW #8)
         // ============================================================
         function toggleSidebar() { sidebarNode.classList.toggle('open'); }
         sidebarTriggerArea.addEventListener('click', (e) => { e.stopPropagation();
@@ -1495,11 +1487,7 @@
             localStorage.removeItem('Axelr_active_session');
             document.querySelectorAll('.chat-bubble').forEach(bubble => bubble.remove());
             const hero = document.getElementById('hero-display');
-            if (!activeSessionId) {
-                hero.style.display = 'flex';
-            } else {
-                hero.style.display = 'none';
-            }
+            hero.style.display = 'flex'; // always show hero on new chat
             if (!isBoot) {
                 promptInput.value = '';
                 promptInput.style.height = 'auto';
@@ -1683,7 +1671,7 @@
         }
 
         // ============================================================
-        // HISTORY – FLAW #10 FIX (regenerate logic)
+        // HISTORY (FLAW #10 – regenerate logic)
         // ============================================================
         async function loadArchiveLogs() {
             try {
@@ -1866,19 +1854,19 @@
                         injectDeployButton(contentDiv, rawCode);
                     }
 
-                    // FLAW #10 – Regenerate button logic
+                    // Regenerate logic (FLAW #10)
                     const isLast = idx === log.messages.length - 1;
                     const alreadyRegenerated = msg.variants && msg.variants.length > 1;
                     const isActive = log.status === 'active';
                     let showRegenerate = false;
-                    if (isLast && isActive && !alreadyRegenerated && msg.createdAt) {
-                        const msgDate = new Date(msg.createdAt);
+                    if (isLast && isActive && !alreadyRegenerated) {
+                        const msgDate = msg.createdAt ? new Date(msg.createdAt) : new Date(log.createdAt);
                         const now = new Date();
                         if (!isNaN(msgDate.getTime()) && (now - msgDate) < 30000) {
                             showRegenerate = true;
                         }
                     }
-                    injectActionButtons(contentDiv, rawResponse, false, showRegenerate, msg.createdAt);
+                    injectActionButtons(contentDiv, rawResponse, false, showRegenerate, msg.createdAt || log.createdAt);
 
                     if (msg.variants && msg.variants.length > 1) {
                         const currentIdx = msg.activeVariant || 0;
@@ -2140,9 +2128,10 @@
         }
 
         // ============================================================
-        // EXECUTE COMMAND – FLAW #2, #4 FIXES
+        // EXECUTE COMMAND (FLAW #2, #4, #6)
         // ============================================================
         async function executeCommand(isRetry = false) {
+            // Immediately hide hero (FLAW #4)
             document.getElementById('hero-display').style.display = 'none';
             if (isProcessing) return;
             isProcessing = true;
@@ -2286,7 +2275,7 @@
 
             globalAbortController = new AbortController();
 
-            // FLAW #2 – timeout fallback
+            // Timeout fallback (FLAW #2)
             let responseReceived = false;
             const timeoutFallback = setTimeout(() => {
                 if (!responseReceived) {
@@ -2359,7 +2348,6 @@
                                 } else if (data.type === 'done') {
                                     responseReceived = true;
                                     clearTimeout(timeoutFallback);
-                                    // FLAW #2 – use finalResponse if fullResponse empty
                                     if (!fullResponse && data.finalResponse) {
                                         fullResponse = data.finalResponse;
                                         contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(fullResponse));
@@ -2372,9 +2360,8 @@
                                         localStorage.setItem('axelr_active_session', activeSessionId);
                                         runningStructuredCache = structuredData;
                                         runningFileTitle = filename;
-                                        // FLAW #4 – refresh history and reload view
+                                        // Refresh history and force view update (FLAW #4)
                                         await loadArchiveLogs();
-                                        // Force view update for the new chat
                                         viewPastLogById(activeSessionId);
                                     }
                                     const rawCode = extractHtmlCode(fullResponse);
@@ -2401,7 +2388,6 @@
                                     injectActionButtons(contentDiv, fullResponse, false, true, now);
                                     scrollToBottom();
                                 }
-                                // additional session handling (already covered)
                             } catch (e) { /* ignore malformed JSON */ }
                         }
                     }
