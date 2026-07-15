@@ -120,7 +120,7 @@
         /* ===== MAIN WRAPPER ===== */
         .main-wrapper { flex: 1; display: none; flex-direction: column; position: relative; height: 100vh; width: 100%; overflow: hidden; opacity: 0; transition: opacity 0.4s ease; }
 
-        /* ===== SIDEBAR ===== */
+        /* ===== SIDEBAR – FIX #3: overflow scroll, footer relative ===== */
         #sidebar-trigger-area { position: absolute; left: 0; top: 0; bottom: 0; width: 32px; z-index: 199; cursor: pointer; background: rgba(255,255,255,0.02); border-right: 1px solid var(--border-muted); display: flex; align-items: center; justify-content: center; transition: 0.3s; }
         #sidebar-trigger-area:hover { background: rgba(255,255,255,0.05); width: 40px; box-shadow: 2px 0 15px rgba(0,0,0,0.5); }
         .trigger-text { writing-mode: vertical-rl; transform: rotate(180deg); letter-spacing: 3px; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--text-muted); font-weight: 600; text-transform: uppercase; transition: 0.3s; white-space: nowrap; }
@@ -139,6 +139,7 @@
             z-index: 200;
             border-right: 1px solid var(--border-muted);
             height: 100dvh;
+            overflow-y: auto; /* allow scrolling of entire sidebar */
         }
         #sidebar-container-node.open { left: 0; }
 
@@ -182,8 +183,7 @@
             gap: 5px;
             margin-top: auto;
             flex-shrink: 0;
-            position: sticky;
-            bottom: 0;
+            position: relative; /* not sticky to avoid cutoff */
             background: var(--bg-sidebar);
             z-index: 10;
             min-height: 60px;
@@ -375,7 +375,7 @@
         .send-btn:hover { opacity: 0.8; }
         .send-btn:disabled { background: var(--bg-card); color: #4b5563; cursor: not-allowed; }
 
-        /* ===== STOP BUTTON COLOUR FIX ===== */
+        /* ===== STOP BUTTON COLOUR FIX – FLAW #5 ===== */
         .send-btn.btn-stop-active {
             background: var(--bg-card) !important;
             color: var(--text-main) !important;
@@ -385,16 +385,16 @@
             border-radius: 12px !important;
         }
         body.workspace-data .send-btn.btn-stop-active {
-            color: #10b981 !important;
-            border-color: rgba(16,185,129,0.4) !important;
-            background: rgba(16,185,129,0.1) !important;
-            box-shadow: 0 0 15px rgba(16,185,129,0.3) !important;
+            color: #00ff88 !important; /* neon green */
+            border-color: rgba(0, 255, 136, 0.6) !important;
+            background: rgba(0, 255, 136, 0.15) !important;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.4) !important;
         }
         body.workspace-design .send-btn.btn-stop-active {
-            color: #ef4444 !important;
-            border-color: rgba(239,68,68,0.4) !important;
-            background: rgba(239,68,68,0.1) !important;
-            box-shadow: 0 0 15px rgba(239,68,68,0.3) !important;
+            color: #ff1a4a !important; /* crimson red */
+            border-color: rgba(255, 26, 74, 0.6) !important;
+            background: rgba(255, 26, 74, 0.15) !important;
+            box-shadow: 0 0 20px rgba(255, 26, 74, 0.4) !important;
         }
 
         .download-btn-bubble { background: var(--accent-glow); color: #000; border: none; padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; margin-top: 15px; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; }
@@ -953,8 +953,9 @@
                         <button class="upgrade-btn" onclick="dispatchCheckoutPipeline('business')">Upgrade to Business</button>
                     </div>
                 </div>
-                <!-- FIX #3: Center alignment -->
-                <div style="font-size:12px;color:var(--text-muted);margin-top:10px;text-align:center;width:100%;">Cancel anytime. Secure processing via Stripe.</div>
+                <div style="display:flex; justify-content:center; width:100%; margin-top:10px;">
+                    <span style="font-size:12px; color:var(--text-muted);">Cancel anytime. Secure processing via Stripe.</span>
+                </div>
             </div>
         </div>
     </div>
@@ -1128,7 +1129,7 @@
             `<svg viewBox="0 0 100 100" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M50 15 L20 32.5 L20 67.5 L50 85" stroke="#ffffff" stroke-width="6" stroke-linejoin="bevel" fill="rgba(255,255,255,0.05)"/><path d="M50 15 L80 32.5 L50 50 L80 67.5 L50 85" stroke="currentColor" stroke-width="6" stroke-linejoin="bevel" fill="none"/><path d="M20 32.5 L50 50 L20 67.5" stroke="#ffffff" stroke-width="3" stroke-linejoin="bevel" opacity="0.5"/></svg>`;
 
         // ============================================================
-        // ICONS – Lucide professional icons for actions (FIX #7)
+        // ICONS – Lucide professional icons (FIX #7)
         // ============================================================
         const ICONS = {
             copy: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`,
@@ -1139,7 +1140,7 @@
         };
 
         // ============================================================
-        // SIDEBAR ICONS – Lucide SVG for professional look (FIX #6)
+        // SIDEBAR ICONS – Lucide SVG (FIX #7)
         // ============================================================
         const SIDEBAR_ICONS = {
             edit: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>`,
@@ -1187,13 +1188,8 @@
         let currentUserId = null;
         let isProcessing = false;
 
-        // Regenerate per chat tracking
         let regeneratedMap = {};
-
-        // Sidebar close ignore flag (FIX #5)
         let ignoreSidebarClose = false;
-
-        // Manipulation attempt counter (session storage)
         let manipulationCount = parseInt(sessionStorage.getItem('axelr_manipulation_count')) || 0;
         let manipulationLockUntil = parseInt(sessionStorage.getItem('axelr_manipulation_lock')) || 0;
 
@@ -1221,7 +1217,7 @@
         function getDraftKey() { return `Axelr_prompt_draft_${currentUserId || 'anonymous'}`; }
 
         // ============================================================
-        // VISUAL VIEWPORT / COMMAND BAR RESPONSIVENESS
+        // VISUAL VIEWPORT / COMMAND BAR RESPONSIVENESS – FLAW #1 FIX
         // ============================================================
         function adjustViewportPadding() {
             const wrapperHeight = commandWrapper.offsetHeight;
@@ -1238,12 +1234,11 @@
                 const vv = window.visualViewport;
                 if (!vv) return;
                 const offsetY = window.innerHeight - vv.height;
-                const maxBottom = window.innerHeight * 0.6;
-                const bottom = Math.min(offsetY, maxBottom);
-                commandWrapper.style.bottom = bottom + 'px';
-                // FIX #8: dynamically set max-height to avoid clipping
-                const availableHeight = window.innerHeight - bottom - 20;
-                commandWrapper.style.maxHeight = availableHeight + 'px';
+                const maxBottom = Math.min(offsetY, window.innerHeight * 0.5);
+                commandWrapper.style.bottom = maxBottom + 'px';
+                const fileChipsHeight = document.getElementById('file-staging-container').offsetHeight || 50;
+                const availableHeight = window.innerHeight - maxBottom - 20 - fileChipsHeight;
+                commandWrapper.style.maxHeight = Math.min(availableHeight, window.innerHeight * 0.8) + 'px';
                 setTimeout(adjustViewportPadding, 50);
                 if (viewport.querySelector('.chat-bubble')) {
                     scrollToBottom();
@@ -1254,10 +1249,13 @@
             setTimeout(adjustCommandWrapperAndViewport, 100);
         }
 
+        // FLAW #6 FIX – do not scroll to top on focus
         promptInput.addEventListener('focus', () => {
             setTimeout(() => {
                 adjustViewportPadding();
-                scrollToBottom();
+                if (viewport.querySelector('.chat-bubble')) {
+                    scrollToBottom();
+                }
             }, 200);
         });
 
@@ -1323,14 +1321,15 @@
         });
 
         // ============================================================
-        // SIDEBAR FUNCTIONS
+        // SIDEBAR FUNCTIONS – FLAW #8 FIX (search input protection)
         // ============================================================
         function toggleSidebar() { sidebarNode.classList.toggle('open'); }
         sidebarTriggerArea.addEventListener('click', (e) => { e.stopPropagation();
             sidebarNode.classList.toggle('open'); });
         window.addEventListener('click', (e) => {
-            if (ignoreSidebarClose) return;
-            // FIX #5: if the click is inside the search input, do not close sidebar
+            if (ignoreSidebarClose || document.activeElement === document.getElementById('sidebar-search-input')) {
+                return;
+            }
             if (e.target.closest('#sidebar-search-box') || e.target.closest('#sidebar-search-box input')) {
                 e.stopPropagation();
                 return;
@@ -1342,7 +1341,6 @@
                 d.classList.remove('active'));
         });
 
-        // FIX #5: increase timeout and clear on blur
         const searchInput = document.getElementById('sidebar-search-input');
         searchInput.addEventListener('focus', () => {
             ignoreSidebarClose = true;
@@ -1420,6 +1418,9 @@
                 window.history.replaceState({}, document.title, window.location.pathname);
                 if (googleAuthUserToken) loadUserProfile();
             }
+            const searchBox = document.getElementById('sidebar-search-box');
+            searchBox.addEventListener('click', (e) => e.stopPropagation());
+            searchBox.addEventListener('touchstart', (e) => e.stopPropagation());
         };
 
         async function initializeSecureWorkspace(payload, token) {
@@ -1682,7 +1683,7 @@
         }
 
         // ============================================================
-        // HISTORY
+        // HISTORY – FLAW #10 FIX (regenerate logic)
         // ============================================================
         async function loadArchiveLogs() {
             try {
@@ -1695,21 +1696,20 @@
                 if (cachedLogHistory.length === 0) { historyListContainer.innerHTML =
                         `<div style="color:#4b5563;font-size:12px;text-align:center;padding:15px;">No ${currentTab} chats.</div>`;
                     return; }
-                // FIX #6: Use Lucide SVG icons in sidebar actions
                 historyListContainer.innerHTML = cachedLogHistory.map(log => `
                     <div class="history-item" onclick="viewPastLogById('${log._id}')">
-                        <div class="history-info"><div class="history-title" id="title-${log._id}">${log.isPinned ? '<span style="display:inline-flex;vertical-align:middle;">' + SIDEBAR_ICONS.push_pin + '</span>' : ''}${escapeHtmlEntities(log.filename)}</div></div>
+                        <div class="history-info"><div class="history-title" id="title-${log._id}">${log.isPinned ? '<span style="display:inline-flex;align-items:center;vertical-align:middle;">' + SIDEBAR_ICONS.push_pin + '</span>' : ''}${escapeHtmlEntities(log.filename)}</div></div>
                         <button class="history-options-btn" onclick="toggleHistoryOptions(event, '${log._id}')">⋮</button>
                         <div class="actions-dropdown-list" id="options-${log._id}">
                             ${currentTab === 'active' ? `
-                                <div class="action-list-item" onclick="renameChat('${log._id}', '${escapeHtmlEntities(log.filename)}', event)"><span style="display:inline-flex;vertical-align:middle;">${SIDEBAR_ICONS.edit}</span> Rename</div>
-                                <div class="action-list-item" onclick="pinChat('${log._id}', event)"><span style="display:inline-flex;vertical-align:middle;">${SIDEBAR_ICONS.push_pin}</span> ${log.isPinned ? 'Unpin' : 'Pin'}</div>
-                                <div class="action-list-item" onclick="shareChat('${log._id}', event)"><span style="display:inline-flex;vertical-align:middle;">${SIDEBAR_ICONS.link}</span> Share Text</div>
-                                <div class="action-list-item" onclick="changeChatStatus('${log._id}', 'archived', event)"><span style="display:inline-flex;vertical-align:middle;">${SIDEBAR_ICONS.inventory}</span> Archive</div>
-                                <div class="action-list-item danger" onclick="changeChatStatus('${log._id}', 'trashed', event)"><span style="display:inline-flex;vertical-align:middle;">${SIDEBAR_ICONS.delete}</span> Trash</div>
+                                <div class="action-list-item" onclick="renameChat('${log._id}', '${escapeHtmlEntities(log.filename)}', event)"><span style="display:inline-flex;align-items:center;vertical-align:middle;">${SIDEBAR_ICONS.edit}</span> Rename</div>
+                                <div class="action-list-item" onclick="pinChat('${log._id}', event)"><span style="display:inline-flex;align-items:center;vertical-align:middle;">${SIDEBAR_ICONS.push_pin}</span> ${log.isPinned ? 'Unpin' : 'Pin'}</div>
+                                <div class="action-list-item" onclick="shareChat('${log._id}', event)"><span style="display:inline-flex;align-items:center;vertical-align:middle;">${SIDEBAR_ICONS.link}</span> Share Text</div>
+                                <div class="action-list-item" onclick="changeChatStatus('${log._id}', 'archived', event)"><span style="display:inline-flex;align-items:center;vertical-align:middle;">${SIDEBAR_ICONS.inventory}</span> Archive</div>
+                                <div class="action-list-item danger" onclick="changeChatStatus('${log._id}', 'trashed', event)"><span style="display:inline-flex;align-items:center;vertical-align:middle;">${SIDEBAR_ICONS.delete}</span> Trash</div>
                             ` : ''}
-                            ${currentTab === 'archived' ? `<div class="action-list-item" onclick="changeChatStatus('${log._id}', 'active', event)"><span style="display:inline-flex;vertical-align:middle;">${SIDEBAR_ICONS.undo}</span> Unarchive</div><div class="action-list-item danger" onclick="changeChatStatus('${log._id}', 'trashed', event)"><span style="display:inline-flex;vertical-align:middle;">${SIDEBAR_ICONS.delete}</span> Trash</div>` : ''}
-                            ${currentTab === 'trashed' ? `<div class="action-list-item" onclick="changeChatStatus('${log._id}', 'active', event)"><span style="display:inline-flex;vertical-align:middle;">${SIDEBAR_ICONS.restore}</span> Restore</div><div class="action-list-item danger" onclick="deleteLogPermanently('${log._id}', event)"><span style="display:inline-flex;vertical-align:middle;">${SIDEBAR_ICONS.delete_forever}</span> Delete Forever</div>` : ''}
+                            ${currentTab === 'archived' ? `<div class="action-list-item" onclick="changeChatStatus('${log._id}', 'active', event)"><span style="display:inline-flex;align-items:center;vertical-align:middle;">${SIDEBAR_ICONS.undo}</span> Unarchive</div><div class="action-list-item danger" onclick="changeChatStatus('${log._id}', 'trashed', event)"><span style="display:inline-flex;align-items:center;vertical-align:middle;">${SIDEBAR_ICONS.delete}</span> Trash</div>` : ''}
+                            ${currentTab === 'trashed' ? `<div class="action-list-item" onclick="changeChatStatus('${log._id}', 'active', event)"><span style="display:inline-flex;align-items:center;vertical-align:middle;">${SIDEBAR_ICONS.restore}</span> Restore</div><div class="action-list-item danger" onclick="deleteLogPermanently('${log._id}', event)"><span style="display:inline-flex;align-items:center;vertical-align:middle;">${SIDEBAR_ICONS.delete_forever}</span> Delete Forever</div>` : ''}
                         </div>
                     </div>`).join('');
                 if (isInitialAppLoad) {
@@ -1866,12 +1866,19 @@
                         injectDeployButton(contentDiv, rawCode);
                     }
 
+                    // FLAW #10 – Regenerate button logic
                     const isLast = idx === log.messages.length - 1;
-                    // FIX #4: compute showRegenerate flag
                     const alreadyRegenerated = msg.variants && msg.variants.length > 1;
                     const isActive = log.status === 'active';
-                    const showRegenerate = isLast && isActive && !alreadyRegenerated && (new Date() - new Date(msg.createdAt) < 30000);
-                    injectActionButtons(contentDiv, msg.text, false, showRegenerate, msg.createdAt);
+                    let showRegenerate = false;
+                    if (isLast && isActive && !alreadyRegenerated && msg.createdAt) {
+                        const msgDate = new Date(msg.createdAt);
+                        const now = new Date();
+                        if (!isNaN(msgDate.getTime()) && (now - msgDate) < 30000) {
+                            showRegenerate = true;
+                        }
+                    }
+                    injectActionButtons(contentDiv, rawResponse, false, showRegenerate, msg.createdAt);
 
                     if (msg.variants && msg.variants.length > 1) {
                         const currentIdx = msg.activeVariant || 0;
@@ -1926,7 +1933,7 @@
         }
 
         // ============================================================
-        // ACTION BUTTONS – FIX #4 & #7
+        // ACTION BUTTONS
         // ============================================================
         function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRegenerate = false, createdAt = null) {
             const actionBar = document.createElement('div');
@@ -1964,7 +1971,6 @@
                 actionBar.appendChild(likeBtn);
                 actionBar.appendChild(dislikeBtn);
 
-                // Regenerate – only if showRegenerate is true
                 if (showRegenerate && createdAt) {
                     const now = Date.now();
                     const msgTime = new Date(createdAt).getTime();
@@ -2134,7 +2140,7 @@
         }
 
         // ============================================================
-        // EXECUTE COMMAND
+        // EXECUTE COMMAND – FLAW #2, #4 FIXES
         // ============================================================
         async function executeCommand(isRetry = false) {
             document.getElementById('hero-display').style.display = 'none';
@@ -2280,6 +2286,19 @@
 
             globalAbortController = new AbortController();
 
+            // FLAW #2 – timeout fallback
+            let responseReceived = false;
+            const timeoutFallback = setTimeout(() => {
+                if (!responseReceived) {
+                    contentDiv.innerHTML = `⚠️ The AI took too long to respond. Please try again.`;
+                    scrollToBottom();
+                    if (globalAbortController) globalAbortController.abort();
+                    sendBtn.classList.remove('btn-stop-active');
+                    sendBtn.disabled = false;
+                    isProcessing = false;
+                }
+            }, 25000);
+
             try {
                 const response = await fetch(`${API_BASE_URL}/api/extract`, {
                     method: 'POST',
@@ -2331,12 +2350,16 @@
                             try {
                                 const data = JSON.parse(line.substring(6));
                                 if (data.type === 'chunk') {
+                                    responseReceived = true;
+                                    clearTimeout(timeoutFallback);
                                     fullResponse += data.text;
                                     const cleanResponse = fullResponse.replace(/<think>[\s\S]*?<\/think>/g, '');
                                     contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(cleanResponse));
                                     scrollToBottom();
                                 } else if (data.type === 'done') {
-                                    // FIX #1: if fullResponse empty, use finalResponse
+                                    responseReceived = true;
+                                    clearTimeout(timeoutFallback);
+                                    // FLAW #2 – use finalResponse if fullResponse empty
                                     if (!fullResponse && data.finalResponse) {
                                         fullResponse = data.finalResponse;
                                         contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(fullResponse));
@@ -2349,8 +2372,10 @@
                                         localStorage.setItem('axelr_active_session', activeSessionId);
                                         runningStructuredCache = structuredData;
                                         runningFileTitle = filename;
-                                        // FIX #1: refresh history to show new chat
-                                        loadArchiveLogs();
+                                        // FLAW #4 – refresh history and reload view
+                                        await loadArchiveLogs();
+                                        // Force view update for the new chat
+                                        viewPastLogById(activeSessionId);
                                     }
                                     const rawCode = extractHtmlCode(fullResponse);
                                     if (rawCode) {
@@ -2373,10 +2398,10 @@
                                     if (regenerateTimer) { clearTimeout(regenerateTimer);
                                         regenerateTimer = null; }
                                     const now = new Date().toISOString();
-                                    // Show regenerate for this new message
                                     injectActionButtons(contentDiv, fullResponse, false, true, now);
                                     scrollToBottom();
                                 }
+                                // additional session handling (already covered)
                             } catch (e) { /* ignore malformed JSON */ }
                         }
                     }
