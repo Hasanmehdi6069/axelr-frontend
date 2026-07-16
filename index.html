@@ -159,7 +159,16 @@
         .sidebar-search-box input { background: transparent; border: none; color: #fff; font-size: 13px; width: 100%; outline: none; }
         .sidebar-search-box input::placeholder { color: var(--text-muted); }
 
-        #sidebar-content { flex: 1; overflow-y: auto; padding: 0 15px 15px 15px; display: flex; flex-direction: column; gap: 8px; }
+        /* ===== SIDEBAR CONTENT & FOOTER – FIXED CUTOFF ===== */
+        #sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 15px 15px 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-height: 0; /* allow flex shrink */
+        }
         .sidebar-section-label { font-size: 11px; text-transform: uppercase; color: #4b5563; font-weight: 600; letter-spacing: 1px; margin: 10px 5px 5px 5px; }
 
         .history-item { padding: 12px 14px; border-radius: 12px; background: rgba(255,255,255,0.01); border: 1px solid transparent; cursor: pointer; transition: 0.2s; display: flex; justify-content: space-between; align-items: center; position: relative; }
@@ -181,7 +190,7 @@
             display: flex;
             flex-direction: column;
             gap: 5px;
-            flex-shrink: 0;
+            flex-shrink: 0; /* prevent footer from shrinking */
             position: sticky;
             bottom: 0;
             background: var(--bg-sidebar);
@@ -338,7 +347,7 @@
             padding-bottom: 8px;
             margin-bottom: 8px;
             border-bottom: 1px solid var(--border-muted);
-            flex-shrink: 0;
+            flex-shrink: 0; /* prevent from shrinking on mobile */
             position: sticky;
             top: 0;
             background: var(--bg-deep);
@@ -374,7 +383,7 @@
         .send-btn:hover { opacity: 0.8; }
         .send-btn:disabled { background: var(--bg-card); color: #4b5563; cursor: not-allowed; }
 
-        /* ===== STOP BUTTON COLOUR – HARDENED ===== */
+        /* ===== STOP BUTTON – HARDENED COLOURS ===== */
         .send-btn.btn-stop-active {
             background: var(--bg-card) !important;
             color: var(--text-main) !important;
@@ -384,15 +393,15 @@
             border-radius: 12px !important;
         }
         body.workspace-data .send-btn.btn-stop-active {
-            color: #00ff88 !important;
-            border-color: rgba(0, 255, 136, 0.6) !important;
             background: rgba(0, 255, 136, 0.15) !important;
+            color: #00ff88 !important;
+            border-color: #00ff88 !important;
             box-shadow: 0 0 20px rgba(0, 255, 136, 0.4) !important;
         }
         body.workspace-design .send-btn.btn-stop-active {
-            color: #ff1a4a !important;
-            border-color: rgba(255, 26, 74, 0.6) !important;
             background: rgba(255, 26, 74, 0.15) !important;
+            color: #ff1a4a !important;
+            border-color: #ff1a4a !important;
             box-shadow: 0 0 20px rgba(255, 26, 74, 0.4) !important;
         }
 
@@ -1022,7 +1031,10 @@
                 <button class="tab-btn" id="tab-trashed" onclick="switchSidebarTab('trashed')">Trash</button>
             </div>
 
-            <div class="sidebar-search-box"><input type="text" placeholder="Search history..." id="sidebar-search-input" onkeyup="filterSidebarLogs()"></div>
+            <!-- Sidebar search box with stopPropagation -->
+            <div class="sidebar-search-box" id="sidebar-search-box">
+                <input type="text" placeholder="Search history..." id="sidebar-search-input" onkeyup="filterSidebarLogs()">
+            </div>
 
             <div id="sidebar-content">
                 <div class="sidebar-section-label">Recent Chats</div>
@@ -1142,7 +1154,7 @@
         const AXELR_AVATAR_SVG =
             `<svg viewBox="0 0 100 100" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M50 15 L20 32.5 L20 67.5 L50 85" stroke="#ffffff" stroke-width="6" stroke-linejoin="bevel" fill="rgba(255,255,255,0.05)"/><path d="M50 15 L80 32.5 L50 50 L80 67.5 L50 85" stroke="currentColor" stroke-width="6" stroke-linejoin="bevel" fill="none"/><path d="M20 32.5 L50 50 L20 67.5" stroke="#ffffff" stroke-width="3" stroke-linejoin="bevel" opacity="0.5"/></svg>`;
 
-        // Professional Lucide icons
+        // Professional Lucide icons (including stop, arrows, more)
         const ICONS = {
             copy: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`,
             edit: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>`,
@@ -1161,7 +1173,7 @@
             delete: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>`,
             inventory: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>`,
             undo: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>`,
-            restore: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-3a5 5 0 0 0-5-5 5 5 0 0 0-5 5H4"/><path d="M4 7v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="8" y1="12" x2="8" y2="16"/></svg>`,
+            restore: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-3a5 5 0 0 0-5-5 5 5 0 0 0-5 5H4"/><path d="M4 7v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="8" y1="12" x2="8" y2="12"/></svg>`,
             delete_forever: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>`,
             push_pin: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 12h14"/><path d="M7 12v-2a5 5 0 0 1 10 0v2"/><circle cx="12" cy="7" r="4"/></svg>`
         };
@@ -1264,6 +1276,7 @@
             viewport.scrollTop = viewport.scrollHeight;
         }
 
+        // Mobile keyboard adjustment – preserves file staging container
         if (window.visualViewport) {
             function adjustCommandWrapperAndViewport() {
                 const vv = window.visualViewport;
@@ -1272,7 +1285,7 @@
                 const maxBottom = Math.min(offsetY, window.innerHeight * 0.5);
                 commandWrapper.style.bottom = maxBottom + 'px';
 
-                // Account for the file staging container height
+                // Account for the file staging container height (flex‑shrink: 0 keeps it visible)
                 const fileChips = document.getElementById('file-staging-container');
                 const fileChipsHeight = fileChips ? fileChips.offsetHeight : 0;
                 const availableHeight = window.innerHeight - maxBottom - 20 - fileChipsHeight;
@@ -1380,6 +1393,13 @@
         });
 
         const searchInput = document.getElementById('sidebar-search-input');
+        // Stop propagation on search box and input to prevent sidebar collapse
+        const searchBox = document.getElementById('sidebar-search-box');
+        [searchBox, searchInput].forEach(el => {
+            el.addEventListener('click', (e) => e.stopPropagation());
+            el.addEventListener('touchstart', (e) => e.stopPropagation());
+        });
+
         searchInput.addEventListener('focus', () => {
             ignoreSidebarClose = true;
             setTimeout(() => { ignoreSidebarClose = false; }, 500);
@@ -1456,13 +1476,7 @@
                 window.history.replaceState({}, document.title, window.location.pathname);
                 if (googleAuthUserToken) loadUserProfile();
             }
-            // Prevent sidebar close when clicking inside search box
-            const searchBox = document.getElementById('sidebar-search-box');
-            const searchInput = document.getElementById('sidebar-search-input');
-            [searchBox, searchInput].forEach(el => {
-                el.addEventListener('click', (e) => e.stopPropagation());
-                el.addEventListener('touchstart', (e) => e.stopPropagation());
-            });
+            // Sidebar search box event listeners already attached above
         };
 
         async function initializeSecureWorkspace(payload, token) {
@@ -2009,7 +2023,8 @@
                 actionBar.appendChild(likeBtn);
                 actionBar.appendChild(dislikeBtn);
 
-                if (showRegenerate && createdAt) {
+                // Regenerate button – zombie‑proof
+                if (showRegenerate && createdAt && sessionId) {
                     const now = Date.now();
                     const msgTime = new Date(createdAt).getTime();
                     const elapsed = now - msgTime;
@@ -2034,7 +2049,7 @@
                         }, 1000);
 
                         regenBtn.onclick = function(e) {
-                            // Zombie prevention: check if this chat is still active
+                            // Prevent zombie: check if this chat is still active
                             if (activeSessionId !== sessionId) {
                                 this.remove();
                                 clearInterval(timerInterval);
@@ -2057,14 +2072,15 @@
                         };
                         actionBar.appendChild(regenBtn);
 
-                        regenerateTimer = setTimeout(() => {
+                        // Auto‑remove after 30s if still present
+                        const autoRemoveTimeout = setTimeout(() => {
                             if (regenBtn.parentNode) {
                                 regenBtn.remove();
                                 clearInterval(timerInterval);
-                                regenerateTimer = null;
                             }
                         }, 30000 - elapsed);
-                        lastMessageTimestamp = Date.now();
+                        // Store timeout on the button for cleanup if needed
+                        regenBtn._autoRemoveTimeout = autoRemoveTimeout;
                     }
                 }
             }
@@ -2189,7 +2205,7 @@
         // EXECUTE COMMAND
         // ============================================================
         async function executeCommand(isRetry = false) {
-            // Immediately hide hero
+            // Immediately hide hero – fix for flaw 2
             document.getElementById('hero-display').style.display = 'none';
             if (isProcessing) return;
             isProcessing = true;
@@ -2410,7 +2426,7 @@
                                 const data = JSON.parse(line.substring(6));
                                 if (data.type === 'chunk') {
                                     responseReceived = true;
-                                    // Reset the timeout on any chunk
+                                    // Reset the timeout on any chunk – flaw 4 fix
                                     clearTimeout(timeoutFallbackInner);
                                     timeoutFallbackInner = setTimeout(() => {
                                         if (!responseReceived) {
