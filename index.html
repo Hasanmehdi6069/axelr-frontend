@@ -159,7 +159,6 @@
         .sidebar-search-box input { background: transparent; border: none; color: #fff; font-size: 13px; width: 100%; outline: none; }
         .sidebar-search-box input::placeholder { color: var(--text-muted); }
 
-        /* ===== SIDEBAR CONTENT & FOOTER – FIXED CUTOFF ===== */
         #sidebar-content {
             flex: 1;
             overflow-y: auto;
@@ -167,7 +166,7 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
-            min-height: 0; /* allow flex shrink */
+            min-height: 0;
         }
         .sidebar-section-label { font-size: 11px; text-transform: uppercase; color: #4b5563; font-weight: 600; letter-spacing: 1px; margin: 10px 5px 5px 5px; }
 
@@ -190,7 +189,7 @@
             display: flex;
             flex-direction: column;
             gap: 5px;
-            flex-shrink: 0; /* prevent footer from shrinking */
+            flex-shrink: 0;
             position: sticky;
             bottom: 0;
             background: var(--bg-sidebar);
@@ -347,7 +346,7 @@
             padding-bottom: 8px;
             margin-bottom: 8px;
             border-bottom: 1px solid var(--border-muted);
-            flex-shrink: 0; /* prevent from shrinking on mobile */
+            flex-shrink: 0;
             position: sticky;
             top: 0;
             background: var(--bg-deep);
@@ -804,23 +803,11 @@
         .deploy-error-details.show { display: block; }
 
         .material-symbols-rounded { font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24; vertical-align: middle; font-size: 24px; }
-        /* Ensure icons are inline-flex */
         .action-icon-btn span, .action-list-item span, .footer-opt span, .sidebar-sub-box span { display: inline-flex !important; align-items: center !important; vertical-align: middle !important; }
 
-        /* Ensure file staging container never shrinks on mobile */
-        #file-staging-container {
-            flex-shrink: 0;
-        }
-
-        #sidebar-content {
-            overflow-y: auto;
-            flex: 1;
-        }
-
-        .sidebar-footer {
-            flex-shrink: 0;
-            padding-bottom: calc(env(safe-area-inset-bottom) + 15px);
-        }
+        #file-staging-container { flex-shrink: 0; }
+        #sidebar-content { overflow-y: auto; flex: 1; }
+        .sidebar-footer { flex-shrink: 0; padding-bottom: calc(env(safe-area-inset-bottom) + 15px); }
     </style>
 </head>
 <body class="workspace-data">
@@ -1031,7 +1018,6 @@
                 <button class="tab-btn" id="tab-trashed" onclick="switchSidebarTab('trashed')">Trash</button>
             </div>
 
-            <!-- Sidebar search box with stopPropagation -->
             <div class="sidebar-search-box" id="sidebar-search-box">
                 <input type="text" placeholder="Search history..." id="sidebar-search-input" onkeyup="filterSidebarLogs()">
             </div>
@@ -1154,7 +1140,7 @@
         const AXELR_AVATAR_SVG =
             `<svg viewBox="0 0 100 100" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M50 15 L20 32.5 L20 67.5 L50 85" stroke="#ffffff" stroke-width="6" stroke-linejoin="bevel" fill="rgba(255,255,255,0.05)"/><path d="M50 15 L80 32.5 L50 50 L80 67.5 L50 85" stroke="currentColor" stroke-width="6" stroke-linejoin="bevel" fill="none"/><path d="M20 32.5 L50 50 L20 67.5" stroke="#ffffff" stroke-width="3" stroke-linejoin="bevel" opacity="0.5"/></svg>`;
 
-        // Professional Lucide icons (including stop, arrows, more)
+        // Professional Lucide icons
         const ICONS = {
             copy: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`,
             edit: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>`,
@@ -1226,12 +1212,9 @@
 
         function extractHtmlCode(text) {
             if (!text) return null;
-            // First, try to find a code block that starts with html
             const htmlBlockRegex = /```html\s*([\s\S]*?)```/i;
             let match = text.match(htmlBlockRegex);
             if (match) return match[1].trim();
-
-            // Fallback: look for any code block that contains HTML-like tags
             const genericBlockRegex = /```(?:\w+)?\s*([\s\S]*?)```/g;
             let block;
             while ((block = genericBlockRegex.exec(text)) !== null) {
@@ -1240,13 +1223,10 @@
                     return content;
                 }
             }
-
-            // Last resort: search for the first HTML tag and capture until </html> or end
             const htmlTagRegex = /(<!DOCTYPE html>|<html>|<html[\s\S]*?>)/i;
             const startMatch = text.match(htmlTagRegex);
             if (startMatch) {
                 const startIndex = startMatch.index;
-                // Try to find the closing </html> tag
                 const endMatch = text.match(/<\/html>/i);
                 if (endMatch) {
                     const endIndex = endMatch.index + endMatch[0].length;
@@ -1255,7 +1235,6 @@
                     return text.substring(startIndex).trim();
                 }
             }
-
             return null;
         }
 
@@ -1264,7 +1243,7 @@
         function getDraftKey() { return `Axelr_prompt_draft_${currentUserId || 'anonymous'}`; }
 
         // ============================================================
-        // VISUAL VIEWPORT / COMMAND BAR RESPONSIVENESS
+        // VIEWPORT & COMMAND BAR RESPONSIVENESS
         // ============================================================
         function adjustViewportPadding() {
             const wrapperHeight = commandWrapper.offsetHeight;
@@ -1276,7 +1255,6 @@
             viewport.scrollTop = viewport.scrollHeight;
         }
 
-        // Mobile keyboard adjustment – preserves file staging container
         if (window.visualViewport) {
             function adjustCommandWrapperAndViewport() {
                 const vv = window.visualViewport;
@@ -1284,13 +1262,10 @@
                 const offsetY = window.innerHeight - vv.height;
                 const maxBottom = Math.min(offsetY, window.innerHeight * 0.5);
                 commandWrapper.style.bottom = maxBottom + 'px';
-
-                // Account for the file staging container height (flex‑shrink: 0 keeps it visible)
                 const fileChips = document.getElementById('file-staging-container');
                 const fileChipsHeight = fileChips ? fileChips.offsetHeight : 0;
                 const availableHeight = window.innerHeight - maxBottom - 20 - fileChipsHeight;
                 commandWrapper.style.maxHeight = Math.min(availableHeight, window.innerHeight * 0.8) + 'px';
-
                 setTimeout(adjustViewportPadding, 50);
                 if (viewport.querySelector('.chat-bubble')) {
                     scrollToBottom();
@@ -1393,7 +1368,6 @@
         });
 
         const searchInput = document.getElementById('sidebar-search-input');
-        // Stop propagation on search box and input to prevent sidebar collapse
         const searchBox = document.getElementById('sidebar-search-box');
         [searchBox, searchInput].forEach(el => {
             el.addEventListener('click', (e) => e.stopPropagation());
@@ -1476,7 +1450,6 @@
                 window.history.replaceState({}, document.title, window.location.pathname);
                 if (googleAuthUserToken) loadUserProfile();
             }
-            // Sidebar search box event listeners already attached above
         };
 
         async function initializeSecureWorkspace(payload, token) {
@@ -1842,6 +1815,7 @@
         function viewPastLogById(logId) {
             const log = cachedLogHistory.find(l => l._id === logId);
             if (!log) return;
+            // Hide hero and clear existing bubbles
             document.getElementById('hero-display').style.display = 'none';
             document.querySelectorAll('.chat-bubble').forEach(b => b.remove());
             activeSessionId = logId;
@@ -1849,6 +1823,14 @@
             runningFileTitle = log.filename;
             runningStructuredCache = log.structuredData;
 
+            // Clear any pending regenerate timer
+            if (regenerateTimer) {
+                clearTimeout(regenerateTimer);
+                regenerateTimer = null;
+            }
+            hasRegenerated = false;
+
+            // If trashed, show a message but still display messages? Actually we shouldn't allow chatting, but we show the messages.
             if (currentTab === 'trashed') {
                 const trashMsg = document.createElement('div');
                 trashMsg.className = 'chat-bubble';
@@ -1858,10 +1840,7 @@
                 viewport.appendChild(trashMsg);
             }
 
-            hasRegenerated = false;
-            if (regenerateTimer) { clearTimeout(regenerateTimer);
-                regenerateTimer = null; }
-
+            // Render messages
             log.messages.forEach((msg, idx) => {
                 if (!msg.variants || !Array.isArray(msg.variants)) {
                     msg.variants = [msg.text];
@@ -1918,7 +1897,7 @@
                         injectDeployButton(contentDiv, rawCode);
                     }
 
-                    // Regenerate logic
+                    // Regenerate logic – only for the last message, active chat, within 30s, and no previous regeneration
                     const isLast = idx === log.messages.length - 1;
                     const alreadyRegenerated = msg.variants && msg.variants.length > 1;
                     const isActive = log.status === 'active';
@@ -1932,6 +1911,7 @@
                     }
                     injectActionButtons(contentDiv, rawResponse, false, showRegenerate, msg.createdAt || log.createdAt, log._id);
 
+                    // Variant navigation
                     if (msg.variants && msg.variants.length > 1) {
                         const currentIdx = msg.activeVariant || 0;
                         const variantBar = document.createElement('div');
@@ -2023,7 +2003,7 @@
                 actionBar.appendChild(likeBtn);
                 actionBar.appendChild(dislikeBtn);
 
-                // Regenerate button – zombie‑proof
+                // Regenerate button – only if showRegenerate is true and sessionId is provided
                 if (showRegenerate && createdAt && sessionId) {
                     const now = Date.now();
                     const msgTime = new Date(createdAt).getTime();
@@ -2049,13 +2029,13 @@
                         }, 1000);
 
                         regenBtn.onclick = function(e) {
-                            // Prevent zombie: check if this chat is still active
+                            // Ensure this is still the active chat
                             if (activeSessionId !== sessionId) {
                                 this.remove();
                                 clearInterval(timerInterval);
                                 return;
                             }
-                            // Remove button immediately
+                            // Remove button and execute
                             this.remove();
                             clearInterval(timerInterval);
                             if (window.lastUserCommand) {
@@ -2072,14 +2052,13 @@
                         };
                         actionBar.appendChild(regenBtn);
 
-                        // Auto‑remove after 30s if still present
+                        // Auto-remove after 30s if still present
                         const autoRemoveTimeout = setTimeout(() => {
                             if (regenBtn.parentNode) {
                                 regenBtn.remove();
                                 clearInterval(timerInterval);
                             }
                         }, 30000 - elapsed);
-                        // Store timeout on the button for cleanup if needed
                         regenBtn._autoRemoveTimeout = autoRemoveTimeout;
                     }
                 }
@@ -2205,7 +2184,7 @@
         // EXECUTE COMMAND
         // ============================================================
         async function executeCommand(isRetry = false) {
-            // Immediately hide hero – fix for flaw 2
+            // Immediately hide hero
             document.getElementById('hero-display').style.display = 'none';
             if (isProcessing) return;
             isProcessing = true;
@@ -2350,7 +2329,7 @@
             globalAbortController = new AbortController();
 
             let responseReceived = false;
-            const timeoutFallback = setTimeout(() => {
+            let timeoutFallback = setTimeout(() => {
                 if (!responseReceived) {
                     contentDiv.innerHTML = `⚠️ The AI took too long to respond. Please try again.`;
                     scrollToBottom();
@@ -2400,9 +2379,8 @@
                 let structuredData = null;
                 let sessionId = null;
                 let filename = 'Export.csv';
-                let timeoutFallbackInner; // declared outside to allow reset
+                let timeoutFallbackInner;
 
-                // Initial timeout
                 timeoutFallbackInner = setTimeout(() => {
                     if (!responseReceived) {
                         contentDiv.innerHTML = `⚠️ The AI took too long to respond. Please try again.`;
@@ -2426,7 +2404,6 @@
                                 const data = JSON.parse(line.substring(6));
                                 if (data.type === 'chunk') {
                                     responseReceived = true;
-                                    // Reset the timeout on any chunk – flaw 4 fix
                                     clearTimeout(timeoutFallbackInner);
                                     timeoutFallbackInner = setTimeout(() => {
                                         if (!responseReceived) {
