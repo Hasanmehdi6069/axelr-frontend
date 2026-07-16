@@ -159,14 +159,14 @@
         .sidebar-search-box input { background: transparent; border: none; color: #fff; font-size: 13px; width: 100%; outline: none; }
         .sidebar-search-box input::placeholder { color: var(--text-muted); }
 
-        #sidebar-content { flex: 1; overflow-y: auto; padding: 0 15px 15px 15px; display: flex; flex-direction: column; gap: 8px; padding-bottom: 80px; /* space for sticky footer */ }
+        #sidebar-content { flex: 1; overflow-y: auto; padding: 0 15px 15px 15px; display: flex; flex-direction: column; gap: 8px; }
         .sidebar-section-label { font-size: 11px; text-transform: uppercase; color: #4b5563; font-weight: 600; letter-spacing: 1px; margin: 10px 5px 5px 5px; }
 
         .history-item { padding: 12px 14px; border-radius: 12px; background: rgba(255,255,255,0.01); border: 1px solid transparent; cursor: pointer; transition: 0.2s; display: flex; justify-content: space-between; align-items: center; position: relative; }
         .history-item:hover { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.12); }
         .history-info { flex: 1; overflow: hidden; }
         .history-title { font-size: 13px; font-weight: 500; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px; }
-        .history-options-btn { background: transparent; border: none; color: var(--text-muted); opacity: 0; cursor: pointer; padding: 5px; transition: 0.2s; border-radius: 6px; font-size: 14px; }
+        .history-options-btn { background: transparent; border: none; color: var(--text-muted); opacity: 0; cursor: pointer; padding: 5px; transition: 0.2s; border-radius: 6px; }
         .history-item:hover .history-options-btn { opacity: 1; }
         .history-options-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
         .actions-dropdown-list { position: absolute; right: 10px; top: 40px; background: var(--bg-card); border: 1px solid var(--border-muted); border-radius: 12px; padding: 6px; display: none; flex-direction: column; gap: 2px; z-index: 250; box-shadow: 0 10px 30px rgba(0,0,0,0.5); min-width: 150px; }
@@ -187,6 +187,7 @@
             background: var(--bg-sidebar);
             z-index: 10;
             min-height: 80px;
+            padding-bottom: calc(env(safe-area-inset-bottom) + 15px);
         }
         .footer-opt { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 10px; color: var(--text-muted); font-size: 13px; cursor: pointer; transition: 0.2s; }
         .footer-opt:hover { background: rgba(255,255,255,0.05); color: #fff; }
@@ -206,6 +207,7 @@
 
         /* ===== HEADER ===== */
         .workspace-header { position: absolute; top: 0; left: 0; right: 0; height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px 0 50px; border-bottom: 1px solid var(--border-muted); z-index: 150; background: rgba(5,5,5,0.8); backdrop-filter: blur(10px); }
+        
         .model-hub { position: relative; }
         #model-selector { background: transparent; border: none; color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 8px; transition: 0.2s; }
         #model-selector:hover { background: rgba(255, 255, 255, 0.05); }
@@ -795,6 +797,21 @@
         .material-symbols-rounded { font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24; vertical-align: middle; font-size: 24px; }
         /* Ensure icons are inline-flex */
         .action-icon-btn span, .action-list-item span, .footer-opt span, .sidebar-sub-box span { display: inline-flex !important; align-items: center !important; vertical-align: middle !important; }
+
+        /* Ensure file staging container never shrinks on mobile */
+        #file-staging-container {
+            flex-shrink: 0;
+        }
+
+        #sidebar-content {
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .sidebar-footer {
+            flex-shrink: 0;
+            padding-bottom: calc(env(safe-area-inset-bottom) + 15px);
+        }
     </style>
 </head>
 <body class="workspace-data">
@@ -1131,7 +1148,11 @@
             edit: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>`,
             thumbsUp: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v12M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4M7 10H4a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h3"/></svg>`,
             thumbsDown: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 14V2M7 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20M17 14h3a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2h-3"/></svg>`,
-            regenerate: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3v6h-6"/><path d="M3 21v-6h6"/><path d="M18.364 5.636a9 9 0 1 1-12.728 12.728"/></svg>`
+            regenerate: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3v6h-6"/><path d="M3 21v-6h6"/><path d="M18.364 5.636a9 9 0 1 1-12.728 12.728"/></svg>`,
+            stop: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>`,
+            leftArrow: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>`,
+            rightArrow: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>`,
+            moreVertical: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>`
         };
 
         const SIDEBAR_ICONS = {
@@ -1193,14 +1214,36 @@
 
         function extractHtmlCode(text) {
             if (!text) return null;
-            const lowerText = text.toLowerCase();
-            if (!lowerText.includes("```")) return null;
-            const blocks = text.split("```");
-            for (let i = 1; i < blocks.length; i += 2) {
-                let block = blocks[i].trim();
-                if (block.toLowerCase().startsWith("html")) return block.substring(4).trim();
-                if (block.startsWith("<html") || block.startsWith("<!DOCTYPE") || block.startsWith("<div")) return block;
+            // First, try to find a code block that starts with html
+            const htmlBlockRegex = /```html\s*([\s\S]*?)```/i;
+            let match = text.match(htmlBlockRegex);
+            if (match) return match[1].trim();
+
+            // Fallback: look for any code block that contains HTML-like tags
+            const genericBlockRegex = /```(?:\w+)?\s*([\s\S]*?)```/g;
+            let block;
+            while ((block = genericBlockRegex.exec(text)) !== null) {
+                const content = block[1].trim();
+                if (content.startsWith("<") && (content.includes("<html") || content.includes("<!DOCTYPE") || content.includes("<div") || content.includes("<body"))) {
+                    return content;
+                }
             }
+
+            // Last resort: search for the first HTML tag and capture until </html> or end
+            const htmlTagRegex = /(<!DOCTYPE html>|<html>|<html[\s\S]*?>)/i;
+            const startMatch = text.match(htmlTagRegex);
+            if (startMatch) {
+                const startIndex = startMatch.index;
+                // Try to find the closing </html> tag
+                const endMatch = text.match(/<\/html>/i);
+                if (endMatch) {
+                    const endIndex = endMatch.index + endMatch[0].length;
+                    return text.substring(startIndex, endIndex).trim();
+                } else {
+                    return text.substring(startIndex).trim();
+                }
+            }
+
             return null;
         }
 
@@ -1209,7 +1252,7 @@
         function getDraftKey() { return `Axelr_prompt_draft_${currentUserId || 'anonymous'}`; }
 
         // ============================================================
-        // VISUAL VIEWPORT / COMMAND BAR RESPONSIVENESS (FLAW #1, #6)
+        // VISUAL VIEWPORT / COMMAND BAR RESPONSIVENESS
         // ============================================================
         function adjustViewportPadding() {
             const wrapperHeight = commandWrapper.offsetHeight;
@@ -1228,9 +1271,13 @@
                 const offsetY = window.innerHeight - vv.height;
                 const maxBottom = Math.min(offsetY, window.innerHeight * 0.5);
                 commandWrapper.style.bottom = maxBottom + 'px';
-                const fileChipsHeight = document.getElementById('file-staging-container').offsetHeight || 40;
+
+                // Account for the file staging container height
+                const fileChips = document.getElementById('file-staging-container');
+                const fileChipsHeight = fileChips ? fileChips.offsetHeight : 0;
                 const availableHeight = window.innerHeight - maxBottom - 20 - fileChipsHeight;
                 commandWrapper.style.maxHeight = Math.min(availableHeight, window.innerHeight * 0.8) + 'px';
+
                 setTimeout(adjustViewportPadding, 50);
                 if (viewport.querySelector('.chat-bubble')) {
                     scrollToBottom();
@@ -1241,7 +1288,6 @@
             setTimeout(adjustCommandWrapperAndViewport, 100);
         }
 
-        // Do not scroll to top on focus
         promptInput.addEventListener('focus', () => {
             setTimeout(() => {
                 adjustViewportPadding();
@@ -1313,7 +1359,7 @@
         });
 
         // ============================================================
-        // SIDEBAR FUNCTIONS (FLAW #8)
+        // SIDEBAR FUNCTIONS
         // ============================================================
         function toggleSidebar() { sidebarNode.classList.toggle('open'); }
         sidebarTriggerArea.addEventListener('click', (e) => { e.stopPropagation();
@@ -1410,9 +1456,13 @@
                 window.history.replaceState({}, document.title, window.location.pathname);
                 if (googleAuthUserToken) loadUserProfile();
             }
+            // Prevent sidebar close when clicking inside search box
             const searchBox = document.getElementById('sidebar-search-box');
-            searchBox.addEventListener('click', (e) => e.stopPropagation());
-            searchBox.addEventListener('touchstart', (e) => e.stopPropagation());
+            const searchInput = document.getElementById('sidebar-search-input');
+            [searchBox, searchInput].forEach(el => {
+                el.addEventListener('click', (e) => e.stopPropagation());
+                el.addEventListener('touchstart', (e) => e.stopPropagation());
+            });
         };
 
         async function initializeSecureWorkspace(payload, token) {
@@ -1487,7 +1537,7 @@
             localStorage.removeItem('Axelr_active_session');
             document.querySelectorAll('.chat-bubble').forEach(bubble => bubble.remove());
             const hero = document.getElementById('hero-display');
-            hero.style.display = 'flex'; // always show hero on new chat
+            hero.style.display = 'flex';
             if (!isBoot) {
                 promptInput.value = '';
                 promptInput.style.height = 'auto';
@@ -1671,7 +1721,7 @@
         }
 
         // ============================================================
-        // HISTORY (FLAW #10 – regenerate logic)
+        // HISTORY
         // ============================================================
         async function loadArchiveLogs() {
             try {
@@ -1687,7 +1737,7 @@
                 historyListContainer.innerHTML = cachedLogHistory.map(log => `
                     <div class="history-item" onclick="viewPastLogById('${log._id}')">
                         <div class="history-info"><div class="history-title" id="title-${log._id}">${log.isPinned ? '<span style="display:inline-flex;align-items:center;vertical-align:middle;">' + SIDEBAR_ICONS.push_pin + '</span>' : ''}${escapeHtmlEntities(log.filename)}</div></div>
-                        <button class="history-options-btn" onclick="toggleHistoryOptions(event, '${log._id}')">⋮</button>
+                        <button class="history-options-btn" onclick="toggleHistoryOptions(event, '${log._id}')">${ICONS.moreVertical}</button>
                         <div class="actions-dropdown-list" id="options-${log._id}">
                             ${currentTab === 'active' ? `
                                 <div class="action-list-item" onclick="renameChat('${log._id}', '${escapeHtmlEntities(log.filename)}', event)"><span style="display:inline-flex;align-items:center;vertical-align:middle;">${SIDEBAR_ICONS.edit}</span> Rename</div>
@@ -1854,7 +1904,7 @@
                         injectDeployButton(contentDiv, rawCode);
                     }
 
-                    // Regenerate logic (FLAW #10)
+                    // Regenerate logic
                     const isLast = idx === log.messages.length - 1;
                     const alreadyRegenerated = msg.variants && msg.variants.length > 1;
                     const isActive = log.status === 'active';
@@ -1866,7 +1916,7 @@
                             showRegenerate = true;
                         }
                     }
-                    injectActionButtons(contentDiv, rawResponse, false, showRegenerate, msg.createdAt || log.createdAt);
+                    injectActionButtons(contentDiv, rawResponse, false, showRegenerate, msg.createdAt || log.createdAt, log._id);
 
                     if (msg.variants && msg.variants.length > 1) {
                         const currentIdx = msg.activeVariant || 0;
@@ -1874,12 +1924,12 @@
                         variantBar.style.cssText =
                             "display:flex;align-items:center;gap:12px;margin-top:15px;padding-top:10px;border-top:1px solid var(--border-muted);font-size:12px;color:var(--text-muted);font-weight:600;";
                         const prevBtn = document.createElement('button');
-                        prevBtn.innerHTML = '◀';
+                        prevBtn.innerHTML = ICONS.leftArrow;
                         prevBtn.style.cssText =
                             `background:transparent;border:none;cursor:${currentIdx === 0 ? 'default' : 'pointer'};color:${currentIdx === 0 ? 'var(--border-muted)' : 'var(--text-main)'};font-size:14px;`;
                         if (currentIdx > 0) prevBtn.onclick = () => switchVariant(logId, msg._id, currentIdx - 1);
                         const nextBtn = document.createElement('button');
-                        nextBtn.innerHTML = '▶';
+                        nextBtn.innerHTML = ICONS.rightArrow;
                         nextBtn.style.cssText =
                             `background:transparent;border:none;cursor:${currentIdx === msg.variants.length - 1 ? 'default' : 'pointer'};color:${currentIdx === msg.variants.length - 1 ? 'var(--border-muted)' : 'var(--text-main)'};font-size:14px;`;
                         if (currentIdx < msg.variants.length - 1) nextBtn.onclick = () => switchVariant(logId, msg
@@ -1923,7 +1973,7 @@
         // ============================================================
         // ACTION BUTTONS
         // ============================================================
-        function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRegenerate = false, createdAt = null) {
+        function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRegenerate = false, createdAt = null, sessionId = null) {
             const actionBar = document.createElement('div');
             actionBar.className = 'bubble-action-bar';
 
@@ -1984,16 +2034,24 @@
                         }, 1000);
 
                         regenBtn.onclick = function(e) {
+                            // Zombie prevention: check if this chat is still active
+                            if (activeSessionId !== sessionId) {
+                                this.remove();
+                                clearInterval(timerInterval);
+                                return;
+                            }
+                            // Remove button immediately
+                            this.remove();
+                            clearInterval(timerInterval);
                             if (window.lastUserCommand) {
                                 document.getElementById('prompt-input').value = window.lastUserCommand;
                                 document.getElementById('prompt-input').style.height = 'auto';
-                                document.getElementById('prompt-input').style.height = document.getElementById(
-                                    'prompt-input').scrollHeight + 'px';
+                                document.getElementById('prompt-input').style.height = document.getElementById('prompt-input').scrollHeight + 'px';
                                 regeneratedMap[activeSessionId] = true;
-                                clearInterval(timerInterval);
-                                this.remove();
-                                if (regenerateTimer) { clearTimeout(regenerateTimer);
-                                    regenerateTimer = null; }
+                                if (regenerateTimer) {
+                                    clearTimeout(regenerateTimer);
+                                    regenerateTimer = null;
+                                }
                                 executeCommand(true);
                             }
                         };
@@ -2128,10 +2186,10 @@
         }
 
         // ============================================================
-        // EXECUTE COMMAND (FLAW #2, #4, #6)
+        // EXECUTE COMMAND
         // ============================================================
         async function executeCommand(isRetry = false) {
-            // Immediately hide hero (FLAW #4)
+            // Immediately hide hero
             document.getElementById('hero-display').style.display = 'none';
             if (isProcessing) return;
             isProcessing = true;
@@ -2271,11 +2329,10 @@
             }
 
             sendBtn.classList.add('btn-stop-active');
-            sendBtn.innerHTML = '⏹';
+            sendBtn.innerHTML = ICONS.stop;
 
             globalAbortController = new AbortController();
 
-            // Timeout fallback (FLAW #2)
             let responseReceived = false;
             const timeoutFallback = setTimeout(() => {
                 if (!responseReceived) {
@@ -2327,6 +2384,19 @@
                 let structuredData = null;
                 let sessionId = null;
                 let filename = 'Export.csv';
+                let timeoutFallbackInner; // declared outside to allow reset
+
+                // Initial timeout
+                timeoutFallbackInner = setTimeout(() => {
+                    if (!responseReceived) {
+                        contentDiv.innerHTML = `⚠️ The AI took too long to respond. Please try again.`;
+                        scrollToBottom();
+                        if (globalAbortController) globalAbortController.abort();
+                        sendBtn.classList.remove('btn-stop-active');
+                        sendBtn.disabled = false;
+                        isProcessing = false;
+                    }
+                }, 25000);
 
                 while (true) {
                     const { done, value } = await reader.read();
@@ -2340,14 +2410,26 @@
                                 const data = JSON.parse(line.substring(6));
                                 if (data.type === 'chunk') {
                                     responseReceived = true;
-                                    clearTimeout(timeoutFallback);
+                                    // Reset the timeout on any chunk
+                                    clearTimeout(timeoutFallbackInner);
+                                    timeoutFallbackInner = setTimeout(() => {
+                                        if (!responseReceived) {
+                                            contentDiv.innerHTML = `⚠️ The AI took too long to respond. Please try again.`;
+                                            scrollToBottom();
+                                            if (globalAbortController) globalAbortController.abort();
+                                            sendBtn.classList.remove('btn-stop-active');
+                                            sendBtn.disabled = false;
+                                            isProcessing = false;
+                                        }
+                                    }, 25000);
+
                                     fullResponse += data.text;
                                     const cleanResponse = fullResponse.replace(/<think>[\s\S]*?<\/think>/g, '');
                                     contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(cleanResponse));
                                     scrollToBottom();
                                 } else if (data.type === 'done') {
                                     responseReceived = true;
-                                    clearTimeout(timeoutFallback);
+                                    clearTimeout(timeoutFallbackInner);
                                     if (!fullResponse && data.finalResponse) {
                                         fullResponse = data.finalResponse;
                                         contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(fullResponse));
@@ -2360,7 +2442,6 @@
                                         localStorage.setItem('axelr_active_session', activeSessionId);
                                         runningStructuredCache = structuredData;
                                         runningFileTitle = filename;
-                                        // Refresh history and force view update (FLAW #4)
                                         await loadArchiveLogs();
                                         viewPastLogById(activeSessionId);
                                     }
@@ -2385,7 +2466,7 @@
                                     if (regenerateTimer) { clearTimeout(regenerateTimer);
                                         regenerateTimer = null; }
                                     const now = new Date().toISOString();
-                                    injectActionButtons(contentDiv, fullResponse, false, true, now);
+                                    injectActionButtons(contentDiv, fullResponse, false, true, now, activeSessionId);
                                     scrollToBottom();
                                 }
                             } catch (e) { /* ignore malformed JSON */ }
