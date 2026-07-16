@@ -1828,6 +1828,11 @@
         // VIEW PAST LOG – FIXED REGENERATE BUTTON LOGIC
         // ============================================================
         function viewPastLogById(logId) {
+  // Clear any pending regen timers
+  if (regenerateTimer) {
+    clearTimeout(regenerateTimer);
+    regenerateTimer = null;
+    }
             const log = cachedLogHistory.find(l => l._id === logId);
             if (!log) return;
             document.getElementById('hero-display').style.display = 'none';
@@ -1975,105 +1980,99 @@
         // ============================================================
         // ACTION BUTTONS – with hardened regenerate timer cleanup
         // ============================================================
-        function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRegenerate = false, createdAt = null, sessionId = null) {
-            const actionBar = document.createElement('div');
-            actionBar.className = 'bubble-action-bar';
+function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRegenerate = false, createdAt = null, sessionId = null) {
+  const actionBar = document.createElement('div');
+  actionBar.className = 'bubble-action-bar';
 
-            if (isUserPrompt) {
-                const editBtn = document.createElement('button');
-                editBtn.className = 'action-icon-btn';
-                editBtn.title = "Edit this prompt";
-                editBtn.innerHTML = `${ICONS.edit} Edit`;
-                editBtn.onclick = () => handleActionClick('edit', rawText, editBtn);
-                actionBar.appendChild(editBtn);
-            } else {
-                const copyBtn = document.createElement('button');
-                copyBtn.className = 'action-icon-btn';
-                copyBtn.title = "Copy Response";
-                copyBtn.innerHTML = `${ICONS.copy} Copy`;
-                copyBtn.onclick = () => handleActionClick('copy', rawText, copyBtn);
+  if (isUserPrompt) {
+    const editBtn = document.createElement('button');
+    editBtn.className = 'action-icon-btn';
+    editBtn.title = "Edit this prompt";
+    editBtn.innerHTML = `${ICONS.edit} Edit`;
+    editBtn.onclick = () => handleActionClick('edit', rawText, editBtn);
+    actionBar.appendChild(editBtn);
+  } else {
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'action-icon-btn';
+    copyBtn.title = "Copy Response";
+    copyBtn.innerHTML = `${ICONS.copy} Copy`;
+    copyBtn.onclick = () => handleActionClick('copy', rawText, copyBtn);
 
-                const likeBtn = document.createElement('button');
-                likeBtn.className = 'action-icon-btn';
-                likeBtn.title = "Helpful Response";
-                likeBtn.innerHTML = ICONS.thumbsUp;
-                likeBtn.onclick = () => { likeBtn.style.color = 'var(--accent-glow)';
-                    dislikeBtn.style.color = 'var(--text-muted)'; };
+    const likeBtn = document.createElement('button');
+    likeBtn.className = 'action-icon-btn';
+    likeBtn.title = "Helpful Response";
+    likeBtn.innerHTML = ICONS.thumbsUp;
+    likeBtn.onclick = () => { likeBtn.style.color = 'var(--accent-glow)'; dislikeBtn.style.color = 'var(--text-muted)'; };
 
-                const dislikeBtn = document.createElement('button');
-                dislikeBtn.className = 'action-icon-btn';
-                dislikeBtn.title = "Not Helpful";
-                dislikeBtn.innerHTML = ICONS.thumbsDown;
-                dislikeBtn.onclick = () => { dislikeBtn.style.color = '#ef4444';
-                    likeBtn.style.color = 'var(--text-muted)'; };
+    const dislikeBtn = document.createElement('button');
+    dislikeBtn.className = 'action-icon-btn';
+    dislikeBtn.title = "Not Helpful";
+    dislikeBtn.innerHTML = ICONS.thumbsDown;
+    dislikeBtn.onclick = () => { dislikeBtn.style.color = '#ef4444'; likeBtn.style.color = 'var(--text-muted)'; };
 
-                actionBar.appendChild(copyBtn);
-                actionBar.appendChild(likeBtn);
-                actionBar.appendChild(dislikeBtn);
+    actionBar.appendChild(copyBtn);
+    actionBar.appendChild(likeBtn);
+    actionBar.appendChild(dislikeBtn);
 
-                // --- Regenerate button – only if explicitly allowed ---
-                if (showRegenerate && createdAt && sessionId) {
-                    const now = Date.now();
-                    const msgTime = new Date(createdAt).getTime();
-                    const elapsed = now - msgTime;
-                    if (elapsed < 30000) {
-                        const regenBtn = document.createElement('button');
-                        regenBtn.className = 'action-icon-btn regen-active';
-                        regenBtn.title = "Regenerate response (available for 30s)";
-                        regenBtn.innerHTML = ICONS.regenerate + `<span class="regen-countdown">${Math.ceil((30000 - elapsed)/1000)}s</span>`;
-                        let remaining = Math.ceil((30000 - elapsed)/1000);
-                        const timerInterval = setInterval(() => {
-                            remaining--;
-                            const countSpan = regenBtn.querySelector('.regen-countdown');
-                            if (countSpan) {
-                                countSpan.textContent = remaining + 's';
-                            }
-                            if (remaining <= 0) {
-                                clearInterval(timerInterval);
-                                if (regenBtn.parentNode) {
-                                    regenBtn.remove();
-                                }
-                            }
-                        }, 1000);
+    // --- Regenerate button – with proper cleanup ---
+    if (showRegenerate && createdAt && sessionId) {
+      const now = Date.now();
+      const msgTime = new Date(createdAt).getTime();
+      const elapsed = now - msgTime;
+      if (elapsed < 30000) {
+        const regenBtn = document.createElement('button');
+        regenBtn.className = 'action-icon-btn regen-active';
+        regenBtn.title = "Regenerate response (available for 30s)";
+        regenBtn.innerHTML = ICONS.regenerate + `<span class="regen-countdown">${Math.ceil((30000 - elapsed)/1000)}s</span>`;
+        
+        // Timer references
+        let intervalId, timeoutId;
 
-                        regenBtn.onclick = function(e) {
-                            // Prevent zombie: check active session
-                            if (activeSessionId !== sessionId) {
-                                this.remove();
-                                clearInterval(timerInterval);
-                                return;
-                            }
-                            // Immediately remove button and timers
-                            this.remove();
-                            clearInterval(timerInterval);
-                            if (window.lastUserCommand) {
-                                document.getElementById('prompt-input').value = window.lastUserCommand;
-                                document.getElementById('prompt-input').style.height = 'auto';
-                                document.getElementById('prompt-input').style.height = document.getElementById('prompt-input').scrollHeight + 'px';
-                                regeneratedMap[activeSessionId] = true;
-                                if (regenerateTimer) {
-                                    clearTimeout(regenerateTimer);
-                                    regenerateTimer = null;
-                                }
-                                executeCommand(true);
-                            }
-                        };
-                        actionBar.appendChild(regenBtn);
+        const cleanup = () => {
+          if (intervalId) clearInterval(intervalId);
+          if (timeoutId) clearTimeout(timeoutId);
+          if (regenBtn.parentNode) regenBtn.remove();
+        };
 
-                        // Auto‑remove after the remaining time
-                        const autoRemoveTimeout = setTimeout(() => {
-                            if (regenBtn.parentNode) {
-                                regenBtn.remove();
-                                clearInterval(timerInterval);
-                            }
-                        }, 30000 - elapsed);
-                        // Store timeout reference for potential cleanup
-                        regenBtn._autoRemoveTimeout = autoRemoveTimeout;
-                    }
-                }
+        // Countdown interval
+        let remaining = Math.ceil((30000 - elapsed) / 1000);
+        intervalId = setInterval(() => {
+          remaining--;
+          const countSpan = regenBtn.querySelector('.regen-countdown');
+          if (countSpan) countSpan.textContent = remaining + 's';
+          if (remaining <= 0) cleanup();
+        }, 1000);
+
+        // Auto-remove timeout
+        timeoutId = setTimeout(cleanup, 30000 - elapsed);
+
+        // Click handler
+        regenBtn.onclick = function(e) {
+          if (activeSessionId !== sessionId) {
+            cleanup();
+            return;
+          }
+          cleanup(); // remove button and clear timers
+          if (window.lastUserCommand) {
+            document.getElementById('prompt-input').value = window.lastUserCommand;
+            document.getElementById('prompt-input').style.height = 'auto';
+            document.getElementById('prompt-input').style.height = document.getElementById('prompt-input').scrollHeight + 'px';
+            if (regenerateTimer) {
+              clearTimeout(regenerateTimer);
+              regenerateTimer = null;
             }
-            bubbleNode.appendChild(actionBar);
-        }
+            executeCommand(true);
+          }
+        };
+
+        // Store cleanup reference (optional)
+        regenBtn._cleanup = cleanup;
+        actionBar.appendChild(regenBtn);
+      }
+    }
+  }
+  bubbleNode.appendChild(actionBar);
+}
 
         function handleActionClick(actionType, rawText, btnRef) {
             if (actionType === 'copy') {
