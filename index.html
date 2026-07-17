@@ -650,7 +650,8 @@
             :root { --viewport-height: 100dvh; }
             body { height: var(--viewport-height); overflow: hidden; }
 
-            #sidebar-container-node { left: -100%; width: 85%; }
+            /* FIX 2: Sidebar covers full screen on mobile – width 100% */
+            #sidebar-container-node { left: -100%; width: 100%; }
             #sidebar-container-node.open { left: 0; box-shadow: 10px 0 30px rgba(0,0,0,0.8); }
             #viewport { padding: 80px 15px 140px 15px !important; height: var(--viewport-height); }
             .workspace-header { padding-left: 40px !important; }
@@ -868,7 +869,13 @@
     <!-- ===== MODALS ===== -->
     <div class="modal-overlay" id="admin-modal">
         <div class="modal-card">
-            <div class="modal-header"><div class="modal-title">Admin Control Room</div><button class="close-modal-btn" onclick="closeModals()">✕</button></div>
+            <div class="modal-header">
+                <div class="modal-title">Admin Control Room</div>
+                <!-- FIX 7: Replace emoji close with material icon -->
+                <button class="close-modal-btn" onclick="closeModals()">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+            </div>
             <div style="display:flex;flex-direction:column;gap:5px;" id="admin-metrics-container">
                 <div style="color:var(--text-muted);font-size:12px;text-align:center;">Fetching Matrix Telemetry...</div>
             </div>
@@ -877,7 +884,12 @@
 
     <div class="modal-overlay" id="instructions-modal">
         <div class="modal-card">
-            <div class="modal-header"><div class="modal-title">Custom Instructions</div><button class="close-modal-btn" onclick="closeModals()">✕</button></div>
+            <div class="modal-header">
+                <div class="modal-title">Custom Instructions</div>
+                <button class="close-modal-btn" onclick="closeModals()">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+            </div>
             <p style="color:var(--text-muted);font-size:13px;margin-bottom:5px;">What would you like Axelr to know about you?</p>
             <textarea class="modal-input" id="instructions-input" placeholder="e.g., I am a software engineer. Only give me the raw code..."></textarea>
             <button class="modal-submit-btn" onclick="saveCustomInstructions()">Save Instructions</button>
@@ -886,10 +898,16 @@
 
     <div class="modal-overlay" id="feedback-modal">
         <div class="modal-card">
-            <div class="modal-header"><div class="modal-title">System Report</div><button class="close-modal-btn" onclick="closeModals()">✕</button></div>
+            <div class="modal-header">
+                <div class="modal-title">System Report</div>
+                <button class="close-modal-btn" onclick="closeModals()">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+            </div>
+            <!-- FIX 7: Remove emojis from select options, keep professional text -->
             <select id="report-type" class="modal-input" style="min-height: auto; margin-bottom: 5px;">
-                <option value="help">🔴 Report an Error/Bug</option>
-                <option value="feedback">💡 Submit UX Feedback</option>
+                <option value="help">Report an Error / Bug</option>
+                <option value="feedback">Submit UX Feedback</option>
             </select>
             <textarea class="modal-input" id="feedback-input" placeholder="Describe the anomaly or feedback..."></textarea>
             <button class="modal-submit-btn" onclick="submitTelemetryReport()">Dispatch Log</button>
@@ -898,7 +916,12 @@
 
     <div class="modal-overlay" id="upgrade-modal">
         <div class="modal-card" style="max-width:900px;">
-            <div class="modal-header"><div class="modal-title">Upgrade Workspace</div><button class="close-modal-btn" onclick="closeModals()">✕</button></div>
+            <div class="modal-header">
+                <div class="modal-title">Upgrade Workspace</div>
+                <button class="close-modal-btn" onclick="closeModals()">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+            </div>
             <div class="axelr-pricing-container">
                 <div>
                     <!-- Pro Tier -->
@@ -974,7 +997,12 @@
 
     <div class="modal-overlay" id="subscription-modal">
         <div class="modal-card">
-            <div class="modal-header"><div class="modal-title">Manage Subscription</div><button class="close-modal-btn" onclick="closeModals()">✕</button></div>
+            <div class="modal-header">
+                <div class="modal-title">Manage Subscription</div>
+                <button class="close-modal-btn" onclick="closeModals()">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+            </div>
             <div style="display:flex;flex-direction:column;gap:5px;">
                 <div class="profile-stat-row"><span class="profile-stat-label">Current Plan</span><span class="profile-stat-value" id="sub-plan-name" style="color:#fff;">Free Allocation</span></div>
             </div>
@@ -984,7 +1012,12 @@
 
     <div class="modal-overlay" id="profile-modal">
         <div class="modal-card">
-            <div class="modal-header"><div class="modal-title">Identity Configuration</div><button class="close-modal-btn" onclick="closeModals()">✕</button></div>
+            <div class="modal-header">
+                <div class="modal-title">Identity Configuration</div>
+                <button class="close-modal-btn" onclick="closeModals()">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+            </div>
             <div style="display:flex;flex-direction:column;gap:5px;">
                 <div class="profile-stat-row"><span class="profile-stat-label">Authentication Layer</span><span class="profile-stat-value">Google OAuth 2.0</span></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Network Status</span><span class="profile-stat-value" style="color:var(--accent-secondary);">Secured</span></div>
@@ -1291,24 +1324,17 @@
             setTimeout(adjustCommandWrapperAndViewport, 100);
         }
 
-        promptInput.addEventListener('focus', () => {
+        // FIX 5 & 6: Ensure focus does not show hero and scrolls properly
+        promptInput.addEventListener('focus', function() {
+            if (activeSessionId) {
+                document.getElementById('hero-display').style.display = 'none';
+            }
             setTimeout(() => {
                 adjustViewportPadding();
                 if (viewport.querySelector('.chat-bubble')) {
                     scrollToBottom();
                 }
             }, 200);
-           promptInput.addEventListener('focus', function() {
-    if (activeSessionId) {
-        document.getElementById('hero-display').style.display = 'none';
-    }
-    setTimeout(() => {
-        adjustViewportPadding();
-        if (viewport.querySelector('.chat-bubble')) {
-            scrollToBottom();
-        }
-    }, 200);
-});
         });
 
         const viewportObserver = new MutationObserver(() => {
@@ -1401,6 +1427,7 @@
             el.addEventListener('touchstart', (e) => e.stopPropagation());
         });
 
+        // FIX 1: Keep sidebar open while searching – already covered by ignoreSidebarClose and click checks
         searchInput.addEventListener('focus', () => {
             ignoreSidebarClose = true;
             setTimeout(() => { ignoreSidebarClose = false; }, 500);
@@ -2453,6 +2480,7 @@ function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRege
                                         localStorage.setItem('axelr_active_session', activeSessionId);
                                         runningStructuredCache = structuredData;
                                         runningFileTitle = filename;
+                                        // FIX 8: Force refresh sidebar immediately
                                         await loadArchiveLogs();
                                         viewPastLogById(activeSessionId);
                                     }
@@ -2658,6 +2686,7 @@ function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRege
                 const resp = await fetch(`${API_BASE_URL}/api/admin/metrics`, { headers: { 'Authorization': `Bearer ${googleAuthUserToken}` } });
                 if (resp.ok) {
                     const data = await resp.json();
+                    // FIX 11: Display token usage in admin modal
                     document.getElementById('admin-metrics-container').innerHTML = `
                             <div class="profile-stat-row"><span class="profile-stat-label">Total Users</span><span class="profile-stat-value">${data.totalUsers}</span></div>
                             <div class="profile-stat-row"><span class="profile-stat-label">Pro Subscribers</span><span class="profile-stat-value" style="color:var(--accent-glow-pro)">${data.proUsers}</span></div>
@@ -2666,6 +2695,9 @@ function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRege
                             <div style="border-top:1px solid var(--border-muted);margin:10px 0;"></div>
                             <div class="profile-stat-row"><span class="profile-stat-label">Gemini Engine</span><span class="profile-stat-value" style="color:var(--accent-secondary)">${data.metrics?.geminiStatus || 'Operational'}</span></div>
                             <div class="profile-stat-row"><span class="profile-stat-label">Database Sync</span><span class="profile-stat-value" style="color:var(--accent-secondary)">${data.metrics?.dbStatus || 'Connected'}</span></div>
+                            <div style="border-top:1px solid var(--border-muted);margin:10px 0;"></div>
+                            <div class="profile-stat-row"><span class="profile-stat-label">Total Tokens Used</span><span class="profile-stat-value">${data.tokenUsage?.total || 0}</span></div>
+                            <div class="profile-stat-row"><span class="profile-stat-label">Free Tier Remaining</span><span class="profile-stat-value" style="color:${data.tokenUsage?.remaining > 0 ? 'var(--accent-secondary)' : '#ef4444'};">${data.tokenUsage?.remaining || 0} / ${data.tokenUsage?.limit || 1000000}</span></div>
                         `;
                 } else {
                     document.getElementById('admin-metrics-container').innerHTML =
