@@ -650,14 +650,8 @@
             :root { --viewport-height: 100dvh; }
             body { height: var(--viewport-height); overflow: hidden; }
 
-             #sidebar-container-node {
-        width: 100vw !important;
-        max-width: 100vw !important;
-        left: -100vw;
-    }
-    #sidebar-container-node.open {
-        left: 0 !important;
-    }
+            #sidebar-container-node { left: -100%; width: 85%; }
+            #sidebar-container-node.open { left: 0; box-shadow: 10px 0 30px rgba(0,0,0,0.8); }
             #viewport { padding: 80px 15px 140px 15px !important; height: var(--viewport-height); }
             .workspace-header { padding-left: 40px !important; }
             .brand-logo { font-size: 16px; }
@@ -1304,10 +1298,16 @@
                     scrollToBottom();
                 }
             }, 200);
-            promptInput.addEventListener('focus', function() {
+           promptInput.addEventListener('focus', function() {
     if (activeSessionId) {
         document.getElementById('hero-display').style.display = 'none';
     }
+    setTimeout(() => {
+        adjustViewportPadding();
+        if (viewport.querySelector('.chat-bubble')) {
+            scrollToBottom();
+        }
+    }, 200);
 });
         });
 
