@@ -904,7 +904,7 @@
                     <span class="material-symbols-rounded">close</span>
                 </button>
             </div>
-            <!-- FIX 7: Remove emojis from select options, keep professional text -->
+            <!-- FIX 7: Replace emojis with professional text -->
             <select id="report-type" class="modal-input" style="min-height: auto; margin-bottom: 5px;">
                 <option value="help">Report an Error / Bug</option>
                 <option value="feedback">Submit UX Feedback</option>
@@ -1186,8 +1186,8 @@
             leftArrow: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>`,
             rightArrow: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>`,
             close: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
-    bug: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M8 4l2 4M16 4l-2 4M20 12h-3M4 12H1M8 20H5M16 20h3M12 20v-4M4 12v4M20 12v4M16 16H8M12 16v-4"/></svg>`,
-    lightbulb: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 2C8 2 5 5 5 9c0 2.5 1.5 4.5 3 6h8c1.5-1.5 3-3.5 3-6 0-4-3-7-7-7z"/><path d="M12 12v2"/></svg>`,
+            bug: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M8 4l2 4M16 4l-2 4M20 12h-3M4 12H1M8 20H5M16 20h3M12 20v-4M4 12v4M20 12v4M16 16H8M12 16v-4"/></svg>`,
+            lightbulb: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 2C8 2 5 5 5 9c0 2.5 1.5 4.5 3 6h8c1.5-1.5 3-3.5 3-6 0-4-3-7-7-7z"/><path d="M12 12v2"/></svg>`,
             moreVertical: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>`
         };
 
@@ -1326,6 +1326,7 @@
 
         // FIX 5 & 6: Ensure focus does not show hero and scrolls properly
         promptInput.addEventListener('focus', function() {
+            // FIX 6: If in active chat, do not show hero
             if (activeSessionId) {
                 document.getElementById('hero-display').style.display = 'none';
             }
@@ -1346,19 +1347,24 @@
         // FILE HANDLING
         // ============================================================
         function renderFileChips() {
+            // FIX 3: Do not clear the container if there are files; just update
             if (stagedFiles.length === 0) {
                 fileStagingContainer.style.display = 'none';
                 fileStagingContainer.innerHTML = '';
                 return;
             }
             fileStagingContainer.style.display = 'flex';
+            // FIX 7: Replace "✕" with material symbol
             fileStagingContainer.innerHTML = stagedFiles.map((file, idx) =>
                 `<div class="file-chip" style="display:flex;align-items:center;gap:8px;max-width:100%;flex-shrink:0;">
                     <span class="material-symbols-rounded" style="font-size:16px;">description</span>
                     <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;display:inline-block;vertical-align:middle;">${escapeHtmlEntities(file.name)}</span>
-                    <span style="cursor:pointer;color:#ef4444;font-weight:bold;font-size:14px;flex-shrink:0;padding-left:4px;" onclick="removeStagedFile(${idx})">✕</span>
+                    <span style="cursor:pointer;color:#ef4444;font-weight:bold;font-size:14px;flex-shrink:0;padding-left:4px;" onclick="removeStagedFile(${idx})">
+                        <span class="material-symbols-rounded" style="font-size:16px;">close</span>
+                    </span>
                 </div>`
             ).join('');
+            // Ensure it stays visible
             requestAnimationFrame(() => {
                 fileStagingContainer.style.display = 'flex';
             });
@@ -1404,21 +1410,21 @@
         function toggleSidebar() { sidebarNode.classList.toggle('open'); }
         sidebarTriggerArea.addEventListener('click', (e) => { e.stopPropagation();
             sidebarNode.classList.toggle('open'); });
-       window.addEventListener('click', (e) => {
-    if (ignoreSidebarClose || document.activeElement === document.getElementById('sidebar-search-input')) {
-        return;
-    }
-    // Do not close sidebar if click is inside sidebar container
-    if (e.target.closest('#sidebar-container-node')) return;
-    if (e.target.closest('#sidebar-search-box') || e.target.closest('#sidebar-search-box input')) {
-        e.stopPropagation();
-        return;
-    }
-    if (!sidebarNode.contains(e.target) && e.target !== sidebarTriggerArea) sidebarNode.classList.remove('open');
-    if (!document.querySelector('.account-hub').contains(e.target)) accountDropdownCard.style.display = 'none';
-    if (!document.querySelector('.model-hub').contains(e.target)) modelDropdownCard.style.display = 'none';
-    if (!e.target.closest('.history-options-btn')) document.querySelectorAll('.actions-dropdown-list').forEach(d => d.classList.remove('active'));
-});
+        window.addEventListener('click', (e) => {
+            // FIX 1: Ignore sidebar close when clicking inside search box or when search input is focused
+            if (ignoreSidebarClose || document.activeElement === document.getElementById('sidebar-search-input')) {
+                return;
+            }
+            if (e.target.closest('#sidebar-container-node')) return;
+            if (e.target.closest('#sidebar-search-box') || e.target.closest('#sidebar-search-box input')) {
+                e.stopPropagation();
+                return;
+            }
+            if (!sidebarNode.contains(e.target) && e.target !== sidebarTriggerArea) sidebarNode.classList.remove('open');
+            if (!document.querySelector('.account-hub').contains(e.target)) accountDropdownCard.style.display = 'none';
+            if (!document.querySelector('.model-hub').contains(e.target)) modelDropdownCard.style.display = 'none';
+            if (!e.target.closest('.history-options-btn')) document.querySelectorAll('.actions-dropdown-list').forEach(d => d.classList.remove('active'));
+        });
 
         const searchInput = document.getElementById('sidebar-search-input');
         const searchBox = document.getElementById('sidebar-search-box');
@@ -1870,13 +1876,14 @@
         // VIEW PAST LOG – FIXED REGENERATE BUTTON LOGIC
         // ============================================================
         function viewPastLogById(logId) {
-  // Clear any pending regen timers
-  if (regenerateTimer) {
-    clearTimeout(regenerateTimer);
-    regenerateTimer = null;
-    }
+            // Clear any pending regen timers
+            if (regenerateTimer) {
+                clearTimeout(regenerateTimer);
+                regenerateTimer = null;
+            }
             const log = cachedLogHistory.find(l => l._id === logId);
             if (!log) return;
+            // FIX 6: Hide hero when viewing a past chat
             document.getElementById('hero-display').style.display = 'none';
             document.querySelectorAll('.chat-bubble').forEach(b => b.remove());
             activeSessionId = logId;
@@ -2022,93 +2029,93 @@
         // ============================================================
         // ACTION BUTTONS – with hardened regenerate timer cleanup
         // ============================================================
-function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRegenerate = false, createdAt = null, sessionId = null) {
-  const actionBar = document.createElement('div');
-  actionBar.className = 'bubble-action-bar';
+        function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRegenerate = false, createdAt = null, sessionId = null) {
+            const actionBar = document.createElement('div');
+            actionBar.className = 'bubble-action-bar';
 
-  if (isUserPrompt) {
-    const editBtn = document.createElement('button');
-    editBtn.className = 'action-icon-btn';
-    editBtn.title = "Edit this prompt";
-    editBtn.innerHTML = `${ICONS.edit} Edit`;
-    editBtn.onclick = () => handleActionClick('edit', rawText, editBtn);
-    actionBar.appendChild(editBtn);
-  } else {
-    const copyBtn = document.createElement('button');
-    copyBtn.className = 'action-icon-btn';
-    copyBtn.title = "Copy Response";
-    copyBtn.innerHTML = `${ICONS.copy} Copy`;
-    copyBtn.onclick = () => handleActionClick('copy', rawText, copyBtn);
+            if (isUserPrompt) {
+                const editBtn = document.createElement('button');
+                editBtn.className = 'action-icon-btn';
+                editBtn.title = "Edit this prompt";
+                editBtn.innerHTML = `${ICONS.edit} Edit`;
+                editBtn.onclick = () => handleActionClick('edit', rawText, editBtn);
+                actionBar.appendChild(editBtn);
+            } else {
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'action-icon-btn';
+                copyBtn.title = "Copy Response";
+                copyBtn.innerHTML = `${ICONS.copy} Copy`;
+                copyBtn.onclick = () => handleActionClick('copy', rawText, copyBtn);
 
-    const likeBtn = document.createElement('button');
-    likeBtn.className = 'action-icon-btn';
-    likeBtn.title = "Helpful Response";
-    likeBtn.innerHTML = ICONS.thumbsUp;
-    likeBtn.onclick = () => { likeBtn.style.color = 'var(--accent-glow)'; dislikeBtn.style.color = 'var(--text-muted)'; };
+                const likeBtn = document.createElement('button');
+                likeBtn.className = 'action-icon-btn';
+                likeBtn.title = "Helpful Response";
+                likeBtn.innerHTML = ICONS.thumbsUp;
+                likeBtn.onclick = () => { likeBtn.style.color = 'var(--accent-glow)'; dislikeBtn.style.color = 'var(--text-muted)'; };
 
-    const dislikeBtn = document.createElement('button');
-    dislikeBtn.className = 'action-icon-btn';
-    dislikeBtn.title = "Not Helpful";
-    dislikeBtn.innerHTML = ICONS.thumbsDown;
-    dislikeBtn.onclick = () => { dislikeBtn.style.color = '#ef4444'; likeBtn.style.color = 'var(--text-muted)'; };
+                const dislikeBtn = document.createElement('button');
+                dislikeBtn.className = 'action-icon-btn';
+                dislikeBtn.title = "Not Helpful";
+                dislikeBtn.innerHTML = ICONS.thumbsDown;
+                dislikeBtn.onclick = () => { dislikeBtn.style.color = '#ef4444'; likeBtn.style.color = 'var(--text-muted)'; };
 
-    actionBar.appendChild(copyBtn);
-    actionBar.appendChild(likeBtn);
-    actionBar.appendChild(dislikeBtn);
+                actionBar.appendChild(copyBtn);
+                actionBar.appendChild(likeBtn);
+                actionBar.appendChild(dislikeBtn);
 
-    // --- Regenerate button – with proper cleanup ---
-    if (showRegenerate && createdAt && sessionId) {
-    const now = Date.now();
-    const msgTime = new Date(createdAt).getTime();
-    const elapsed = now - msgTime;
-    if (elapsed < 30000) {
-        const regenBtn = document.createElement('button');
-        regenBtn.className = 'action-icon-btn regen-active';
-        regenBtn.title = "Regenerate response (available for 30s)";
-        regenBtn.innerHTML = ICONS.regenerate + `<span class="regen-countdown">${Math.ceil((30000 - elapsed)/1000)}s</span>`;
-        
-        let intervalId, timeoutId;
+                // --- Regenerate button – with proper cleanup ---
+                if (showRegenerate && createdAt && sessionId) {
+                    const now = Date.now();
+                    const msgTime = new Date(createdAt).getTime();
+                    const elapsed = now - msgTime;
+                    if (elapsed < 30000) {
+                        const regenBtn = document.createElement('button');
+                        regenBtn.className = 'action-icon-btn regen-active';
+                        regenBtn.title = "Regenerate response (available for 30s)";
+                        regenBtn.innerHTML = ICONS.regenerate + `<span class="regen-countdown">${Math.ceil((30000 - elapsed)/1000)}s</span>`;
+                        
+                        let intervalId, timeoutId;
 
-        const cleanup = () => {
-            if (intervalId) clearInterval(intervalId);
-            if (timeoutId) clearTimeout(timeoutId);
-            if (regenBtn.parentNode) regenBtn.remove();
-        };
+                        const cleanup = () => {
+                            if (intervalId) clearInterval(intervalId);
+                            if (timeoutId) clearTimeout(timeoutId);
+                            if (regenBtn.parentNode) regenBtn.remove();
+                        };
 
-        let remaining = Math.ceil((30000 - elapsed) / 1000);
-        intervalId = setInterval(() => {
-            remaining--;
-            const countSpan = regenBtn.querySelector('.regen-countdown');
-            if (countSpan) countSpan.textContent = remaining + 's';
-            if (remaining <= 0) cleanup();
-        }, 1000);
+                        let remaining = Math.ceil((30000 - elapsed) / 1000);
+                        intervalId = setInterval(() => {
+                            remaining--;
+                            const countSpan = regenBtn.querySelector('.regen-countdown');
+                            if (countSpan) countSpan.textContent = remaining + 's';
+                            if (remaining <= 0) cleanup();
+                        }, 1000);
 
-        timeoutId = setTimeout(cleanup, 30000 - elapsed);
+                        timeoutId = setTimeout(cleanup, 30000 - elapsed);
 
-        regenBtn.onclick = function(e) {
-            if (activeSessionId !== sessionId) {
-                cleanup();
-                return;
-            }
-            cleanup(); // remove button and clear timers
-            if (window.lastUserCommand) {
-                document.getElementById('prompt-input').value = window.lastUserCommand;
-                document.getElementById('prompt-input').style.height = 'auto';
-                document.getElementById('prompt-input').style.height = document.getElementById('prompt-input').scrollHeight + 'px';
-                if (regenerateTimer) {
-                    clearTimeout(regenerateTimer);
-                    regenerateTimer = null;
+                        regenBtn.onclick = function(e) {
+                            if (activeSessionId !== sessionId) {
+                                cleanup();
+                                return;
+                            }
+                            cleanup(); // remove button and clear timers
+                            if (window.lastUserCommand) {
+                                document.getElementById('prompt-input').value = window.lastUserCommand;
+                                document.getElementById('prompt-input').style.height = 'auto';
+                                document.getElementById('prompt-input').style.height = document.getElementById('prompt-input').scrollHeight + 'px';
+                                if (regenerateTimer) {
+                                    clearTimeout(regenerateTimer);
+                                    regenerateTimer = null;
+                                }
+                                executeCommand(true);
+                            }
+                        };
+
+                        actionBar.appendChild(regenBtn);
+                    }
                 }
-                executeCommand(true);
             }
-        };
-
-        actionBar.appendChild(regenBtn);
-    }sidebar 
-    }
-  }
-  bubbleNode.appendChild(actionBar);
-}
+            bubbleNode.appendChild(actionBar);
+        }
 
         function handleActionClick(actionType, rawText, btnRef) {
             if (actionType === 'copy') {
@@ -2228,11 +2235,11 @@ function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRege
         // EXECUTE COMMAND – harden timeout reset and UI consistency
         // ============================================================
         async function executeCommand(isRetry = false) {
-            // Immediately hide hero
-    document.getElementById('hero-display').style.display = 'none';
-    
-    if (isProcessing) return;
-    isProcessing = true;
+            // Immediately hide hero (FIX 5)
+            document.getElementById('hero-display').style.display = 'none';
+            
+            if (isProcessing) return;
+            isProcessing = true;
             if (manipulationLockUntil && Date.now() < manipulationLockUntil) {
                 const remaining = Math.ceil((manipulationLockUntil - Date.now()) / 1000);
                 alert(`⛔ System temporarily locked due to security violations. Please wait ${remaining} seconds.`);
