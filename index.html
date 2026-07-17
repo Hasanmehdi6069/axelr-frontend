@@ -650,8 +650,14 @@
             :root { --viewport-height: 100dvh; }
             body { height: var(--viewport-height); overflow: hidden; }
 
-            #sidebar-container-node { left: -100%; width: 85%; }
-            #sidebar-container-node.open { left: 0; box-shadow: 10px 0 30px rgba(0,0,0,0.8); }
+             #sidebar-container-node {
+        width: 100vw !important;
+        max-width: 100vw !important;
+        left: -100vw;
+    }
+    #sidebar-container-node.open {
+        left: 0 !important;
+    }
             #viewport { padding: 80px 15px 140px 15px !important; height: var(--viewport-height); }
             .workspace-header { padding-left: 40px !important; }
             .brand-logo { font-size: 16px; }
@@ -1152,6 +1158,9 @@
             stop: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>`,
             leftArrow: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>`,
             rightArrow: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>`,
+            close: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+    bug: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M8 4l2 4M16 4l-2 4M20 12h-3M4 12H1M8 20H5M16 20h3M12 20v-4M4 12v4M20 12v4M16 16H8M12 16v-4"/></svg>`,
+    lightbulb: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 2C8 2 5 5 5 9c0 2.5 1.5 4.5 3 6h8c1.5-1.5 3-3.5 3-6 0-4-3-7-7-7z"/><path d="M12 12v2"/></svg>`,
             moreVertical: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>`
         };
 
@@ -1295,6 +1304,11 @@
                     scrollToBottom();
                 }
             }, 200);
+            promptInput.addEventListener('focus', function() {
+    if (activeSessionId) {
+        document.getElementById('hero-display').style.display = 'none';
+    }
+});
         });
 
         const viewportObserver = new MutationObserver(() => {
@@ -1364,20 +1378,21 @@
         function toggleSidebar() { sidebarNode.classList.toggle('open'); }
         sidebarTriggerArea.addEventListener('click', (e) => { e.stopPropagation();
             sidebarNode.classList.toggle('open'); });
-        window.addEventListener('click', (e) => {
-            if (ignoreSidebarClose || document.activeElement === document.getElementById('sidebar-search-input')) {
-                return;
-            }
-            if (e.target.closest('#sidebar-search-box') || e.target.closest('#sidebar-search-box input')) {
-                e.stopPropagation();
-                return;
-            }
-            if (!sidebarNode.contains(e.target) && e.target !== sidebarTriggerArea) sidebarNode.classList.remove('open');
-            if (!document.querySelector('.account-hub').contains(e.target)) accountDropdownCard.style.display = 'none';
-            if (!document.querySelector('.model-hub').contains(e.target)) modelDropdownCard.style.display = 'none';
-            if (!e.target.closest('.history-options-btn')) document.querySelectorAll('.actions-dropdown-list').forEach(d =>
-                d.classList.remove('active'));
-        });
+       window.addEventListener('click', (e) => {
+    if (ignoreSidebarClose || document.activeElement === document.getElementById('sidebar-search-input')) {
+        return;
+    }
+    // Do not close sidebar if click is inside sidebar container
+    if (e.target.closest('#sidebar-container-node')) return;
+    if (e.target.closest('#sidebar-search-box') || e.target.closest('#sidebar-search-box input')) {
+        e.stopPropagation();
+        return;
+    }
+    if (!sidebarNode.contains(e.target) && e.target !== sidebarTriggerArea) sidebarNode.classList.remove('open');
+    if (!document.querySelector('.account-hub').contains(e.target)) accountDropdownCard.style.display = 'none';
+    if (!document.querySelector('.model-hub').contains(e.target)) modelDropdownCard.style.display = 'none';
+    if (!e.target.closest('.history-options-btn')) document.querySelectorAll('.actions-dropdown-list').forEach(d => d.classList.remove('active'));
+});
 
         const searchInput = document.getElementById('sidebar-search-input');
         const searchBox = document.getElementById('sidebar-search-box');
@@ -2016,59 +2031,53 @@ function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRege
 
     // --- Regenerate button – with proper cleanup ---
     if (showRegenerate && createdAt && sessionId) {
-      const now = Date.now();
-      const msgTime = new Date(createdAt).getTime();
-      const elapsed = now - msgTime;
-      if (elapsed < 30000) {
+    const now = Date.now();
+    const msgTime = new Date(createdAt).getTime();
+    const elapsed = now - msgTime;
+    if (elapsed < 30000) {
         const regenBtn = document.createElement('button');
         regenBtn.className = 'action-icon-btn regen-active';
         regenBtn.title = "Regenerate response (available for 30s)";
         regenBtn.innerHTML = ICONS.regenerate + `<span class="regen-countdown">${Math.ceil((30000 - elapsed)/1000)}s</span>`;
         
-        // Timer references
         let intervalId, timeoutId;
 
         const cleanup = () => {
-          if (intervalId) clearInterval(intervalId);
-          if (timeoutId) clearTimeout(timeoutId);
-          if (regenBtn.parentNode) regenBtn.remove();
+            if (intervalId) clearInterval(intervalId);
+            if (timeoutId) clearTimeout(timeoutId);
+            if (regenBtn.parentNode) regenBtn.remove();
         };
 
-        // Countdown interval
         let remaining = Math.ceil((30000 - elapsed) / 1000);
         intervalId = setInterval(() => {
-          remaining--;
-          const countSpan = regenBtn.querySelector('.regen-countdown');
-          if (countSpan) countSpan.textContent = remaining + 's';
-          if (remaining <= 0) cleanup();
+            remaining--;
+            const countSpan = regenBtn.querySelector('.regen-countdown');
+            if (countSpan) countSpan.textContent = remaining + 's';
+            if (remaining <= 0) cleanup();
         }, 1000);
 
-        // Auto-remove timeout
         timeoutId = setTimeout(cleanup, 30000 - elapsed);
 
-        // Click handler
         regenBtn.onclick = function(e) {
-          if (activeSessionId !== sessionId) {
-            cleanup();
-            return;
-          }
-          cleanup(); // remove button and clear timers
-          if (window.lastUserCommand) {
-            document.getElementById('prompt-input').value = window.lastUserCommand;
-            document.getElementById('prompt-input').style.height = 'auto';
-            document.getElementById('prompt-input').style.height = document.getElementById('prompt-input').scrollHeight + 'px';
-            if (regenerateTimer) {
-              clearTimeout(regenerateTimer);
-              regenerateTimer = null;
+            if (activeSessionId !== sessionId) {
+                cleanup();
+                return;
             }
-            executeCommand(true);
-          }
+            cleanup(); // remove button and clear timers
+            if (window.lastUserCommand) {
+                document.getElementById('prompt-input').value = window.lastUserCommand;
+                document.getElementById('prompt-input').style.height = 'auto';
+                document.getElementById('prompt-input').style.height = document.getElementById('prompt-input').scrollHeight + 'px';
+                if (regenerateTimer) {
+                    clearTimeout(regenerateTimer);
+                    regenerateTimer = null;
+                }
+                executeCommand(true);
+            }
         };
 
-        // Store cleanup reference (optional)
-        regenBtn._cleanup = cleanup;
         actionBar.appendChild(regenBtn);
-      }
+    }sidebar 
     }
   }
   bubbleNode.appendChild(actionBar);
@@ -2192,10 +2201,11 @@ function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRege
         // EXECUTE COMMAND – harden timeout reset and UI consistency
         // ============================================================
         async function executeCommand(isRetry = false) {
-            document.getElementById('hero-display').style.display = 'none';
-            if (isProcessing) return;
-            isProcessing = true;
-
+            // Immediately hide hero
+    document.getElementById('hero-display').style.display = 'none';
+    
+    if (isProcessing) return;
+    isProcessing = true;
             if (manipulationLockUntil && Date.now() < manipulationLockUntil) {
                 const remaining = Math.ceil((manipulationLockUntil - Date.now()) / 1000);
                 alert(`⛔ System temporarily locked due to security violations. Please wait ${remaining} seconds.`);
