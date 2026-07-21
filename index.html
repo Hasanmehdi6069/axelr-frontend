@@ -654,6 +654,25 @@
             #sidebar-container-node { left: -100%; width: 100%; }
             #sidebar-container-node.open { left: 0; box-shadow: 10px 0 30px rgba(0,0,0,0.8); }
             #viewport { padding: 80px 15px 140px 15px !important; height: var(--viewport-height); }
+            
+        /* Add swipe handle indicator */
+        .swipe-handle {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 20px;
+            height: 100%;
+            background: transparent;
+            z-index: 201;
+            cursor: ew-resize;
+        }
+        /* File staging container always visible */
+        #file-staging-container {
+            flex-shrink: 0;
+            min-height: 40px;
+            background: var(--bg-deep);
+            z-index: 5;
+        }
             .workspace-header { padding-left: 40px !important; }
             .brand-logo { font-size: 16px; }
             .chat-bubble { max-width: 95% !important; padding: 12px 14px !important; }
@@ -904,7 +923,7 @@
                     <span class="material-symbols-rounded">close</span>
                 </button>
             </div>
-            <!-- FIX 7: Replace emojis with professional text -->
+            <!-- FIX 7: Replace emojis with professional text options -->
             <select id="report-type" class="modal-input" style="min-height: auto; margin-bottom: 5px;">
                 <option value="help">Report an Error / Bug</option>
                 <option value="feedback">Submit UX Feedback</option>
@@ -1326,7 +1345,6 @@
 
         // FIX 5 & 6: Ensure focus does not show hero and scrolls properly
         promptInput.addEventListener('focus', function() {
-            // FIX 6: If in active chat, do not show hero
             if (activeSessionId) {
                 document.getElementById('hero-display').style.display = 'none';
             }
@@ -1347,24 +1365,20 @@
         // FILE HANDLING
         // ============================================================
         function renderFileChips() {
-            // FIX 3: Do not clear the container if there are files; just update
             if (stagedFiles.length === 0) {
                 fileStagingContainer.style.display = 'none';
                 fileStagingContainer.innerHTML = '';
                 return;
             }
             fileStagingContainer.style.display = 'flex';
-            // FIX 7: Replace "✕" with material symbol
             fileStagingContainer.innerHTML = stagedFiles.map((file, idx) =>
                 `<div class="file-chip" style="display:flex;align-items:center;gap:8px;max-width:100%;flex-shrink:0;">
                     <span class="material-symbols-rounded" style="font-size:16px;">description</span>
                     <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;display:inline-block;vertical-align:middle;">${escapeHtmlEntities(file.name)}</span>
-                    <span style="cursor:pointer;color:#ef4444;font-weight:bold;font-size:14px;flex-shrink:0;padding-left:4px;" onclick="removeStagedFile(${idx})">
-                        <span class="material-symbols-rounded" style="font-size:16px;">close</span>
-                    </span>
+                    <!-- FIX 7: Replace emoji with material icon -->
+                    <span style="cursor:pointer;color:#ef4444;font-weight:bold;font-size:14px;flex-shrink:0;padding-left:4px;" onclick="removeStagedFile(${idx})"><span class="material-symbols-rounded" style="font-size:16px;">close</span></span>
                 </div>`
             ).join('');
-            // Ensure it stays visible
             requestAnimationFrame(() => {
                 fileStagingContainer.style.display = 'flex';
             });
@@ -1411,10 +1425,11 @@
         sidebarTriggerArea.addEventListener('click', (e) => { e.stopPropagation();
             sidebarNode.classList.toggle('open'); });
         window.addEventListener('click', (e) => {
-            // FIX 1: Ignore sidebar close when clicking inside search box or when search input is focused
+            // FIX 1: Do not close sidebar if search input is focused or click inside search box
             if (ignoreSidebarClose || document.activeElement === document.getElementById('sidebar-search-input')) {
                 return;
             }
+            // Do not close sidebar if click is inside sidebar container
             if (e.target.closest('#sidebar-container-node')) return;
             if (e.target.closest('#sidebar-search-box') || e.target.closest('#sidebar-search-box input')) {
                 e.stopPropagation();
@@ -1883,7 +1898,6 @@
             }
             const log = cachedLogHistory.find(l => l._id === logId);
             if (!log) return;
-            // FIX 6: Hide hero when viewing a past chat
             document.getElementById('hero-display').style.display = 'none';
             document.querySelectorAll('.chat-bubble').forEach(b => b.remove());
             activeSessionId = logId;
@@ -2073,7 +2087,7 @@
                         regenBtn.className = 'action-icon-btn regen-active';
                         regenBtn.title = "Regenerate response (available for 30s)";
                         regenBtn.innerHTML = ICONS.regenerate + `<span class="regen-countdown">${Math.ceil((30000 - elapsed)/1000)}s</span>`;
-                        
+
                         let intervalId, timeoutId;
 
                         const cleanup = () => {
@@ -2235,9 +2249,9 @@
         // EXECUTE COMMAND – harden timeout reset and UI consistency
         // ============================================================
         async function executeCommand(isRetry = false) {
-            // Immediately hide hero (FIX 5)
+            // Immediately hide hero
             document.getElementById('hero-display').style.display = 'none';
-            
+
             if (isProcessing) return;
             isProcessing = true;
             if (manipulationLockUntil && Date.now() < manipulationLockUntil) {
@@ -2817,6 +2831,75 @@
             const currentWorkspace = getWorkspace();
             activateWorkspace(currentWorkspace, true);
             adjustViewportPadding();
+        });
+
+        
+        // ---- SWIPE-TO-CLOSE SIDEBAR (like Gemini) ----
+        const sidebar = document.getElementById('sidebar-container-node');
+        const swipeHandle = document.getElementById('swipe-handle');
+        let startX = 0, currentX = 0, isDragging = false;
+
+        // Touch events on the handle
+        swipeHandle.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+            isDragging = true;
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            currentX = e.touches[0].clientX;
+            const delta = currentX - startX;
+            // Only allow swiping left (closing) when sidebar is open
+            if (sidebar.classList.contains('open') && delta < 0) {
+                const newLeft = Math.min(0, delta); // max left: 0 (fully open)
+                sidebar.style.transition = 'none';
+                sidebar.style.left = `${newLeft}px`;
+            }
+        });
+
+        document.addEventListener('touchend', () => {
+            if (!isDragging) return;
+            isDragging = false;
+            sidebar.style.transition = 'all 0.3s ease';
+            if (sidebar.classList.contains('open')) {
+                const currentLeft = parseFloat(sidebar.style.left) || 0;
+                // If swiped left more than 50px, close it
+                if (currentLeft < -50) {
+                    sidebar.classList.remove('open');
+                }
+                sidebar.style.left = '';
+            }
+            startX = 0;
+            currentX = 0;
+        });
+
+        // Also handle mouse drag for desktop (optional)
+        let isMouseDown = false;
+        swipeHandle.addEventListener('mousedown', (e) => {
+            isMouseDown = true;
+            startX = e.clientX;
+            e.preventDefault();
+        });
+        document.addEventListener('mousemove', (e) => {
+            if (!isMouseDown) return;
+            currentX = e.clientX;
+            const delta = currentX - startX;
+            if (sidebar.classList.contains('open') && delta < 0) {
+                sidebar.style.transition = 'none';
+                sidebar.style.left = `${delta}px`;
+            }
+        });
+        document.addEventListener('mouseup', () => {
+            if (!isMouseDown) return;
+            isMouseDown = false;
+            sidebar.style.transition = 'all 0.3s ease';
+            if (sidebar.classList.contains('open')) {
+                const currentLeft = parseFloat(sidebar.style.left) || 0;
+                if (currentLeft < -50) {
+                    sidebar.classList.remove('open');
+                }
+                sidebar.style.left = '';
+            }
         });
 
         // ============================================================
