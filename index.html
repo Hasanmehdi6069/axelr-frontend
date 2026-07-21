@@ -140,6 +140,7 @@
             border-right: 1px solid var(--border-muted);
             height: 100dvh;
             overflow-y: auto;
+            touch-action: pan-y; /* Prevent horizontal scroll conflicts */
         }
         #sidebar-container-node.open { left: 0; }
 
@@ -183,6 +184,8 @@
         .action-list-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; font-size: 13px; color: var(--text-muted); cursor: pointer; border-radius: 6px; transition: 0.2s; border: none; background: transparent; text-align: left; }
         .action-list-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
         .action-list-item.danger:hover { background: rgba(239,68,68,0.1); color: #ef4444; }
+        .action-list-item .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--text-muted); border-radius: 50%; border-top-color: transparent; animation: spin 0.6s linear infinite; margin-right: 6px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
         .sidebar-footer {
             padding: 15px;
@@ -1727,6 +1730,7 @@
         let hasRegenerated = false;
         let currentUserId = null;
         let isProcessing = false;
+        let userIsAdmin = false;
 
         let regeneratedMap = {};
         let ignoreSidebarClose = false;
@@ -1860,26 +1864,29 @@
             renderFileChips(); }
 
         fileInput.addEventListener('change', (e) => {
-    let maxBytes = 5 * 1024 * 1024;
-    let maxFilesAllowed = 2;
-    if (document.body.classList.contains('pro-tier')) {
-        maxBytes = 20 * 1024 * 1024;
-        maxFilesAllowed = 5;
-    } else if (document.body.classList.contains('designer-tier')) {
-        maxBytes = 50 * 1024 * 1024;
-        maxFilesAllowed = 5;
-    }
-    const incomingFiles = Array.from(e.target.files);
-    if ((stagedFiles.length + incomingFiles.length) > maxFilesAllowed) {
-        alert(`⚠️ Tier Limit Reached: You can only attach up to ${maxFilesAllowed} files.`);
-        fileInput.value = '';
-        return;
-    }
-    // ... rest of validation
-});
+            let maxBytes = 5 * 1024 * 1024;
+            let maxFilesAllowed = 2;
+            if (document.body.classList.contains('pro-tier')) {
+                maxBytes = 20 * 1024 * 1024;
+                maxFilesAllowed = 5;
+            } else if (document.body.classList.contains('designer-tier')) {
+                maxBytes = 50 * 1024 * 1024;
+                maxFilesAllowed = 5;
+            }
+            const incomingFiles = Array.from(e.target.files);
+            if ((stagedFiles.length + incomingFiles.length) > maxFilesAllowed) {
+                alert(`⚠️ Tier Limit Reached: You can only attach up to ${maxFilesAllowed} files.`);
+                fileInput.value = '';
+                return;
+            }
             const validFiles = incomingFiles.filter(file => {
                 if (file.size === 0) { alert(`⚠️ The file "${file.name}" is empty (0 bytes).`);
                     return false; }
+                // Check MIME type (if supported)
+                if (file.type && !file.type.startsWith('image/') && file.type !== 'text/plain' && file.type !== 'text/csv' && file.type !== 'application/pdf' && !file.type.includes('spreadsheet') && !file.type.includes('document')) {
+                    alert(`⚠️ File type "${file.type}" is not supported. Please upload images, PDFs, CSVs, or spreadsheets.`);
+                    return false;
+                }
                 return true;
             });
             let incomingSize = validFiles.reduce((acc, file) => acc + file.size, 0);
@@ -1893,6 +1900,7 @@
             renderFileChips();
             fileInput.value = '';
             validateSendCommand();
+        });
 
         // ============================================================
         // SIDEBAR FUNCTIONS
@@ -1967,51 +1975,52 @@
         }
 
         // ---- SEARCH OVERLAY ----
-function openSearchOverlay() {
-    const overlay = document.getElementById('search-overlay');
-    overlay.classList.add('active');
-    const input = document.getElementById('search-overlay-input');
-    input.value = '';
-    input.focus();
-    filterSearchOverlay();
-}
+        function openSearchOverlay() {
+            const overlay = document.getElementById('search-overlay');
+            overlay.classList.add('active');
+            const input = document.getElementById('search-overlay-input');
+            input.value = '';
+            input.focus();
+            filterSearchOverlay();
+        }
 
-function closeSearchOverlay() {
-    document.getElementById('search-overlay').classList.remove('active');
-}
+        function closeSearchOverlay() {
+            document.getElementById('search-overlay').classList.remove('active');
+        }
 
-function filterSearchOverlay() {
-    const query = document.getElementById('search-overlay-input').value.toLowerCase();
-    const resultsContainer = document.getElementById('search-overlay-results');
-    const logs = cachedLogHistory.filter(log => log.status === currentTab); // filter by current tab
-    const filtered = query ? logs.filter(log => log.filename.toLowerCase().includes(query)) : logs;
-    if (filtered.length === 0) {
-        resultsContainer.innerHTML = `<div style="color:var(--text-muted);text-align:center;padding:30px;">No matching chats</div>`;
-        return;
-    }
-    resultsContainer.innerHTML = filtered.map(log => `
-        <div class="search-result-item" onclick="viewPastLogById('${log._id}'); closeSearchOverlay();">
-            <div class="title">${escapeHtmlEntities(log.filename)}</div>
-            <div class="preview">${log.messages.length} messages • ${new Date(log.createdAt).toLocaleDateString()}</div>
-        </div>
-    `).join('');
-}
+        function filterSearchOverlay() {
+            const query = document.getElementById('search-overlay-input').value.toLowerCase();
+            const resultsContainer = document.getElementById('search-overlay-results');
+            const logs = cachedLogHistory.filter(log => log.status === currentTab); // filter by current tab
+            const filtered = query ? logs.filter(log => log.filename.toLowerCase().includes(query)) : logs;
+            if (filtered.length === 0) {
+                resultsContainer.innerHTML = `<div style="color:var(--text-muted);text-align:center;padding:30px;">No matching chats</div>`;
+                return;
+            }
+            resultsContainer.innerHTML = filtered.map(log => `
+                <div class="search-result-item" onclick="viewPastLogById('${log._id}'); closeSearchOverlay();">
+                    <div class="title">${escapeHtmlEntities(log.filename)}</div>
+                    <div class="preview">${log.messages.length} messages • ${new Date(log.createdAt).toLocaleDateString()}</div>
+                </div>
+            `).join('');
+        }
 
-// Attach input event to overlay search
-document.getElementById('search-overlay-input').addEventListener('input', filterSearchOverlay);
+        // Attach input event to overlay search
+        document.getElementById('search-overlay-input').addEventListener('input', filterSearchOverlay);
 
-// Replace the sidebar search input with overlay trigger
-const sidebarSearchInput = document.getElementById('sidebar-search-input');
-sidebarSearchInput.addEventListener('focus', function(e) {
-    e.preventDefault();
-    this.blur();
-    openSearchOverlay();
-});
-// Also when clicking the search box, open overlay
-document.getElementById('sidebar-search-box').addEventListener('click', function(e) {
-    e.preventDefault();
-    openSearchOverlay();
-});
+        // Replace the sidebar search input with overlay trigger
+        const sidebarSearchInput = document.getElementById('sidebar-search-input');
+        sidebarSearchInput.addEventListener('focus', function(e) {
+            e.preventDefault();
+            this.blur();
+            openSearchOverlay();
+        });
+        // Also when clicking the search box, open overlay
+        document.getElementById('sidebar-search-box').addEventListener('click', function(e) {
+            e.preventDefault();
+            openSearchOverlay();
+        });
+
         // ============================================================
         // AUTH FUNCTIONS
         // ============================================================
@@ -2065,9 +2074,7 @@ document.getElementById('sidebar-search-box').addEventListener('click', function
             document.getElementById('dropdown-avatar').src = payload.picture;
             document.getElementById('dropdown-name').innerText = payload.name;
             document.getElementById('dropdown-email').innerText = payload.email;
-            if (payload.email === "shanh1346@gmail.com") {
-                document.getElementById('admin-dashboard-btn').style.display = 'block';
-            }
+            // Admin button controlled by profile data later
             await loadUserProfile();
             await loadArchiveLogs();
         }
@@ -2241,6 +2248,12 @@ document.getElementById('sidebar-search-box').addEventListener('click', function
                     document.getElementById('instructions-input').value = data.customInstructions || "";
                     document.getElementById('modal-tier-display').innerText = data.tier.toUpperCase() + ' ALLOCATION';
 
+                    // Admin flag
+                    userIsAdmin = data.isAdmin || false;
+                    if (userIsAdmin) {
+                        document.getElementById('admin-dashboard-btn').style.display = 'block';
+                    }
+
                     const currentWorkspace = getWorkspace();
                     const isDesign = currentWorkspace === 'design';
                     const isFree = data.tier === 'free';
@@ -2351,36 +2364,47 @@ document.getElementById('sidebar-search-box').addEventListener('click', function
             } catch (e) {}
         }
 
-        // Inside viewPastLogById, before the loop:
-let lastUserMsgIndex = -1;
-log.messages.forEach((msg, idx) => {
-    if (msg.role === 'user') lastUserMsgIndex = idx;
-});
-// For user messages:
-const isLastUserMsg = (msg.role === 'user' && idx === lastUserMsgIndex);
-injectActionButtons(contentDiv, msg.text, true, false, null, null, isLastUserMsg);
-
-// For AI messages (only one call):
-let showRegenerate = false;
-const isLast = idx === log.messages.length - 1;
-const alreadyRegenerated = msg.variants && msg.variants.length > 1;
-const isActive = log.status === 'active';
-if (isLast && isActive && !alreadyRegenerated) {
-    const msgDate = msg.createdAt ? new Date(msg.createdAt) : new Date(log.createdAt);
-    const now = new Date();
-    if (!isNaN(msgDate.getTime()) && (now - msgDate) < 30000) {
-        showRegenerate = true;
-    }
-}
-// Remove the duplicate call here, just use the one with the flag:
-injectActionButtons(contentDiv, rawResponse, false, showRegenerate, msg.createdAt || log.createdAt, log._id);
+        // ---- RENAME CHAT (FIX: added function) ----
+        async function renameChat(logId, currentName, e) {
+            e.stopPropagation();
+            document.querySelectorAll('.actions-dropdown-list').forEach(d => d.classList.remove('active'));
+            const newName = prompt('Rename chat:', currentName);
+            if (!newName || newName.trim() === '') return;
+            // Show loading indicator
+            const item = e.target.closest('.history-item');
+            const originalTitle = item?.querySelector('.history-title')?.innerHTML;
+            if (item) {
+                const titleEl = item.querySelector('.history-title');
+                if (titleEl) titleEl.innerHTML = `<span class="spinner"></span> Renaming...`;
+            }
+            try {
+                const resp = await fetch(`${API_BASE_URL}/api/history/${logId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${googleAuthUserToken}` },
+                    body: JSON.stringify({ action: 'rename', payload: newName.trim() })
+                });
+                if (resp.ok) loadArchiveLogs();
+                else if (item && originalTitle) item.querySelector('.history-title').innerHTML = originalTitle;
+            } catch (e) {
+                console.error('Rename failed:', e);
+                if (item && originalTitle) item.querySelector('.history-title').innerHTML = originalTitle;
+            }
+        }
 
         async function pinChat(logId, e) {
             e.stopPropagation();
             document.querySelectorAll('.actions-dropdown-list').forEach(d => d.classList.remove('active'));
+            const item = e.target.closest('.history-item');
+            const originalTitle = item?.querySelector('.history-title')?.innerHTML;
+            if (item) {
+                const titleEl = item.querySelector('.history-title');
+                if (titleEl) titleEl.innerHTML = `<span class="spinner"></span> Updating...`;
+            }
             try { const resp = await fetch(`${API_BASE_URL}/api/history/${logId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json',
                         'Authorization': `Bearer ${googleAuthUserToken}` }, body: JSON.stringify({ action: 'pin' }) }); if (
-                    resp.ok) loadArchiveLogs(); } catch (e) {}
+                    resp.ok) loadArchiveLogs(); else if (item && originalTitle) item.querySelector('.history-title').innerHTML =
+                    originalTitle; } catch (e) { if (item && originalTitle) item.querySelector('.history-title').innerHTML =
+                    originalTitle; }
         }
 
         async function shareChat(logId, e) {
@@ -2408,23 +2432,39 @@ injectActionButtons(contentDiv, rawResponse, false, showRegenerate, msg.createdA
         async function changeChatStatus(logId, status, e) {
             e.stopPropagation();
             document.querySelectorAll('.actions-dropdown-list').forEach(d => d.classList.remove('active'));
+            const item = e.target.closest('.history-item');
+            const originalTitle = item?.querySelector('.history-title')?.innerHTML;
+            if (item) {
+                const titleEl = item.querySelector('.history-title');
+                if (titleEl) titleEl.innerHTML = `<span class="spinner"></span> Moving...`;
+            }
             try { const resp = await fetch(`${API_BASE_URL}/api/history/${logId}/status`, { method: 'PUT', headers: { 'Content-Type': 'application/json',
                         'Authorization': `Bearer ${googleAuthUserToken}` }, body: JSON.stringify({ status }) }); if (resp
                     .ok) { if (activeSessionId === logId && status === 'trashed') resetToNewChat();
-                    loadArchiveLogs(); } } catch (e) {}
+                    loadArchiveLogs(); } else if (item && originalTitle) item.querySelector('.history-title').innerHTML =
+                    originalTitle; } catch (e) { if (item && originalTitle) item.querySelector('.history-title').innerHTML =
+                    originalTitle; }
         }
 
         async function deleteLogPermanently(logId, e) {
             e.stopPropagation();
             document.querySelectorAll('.actions-dropdown-list').forEach(d => d.classList.remove('active'));
             if (!confirm("Delete permanently? This cannot be undone.")) return;
+            const item = e.target.closest('.history-item');
+            const originalTitle = item?.querySelector('.history-title')?.innerHTML;
+            if (item) {
+                const titleEl = item.querySelector('.history-title');
+                if (titleEl) titleEl.innerHTML = `<span class="spinner"></span> Deleting...`;
+            }
             try { const resp = await fetch(`${API_BASE_URL}/api/history/${logId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${googleAuthUserToken}` } }); if (
                     resp.ok) { if (activeSessionId === logId) resetToNewChat();
-                    loadArchiveLogs(); } } catch (e) {}
+                    loadArchiveLogs(); } else if (item && originalTitle) item.querySelector('.history-title').innerHTML =
+                    originalTitle; } catch (e) { if (item && originalTitle) item.querySelector('.history-title').innerHTML =
+                    originalTitle; }
         }
 
         // ============================================================
-        // VIEW PAST LOG – FIXED REGENERATE BUTTON LOGIC
+        // VIEW PAST LOG – FIXED REGENERATE BUTTON LOGIC (duplicate call removed)
         // ============================================================
         function viewPastLogById(logId) {
             // Clear any pending regen timers
@@ -2477,7 +2517,11 @@ injectActionButtons(contentDiv, rawResponse, false, showRegenerate, msg.createdA
                     contentDiv.style.flex = '1';
                     contentDiv.innerHTML = `${filesHtml}${DOMPurify.sanitize(marked.parse(msg.text || ""))}`;
                     bubble.appendChild(contentDiv);
-                    injectActionButtons(contentDiv, msg.text, true);
+                    // Determine if this is the last user message for edit button
+                    let lastUserIdx = -1;
+                    log.messages.forEach((m, i) => { if (m.role === 'user') lastUserIdx = i; });
+                    const isLastUser = (msg.role === 'user' && idx === lastUserIdx);
+                    injectActionButtons(contentDiv, msg.text, true, false, null, null, isLastUser);
                 } else {
                     let rawResponse = msg.text || "";
                     const avatarDiv = document.createElement('div');
@@ -2514,8 +2558,7 @@ injectActionButtons(contentDiv, rawResponse, false, showRegenerate, msg.createdA
                     const isLast = idx === log.messages.length - 1;
                     const alreadyRegenerated = msg.variants && msg.variants.length > 1;
                     const isActive = log.status === 'active';
-                    // Replace the call to injectActionButtons for AI messages:
-injectActionButtons(contentDiv, rawResponse, false, false, null, null);
+                    let showRegenerate = false;
                     if (isLast && isActive && !alreadyRegenerated) {
                         const msgDate = msg.createdAt ? new Date(msg.createdAt) : new Date(log.createdAt);
                         const now = new Date();
@@ -2523,6 +2566,7 @@ injectActionButtons(contentDiv, rawResponse, false, false, null, null);
                             showRegenerate = true;
                         }
                     }
+                    // Single call to injectActionButtons with proper regenerate flag
                     injectActionButtons(contentDiv, rawResponse, false, showRegenerate, msg.createdAt || log.createdAt, log._id);
 
                     if (msg.variants && msg.variants.length > 1) {
@@ -2580,28 +2624,27 @@ injectActionButtons(contentDiv, rawResponse, false, false, null, null);
         // ============================================================
         // ACTION BUTTONS – with hardened regenerate timer cleanup
         // ============================================================
-       function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRegenerate = false, createdAt = null, sessionId = null, isLastUserMsg = false) {
-    const actionBar = document.createElement('div');
-    actionBar.className = 'bubble-action-bar';
+        function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRegenerate = false, createdAt = null, sessionId = null, isLastUserMsg = false) {
+            const actionBar = document.createElement('div');
+            actionBar.className = 'bubble-action-bar';
 
-    if (isUserPrompt) {
-        const copyBtn = document.createElement('button');
-        copyBtn.className = 'action-icon-btn';
-        copyBtn.title = "Copy Prompt";
-        copyBtn.innerHTML = `${ICONS.copy} Copy`;
-        copyBtn.onclick = () => handleActionClick('copy', rawText, copyBtn);
-        actionBar.appendChild(copyBtn);
+            if (isUserPrompt) {
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'action-icon-btn';
+                copyBtn.title = "Copy Prompt";
+                copyBtn.innerHTML = `${ICONS.copy} Copy`;
+                copyBtn.onclick = () => handleActionClick('copy', rawText, copyBtn);
+                actionBar.appendChild(copyBtn);
 
-        if (isLastUserMsg) {
-            const editBtn = document.createElement('button');
-            editBtn.className = 'action-icon-btn';
-            editBtn.title = "Edit this prompt";
-            editBtn.innerHTML = `${ICONS.edit} Edit`;
-            editBtn.onclick = () => handleActionClick('edit', rawText, editBtn);
-            actionBar.appendChild(editBtn);
-        }
-    }
-    else {
+                if (isLastUserMsg) {
+                    const editBtn = document.createElement('button');
+                    editBtn.className = 'action-icon-btn';
+                    editBtn.title = "Edit this prompt";
+                    editBtn.innerHTML = `${ICONS.edit} Edit`;
+                    editBtn.onclick = () => handleActionClick('edit', rawText, editBtn);
+                    actionBar.appendChild(editBtn);
+                }
+            } else {
                 const copyBtn = document.createElement('button');
                 copyBtn.className = 'action-icon-btn';
                 copyBtn.title = "Copy Response";
@@ -3454,6 +3497,23 @@ injectActionButtons(contentDiv, rawResponse, false, false, null, null);
         // ============================================================
         console.log('🟢 Axelr AI Frontend Loaded (v3)');
         console.log('📡 API Base URL:', API_BASE_URL);
+
+        const today = new Date();
+        today.setUTCHours(0, 0, 0, 0);
+        const lastVisit = localStorage.getItem('axelr_last_visit');
+        if (!lastVisit || new Date(lastVisit) < today) {
+            localStorage.setItem('axelr_last_visit', today.toISOString());
+            openInstructionsModal();
+        }
+
+        loadUserProfile().then(() => {
+            loadArchiveLogs().then(() => {
+                const storedSessionId = localStorage.getItem('axelr_active_session');
+                if (storedSessionId) {
+                    viewPastLogById(storedSessionId);
+                }
+            });
+        });
     </script>
 </body>
 </html>
