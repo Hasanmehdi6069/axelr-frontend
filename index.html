@@ -321,6 +321,72 @@
         .thinking-extended { color: var(--text-muted); font-size: 13px; margin-top: 8px; animation: fadePulse 2s ease-in-out infinite; }
         @keyframes fadePulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
 
+        /* ===== SEARCH OVERLAY ===== */
+#search-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    background: rgba(5,5,5,0.85);
+    backdrop-filter: blur(12px);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    padding: 60px 20px 20px 20px;
+    overflow-y: auto;
+}
+#search-overlay.active {
+    display: flex;
+}
+#search-overlay .close-search {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 28px;
+    cursor: pointer;
+}
+#search-overlay .search-results {
+    width: 100%;
+    max-width: 700px;
+    margin-top: 20px;
+}
+#search-overlay .search-result-item {
+    padding: 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-muted);
+    border-radius: 12px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+#search-overlay .search-result-item:hover {
+    background: rgba(255,255,255,0.05);
+}
+#search-overlay .search-result-item .title {
+    color: #fff;
+    font-weight: 600;
+}
+#search-overlay .search-result-item .preview {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-top: 4px;
+}
+#search-overlay .search-input-box {
+    width: 100%;
+    max-width: 700px;
+    background: var(--bg-input);
+    border: 1px solid var(--border-muted);
+    border-radius: 12px;
+    padding: 14px 18px;
+    color: #fff;
+    font-size: 18px;
+    outline: none;
+}
+#search-overlay .search-input-box:focus {
+    border-color: var(--accent-glow);
+}
         /* ===== COMMAND WRAPPER ===== */
         .command-wrapper {
             position: fixed;
@@ -601,6 +667,72 @@
                 font-size: 9px;
                 padding: 3px 8px;
             }
+            /* ===== SEARCH OVERLAY ===== */
+#search-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    background: rgba(5,5,5,0.85);
+    backdrop-filter: blur(12px);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    padding: 60px 20px 20px 20px;
+    overflow-y: auto;
+}
+#search-overlay.active {
+    display: flex;
+}
+#search-overlay .close-search {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 28px;
+    cursor: pointer;
+}
+#search-overlay .search-results {
+    width: 100%;
+    max-width: 700px;
+    margin-top: 20px;
+}
+#search-overlay .search-result-item {
+    padding: 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-muted);
+    border-radius: 12px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+#search-overlay .search-result-item:hover {
+    background: rgba(255,255,255,0.05);
+}
+#search-overlay .search-result-item .title {
+    color: #fff;
+    font-weight: 600;
+}
+#search-overlay .search-result-item .preview {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-top: 4px;
+}
+#search-overlay .search-input-box {
+    width: 100%;
+    max-width: 700px;
+    background: var(--bg-input);
+    border: 1px solid var(--border-muted);
+    border-radius: 12px;
+    padding: 14px 18px;
+    color: #fff;
+    font-size: 18px;
+    outline: none;
+}
+#search-overlay .search-input-box:focus {
+    border-color: var(--accent-glow);
+}
         }
         @media (max-width: 480px) {
             .tier-card {
@@ -632,6 +764,72 @@
                 font-size: 8px;
                 padding: 2px 6px;
             }
+            /* ===== SEARCH OVERLAY ===== */
+#search-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    background: rgba(5,5,5,0.85);
+    backdrop-filter: blur(12px);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    padding: 60px 20px 20px 20px;
+    overflow-y: auto;
+}
+#search-overlay.active {
+    display: flex;
+}
+#search-overlay .close-search {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 28px;
+    cursor: pointer;
+}
+#search-overlay .search-results {
+    width: 100%;
+    max-width: 700px;
+    margin-top: 20px;
+}
+#search-overlay .search-result-item {
+    padding: 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-muted);
+    border-radius: 12px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+#search-overlay .search-result-item:hover {
+    background: rgba(255,255,255,0.05);
+}
+#search-overlay .search-result-item .title {
+    color: #fff;
+    font-weight: 600;
+}
+#search-overlay .search-result-item .preview {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-top: 4px;
+}
+#search-overlay .search-input-box {
+    width: 100%;
+    max-width: 700px;
+    background: var(--bg-input);
+    border: 1px solid var(--border-muted);
+    border-radius: 12px;
+    padding: 14px 18px;
+    color: #fff;
+    font-size: 18px;
+    outline: none;
+}
+#search-overlay .search-input-box:focus {
+    border-color: var(--accent-glow);
+}
         }
 
         /* Mobile workspace selector */
@@ -643,6 +841,72 @@
                 grid-template-columns: 1fr;
                 gap: 16px;
             }
+            /* ===== SEARCH OVERLAY ===== */
+#search-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    background: rgba(5,5,5,0.85);
+    backdrop-filter: blur(12px);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    padding: 60px 20px 20px 20px;
+    overflow-y: auto;
+}
+#search-overlay.active {
+    display: flex;
+}
+#search-overlay .close-search {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 28px;
+    cursor: pointer;
+}
+#search-overlay .search-results {
+    width: 100%;
+    max-width: 700px;
+    margin-top: 20px;
+}
+#search-overlay .search-result-item {
+    padding: 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-muted);
+    border-radius: 12px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+#search-overlay .search-result-item:hover {
+    background: rgba(255,255,255,0.05);
+}
+#search-overlay .search-result-item .title {
+    color: #fff;
+    font-weight: 600;
+}
+#search-overlay .search-result-item .preview {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-top: 4px;
+}
+#search-overlay .search-input-box {
+    width: 100%;
+    max-width: 700px;
+    background: var(--bg-input);
+    border: 1px solid var(--border-muted);
+    border-radius: 12px;
+    padding: 14px 18px;
+    color: #fff;
+    font-size: 18px;
+    outline: none;
+}
+#search-overlay .search-input-box:focus {
+    border-color: var(--accent-glow);
+}
         }
 
         /* ===== MOBILE UI – HARDENED ===== */
@@ -650,8 +914,75 @@
             :root { --viewport-height: 100dvh; }
             body { height: var(--viewport-height); overflow: hidden; }
 
+            /* ===== SEARCH OVERLAY ===== */
+#search-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    background: rgba(5,5,5,0.85);
+    backdrop-filter: blur(12px);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    padding: 60px 20px 20px 20px;
+    overflow-y: auto;
+}
+#search-overlay.active {
+    display: flex;
+}
+#search-overlay .close-search {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 28px;
+    cursor: pointer;
+}
+#search-overlay .search-results {
+    width: 100%;
+    max-width: 700px;
+    margin-top: 20px;
+}
+#search-overlay .search-result-item {
+    padding: 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-muted);
+    border-radius: 12px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+#search-overlay .search-result-item:hover {
+    background: rgba(255,255,255,0.05);
+}
+#search-overlay .search-result-item .title {
+    color: #fff;
+    font-weight: 600;
+}
+#search-overlay .search-result-item .preview {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-top: 4px;
+}
+#search-overlay .search-input-box {
+    width: 100%;
+    max-width: 700px;
+    background: var(--bg-input);
+    border: 1px solid var(--border-muted);
+    border-radius: 12px;
+    padding: 14px 18px;
+    color: #fff;
+    font-size: 18px;
+    outline: none;
+}
+#search-overlay .search-input-box:focus {
+    border-color: var(--accent-glow);
+}
             /* FIX 2: Sidebar covers full screen on mobile – width 100% */
-            #sidebar-container-node { left: -100%; width: 100%; }
+           
+            #sidebar-container-node { left: -100%; width: 85%; }
             #sidebar-container-node.open { left: 0; box-shadow: 10px 0 30px rgba(0,0,0,0.8); }
             #viewport { padding: 80px 15px 140px 15px !important; height: var(--viewport-height); }
             
@@ -737,14 +1068,145 @@
             .command-wrapper { padding-left: 38px !important; padding-right: 10px !important; padding-bottom: 15px !important; }
             .input-frame { padding: 6px 8px !important; }
             .action-btn { width: 32px !important; height: 32px !important; }
+        /* ===== SEARCH OVERLAY ===== */
+#search-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    background: rgba(5,5,5,0.85);
+    backdrop-filter: blur(12px);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    padding: 60px 20px 20px 20px;
+    overflow-y: auto;
+}
+#search-overlay.active {
+    display: flex;
+}
+#search-overlay .close-search {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 28px;
+    cursor: pointer;
+}
+#search-overlay .search-results {
+    width: 100%;
+    max-width: 700px;
+    margin-top: 20px;
+}
+#search-overlay .search-result-item {
+    padding: 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-muted);
+    border-radius: 12px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+#search-overlay .search-result-item:hover {
+    background: rgba(255,255,255,0.05);
+}
+#search-overlay .search-result-item .title {
+    color: #fff;
+    font-weight: 600;
+}
+#search-overlay .search-result-item .preview {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-top: 4px;
+}
+#search-overlay .search-input-box {
+    width: 100%;
+    max-width: 700px;
+    background: var(--bg-input);
+    border: 1px solid var(--border-muted);
+    border-radius: 12px;
+    padding: 14px 18px;
+    color: #fff;
+    font-size: 18px;
+    outline: none;
+}
+#search-overlay .search-input-box:focus {
+    border-color: var(--accent-glow);
+}
         }
 
         @media (max-width: 320px) {
             .hero-text h1 { font-size: 20px !important; }
             .hero-text p { font-size: 11px !important; }
             .workspace-header { padding-left: 35px !important; }
-        }
 
+        /* ===== SEARCH OVERLAY ===== */
+#search-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    background: rgba(5,5,5,0.85);
+    backdrop-filter: blur(12px);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    padding: 60px 20px 20px 20px;
+    overflow-y: auto;
+}
+#search-overlay.active {
+    display: flex;
+}
+#search-overlay .close-search {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 28px;
+    cursor: pointer;
+}
+#search-overlay .search-results {
+    width: 100%;
+    max-width: 700px;
+    margin-top: 20px;
+}
+#search-overlay .search-result-item {
+    padding: 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-muted);
+    border-radius: 12px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+#search-overlay .search-result-item:hover {
+    background: rgba(255,255,255,0.05);
+}
+#search-overlay .search-result-item .title {
+    color: #fff;
+    font-weight: 600;
+}
+#search-overlay .search-result-item .preview {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-top: 4px;
+}
+#search-overlay .search-input-box {
+    width: 100%;
+    max-width: 700px;
+    background: var(--bg-input);
+    border: 1px solid var(--border-muted);
+    border-radius: 12px;
+    padding: 14px 18px;
+    color: #fff;
+    font-size: 18px;
+    outline: none;
+}
+#search-overlay .search-input-box:focus {
+    border-color: var(--accent-glow);
+}
         /* Security alert banner */
         .security-alert-banner {
             background: rgba(239,68,68,0.15);
@@ -829,6 +1291,7 @@
         #file-staging-container { flex-shrink: 0; }
         #sidebar-content { overflow-y: auto; flex: 1; }
         .sidebar-footer { flex-shrink: 0; padding-bottom: calc(env(safe-area-inset-bottom) + 15px); }
+    }
     </style>
 </head>
 <body class="workspace-data">
@@ -1080,6 +1543,15 @@
                 <div class="sidebar-section-label">Recent Chats</div>
                 <div id="history-list-container"></div>
             </div>
+
+            <!-- ===== SEARCH OVERLAY ===== -->
+<div id="search-overlay">
+    <button class="close-search" onclick="closeSearchOverlay()">
+        <span class="material-symbols-rounded">close</span>
+    </button>
+    <input type="text" class="search-input-box" id="search-overlay-input" placeholder="Search chats..." autofocus>
+    <div class="search-results" id="search-overlay-results"></div>
+</div>
 
             <div class="sidebar-footer">
                 <div class="sidebar-sub-box" onclick="showWorkspaceSelector()">
@@ -1388,18 +1860,23 @@
             renderFileChips(); }
 
         fileInput.addEventListener('change', (e) => {
-            let maxBytes = 5 * 1024 * 1024;
-            let maxFilesAllowed = 2;
-            if (document.body.classList.contains('pro-tier') || document.body.classList.contains('designer-tier')) {
-                maxBytes = 25 * 1024 * 1024;
-                maxFilesAllowed = 5;
-            }
-            const incomingFiles = Array.from(e.target.files);
-            if ((stagedFiles.length + incomingFiles.length) > maxFilesAllowed) {
-                alert(`⚠️ Tier Limit Reached: You can only attach up to ${maxFilesAllowed} files.`);
-                fileInput.value = '';
-                return;
-            }
+    let maxBytes = 5 * 1024 * 1024;
+    let maxFilesAllowed = 2;
+    if (document.body.classList.contains('pro-tier')) {
+        maxBytes = 20 * 1024 * 1024;
+        maxFilesAllowed = 5;
+    } else if (document.body.classList.contains('designer-tier')) {
+        maxBytes = 50 * 1024 * 1024;
+        maxFilesAllowed = 5;
+    }
+    const incomingFiles = Array.from(e.target.files);
+    if ((stagedFiles.length + incomingFiles.length) > maxFilesAllowed) {
+        alert(`⚠️ Tier Limit Reached: You can only attach up to ${maxFilesAllowed} files.`);
+        fileInput.value = '';
+        return;
+    }
+    // ... rest of validation
+});
             const validFiles = incomingFiles.filter(file => {
                 if (file.size === 0) { alert(`⚠️ The file "${file.name}" is empty (0 bytes).`);
                     return false; }
@@ -1416,7 +1893,6 @@
             renderFileChips();
             fileInput.value = '';
             validateSendCommand();
-        });
 
         // ============================================================
         // SIDEBAR FUNCTIONS
@@ -1490,6 +1966,52 @@
             loadArchiveLogs();
         }
 
+        // ---- SEARCH OVERLAY ----
+function openSearchOverlay() {
+    const overlay = document.getElementById('search-overlay');
+    overlay.classList.add('active');
+    const input = document.getElementById('search-overlay-input');
+    input.value = '';
+    input.focus();
+    filterSearchOverlay();
+}
+
+function closeSearchOverlay() {
+    document.getElementById('search-overlay').classList.remove('active');
+}
+
+function filterSearchOverlay() {
+    const query = document.getElementById('search-overlay-input').value.toLowerCase();
+    const resultsContainer = document.getElementById('search-overlay-results');
+    const logs = cachedLogHistory.filter(log => log.status === currentTab); // filter by current tab
+    const filtered = query ? logs.filter(log => log.filename.toLowerCase().includes(query)) : logs;
+    if (filtered.length === 0) {
+        resultsContainer.innerHTML = `<div style="color:var(--text-muted);text-align:center;padding:30px;">No matching chats</div>`;
+        return;
+    }
+    resultsContainer.innerHTML = filtered.map(log => `
+        <div class="search-result-item" onclick="viewPastLogById('${log._id}'); closeSearchOverlay();">
+            <div class="title">${escapeHtmlEntities(log.filename)}</div>
+            <div class="preview">${log.messages.length} messages • ${new Date(log.createdAt).toLocaleDateString()}</div>
+        </div>
+    `).join('');
+}
+
+// Attach input event to overlay search
+document.getElementById('search-overlay-input').addEventListener('input', filterSearchOverlay);
+
+// Replace the sidebar search input with overlay trigger
+const sidebarSearchInput = document.getElementById('sidebar-search-input');
+sidebarSearchInput.addEventListener('focus', function(e) {
+    e.preventDefault();
+    this.blur();
+    openSearchOverlay();
+});
+// Also when clicking the search box, open overlay
+document.getElementById('sidebar-search-box').addEventListener('click', function(e) {
+    e.preventDefault();
+    openSearchOverlay();
+});
         // ============================================================
         // AUTH FUNCTIONS
         // ============================================================
@@ -1829,15 +2351,29 @@
             } catch (e) {}
         }
 
-        async function renameChat(logId, currentName, e) {
-            e.stopPropagation();
-            document.querySelectorAll('.actions-dropdown-list').forEach(d => d.classList.remove('active'));
-            const newName = prompt("Enter new matrix designation:", currentName);
-            if (!newName || newName === currentName) return;
-            try { const resp = await fetch(`${API_BASE_URL}/api/history/${logId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${googleAuthUserToken}` }, body: JSON.stringify({ action: 'rename',
-                        payload: newName }) }); if (resp.ok) loadArchiveLogs(); } catch (e) {}
-        }
+        // Inside viewPastLogById, before the loop:
+let lastUserMsgIndex = -1;
+log.messages.forEach((msg, idx) => {
+    if (msg.role === 'user') lastUserMsgIndex = idx;
+});
+// For user messages:
+const isLastUserMsg = (msg.role === 'user' && idx === lastUserMsgIndex);
+injectActionButtons(contentDiv, msg.text, true, false, null, null, isLastUserMsg);
+
+// For AI messages (only one call):
+let showRegenerate = false;
+const isLast = idx === log.messages.length - 1;
+const alreadyRegenerated = msg.variants && msg.variants.length > 1;
+const isActive = log.status === 'active';
+if (isLast && isActive && !alreadyRegenerated) {
+    const msgDate = msg.createdAt ? new Date(msg.createdAt) : new Date(log.createdAt);
+    const now = new Date();
+    if (!isNaN(msgDate.getTime()) && (now - msgDate) < 30000) {
+        showRegenerate = true;
+    }
+}
+// Remove the duplicate call here, just use the one with the flag:
+injectActionButtons(contentDiv, rawResponse, false, showRegenerate, msg.createdAt || log.createdAt, log._id);
 
         async function pinChat(logId, e) {
             e.stopPropagation();
@@ -1978,7 +2514,8 @@
                     const isLast = idx === log.messages.length - 1;
                     const alreadyRegenerated = msg.variants && msg.variants.length > 1;
                     const isActive = log.status === 'active';
-                    let showRegenerate = false;
+                    // Replace the call to injectActionButtons for AI messages:
+injectActionButtons(contentDiv, rawResponse, false, false, null, null);
                     if (isLast && isActive && !alreadyRegenerated) {
                         const msgDate = msg.createdAt ? new Date(msg.createdAt) : new Date(log.createdAt);
                         const now = new Date();
@@ -2043,18 +2580,28 @@
         // ============================================================
         // ACTION BUTTONS – with hardened regenerate timer cleanup
         // ============================================================
-        function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRegenerate = false, createdAt = null, sessionId = null) {
-            const actionBar = document.createElement('div');
-            actionBar.className = 'bubble-action-bar';
+       function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRegenerate = false, createdAt = null, sessionId = null, isLastUserMsg = false) {
+    const actionBar = document.createElement('div');
+    actionBar.className = 'bubble-action-bar';
 
-            if (isUserPrompt) {
-                const editBtn = document.createElement('button');
-                editBtn.className = 'action-icon-btn';
-                editBtn.title = "Edit this prompt";
-                editBtn.innerHTML = `${ICONS.edit} Edit`;
-                editBtn.onclick = () => handleActionClick('edit', rawText, editBtn);
-                actionBar.appendChild(editBtn);
-            } else {
+    if (isUserPrompt) {
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'action-icon-btn';
+        copyBtn.title = "Copy Prompt";
+        copyBtn.innerHTML = `${ICONS.copy} Copy`;
+        copyBtn.onclick = () => handleActionClick('copy', rawText, copyBtn);
+        actionBar.appendChild(copyBtn);
+
+        if (isLastUserMsg) {
+            const editBtn = document.createElement('button');
+            editBtn.className = 'action-icon-btn';
+            editBtn.title = "Edit this prompt";
+            editBtn.innerHTML = `${ICONS.edit} Edit`;
+            editBtn.onclick = () => handleActionClick('edit', rawText, editBtn);
+            actionBar.appendChild(editBtn);
+        }
+    }
+    else {
                 const copyBtn = document.createElement('button');
                 copyBtn.className = 'action-icon-btn';
                 copyBtn.title = "Copy Response";
