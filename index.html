@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Axelr AI | Intelligence Execution Platform</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tailwindcss/forms@0.3.4/dist/forms.min.css">
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png">
@@ -40,10 +38,9 @@
 </head>
 <body class="workspace-data">
 
-    <!-- Offline Banner -->
     <div id="offline-banner">⚠️ Network Disconnected. Axelr is in standby mode. Data preserved locally.</div>
 
-    <!-- AUTH WALL -->
+    <!-- ===== AUTH WALL ===== -->
     <div id="auth-wall">
         <div class="auth-card">
             <div class="auth-logo">
@@ -76,7 +73,7 @@
         </div>
     </div>
 
-    <!-- WORKSPACE SELECTOR -->
+    <!-- ===== WORKSPACE SELECTOR ===== -->
     <div id="workspace-selector">
         <h2>Select Workspace</h2>
         <div class="ws-grid">
@@ -109,7 +106,7 @@
         </div>
     </div>
 
-    <!-- Settings Modal -->
+    <!-- Settings Modal (NEW) -->
     <div class="modal-overlay" id="settings-modal">
         <div class="modal-card">
             <div class="modal-header">
@@ -131,6 +128,7 @@
                         </div>
                     </div>
                 </div>
+
                 <!-- Plan -->
                 <div class="settings-item" onclick="openBillingFlow()">
                     <span class="material-symbols-rounded icon">workspace_premium</span>
@@ -140,6 +138,7 @@
                     </div>
                     <span class="material-symbols-rounded arrow">chevron_right</span>
                 </div>
+
                 <!-- Custom Instructions -->
                 <div class="settings-item" onclick="openInstructionsModal()">
                     <span class="material-symbols-rounded icon">edit_note</span>
@@ -149,6 +148,7 @@
                     </div>
                     <span class="material-symbols-rounded arrow">chevron_right</span>
                 </div>
+
                 <!-- Help & Feedback -->
                 <div class="settings-item" onclick="openFeedbackModal()">
                     <span class="material-symbols-rounded icon">help</span>
@@ -236,6 +236,7 @@
                         </div>
                         <button class="upgrade-btn" onclick="dispatchCheckoutPipeline('pro')">Upgrade to Pro</button>
                     </div>
+
                     <div class="tier-card business-premium">
                         <div class="tier-badge-pos">HEAVY HITTERS</div>
                         <h3>Business</h3>
@@ -290,7 +291,7 @@
         </div>
     </div>
 
-    <!-- Profile Modal (with working buttons) -->
+    <!-- Profile Modal -->
     <div class="modal-overlay" id="profile-modal">
         <div class="modal-card">
             <div class="modal-header">
@@ -300,15 +301,16 @@
                 </button>
             </div>
             <div style="display:flex;flex-direction:column;gap:5px;">
-                <div class="profile-stat-row"><span class="profile-stat-label">Account</span><span class="profile-stat-value" style="color:var(--accent-glow);cursor:pointer;" onclick="alert('Add another account')">Add another account →</span></div>
-                <div class="profile-stat-row"><span class="profile-stat-label">Privacy & Security</span><span class="profile-stat-value" style="color:var(--accent-glow);cursor:pointer;" onclick="alert('Manage privacy & security')">Manage →</span></div>
-                <div class="profile-stat-row"><span class="profile-stat-label">Help Center</span><span class="profile-stat-value" style="color:var(--accent-glow);cursor:pointer;" onclick="window.open('https://help.axelr.in','_blank')">Visit →</span></div>
+                <div class="profile-stat-row"><span class="profile-stat-label">Authentication Layer</span><span class="profile-stat-value">Google OAuth 2.0</span></div>
+                <div class="profile-stat-row"><span class="profile-stat-label">Network Status</span><span class="profile-stat-value" style="color:var(--accent-secondary);">Secured</span></div>
+                <div class="profile-stat-row"><span class="profile-stat-label">Current Node Tier</span><span class="profile-stat-value" id="modal-tier-display">FREE ALLOCATION</span></div>
             </div>
         </div>
     </div>
 
     <!-- ===== MAIN APP ===== -->
     <div class="main-wrapper" id="content-mask">
+
         <!-- Sidebar Trigger -->
         <div id="sidebar-trigger-area"><div class="trigger-text">Context Vault</div></div>
 
@@ -332,6 +334,7 @@
                 <button class="tab-btn" id="tab-trashed" onclick="switchSidebarTab('trashed')">Trash</button>
             </div>
 
+            <!-- Sidebar search box -->
             <div class="sidebar-search-box" id="sidebar-search-box">
                 <input type="text" placeholder="Search history..." id="sidebar-search-input">
             </div>
@@ -341,7 +344,7 @@
                 <div id="history-list-container"></div>
             </div>
 
-            <!-- Search Overlay -->
+            <!-- ===== SEARCH OVERLAY ===== -->
             <div id="search-overlay">
                 <button class="close-search" onclick="closeSearchOverlay()">
                     <span class="material-symbols-rounded">close</span>
@@ -350,12 +353,13 @@
                 <div class="search-results" id="search-overlay-results"></div>
             </div>
 
-            <!-- Sidebar Footer – only Switch Workspace & Settings -->
             <div class="sidebar-footer">
+                <!-- Only two items now -->
                 <div class="sidebar-sub-box" onclick="showWorkspaceSelector()">
                     <div class="sub-box-title">Switch Workspace <span class="material-symbols-rounded" style="font-size:18px;color:var(--accent-glow);">swap_horiz</span></div>
                     <div class="sub-box-desc">Change between Data & Design intelligence.</div>
                 </div>
+
                 <div class="sidebar-sub-box" onclick="openSettingsModal()">
                     <div class="sub-box-title">Settings <span class="material-symbols-rounded" style="font-size:18px;color:var(--text-muted);">settings</span></div>
                     <div class="sub-box-desc">Quota, Plan, Instructions & Feedback</div>
