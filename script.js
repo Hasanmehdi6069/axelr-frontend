@@ -5,7 +5,7 @@
         const API_BASE_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" ?
             "http://localhost:5000" :
             "https://zelrex-backend.onrender.com";
-            "https://axelr-backend-1.onrender.com";
+            const API_BASE_URL = window.location.hostname === "localhost" ? "http://localhost:5000" : "https://axelr-backend-1.onrender.com";
 
         const AXELR_AVATAR_SVG =
             `<svg viewBox="0 0 100 100" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M50 15 L20 32.5 L20 67.5 L50 85" stroke="#ffffff" stroke-width="6" stroke-linejoin="bevel" fill="rgba(255,255,255,0.05)"/><path d="M50 15 L80 32.5 L50 50 L80 67.5 L50 85" stroke="currentColor" stroke-width="6" stroke-linejoin="bevel" fill="none"/><path d="M20 32.5 L50 50 L20 67.5" stroke="#ffffff" stroke-width="3" stroke-linejoin="bevel" opacity="0.5"/></svg>`;
