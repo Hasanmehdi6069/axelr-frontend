@@ -36,11 +36,13 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.3/purify.min.js"></script>
 </head>
+
 <body class="workspace-data">
 
+    <!-- Offline Banner -->
     <div id="offline-banner">⚠️ Network Disconnected. Axelr is in standby mode. Data preserved locally.</div>
 
-    <!-- ===== AUTH WALL ===== -->
+    <!-- AUTH WALL -->
     <div id="auth-wall">
         <div class="auth-card">
             <div class="auth-logo">
@@ -73,7 +75,7 @@
         </div>
     </div>
 
-    <!-- ===== WORKSPACE SELECTOR ===== -->
+    <!-- WORKSPACE SELECTOR -->
     <div id="workspace-selector">
         <h2>Select Workspace</h2>
         <div class="ws-grid">
@@ -106,7 +108,7 @@
         </div>
     </div>
 
-    <!-- Settings Modal (NEW) -->
+    <!-- Settings Modal -->
     <div class="modal-overlay" id="settings-modal">
         <div class="modal-card">
             <div class="modal-header">
@@ -128,7 +130,6 @@
                         </div>
                     </div>
                 </div>
-
                 <!-- Plan -->
                 <div class="settings-item" onclick="openBillingFlow()">
                     <span class="material-symbols-rounded icon">workspace_premium</span>
@@ -138,7 +139,6 @@
                     </div>
                     <span class="material-symbols-rounded arrow">chevron_right</span>
                 </div>
-
                 <!-- Custom Instructions -->
                 <div class="settings-item" onclick="openInstructionsModal()">
                     <span class="material-symbols-rounded icon">edit_note</span>
@@ -148,7 +148,6 @@
                     </div>
                     <span class="material-symbols-rounded arrow">chevron_right</span>
                 </div>
-
                 <!-- Help & Feedback -->
                 <div class="settings-item" onclick="openFeedbackModal()">
                     <span class="material-symbols-rounded icon">help</span>
@@ -157,6 +156,15 @@
                         <div class="desc">Report issues or suggest improvements</div>
                     </div>
                     <span class="material-symbols-rounded arrow">chevron_right</span>
+
+                    <div class="settings-item" onclick="openThemeModal()">
+    <span class="material-symbols-rounded icon">dark_mode</span>
+    <div class="content">
+        <div class="title">Theme & System</div>
+        <div class="desc">Switch between dark/light mode, check system status</div>
+    </div>
+    <span class="material-symbols-rounded arrow">chevron_right</span>
+</div>
                 </div>
             </div>
         </div>
@@ -236,7 +244,6 @@
                         </div>
                         <button class="upgrade-btn" onclick="dispatchCheckoutPipeline('pro')">Upgrade to Pro</button>
                     </div>
-
                     <div class="tier-card business-premium">
                         <div class="tier-badge-pos">HEAVY HITTERS</div>
                         <h3>Business</h3>
@@ -291,7 +298,7 @@
         </div>
     </div>
 
-    <!-- Profile Modal -->
+    <!-- Profile Modal (with working buttons) -->
     <div class="modal-overlay" id="profile-modal">
         <div class="modal-card">
             <div class="modal-header">
@@ -300,17 +307,42 @@
                     <span class="material-symbols-rounded">close</span>
                 </button>
             </div>
-            <div style="display:flex;flex-direction:column;gap:5px;">
-                <div class="profile-stat-row"><span class="profile-stat-label">Authentication Layer</span><span class="profile-stat-value">Google OAuth 2.0</span></div>
-                <div class="profile-stat-row"><span class="profile-stat-label">Network Status</span><span class="profile-stat-value" style="color:var(--accent-secondary);">Secured</span></div>
-                <div class="profile-stat-row"><span class="profile-stat-label">Current Node Tier</span><span class="profile-stat-value" id="modal-tier-display">FREE ALLOCATION</span></div>
-            </div>
+            
+    <!-- NEW: Account (Add another) -->
+    <div class="settings-item" onclick="addAnotherAccount()">
+        <span class="material-symbols-rounded icon">person_add</span>
+        <div class="content">
+            <div class="title">Add another account</div>
+            <div class="desc">Switch or add a Google account</div>
+        </div>
+        <span class="material-symbols-rounded arrow">chevron_right</span>
+    </div>
+    
+    <!-- NEW: Privacy & Security -->
+    <div class="settings-item" onclick="openPrivacyModal()">
+        <span class="material-symbols-rounded icon">security</span>
+        <div class="content">
+            <div class="title">Privacy & Security</div>
+            <div class="desc">Manage security settings</div>
+        </div>
+        <span class="material-symbols-rounded arrow">chevron_right</span>
+    </div>
+    
+    <!-- NEW: Help Center -->
+    <div class="settings-item" onclick="openHelpModal()">
+        <span class="material-symbols-rounded icon">help</span>
+        <div class="content">
+            <div class="title">Help Center</div>
+            <div class="desc">FAQs, support, and documentation</div>
+        </div>
+        <span class="material-symbols-rounded arrow">chevron_right</span>
+    </div>
+</div>
         </div>
     </div>
 
     <!-- ===== MAIN APP ===== -->
     <div class="main-wrapper" id="content-mask">
-
         <!-- Sidebar Trigger -->
         <div id="sidebar-trigger-area"><div class="trigger-text">Context Vault</div></div>
 
@@ -334,7 +366,6 @@
                 <button class="tab-btn" id="tab-trashed" onclick="switchSidebarTab('trashed')">Trash</button>
             </div>
 
-            <!-- Sidebar search box -->
             <div class="sidebar-search-box" id="sidebar-search-box">
                 <input type="text" placeholder="Search history..." id="sidebar-search-input">
             </div>
@@ -344,7 +375,7 @@
                 <div id="history-list-container"></div>
             </div>
 
-            <!-- ===== SEARCH OVERLAY ===== -->
+            <!-- Search Overlay -->
             <div id="search-overlay">
                 <button class="close-search" onclick="closeSearchOverlay()">
                     <span class="material-symbols-rounded">close</span>
@@ -353,13 +384,12 @@
                 <div class="search-results" id="search-overlay-results"></div>
             </div>
 
+            <!-- Sidebar Footer – only Switch Workspace & Settings -->
             <div class="sidebar-footer">
-                <!-- Only two items now -->
                 <div class="sidebar-sub-box" onclick="showWorkspaceSelector()">
                     <div class="sub-box-title">Switch Workspace <span class="material-symbols-rounded" style="font-size:18px;color:var(--accent-glow);">swap_horiz</span></div>
                     <div class="sub-box-desc">Change between Data & Design intelligence.</div>
                 </div>
-
                 <div class="sidebar-sub-box" onclick="openSettingsModal()">
                     <div class="sub-box-title">Settings <span class="material-symbols-rounded" style="font-size:18px;color:var(--text-muted);">settings</span></div>
                     <div class="sub-box-desc">Quota, Plan, Instructions & Feedback</div>
@@ -402,6 +432,7 @@
                     <div class="tier-badge" id="tier-badge">FREE TIER</div>
                     <div style="border-top:1px solid var(--border-muted);margin:5px 0;"></div>
                     <div class="footer-opt" style="padding:8px;" onclick="openProfileModal()"><span class="material-symbols-rounded" style="font-size:18px;">account_circle</span> Profile Settings</div>
+                    <div class="footer-opt" style="padding:8px;" onclick="openSubscriptionModal()"><span class="material-symbols-rounded" style="font-size:18px;">credit_card</span> Manage Subscription</div>
                     <div id="admin-dashboard-btn" class="footer-opt" style="padding:8px;color:var(--accent-glow);display:none;" onclick="openAdminModal()"><span class="material-symbols-rounded" style="font-size:18px;">admin_panel_settings</span> Admin Control Room</div>
                     <button class="logout-btn" onclick="executeGlobalLogout()">Log out</button>
                 </div>
