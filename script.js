@@ -2,7 +2,7 @@
 // CONFIGURATION
 // ============================================================
 const API_BASE_URL = window.location.hostname === "localhost" ? "http://localhost:5000" :
-    "https://axelr-backend-1.onrender.com";
+    "https://zelrex-backend.onrender.com";
 
 const AXELR_AVATAR_SVG =
     `<svg viewBox="0 0 100 100" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M50 15 L20 32.5 L20 67.5 L50 85" stroke="#ffffff" stroke-width="6" stroke-linejoin="bevel" fill="rgba(255,255,255,0.05)"/><path d="M50 15 L80 32.5 L50 50 L80 67.5 L50 85" stroke="currentColor" stroke-width="6" stroke-linejoin="bevel" fill="none"/><path d="M20 32.5 L50 50 L20 67.5" stroke="#ffffff" stroke-width="3" stroke-linejoin="bevel" opacity="0.5"/></svg>`;
@@ -124,7 +124,6 @@ let currentThemePreference = localStorage.getItem('axelr_theme') || 'system';
 let systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
 function applyTheme(theme) {
-    // 'theme' is the actual applied theme: 'dark' or 'light'
     if (theme === 'dark') {
         document.body.classList.remove('light-theme');
         document.body.classList.add('dark-theme');
@@ -132,11 +131,9 @@ function applyTheme(theme) {
         document.body.classList.remove('dark-theme');
         document.body.classList.add('light-theme');
     }
-    // Update UI buttons
     document.querySelectorAll('.theme-option').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.theme === currentThemePreference);
     });
-    // Update the description text in settings
     const desc = document.getElementById('theme-desc');
     if (desc) {
         if (currentThemePreference === 'system') {
@@ -158,7 +155,6 @@ function setTheme(pref) {
     }
 }
 
-// Listen for system theme changes
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
     systemDark = e.matches;
     if (currentThemePreference === 'system') {
@@ -166,7 +162,6 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e)
     }
 });
 
-// Initial theme setup
 document.addEventListener('DOMContentLoaded', () => {
     const saved = localStorage.getItem('axelr_theme') || 'system';
     currentThemePreference = saved;
@@ -367,12 +362,10 @@ function toggleHistoryOptions(e, id) {
 function switchSidebarTab(tab) {
     currentTab = tab;
     document.querySelectorAll('.tab-btn').forEach(b => {
-        b.style.background = 'transparent';
-        b.style.color = 'var(--text-muted)';
+        b.classList.remove('active');
     });
     const activeBtn = document.getElementById(`tab-${tab}`);
-    activeBtn.style.background = 'var(--bg-card)';
-    activeBtn.style.color = '#fff';
+    activeBtn.classList.add('active');
     loadArchiveLogs();
 }
 
@@ -380,7 +373,6 @@ function openSettingsModal() {
     closeModals();
     document.getElementById('settings-modal').classList.add('active');
     updateSettingsQuota();
-    // Highlight current theme button
     document.querySelectorAll('.theme-option').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.theme === currentThemePreference);
     });
@@ -463,17 +455,15 @@ function handleCredentialResponse(response) {
     const payload = decodeJwt(token);
     localStorage.setItem('google_auth_token', token);
     initializeSecureWorkspace(payload, token);
-    // Inside initializeSecureWorkspace, after setting src:
-const avatarSrc = payload.picture;
-const avatarImg = document.getElementById('user-avatar');
-const fallback = document.getElementById('user-avatar-fallback');
-avatarImg.src = avatarSrc;
-fallback.innerText = payload.name.charAt(0).toUpperCase();
-// Also for dropdown
-const dropdownImg = document.getElementById('dropdown-avatar');
-const dropdownFallback = document.getElementById('dropdown-avatar-fallback');
-dropdownImg.src = avatarSrc;
-dropdownFallback.innerText = payload.name.charAt(0).toUpperCase();
+    const avatarSrc = payload.picture;
+    const avatarImg = document.getElementById('user-avatar');
+    const fallback = document.getElementById('user-avatar-fallback');
+    avatarImg.src = avatarSrc;
+    fallback.innerText = payload.name.charAt(0).toUpperCase();
+    const dropdownImg = document.getElementById('dropdown-avatar');
+    const dropdownFallback = document.getElementById('dropdown-avatar-fallback');
+    dropdownImg.src = avatarSrc;
+    dropdownFallback.innerText = payload.name.charAt(0).toUpperCase();
 }
 
 window.onload = function() {
@@ -526,9 +516,6 @@ function executeGlobalLogout() {
     location.reload();
 }
 
-if (payload.email === "shanh1346@gmail.com") {
-  document.getElementById('admin-dashboard-btn').style.display = 'block';
-}
 // ============================================================
 // WORKSPACE FUNCTIONS
 // ============================================================
@@ -594,6 +581,9 @@ function resetToNewChat(isBoot = false) {
         clearTimeout(regenerateTimer);
         regenerateTimer = null;
     }
+    // Hide main back button when resetting
+    const mainBackBtn = document.getElementById('main-back-btn');
+    if (mainBackBtn) mainBackBtn.style.display = 'none';
     adjustViewportPadding();
 }
 
@@ -698,10 +688,12 @@ async function loadUserProfile() {
             const data = await resp.json();
             document.getElementById('instructions-input').value = data.customInstructions || "";
 
-          if (data.isAdmin || data.email === 'shanh1346@gmail.com') {
-    document.getElementById('admin-dashboard-btn').style.display = 'block';
-    console.log('✅ Admin mode enabled for', data.email);
-}
+            if (data.isAdmin || data.email === 'shanh1346@gmail.com') {
+                document.getElementById('admin-dashboard-btn').style.display = 'block';
+                console.log('✅ Admin mode enabled for', data.email);
+            } else {
+                document.getElementById('admin-dashboard-btn').style.display = 'none';
+            }
 
             const currentWorkspace = getWorkspace();
             const isDesign = currentWorkspace === 'design';
@@ -760,6 +752,8 @@ async function loadUserProfile() {
             else { document.body.classList.remove('pro-tier', 'designer-tier'); }
 
             updateSettingsQuota();
+            // Update subscription modal content after profile load
+            updateSubscriptionModal();
         }
     } catch (e) { console.warn('Profile load failed', e); }
 }
@@ -948,6 +942,10 @@ function viewPastLogById(logId) {
     localStorage.setItem('axelr_active_session', activeSessionId);
     runningFileTitle = log.filename;
     runningStructuredCache = log.structuredData;
+
+    // Show main back button when viewing a chat
+    const mainBackBtn = document.getElementById('main-back-btn');
+    if (mainBackBtn) mainBackBtn.style.display = 'flex';
 
     if (currentTab === 'trashed') {
         const trashMsg = document.createElement('div');
@@ -1773,6 +1771,7 @@ function openFeedbackModal() {
 function openBillingFlow() {
     closeModals();
     document.getElementById('subscription-modal').classList.add('active');
+    updateSubscriptionModal();   // refresh content
 }
 
 async function openAdminModal() {
@@ -1790,8 +1789,8 @@ async function openAdminModal() {
                 <div class="profile-stat-row"><span class="profile-stat-label">Designer Subscribers</span><span class="profile-stat-value" style="color:var(--accent-glow-designer)">${data.designerUsers}</span></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Total Matrix Logs</span><span class="profile-stat-value">${data.totalChats}</span></div>
                 <div style="border-top:1px solid var(--border-muted);margin:10px 0;"></div>
-                <div class="profile-stat-row"><span class="profile-stat-label">Gemini Engine</span><span class="profile-stat-value" style="color:var(--accent-secondary)">${data.metrics?.geminiStatus || 'Operational'}</span></div>
-                <div class="profile-stat-row"><span class="profile-stat-label">Database Sync</span><span class="profile-stat-value" style="color:var(--accent-secondary)">${data.metrics?.dbStatus || 'Connected'}</span></div>
+                <div class="profile-stat-row"><span class="profile-stat-label">Total Queries Processed</span><span class="profile-stat-value">${data.metrics?.totalQueries || 0}</span></div>
+                <div class="profile-stat-row"><span class="profile-stat-label">Total Storage Used</span><span class="profile-stat-value">${(data.metrics?.totalBytes || 0) / (1024*1024)} MB</span></div>
                 <div style="border-top:1px solid var(--border-muted);margin:10px 0;"></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Total Tokens Used</span><span class="profile-stat-value">${data.tokenUsage?.total || 0}</span></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Free Tier Remaining</span><span class="profile-stat-value" style="color:${data.tokenUsage?.remaining > 0 ? 'var(--accent-secondary)' : '#ef4444'};">${data.tokenUsage?.remaining || 0} / ${data.tokenUsage?.limit || 1000000}</span></div>
@@ -1929,44 +1928,13 @@ async function submitTelemetryReport() {
 // ============================================================
 // PRIVACY & HELP (clean modal versions)
 // ============================================================
-// ============================================================
-// MODALS – stable, no choking
-// ============================================================
 function closeModals() {
-    // Static modals: just hide them
     document.querySelectorAll('.modal-overlay:not(#privacy-modal):not(#help-modal)').forEach(m => {
         m.classList.remove('active');
     });
-    // Dynamic modals: remove them entirely
     document.querySelectorAll('#privacy-modal, #help-modal').forEach(m => m.remove());
 }
 
-function openUpgradeModal() {
-    closeModals();
-    document.getElementById('upgrade-modal').classList.add('active');
-}
-
-function openProfileModal() {
-    closeModals();
-    document.getElementById('profile-modal').classList.add('active');
-}
-
-function openInstructionsModal() {
-    closeModals();
-    document.getElementById('instructions-modal').classList.add('active');
-}
-
-function openFeedbackModal() {
-    closeModals();
-    document.getElementById('feedback-modal').classList.add('active');
-}
-
-function openBillingFlow() {
-    closeModals();
-    document.getElementById('subscription-modal').classList.add('active');
-}
-
-// Dynamic modals – they create their own DOM and remove on close
 function openPrivacyModal() {
     closeModals();
     const modal = document.createElement('div');
@@ -2013,10 +1981,6 @@ function openHelpCenter() {
 }
 
 // ============================================================
-// Delete old duplicate closeModals and dynamic functions
-// Remove any previous definitions of openPrivacyModal/openHelpCenter
-// ============================================================
-// ============================================================
 // ADD ANOTHER ACCOUNT
 // ============================================================
 function addAnotherAccount() {
@@ -2034,66 +1998,6 @@ function syncTierMatrixEngine(tierGroup, subTierSelection, derivedCostValue) {
     if (targetOutputNode) {
         targetOutputNode.innerHTML =
             `$${derivedCostValue}<span style="font-size:14px;color:#555;font-weight:400;">/mo</span>`;
-    }
-}
-
-async function dispatchCheckoutPipeline(targetBaseTier) {
-    const selectedRadio = document.querySelector(`input[name="${targetBaseTier}-sub-selector"]:checked`);
-    if (!selectedRadio) {
-        alert("Please select a plan option.");
-        return;
-    }
-    const selectedSubConfig = selectedRadio.value;
-    const checkoutBtn = document.querySelector(`.${targetBaseTier}-premium .upgrade-btn`);
-    const originalText = checkoutBtn.innerText;
-    checkoutBtn.innerText = "Connecting to Stripe...";
-    checkoutBtn.style.opacity = "0.7";
-    checkoutBtn.disabled = true;
-
-    // Timeout to prevent infinite waiting
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/billing/checkout`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${googleAuthUserToken}` },
-            body: JSON.stringify({ tier: targetBaseTier, subTier: selectedSubConfig }),
-            signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-            let errorMsg = `HTTP ${response.status}`;
-            try {
-                const errData = await response.json();
-                errorMsg = errData.message || errorMsg;
-            } catch (_) {}
-            throw new Error(errorMsg);
-        }
-
-        const data = await response.json();
-        if (data.url) {
-            window.location.href = data.url;
-        } else {
-            throw new Error(data.message || "No checkout URL returned.");
-        }
-    } catch (e) {
-        console.error("Checkout error:", e);
-        let userMsg = "Checkout Failed";
-        if (e.name === 'AbortError') {
-            userMsg = "Request timed out. Please try again.";
-        } else if (e.message) {
-            userMsg = e.message;
-        }
-        alert(`⚠️ ${userMsg}`);
-        checkoutBtn.innerText = "Retry";
-        checkoutBtn.disabled = false;
-        checkoutBtn.style.opacity = "1";
-        // allow retry with same button
-        checkoutBtn.onclick = () => dispatchCheckoutPipeline(targetBaseTier);
-    } finally {
-        clearTimeout(timeoutId);
     }
 }
 
@@ -2221,66 +2125,66 @@ document.addEventListener('mouseup', () => {
 });
 
 function toggleTheme() {
-  document.body.classList.toggle('light-theme');
-  localStorage.setItem('axelr_theme', document.body.classList.contains('light-theme') ? 'light' : 'dark');
+    document.body.classList.toggle('light-theme');
+    localStorage.setItem('axelr_theme', document.body.classList.contains('light-theme') ? 'light' : 'dark');
 }
-// On load, check localStorage
 if (localStorage.getItem('axelr_theme') === 'light') {
-  document.body.classList.add('light-theme');
+    document.body.classList.add('light-theme');
 }
 
 function openSubscriptionModal() {
-  closeModals();
-  const modal = document.getElementById('subscription-modal');
-  const planName = document.getElementById('sub-plan-name').innerText;
-  const isFree = planName.toLowerCase().includes('free');
-  const content = document.getElementById('subscription-content');
-  if (isFree) {
-    content.innerHTML = `
-      <div style="padding:20px 0;text-align:center;">
-        <span class="material-symbols-rounded" style="font-size:48px;color:var(--accent-glow);">rocket_launch</span>
-        <h3 style="color:#fff;margin:12px 0;">You are on the Free Plan</h3>
-        <p style="color:var(--text-muted);font-size:14px;">Unlock unlimited extractions, UI generations, and priority support.</p>
-        <button class="modal-submit-btn" onclick="openUpgradeModal()" style="margin-top:20px;">View Upgrade Options</button>
-      </div>
-    `;
-  } else {
-    content.innerHTML = `
-      <div style="display:flex;flex-direction:column;gap:5px;">
-        <div class="profile-stat-row"><span class="profile-stat-label">Current Plan</span><span class="profile-stat-value" style="color:#fff;">${planName}</span></div>
-        <button class="modal-submit-btn" style="background:transparent;border:1px solid var(--accent-glow);color:var(--accent-glow);margin-top:15px;" onclick="openUpgradeModal()">Change Plan</button>
-      </div>
-    `;
-  }
-  modal.classList.add('active');
+    closeModals();
+    const modal = document.getElementById('subscription-modal');
+    const planName = document.getElementById('sub-plan-name').innerText;
+    const isFree = planName.toLowerCase().includes('free');
+    const content = document.getElementById('subscription-content');
+    if (isFree) {
+        content.innerHTML = `
+            <div style="padding:20px 0;text-align:center;">
+                <span class="material-symbols-rounded" style="font-size:48px;color:var(--accent-glow);">rocket_launch</span>
+                <h3 style="color:#fff;margin:12px 0;">You are on the Free Plan</h3>
+                <p style="color:var(--text-muted);font-size:14px;">Unlock unlimited extractions, UI generations, and priority support.</p>
+                <button class="modal-submit-btn" onclick="openUpgradeModal()" style="margin-top:20px;">View Upgrade Options</button>
+            </div>
+        `;
+    } else {
+        content.innerHTML = `
+            <div style="display:flex;flex-direction:column;gap:5px;">
+                <div class="profile-stat-row"><span class="profile-stat-label">Current Plan</span><span class="profile-stat-value" style="color:#fff;">${planName}</span></div>
+                <button class="modal-submit-btn" style="background:transparent;border:1px solid var(--accent-glow);color:var(--accent-glow);margin-top:15px;" onclick="openUpgradeModal()">Change Plan</button>
+            </div>
+        `;
+    }
+    modal.classList.add('active');
 }
+
 function updateSubscriptionModal() {
-  const planName = document.getElementById('sub-plan-name').innerText;
-  const freeMsg = document.getElementById('free-tier-message');
-  const paidMsg = document.getElementById('paid-tier-message');
-  const paidName = document.getElementById('paid-tier-name');
-  if (planName.toLowerCase().includes('free')) {
-    freeMsg.style.display = 'block';
-    paidMsg.style.display = 'none';
-  } else {
-    freeMsg.style.display = 'none';
-    paidMsg.style.display = 'block';
-    paidName.innerText = planName.replace(' ALLOCATION', '');
-  }
+    const planName = document.getElementById('sub-plan-name').innerText;
+    const freeMsg = document.getElementById('free-tier-message');
+    const paidMsg = document.getElementById('paid-tier-message');
+    const paidName = document.getElementById('paid-tier-name');
+    const detailsSpan = document.getElementById('subscription-details');
+
+    if (planName.toLowerCase().includes('free')) {
+        freeMsg.style.display = 'block';
+        paidMsg.style.display = 'none';
+    } else {
+        freeMsg.style.display = 'none';
+        paidMsg.style.display = 'block';
+        paidName.innerText = planName.replace(' ALLOCATION', '');
+        detailsSpan.innerText = 'Active subscription. Manage your plan via Stripe.';
+    }
 }
-// Call this after loading profile
-// Inside loadUserProfile, after setting sub-plan-name, call updateSubscriptionModal()
+
 // ============================================================
 // INIT
 // ============================================================
 console.log('🟢 Axelr AI Frontend Loaded (v3.1)');
 console.log('📡 API Base URL:', API_BASE_URL);
 
-// Global error handler to prevent UI freezes
 window.onerror = function(message, source, lineno, colno, error) {
     console.error('Global error:', message, error);
-    // Optionally show a user-friendly message
-    return true; // Prevent default browser behavior
+    return true;
 };
 
 const today = new Date();

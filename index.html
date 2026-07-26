@@ -85,6 +85,9 @@
     <div class="modal-overlay" id="admin-modal">
         <div class="modal-card">
             <div class="modal-header">
+                <button class="back-btn" onclick="closeModals()" title="Back">
+                    <span class="material-symbols-rounded">arrow_back</span>
+                </button>
                 <div class="modal-title">Admin Control Room</div>
                 <button class="close-modal-btn" onclick="closeModals()">
                     <span class="material-symbols-rounded">close</span>
@@ -100,6 +103,9 @@
     <div class="modal-overlay" id="settings-modal">
         <div class="modal-card">
             <div class="modal-header">
+                <button class="back-btn" onclick="closeModals()" title="Back">
+                    <span class="material-symbols-rounded">arrow_back</span>
+                </button>
                 <div class="modal-title"><span class="material-symbols-rounded">settings</span> Settings</div>
                 <button class="close-modal-btn" onclick="closeModals()">
                     <span class="material-symbols-rounded">close</span>
@@ -145,7 +151,7 @@
                     </div>
                     <span class="material-symbols-rounded arrow">chevron_right</span>
                 </div>
-                <!-- Theme Selector (three-state) -->
+                <!-- Theme Selector -->
                 <div class="settings-item" style="flex-direction:column;align-items:stretch;gap:8px;cursor:default;">
                     <div style="display:flex;align-items:center;gap:12px;">
                         <span class="material-symbols-rounded icon">palette</span>
@@ -155,16 +161,16 @@
                         </div>
                     </div>
                     <div style="display:flex; gap:6px; margin-top:4px; flex-wrap:wrap; width:100%;">
-  <button class="theme-option" data-theme="system" onclick="setTheme('system')" style="flex:1 1 30%; min-width:60px;">
-    <span class="material-symbols-rounded">desktop_windows</span> System
-  </button>
-  <button class="theme-option" data-theme="dark" onclick="setTheme('dark')" style="flex:1 1 30%; min-width:60px;">
-    <span class="material-symbols-rounded">dark_mode</span> Dark
-  </button>
-  <button class="theme-option" data-theme="light" onclick="setTheme('light')" style="flex:1 1 30%; min-width:60px;">
-    <span class="material-symbols-rounded">light_mode</span> Light
-  </button>
-</div>
+                        <button class="theme-option" data-theme="system" onclick="setTheme('system')" style="flex:1 1 30%; min-width:60px;">
+                            <span class="material-symbols-rounded">desktop_windows</span> System
+                        </button>
+                        <button class="theme-option" data-theme="dark" onclick="setTheme('dark')" style="flex:1 1 30%; min-width:60px;">
+                            <span class="material-symbols-rounded">dark_mode</span> Dark
+                        </button>
+                        <button class="theme-option" data-theme="light" onclick="setTheme('light')" style="flex:1 1 30%; min-width:60px;">
+                            <span class="material-symbols-rounded">light_mode</span> Light
+                        </button>
+                    </div>
                 </div>
                 <!-- Delete all chats -->
                 <div class="settings-item" onclick="deleteAllChats()" style="border-color:rgba(239,68,68,0.3);">
@@ -192,6 +198,9 @@
     <div class="modal-overlay" id="instructions-modal">
         <div class="modal-card">
             <div class="modal-header">
+                <button class="back-btn" onclick="closeModals()" title="Back">
+                    <span class="material-symbols-rounded">arrow_back</span>
+                </button>
                 <div class="modal-title">Custom Instructions</div>
                 <button class="close-modal-btn" onclick="closeModals()">
                     <span class="material-symbols-rounded">close</span>
@@ -207,6 +216,9 @@
     <div class="modal-overlay" id="feedback-modal">
         <div class="modal-card">
             <div class="modal-header">
+                <button class="back-btn" onclick="closeModals()" title="Back">
+                    <span class="material-symbols-rounded">arrow_back</span>
+                </button>
                 <div class="modal-title">System Report</div>
                 <button class="close-modal-btn" onclick="closeModals()">
                     <span class="material-symbols-rounded">close</span>
@@ -225,6 +237,9 @@
     <div class="modal-overlay" id="upgrade-modal">
         <div class="modal-card" style="max-width:900px;">
             <div class="modal-header">
+                <button class="back-btn" onclick="closeModals()" title="Back">
+                    <span class="material-symbols-rounded">arrow_back</span>
+                </button>
                 <div class="modal-title">Upgrade Workspace</div>
                 <button class="close-modal-btn" onclick="closeModals()">
                     <span class="material-symbols-rounded">close</span>
@@ -300,34 +315,13 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="subscription-modal">
-  <div class="modal-card">
-    <div class="modal-header">
-      <div class="modal-title">Manage Subscription</div>
-      <button class="close-modal-btn" onclick="closeModals()">
-        <span class="material-symbols-rounded">close</span>
-      </button>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:5px;">
-      <div class="profile-stat-row"><span class="profile-stat-label">Current Plan</span><span class="profile-stat-value" id="sub-plan-name" style="color:#fff;">Free Allocation</span></div>
-      <!-- Free tier message -->
-      <div id="free-tier-message" style="display:none;background:rgba(234,179,8,0.15);border-left:4px solid #eab308;padding:12px;border-radius:6px;color:#fde047;font-size:13px;margin:10px 0;">
-        <span class="material-symbols-rounded" style="font-size:18px;vertical-align:middle;">info</span>
-        You are on the <strong>Free</strong> tier. <br>Upgrade to unlock premium features and higher limits.
-      </div>
-      <div id="paid-tier-message" style="display:none;background:rgba(16,185,129,0.1);border-left:4px solid #10b981;padding:12px;border-radius:6px;color:#10b981;font-size:13px;margin:10px 0;">
-        <span class="material-symbols-rounded" style="font-size:18px;vertical-align:middle;">check_circle</span>
-        You are on the <strong id="paid-tier-name">Pro</strong> tier. Thank you for your support!
-      </div>
-    </div>
-    <button class="modal-submit-btn" style="background:transparent;border:1px solid var(--accent-glow);color:var(--accent-glow);margin-top:15px;" onclick="openUpgradeModal()">View Upgrade Options</button>
-  </div>
-</div>
-
     <!-- Profile Modal -->
     <div class="modal-overlay" id="profile-modal">
         <div class="modal-card">
             <div class="modal-header">
+                <button class="back-btn" onclick="closeModals()" title="Back">
+                    <span class="material-symbols-rounded">arrow_back</span>
+                </button>
                 <div class="modal-title">Identity Configuration</div>
                 <button class="close-modal-btn" onclick="closeModals()">
                     <span class="material-symbols-rounded">close</span>
@@ -359,6 +353,38 @@
                     <span class="material-symbols-rounded arrow">chevron_right</span>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Subscription Modal (fixed) -->
+    <div class="modal-overlay" id="subscription-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <button class="back-btn" onclick="closeModals()" title="Back">
+                    <span class="material-symbols-rounded">arrow_back</span>
+                </button>
+                <div class="modal-title">Manage Subscription</div>
+                <button class="close-modal-btn" onclick="closeModals()">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+            </div>
+            <div id="subscription-content" style="display:flex;flex-direction:column;gap:5px;padding:10px 0;">
+                <!-- injected by JS -->
+            </div>
+            <div style="display:flex;flex-direction:column;gap:5px;">
+                <div class="profile-stat-row"><span class="profile-stat-label">Current Plan</span><span class="profile-stat-value" id="sub-plan-name" style="color:#fff;">Free Allocation</span></div>
+                <!-- Free tier message -->
+                <div id="free-tier-message" style="display:none;background:rgba(234,179,8,0.15);border-left:4px solid #eab308;padding:12px;border-radius:6px;color:#fde047;font-size:13px;margin:10px 0;">
+                    <span class="material-symbols-rounded" style="font-size:18px;vertical-align:middle;">info</span>
+                    You are on the <strong>Free</strong> tier. <br>Upgrade to unlock premium features and higher limits.
+                </div>
+                <div id="paid-tier-message" style="display:none;background:rgba(16,185,129,0.1);border-left:4px solid #10b981;padding:12px;border-radius:6px;color:#10b981;font-size:13px;margin:10px 0;">
+                    <span class="material-symbols-rounded" style="font-size:18px;vertical-align:middle;">check_circle</span>
+                    You are on the <strong id="paid-tier-name">Pro</strong> tier. <br>
+                    Plan details: <span id="subscription-details">Loading...</span>
+                </div>
+            </div>
+            <button class="modal-submit-btn" style="background:transparent;border:1px solid var(--accent-glow);color:var(--accent-glow);margin-top:15px;" onclick="openUpgradeModal()">View Upgrade Options</button>
         </div>
     </div>
 
@@ -420,6 +446,11 @@
 
         <!-- Header -->
         <div class="workspace-header">
+            <!-- Main Back Button (visible when a chat is active) -->
+            <button class="back-btn" id="main-back-btn" onclick="resetToNewChat()" style="display:none;" title="Back to new chat">
+                <span class="material-symbols-rounded">arrow_back</span>
+            </button>
+
             <div class="model-hub">
                 <button id="model-selector" onclick="toggleModelDropdown(event)">
                     <span id="model-text-display">Model 2.0</span> <span class="badge" id="model-badge-display">FLASH</span>
@@ -434,12 +465,12 @@
                         <div class="model-desc">Our smartest model. Endless pipelines.</div>
                     </div>
                     <div class="model-option designer" onclick="openUpgradeModal()" style="border-color:rgba(244,63,94,0.2);background:rgba(244,63,94,0.05);">
-    <div class="model-title" style="color:var(--accent-glow-designer);">
-        Axelr Architect 3.5
-        <span style="background:rgba(244,63,94,0.1);color:var(--accent-glow-designer);padding:2px 6px;border-radius:4px;font-size:9px;white-space:nowrap;">BUILDER</span>
-    </div>
-    <div class="model-desc">Advanced UI/UX generations &amp; Live Deployment.</div>
-</div>
+                        <div class="model-title" style="color:var(--accent-glow-designer);">
+                            Axelr Architect 3.5
+                            <span style="background:rgba(244,63,94,0.1);color:var(--accent-glow-designer);padding:2px 6px;border-radius:4px;font-size:9px;white-space:nowrap;">BUILDER</span>
+                        </div>
+                        <div class="model-desc">Advanced UI/UX generations &amp; Live Deployment.</div>
+                    </div>
                 </div>
             </div>
 
