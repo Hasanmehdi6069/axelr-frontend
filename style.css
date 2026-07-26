@@ -196,19 +196,6 @@ body.light-theme .workspace-card {
     border-color: #ddd;
 }
 
-/* Fix chat tabs visibility in light theme */
-body.light-theme .sidebar-tabs {
-    background: #e5e7eb;
-}
-body.light-theme .tab-btn {
-    color: #4b5563;
-}
-body.light-theme .tab-btn.active {
-    background: #ffffff;
-    color: #000;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
 /* Fix quota bar visibility */
 body.light-theme .axelr-quota-box .quota-track {
     background: #ddd;
@@ -1011,11 +998,18 @@ body.designer-tier #model-selector .badge {
     align-items: center;
     justify-content: space-between;
 }
-.model-title span {
-    font-size: 10px;
-    font-weight: 700;
-    padding: 2px 6px;
-    border-radius: 4px;
+.model-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    flex-wrap: wrap;          /* allows badge to wrap on small screens */
+}
+.model-option.designer .model-title span {
+    font-size: 8px !important;
+    padding: 2px 5px !important;
+    white-space: nowrap;
+    line-height: 1.4;
 }
 .model-desc {
     font-size: 11px;
@@ -2224,3 +2218,85 @@ body.workspace-design .ai-avatar-bubble svg path:nth-child(2) {
         font-size: 18px;
     }
 }
+.theme-option {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 8px;
+  border: 1px solid var(--border-muted);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.2s;
+  font-family: 'Inter', sans-serif;
+  white-space: nowrap;
+}
+@media (max-width: 480px) {
+  .theme-option {
+    font-size: 10px;
+    padding: 4px 6px;
+  }
+}
+.theme-option {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 8px;
+  border: 1px solid var(--border-muted);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.2s;
+  font-family: 'Inter', sans-serif;
+  white-space: nowrap;
+}
+@media (max-width: 480px) {
+  .theme-option {
+    font-size: 10px;
+    padding: 4px 6px;
+  }
+}
+body.workspace-design {
+  --accent-glow: #ef4444 !important;
+  --accent-glow-designer: #ef4444 !important;
+  --accent-secondary: #18ad7b !important;
+  --border-muted: rgba(239, 68, 68, 0.3) !important;
+}
+body.workspace-design .brand-logo {
+  color: var(--accent-glow) !important;
+}
+body.workspace-design .input-frame:focus-within {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 30px rgba(239, 68, 68, 0.2) !important;
+}
+
+body.light-theme .sidebar-tabs {
+    background: var(--bg-deep);   /* #f5f5f5 */
+    border-radius: 8px;
+    padding: 4px;
+}
+body.light-theme .tab-btn {
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    padding: 6px;
+    font-size: 11px;
+    font-weight: 600;
+}
+body.light-theme .tab-btn.active {
+    background: var(--bg-card);   /* #ffffff */
+    color: var(--text-main);      /* #000 */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+}
+body.workspace-data { --accent-glow: #10b981; }
+body.workspace-design { --accent-glow: #ef4444; }

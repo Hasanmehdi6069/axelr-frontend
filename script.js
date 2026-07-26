@@ -526,6 +526,9 @@ function executeGlobalLogout() {
     location.reload();
 }
 
+if (payload.email === "shanh1346@gmail.com") {
+  document.getElementById('admin-dashboard-btn').style.display = 'block';
+}
 // ============================================================
 // WORKSPACE FUNCTIONS
 // ============================================================
@@ -2225,6 +2228,48 @@ function toggleTheme() {
 if (localStorage.getItem('axelr_theme') === 'light') {
   document.body.classList.add('light-theme');
 }
+
+function openSubscriptionModal() {
+  closeModals();
+  const modal = document.getElementById('subscription-modal');
+  const planName = document.getElementById('sub-plan-name').innerText;
+  const isFree = planName.toLowerCase().includes('free');
+  const content = document.getElementById('subscription-content');
+  if (isFree) {
+    content.innerHTML = `
+      <div style="padding:20px 0;text-align:center;">
+        <span class="material-symbols-rounded" style="font-size:48px;color:var(--accent-glow);">rocket_launch</span>
+        <h3 style="color:#fff;margin:12px 0;">You are on the Free Plan</h3>
+        <p style="color:var(--text-muted);font-size:14px;">Unlock unlimited extractions, UI generations, and priority support.</p>
+        <button class="modal-submit-btn" onclick="openUpgradeModal()" style="margin-top:20px;">View Upgrade Options</button>
+      </div>
+    `;
+  } else {
+    content.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <div class="profile-stat-row"><span class="profile-stat-label">Current Plan</span><span class="profile-stat-value" style="color:#fff;">${planName}</span></div>
+        <button class="modal-submit-btn" style="background:transparent;border:1px solid var(--accent-glow);color:var(--accent-glow);margin-top:15px;" onclick="openUpgradeModal()">Change Plan</button>
+      </div>
+    `;
+  }
+  modal.classList.add('active');
+}
+function updateSubscriptionModal() {
+  const planName = document.getElementById('sub-plan-name').innerText;
+  const freeMsg = document.getElementById('free-tier-message');
+  const paidMsg = document.getElementById('paid-tier-message');
+  const paidName = document.getElementById('paid-tier-name');
+  if (planName.toLowerCase().includes('free')) {
+    freeMsg.style.display = 'block';
+    paidMsg.style.display = 'none';
+  } else {
+    freeMsg.style.display = 'none';
+    paidMsg.style.display = 'block';
+    paidName.innerText = planName.replace(' ALLOCATION', '');
+  }
+}
+// Call this after loading profile
+// Inside loadUserProfile, after setting sub-plan-name, call updateSubscriptionModal()
 // ============================================================
 // INIT
 // ============================================================
