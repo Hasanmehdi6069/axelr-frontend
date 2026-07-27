@@ -618,6 +618,7 @@ function activateWorkspace(type, isBoot = false) {
     resetToNewChat(isBoot);
     if (!isBoot) loadArchiveLogs();
 }
+
 function resetToNewChat(isBoot = false) {
     activeSessionId = null;
     runningStructuredCache = null;
@@ -652,11 +653,6 @@ function resetToNewChat(isBoot = false) {
     const mainBackBtn = document.getElementById('main-back-btn');
     if (mainBackBtn) mainBackBtn.style.display = 'none';
     adjustViewportPadding();
-    
-    // Reload history after resetting to ensure cachedLogHistory is up to date
-    if (!isBoot) {
-        loadArchiveLogs();
-    }
 }
 
 // ============================================================
@@ -1006,27 +1002,8 @@ function viewPastLogById(logId) {
         clearTimeout(regenerateTimer);
         regenerateTimer = null;
     }
-    
-    // Try to find the log in cachedLogHistory
-    let log = cachedLogHistory.find(l => l._id === logId);
-    
-    // If not found, refresh cache and try again
-    if (!log) {
-        // Refresh the history cache
-        loadArchiveLogs().then(() => {
-            const refreshedLog = cachedLogHistory.find(l => l._id === logId);
-            if (refreshedLog) {
-                // Recursive call with the same logId, now it should exist
-                viewPastLogById(logId);
-            } else {
-                // Log not found, reset to new chat
-                resetToNewChat();
-                alert('Chat not found. It may have been deleted.');
-            }
-        });
-        return;
-    }
-    
+    const log = cachedLogHistory.find(l => l._id === logId);
+    if (!log) return;
     document.getElementById('hero-display').style.display = 'none';
     document.querySelectorAll('.chat-bubble').forEach(b => b.remove());
     activeSessionId = logId;
@@ -1037,6 +1014,7 @@ function viewPastLogById(logId) {
     // Show main back button when viewing a chat
     const mainBackBtn = document.getElementById('main-back-btn');
     if (mainBackBtn) mainBackBtn.style.display = 'flex';
+
     if (currentTab === 'trashed') {
         const trashMsg = document.createElement('div');
         trashMsg.className = 'chat-bubble';
