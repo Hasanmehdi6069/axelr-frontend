@@ -245,7 +245,75 @@ function renderFileChips() {
         fileStagingContainer.style.display = 'flex';
     });
 }
+// ============================================================
+// VIEWPORT & KEYBOARD ADJUSTMENT (Fixed for mobile)
+// ============================================================
+let isVisualViewportActive = false;
 
+function adjustCommandWrapperAndViewport() {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const offsetY = window.innerHeight - vv.height;
+    const maxBottom = Math.min(offsetY, window.innerHeight * 0.5);
+    // Only update if there's a meaningful change
+    if (Math.abs(parseFloat(commandWrapper.style.bottom || '0') - maxBottom) > 5) {
+        commandWrapper.style.bottom = maxBottom + 'px';
+    }
+    const fileChips = document.getElementById('file-staging-container');
+    const fileChipsHeight = fileChips ? fileChips.offsetHeight : 0;
+    const availableHeight = window.innerHeight - maxBottom - 20 - fileChipsHeight;
+    commandWrapper.style.maxHeight = Math.min(availableHeight, window.innerHeight * 0.8) + 'px';
+    setTimeout(adjustViewportPadding, 50);
+    if (viewport.querySelector('.chat-bubble')) {
+        scrollToBottom();
+    }
+}
+
+// Use a debounced version to prevent excessive updates
+let resizeTimeout = null;
+function debouncedAdjust() {
+    if (resizeTimeout) {
+        cancelAnimationFrame(resizeTimeout);
+    }
+    resizeTimeout = requestAnimationFrame(() => {
+        adjustCommandWrapperAndViewport();
+        resizeTimeout = null;
+    });
+}
+
+if (window.visualViewport) {
+    // Use 'resize' and 'scroll' with debouncing
+    window.visualViewport.addEventListener('resize', debouncedAdjust);
+    window.visualViewport.addEventListener('scroll', debouncedAdjust);
+    
+    // Initial adjustment after a short delay
+    setTimeout(debouncedAdjust, 100);
+}
+
+// Also adjust when the window resizes
+window.addEventListener('resize', debouncedAdjust);
+
+// Fix: Ensure file staging container persists
+function renderFileChips() {
+    const container = document.getElementById('file-staging-container');
+    if (stagedFiles.length === 0) {
+        container.style.display = 'none';
+        container.innerHTML = '';
+        return;
+    }
+    container.style.display = 'flex';
+    container.innerHTML = stagedFiles.map((file, idx) =>
+        `<div class="file-chip" style="display:flex;align-items:center;gap:8px;max-width:100%;flex-shrink:0;background:rgba(0,242,254,0.08);border:1px solid rgba(0,242,254,0.15);color:var(--text-muted);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;margin-top:5px;display:inline-flex;align-items:center;gap:5px;">
+            <span class="material-symbols-rounded" style="font-size:16px;">description</span>
+            <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;display:inline-block;vertical-align:middle;">${escapeHtmlEntities(file.name)}</span>
+            <span style="cursor:pointer;color:#ef4444;font-weight:bold;font-size:14px;flex-shrink:0;padding-left:4px;" onclick="removeStagedFile(${idx})"><span class="material-symbols-rounded" style="font-size:16px;">close</span></span>
+        </div>`
+    ).join('');
+    // Ensure the container remains visible
+    container.style.display = 'flex';
+    // Re-trigger layout adjustment
+    requestAnimationFrame(debouncedAdjust);
+}
 function removeStagedFile(idx) {
     stagedFiles.splice(idx, 1);
     renderFileChips();
