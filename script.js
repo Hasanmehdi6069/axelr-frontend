@@ -2292,3 +2292,52 @@ loadUserProfile().then(() => {
         }
     });
 });
+// ============================================================
+// VERSION & CACHE CONTROL
+// ============================================================
+const APP_VERSION = '4.0.0';
+const BUILD_DATE = '2026-07-27';
+
+console.log(`🟢 Axelr AI v${APP_VERSION} (Build: ${BUILD_DATE})`);
+console.log('📡 API Base URL:', API_BASE_URL);
+
+// Force reload if version mismatch
+const storedVersion = localStorage.getItem('axelr_app_version');
+if (storedVersion && storedVersion !== APP_VERSION) {
+    console.log('🔄 Version mismatch, clearing cache...');
+    localStorage.clear();
+    localStorage.setItem('axelr_app_version', APP_VERSION);
+} else if (!storedVersion) {
+    localStorage.setItem('axelr_app_version', APP_VERSION);
+}
+
+// Check for service worker updates
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(registrations => {
+        for (let registration of registrations) {
+            registration.update();
+        }
+    });
+}
+// Add this middleware after helmet
+app.use((req, res, next) => {
+    // Cache static assets for 1 year with versioned URLs
+    if (req.path.match(/\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$/)) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    } else {
+        // HTML files should not be cached
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+    }
+    next();
+});
+
+// Add version endpoint
+app.get('/api/version', (req, res) => {
+    res.json({
+        version: '4.0.0',
+        buildDate: '2026-07-27',
+        environment: process.env.NODE_ENV || 'development'
+    });
+});
