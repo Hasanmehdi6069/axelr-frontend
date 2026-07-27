@@ -178,9 +178,8 @@ body.light-theme .brand-logo span {
 }
 
 body.light-theme {
-    --logo-stroke-primary: #000000;
-    --logo-fill-primary: rgba(0,0,0,0.05);
-    --logo-stroke-secondary: #000000;
+    /* ... existing light variables ... */
+    --logo-text-color: #000000;    /* light mode */
 }
 /* Fix workspace selector heading & cards in light theme */
 body.light-theme #workspace-selector h2 {
@@ -2327,73 +2326,15 @@ body.light-theme .back-btn:hover {
     --logo-fill-primary: rgba(255,255,255,0.05);
     --logo-stroke-secondary: #ffffff;
 }
-/* ============================================================
-   LOGO FIX - Light Theme
-   ============================================================ */
-/* Fix: Make logo visible in light theme */
-body.light-theme .auth-logo svg path:first-child,
-body.light-theme .auth-logo svg path:last-child,
-body.light-theme .brand-logo svg path:first-child,
-body.light-theme .brand-logo svg path:last-child,
-body.light-theme .hero-logo-anim svg path:first-child,
-body.light-theme .hero-logo-anim svg path:last-child {
-    stroke: #000000 !important;
-}
 
-body.light-theme .auth-logo svg path:nth-child(2),
-body.light-theme .brand-logo svg path:nth-child(2),
-body.light-theme .hero-logo-anim svg path:nth-child(2) {
-    stroke: #000000 !important;
+body.light-theme {
+    --logo-stroke-primary: #000000;
+    --logo-fill-primary: rgba(0,0,0,0.05);
+    --logo-stroke-secondary: #000000;
 }
-
-/* Also fix the avatar icon */
 body.light-theme .ai-avatar-bubble svg path:first-child {
     stroke: #000000 !important;
 }
 body.light-theme .ai-avatar-bubble svg path:last-child {
     stroke: #000000 !important;
 }
-body.light-theme .ai-avatar-bubble svg path:nth-child(2) {
-    stroke: #000000 !important;
-}
-/* ============================================================
-   LOGO FIX - Light Theme (Make white parts black)
-   ============================================================ */
-body.light-theme .auth-logo svg path:first-child,
-body.light-theme .auth-logo svg path:last-child,
-body.light-theme .brand-logo svg path:first-child,
-body.light-theme .brand-logo svg path:last-child,
-body.light-theme .hero-logo-anim svg path:first-child,
-body.light-theme .hero-logo-anim svg path:last-child {
-    stroke: #000000 !important;
-}
-
-body.light-theme .auth-logo svg path:nth-child(2),
-body.light-theme .brand-logo svg path:nth-child(2),
-body.light-theme .hero-logo-anim svg path:nth-child(2) {
-    stroke: #000000 !important;
-}
-
-/* Avatar icon fix */
-body.light-theme .ai-avatar-bubble svg path:first-child {
-    stroke: #000000 !important;
-}
-body.light-theme .ai-avatar-bubble svg path:last-child {
-    stroke: #000000 !important;
-}
-body.light-theme .ai-avatar-bubble svg path:nth-child(2) {
-    stroke: #000000 !important;
-}
-
-/* ✅ QUOTA FIX - Prevent negative values */
-.axelr-quota-box .quota-count {
-    color: var(--text-main);
-    font-size: 11px;
-    font-family: 'JetBrains Mono', monospace;
-    font-weight: 600;
-}
-/* Ensure quota never shows negative */
-.axelr-quota-box .quota-count:contains('-') {
-    color: #ef4444 !important;
-}
-

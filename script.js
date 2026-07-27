@@ -64,7 +64,6 @@ let regenerateTimer = null;
 let hasRegenerated = false;
 let currentUserId = null;
 let isProcessing = false;
-let userIsAdmin = false;
 
 let ignoreSidebarClose = false;
 let manipulationCount = parseInt(sessionStorage.getItem('axelr_manipulation_count')) || 0;
@@ -204,7 +203,6 @@ function adjustCommandWrapperAndViewport() {
     }
 }
 
-// Debounced version
 let resizeTimeout2 = null;
 function debouncedAdjust() {
     if (resizeTimeout2) {
@@ -694,7 +692,7 @@ renderer.code = function(code, language) {
 marked.setOptions({ renderer: renderer, breaks: true });
 
 // ============================================================
-// USER PROFILE & QUOTA
+// USER PROFILE & QUOTA - FIXED (removed broken code)
 // ============================================================
 async function loadUserProfile() {
     try {
@@ -705,7 +703,9 @@ async function loadUserProfile() {
             const data = await resp.json();
             document.getElementById('instructions-input').value = data.customInstructions || "";
 
-            if (data.isAdmin || data.email === 'shanh1346@gmail.com') {
+            // ✅ FIX: Check admin status properly
+            const isAdmin = data.isAdmin === true || data.email === 'shanh1346@gmail.com';
+            if (isAdmin) {
                 document.getElementById('admin-dashboard-btn').style.display = 'block';
                 console.log('✅ Admin mode enabled for', data.email);
             } else {
@@ -825,6 +825,9 @@ async function loadArchiveLogs() {
     } catch (e) {}
 }
 
+// ============================================================
+// RENAME, PIN, SHARE, STATUS FUNCTIONS
+// ============================================================
 async function renameChat(logId, currentName, e) {
     e.stopPropagation();
     document.querySelectorAll('.actions-dropdown-list').forEach(d => d.classList.remove('active'));
@@ -1763,6 +1766,10 @@ async function openAdminModal() {
                 <div style="border-top:1px solid var(--border-muted);margin:10px 0;"></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Total Tokens Used</span><span class="profile-stat-value">${data.tokenUsage?.total || 0}</span></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Free Tier Remaining</span><span class="profile-stat-value" style="color:${data.tokenUsage?.remaining > 0 ? 'var(--accent-secondary)' : '#ef4444'};">${data.tokenUsage?.remaining || 0} / ${data.tokenUsage?.limit || 1000000}</span></div>
+                <div style="border-top:1px solid var(--border-muted);margin:10px 0;"></div>
+                <div class="profile-stat-row"><span class="profile-stat-label">Daily AI Queries</span><span class="profile-stat-value">${data.dailyAIUsage?.totalQueries || 0}</span></div>
+                <div class="profile-stat-row"><span class="profile-stat-label">Daily Prompt Tokens</span><span class="profile-stat-value">${data.dailyAIUsage?.prompt || 0}</span></div>
+                <div class="profile-stat-row"><span class="profile-stat-label">Daily Completion Tokens</span><span class="profile-stat-value">${data.dailyAIUsage?.completion || 0}</span></div>
             `;
         } else {
             document.getElementById('admin-metrics-container').innerHTML =
