@@ -1378,6 +1378,9 @@ function showSecurityAlert(level) {
 // ============================================================
 // EXECUTE COMMAND
 // ============================================================
+// ============================================================
+// EXECUTE COMMAND - FIXED
+// ============================================================
 async function executeCommand(isRetry = false) {
     document.getElementById('hero-display').style.display = 'none';
 
@@ -1529,7 +1532,7 @@ async function executeCommand(isRetry = false) {
             sendBtn.disabled = false;
             isProcessing = false;
         }
-    }, 25000);
+    }, 30000);
 
     try {
         const response = await fetch(`${API_BASE_URL}/api/extract`, {
@@ -1557,119 +1560,76 @@ async function executeCommand(isRetry = false) {
             return;
         }
 
-        if (!response.body) {
-            contentDiv.innerHTML = `⚠️ No response body.`;
+        // --- FIXED: Parse JSON response (not streaming) ---
+        const result = await response.json();
+        responseReceived = true;
+
+        if (result.success) {
+            const fullResponse = result.text || "No response from AI.";
+            const sessionId = result.sessionId;
+            const structuredData = result.structuredData;
+            const filename = result.filename || 'Export.csv';
+
+            // Update UI
+            contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(fullResponse));
+
+            if (sessionId) {
+                activeSessionId = sessionId;
+                localStorage.setItem('axelr_active_session', activeSessionId);
+                runningStructuredCache = structuredData;
+                runningFileTitle = filename;
+                await loadArchiveLogs();
+                viewPastLogById(activeSessionId);
+            }
+
+            const rawCode = extractHtmlCode(fullResponse);
+            if (rawCode) {
+                const iframe = document.createElement('iframe');
+                iframe.style.width = '100%';
+                iframe.style.height = '400px';
+                iframe.style.border = '1px solid var(--border-muted)';
+                iframe.style.borderRadius = '8px';
+                iframe.style.marginTop = '15px';
+                iframe.style.backgroundColor = '#ffffff';
+                contentDiv.appendChild(iframe);
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                iframeDoc.open();
+                iframeDoc.write(rawCode);
+                iframeDoc.close();
+                injectDeployButton(contentDiv, rawCode);
+            }
+
+            appendPayloadDownload(contentDiv);
+            hasRegenerated = false;
+            if (regenerateTimer) {
+                clearTimeout(regenerateTimer);
+                regenerateTimer = null;
+            }
+
+            const now = new Date().toISOString();
+            injectActionButtons(contentDiv, fullResponse, false, true, now, activeSessionId);
             scrollToBottom();
-            isProcessing = false;
-            return;
+
+            // Show back button
+            const mainBackBtn = document.getElementById('main-back-btn');
+            if (mainBackBtn) mainBackBtn.style.display = 'flex';
+
+        } else {
+            contentDiv.innerHTML = `⚠️ ${result.message || 'Something went wrong.'}`;
         }
 
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let fullResponse = "";
-        let structuredData = null;
-        let sessionId = null;
-        let filename = 'Export.csv';
-        let timeoutFallbackInner;
-
-        timeoutFallbackInner = setTimeout(() => {
-            if (!responseReceived) {
-                contentDiv.innerHTML = `⚠️ The AI took too long to respond. Please try again.`;
-                scrollToBottom();
-                if (globalAbortController) globalAbortController.abort();
-                sendBtn.classList.remove('btn-stop-active');
-                sendBtn.disabled = false;
-                isProcessing = false;
-            }
-        }, 25000);
-
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split('\n\n');
-            for (const line of lines) {
-                if (line.startsWith('data: ')) {
-                    try {
-                        const data = JSON.parse(line.substring(6));
-                        if (data.type === 'chunk') {
-                            responseReceived = true;
-                            clearTimeout(timeoutFallbackInner);
-                            timeoutFallbackInner = setTimeout(() => {
-                                if (!responseReceived) {
-                                    contentDiv.innerHTML =
-                                        `⚠️ The AI took too long to respond. Please try again.`;
-                                    scrollToBottom();
-                                    if (globalAbortController) globalAbortController.abort();
-                                    sendBtn.classList.remove('btn-stop-active');
-                                    sendBtn.disabled = false;
-                                    isProcessing = false;
-                                }
-                            }, 25000);
-
-                            fullResponse += data.text;
-                            const cleanResponse = fullResponse.replace(/<think>[\s\S]*?<\/think>/g, '');
-                            contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(cleanResponse));
-                            scrollToBottom();
-                        } else if (data.type === 'done') {
-                            responseReceived = true;
-                            clearTimeout(timeoutFallbackInner);
-                            if (!fullResponse && data.finalResponse) {
-                                fullResponse = data.finalResponse;
-                                contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(fullResponse));
-                            }
-                            sessionId = data.sessionId;
-                            structuredData = data.structuredData;
-                            filename = data.filename || 'Export.csv';
-                            if (sessionId) {
-                                activeSessionId = sessionId;
-                                localStorage.setItem('axelr_active_session', activeSessionId);
-                                runningStructuredCache = structuredData;
-                                runningFileTitle = filename;
-                                await loadArchiveLogs();
-                                viewPastLogById(activeSessionId);
-                            }
-                            const rawCode = extractHtmlCode(fullResponse);
-                            if (rawCode) {
-                                const iframe = document.createElement('iframe');
-                                iframe.style.width = '100%';
-                                iframe.style.height = '400px';
-                                iframe.style.border = '1px solid var(--border-muted)';
-                                iframe.style.borderRadius = '8px';
-                                iframe.style.marginTop = '15px';
-                                iframe.style.backgroundColor = '#ffffff';
-                                contentDiv.appendChild(iframe);
-                                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                                iframeDoc.open();
-                                iframeDoc.write(rawCode);
-                                iframeDoc.close();
-                                injectDeployButton(contentDiv, rawCode);
-                            }
-                            appendPayloadDownload(contentDiv);
-                            hasRegenerated = false;
-                            if (regenerateTimer) {
-                                clearTimeout(regenerateTimer);
-                                regenerateTimer = null;
-                            }
-                            const now = new Date().toISOString();
-                            injectActionButtons(contentDiv, fullResponse, false, true, now, activeSessionId);
-                            scrollToBottom();
-                        }
-                    } catch (e) { /* ignore malformed JSON */ }
-                }
-            }
-        }
     } catch (error) {
         clearTimeout(extendedTimeout);
         if (error.name === 'AbortError') {
             contentDiv.innerHTML +=
                 `<br><br><em style="color:var(--text-muted);">[Generation halted by user]</em>`;
         } else {
+            console.error('Execute error:', error);
             contentDiv.innerHTML = `⚠️ Network connection dropped. Please retry.`;
         }
         scrollToBottom();
     } finally {
+        clearTimeout(timeoutFallback);
         globalAbortController = null;
         sendBtn.classList.remove('btn-stop-active');
         sendBtn.innerHTML = originalBtnHtml;
@@ -1683,7 +1643,6 @@ async function executeCommand(isRetry = false) {
         isProcessing = false;
     }
 }
-
 // ============================================================
 // PAYLOAD / DEPLOY
 // ============================================================
