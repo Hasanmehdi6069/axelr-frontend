@@ -2284,14 +2284,6 @@ if (!lastVisit || new Date(lastVisit) < today) {
     localStorage.setItem('axelr_last_visit', today.toISOString());
 }
 
-loadUserProfile().then(() => {
-    loadArchiveLogs().then(() => {
-        const storedSessionId = localStorage.getItem('axelr_active_session');
-        if (storedSessionId) {
-            viewPastLogById(storedSessionId);
-        }
-    });
-});
 // ============================================================
 // VERSION & CACHE CONTROL
 // ============================================================
@@ -2317,27 +2309,15 @@ if ('serviceWorker' in navigator) {
         for (let registration of registrations) {
             registration.update();
         }
-    });
+    }).catch(() => {});
 }
-// Add this middleware after helmet
-app.use((req, res, next) => {
-    // Cache static assets for 1 year with versioned URLs
-    if (req.path.match(/\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$/)) {
-        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-    } else {
-        // HTML files should not be cached
-        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-        res.setHeader('Pragma', 'no-cache');
-        res.setHeader('Expires', '0');
-    }
-    next();
-});
 
-// Add version endpoint
-app.get('/api/version', (req, res) => {
-    res.json({
-        version: '4.0.0',
-        buildDate: '2026-07-27',
-        environment: process.env.NODE_ENV || 'development'
+// Load user profile and history
+loadUserProfile().then(() => {
+    loadArchiveLogs().then(() => {
+        const storedSessionId = localStorage.getItem('axelr_active_session');
+        if (storedSessionId) {
+            viewPastLogById(storedSessionId);
+        }
     });
 });
