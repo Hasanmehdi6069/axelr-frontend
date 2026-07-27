@@ -7,7 +7,6 @@ const API_BASE_URL = window.location.hostname === "localhost" ? "http://localhos
 const AXELR_AVATAR_SVG =
     `<svg viewBox="0 0 100 100" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M50 15 L20 32.5 L20 67.5 L50 85" stroke="#ffffff" stroke-width="6" stroke-linejoin="bevel" fill="rgba(255,255,255,0.05)"/><path d="M50 15 L80 32.5 L50 50 L80 67.5 L50 85" stroke="currentColor" stroke-width="6" stroke-linejoin="bevel" fill="none"/><path d="M20 32.5 L50 50 L20 67.5" stroke="#ffffff" stroke-width="3" stroke-linejoin="bevel" opacity="0.5"/></svg>`;
 
-// Lucide-style icons (inline SVG)
 const ICONS = {
     copy: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`,
     edit: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>`,
@@ -186,25 +185,41 @@ function scrollToBottom() {
     viewport.scrollTop = viewport.scrollHeight;
 }
 
-if (window.visualViewport) {
-    function adjustCommandWrapperAndViewport() {
-        const vv = window.visualViewport;
-        if (!vv) return;
-        const offsetY = window.innerHeight - vv.height;
-        const maxBottom = Math.min(offsetY, window.innerHeight * 0.5);
+// Single version of adjustCommandWrapperAndViewport
+function adjustCommandWrapperAndViewport() {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const offsetY = window.innerHeight - vv.height;
+    const maxBottom = Math.min(offsetY, window.innerHeight * 0.5);
+    if (Math.abs(parseFloat(commandWrapper.style.bottom || '0') - maxBottom) > 5) {
         commandWrapper.style.bottom = maxBottom + 'px';
-        const fileChips = document.getElementById('file-staging-container');
-        const fileChipsHeight = fileChips ? fileChips.offsetHeight : 0;
-        const availableHeight = window.innerHeight - maxBottom - 20 - fileChipsHeight;
-        commandWrapper.style.maxHeight = Math.min(availableHeight, window.innerHeight * 0.8) + 'px';
-        setTimeout(adjustViewportPadding, 50);
-        if (viewport.querySelector('.chat-bubble')) {
-            scrollToBottom();
-        }
     }
-    window.visualViewport.addEventListener('resize', adjustCommandWrapperAndViewport);
-    window.visualViewport.addEventListener('scroll', adjustCommandWrapperAndViewport);
-    setTimeout(adjustCommandWrapperAndViewport, 100);
+    const fileChips = document.getElementById('file-staging-container');
+    const fileChipsHeight = fileChips ? fileChips.offsetHeight : 0;
+    const availableHeight = window.innerHeight - maxBottom - 20 - fileChipsHeight;
+    commandWrapper.style.maxHeight = Math.min(availableHeight, window.innerHeight * 0.8) + 'px';
+    setTimeout(adjustViewportPadding, 50);
+    if (viewport.querySelector('.chat-bubble')) {
+        scrollToBottom();
+    }
+}
+
+// Debounced version
+let resizeTimeout2 = null;
+function debouncedAdjust() {
+    if (resizeTimeout2) {
+        cancelAnimationFrame(resizeTimeout2);
+    }
+    resizeTimeout2 = requestAnimationFrame(() => {
+        adjustCommandWrapperAndViewport();
+        resizeTimeout2 = null;
+    });
+}
+
+if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', debouncedAdjust);
+    window.visualViewport.addEventListener('scroll', debouncedAdjust);
+    setTimeout(debouncedAdjust, 100);
 }
 
 promptInput.addEventListener('focus', function() {
@@ -225,77 +240,11 @@ const viewportObserver = new MutationObserver(() => {
 viewportObserver.observe(viewport, { childList: true, subtree: true, characterData: true });
 
 // ============================================================
-// FILE HANDLING
+// FILE HANDLING - SINGLE VERSION
 // ============================================================
-function renderFileChips() {
-    if (stagedFiles.length === 0) {
-        fileStagingContainer.style.display = 'none';
-        fileStagingContainer.innerHTML = '';
-        return;
-    }
-    fileStagingContainer.style.display = 'flex';
-    fileStagingContainer.innerHTML = stagedFiles.map((file, idx) =>
-        `<div class="file-chip" style="display:flex;align-items:center;gap:8px;max-width:100%;flex-shrink:0;">
-            <span class="material-symbols-rounded" style="font-size:16px;">description</span>
-            <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;display:inline-block;vertical-align:middle;">${escapeHtmlEntities(file.name)}</span>
-            <span style="cursor:pointer;color:#ef4444;font-weight:bold;font-size:14px;flex-shrink:0;padding-left:4px;" onclick="removeStagedFile(${idx})"><span class="material-symbols-rounded" style="font-size:16px;">close</span></span>
-        </div>`
-    ).join('');
-    requestAnimationFrame(() => {
-        fileStagingContainer.style.display = 'flex';
-    });
-}
-// ============================================================
-// VIEWPORT & KEYBOARD ADJUSTMENT (Fixed for mobile)
-// ============================================================
-let isVisualViewportActive = false;
-
-function adjustCommandWrapperAndViewport() {
-    const vv = window.visualViewport;
-    if (!vv) return;
-    const offsetY = window.innerHeight - vv.height;
-    const maxBottom = Math.min(offsetY, window.innerHeight * 0.5);
-    // Only update if there's a meaningful change
-    if (Math.abs(parseFloat(commandWrapper.style.bottom || '0') - maxBottom) > 5) {
-        commandWrapper.style.bottom = maxBottom + 'px';
-    }
-    const fileChips = document.getElementById('file-staging-container');
-    const fileChipsHeight = fileChips ? fileChips.offsetHeight : 0;
-    const availableHeight = window.innerHeight - maxBottom - 20 - fileChipsHeight;
-    commandWrapper.style.maxHeight = Math.min(availableHeight, window.innerHeight * 0.8) + 'px';
-    setTimeout(adjustViewportPadding, 50);
-    if (viewport.querySelector('.chat-bubble')) {
-        scrollToBottom();
-    }
-}
-
-// Use a debounced version to prevent excessive updates
-let resizeTimeout = null;
-function debouncedAdjust() {
-    if (resizeTimeout) {
-        cancelAnimationFrame(resizeTimeout);
-    }
-    resizeTimeout = requestAnimationFrame(() => {
-        adjustCommandWrapperAndViewport();
-        resizeTimeout = null;
-    });
-}
-
-if (window.visualViewport) {
-    // Use 'resize' and 'scroll' with debouncing
-    window.visualViewport.addEventListener('resize', debouncedAdjust);
-    window.visualViewport.addEventListener('scroll', debouncedAdjust);
-    
-    // Initial adjustment after a short delay
-    setTimeout(debouncedAdjust, 100);
-}
-
-// Also adjust when the window resizes
-window.addEventListener('resize', debouncedAdjust);
-
-// Fix: Ensure file staging container persists
 function renderFileChips() {
     const container = document.getElementById('file-staging-container');
+    if (!container) return;
     if (stagedFiles.length === 0) {
         container.style.display = 'none';
         container.innerHTML = '';
@@ -309,11 +258,10 @@ function renderFileChips() {
             <span style="cursor:pointer;color:#ef4444;font-weight:bold;font-size:14px;flex-shrink:0;padding-left:4px;" onclick="removeStagedFile(${idx})"><span class="material-symbols-rounded" style="font-size:16px;">close</span></span>
         </div>`
     ).join('');
-    // Ensure the container remains visible
     container.style.display = 'flex';
-    // Re-trigger layout adjustment
     requestAnimationFrame(debouncedAdjust);
 }
+
 function removeStagedFile(idx) {
     stagedFiles.splice(idx, 1);
     renderFileChips();
@@ -463,7 +411,9 @@ function updateSettingsQuota() {
     }
 }
 
-// ---- SEARCH OVERLAY ----
+// ============================================================
+// SEARCH OVERLAY
+// ============================================================
 function openSearchOverlay() {
     const overlay = document.getElementById('search-overlay');
     overlay.classList.add('active');
@@ -649,7 +599,6 @@ function resetToNewChat(isBoot = false) {
         clearTimeout(regenerateTimer);
         regenerateTimer = null;
     }
-    // Hide main back button when resetting
     const mainBackBtn = document.getElementById('main-back-btn');
     if (mainBackBtn) mainBackBtn.style.display = 'none';
     adjustViewportPadding();
@@ -772,7 +721,7 @@ async function loadUserProfile() {
             let used = 0, limit = 0;
 
             if (isFree) {
-                used = data.dailyUsage || 0;
+                used = Math.max(0, data.dailyUsage || 0);
                 limit = 5;
             } else {
                 const hasData = data.subTierOptions?.hasDataAccess || false;
@@ -792,10 +741,10 @@ async function loadUserProfile() {
                     else if (subTierType === 'design') { dataLimit = 0; uiLimit = 20; }
                 }
                 if (isDesign) {
-                    used = data.quotas?.dailyGenerationsUsed || 0;
+                    used = Math.max(0, data.quotas?.dailyGenerationsUsed || 0);
                     limit = uiLimit;
                 } else {
-                    used = data.quotas?.dailyExtractionsUsed || 0;
+                    used = Math.max(0, data.quotas?.dailyExtractionsUsed || 0);
                     limit = dataLimit;
                 }
             }
@@ -820,7 +769,6 @@ async function loadUserProfile() {
             else { document.body.classList.remove('pro-tier', 'designer-tier'); }
 
             updateSettingsQuota();
-            // Update subscription modal content after profile load
             updateSubscriptionModal();
         }
     } catch (e) { console.warn('Profile load failed', e); }
@@ -1011,7 +959,6 @@ function viewPastLogById(logId) {
     runningFileTitle = log.filename;
     runningStructuredCache = log.structuredData;
 
-    // Show main back button when viewing a chat
     const mainBackBtn = document.getElementById('main-back-btn');
     if (mainBackBtn) mainBackBtn.style.display = 'flex';
 
@@ -1376,10 +1323,7 @@ function showSecurityAlert(level) {
 }
 
 // ============================================================
-// EXECUTE COMMAND
-// ============================================================
-// ============================================================
-// EXECUTE COMMAND - FIXED
+// EXECUTE COMMAND - SINGLE CLEAN VERSION
 // ============================================================
 async function executeCommand(isRetry = false) {
     document.getElementById('hero-display').style.display = 'none';
@@ -1560,7 +1504,6 @@ async function executeCommand(isRetry = false) {
             return;
         }
 
-        // --- FIXED: Parse JSON response (not streaming) ---
         const result = await response.json();
         responseReceived = true;
 
@@ -1570,7 +1513,6 @@ async function executeCommand(isRetry = false) {
             const structuredData = result.structuredData;
             const filename = result.filename || 'Export.csv';
 
-            // Update UI
             contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(fullResponse));
 
             if (sessionId) {
@@ -1610,7 +1552,6 @@ async function executeCommand(isRetry = false) {
             injectActionButtons(contentDiv, fullResponse, false, true, now, activeSessionId);
             scrollToBottom();
 
-            // Show back button
             const mainBackBtn = document.getElementById('main-back-btn');
             if (mainBackBtn) mainBackBtn.style.display = 'flex';
 
@@ -1643,6 +1584,7 @@ async function executeCommand(isRetry = false) {
         isProcessing = false;
     }
 }
+
 // ============================================================
 // PAYLOAD / DEPLOY
 // ============================================================
@@ -1769,7 +1711,7 @@ function injectDeployButton(bubbleNode, rawHtml) {
 }
 
 // ============================================================
-// MODALS
+// MODALS - SINGLE CLEAN VERSION
 // ============================================================
 function closeModals() {
     document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
@@ -1798,7 +1740,7 @@ function openFeedbackModal() {
 function openBillingFlow() {
     closeModals();
     document.getElementById('subscription-modal').classList.add('active');
-    updateSubscriptionModal();   // refresh content
+    updateSubscriptionModal();
 }
 
 async function openAdminModal() {
@@ -1953,15 +1895,8 @@ async function submitTelemetryReport() {
 }
 
 // ============================================================
-// PRIVACY & HELP (clean modal versions)
+// PRIVACY & HELP
 // ============================================================
-function closeModals() {
-    document.querySelectorAll('.modal-overlay:not(#privacy-modal):not(#help-modal)').forEach(m => {
-        m.classList.remove('active');
-    });
-    document.querySelectorAll('#privacy-modal, #help-modal').forEach(m => m.remove());
-}
-
 function openPrivacyModal() {
     closeModals();
     const modal = document.createElement('div');
@@ -2076,15 +2011,8 @@ async function deleteAccount() {
 }
 
 // ============================================================
-// RESIZE HANDLER
+// SWIPE-TO-CLOSE SIDEBAR
 // ============================================================
-window.addEventListener('resize', () => {
-    const currentWorkspace = getWorkspace();
-    activateWorkspace(currentWorkspace, true);
-    adjustViewportPadding();
-});
-
-// ---- SWIPE-TO-CLOSE SIDEBAR ----
 const sidebar = document.getElementById('sidebar-container-node');
 const swipeHandle = document.createElement('div');
 swipeHandle.className = 'swipe-handle';
@@ -2159,26 +2087,28 @@ if (localStorage.getItem('axelr_theme') === 'light') {
     document.body.classList.add('light-theme');
 }
 
+// ============================================================
+// SUBSCRIPTION MODAL - SINGLE CLEAN VERSION
+// ============================================================
 function openSubscriptionModal() {
     closeModals();
     const modal = document.getElementById('subscription-modal');
     const planName = document.getElementById('sub-plan-name').innerText;
     const isFree = planName.toLowerCase().includes('free');
     const content = document.getElementById('subscription-content');
+    
     if (isFree) {
         content.innerHTML = `
             <div style="padding:20px 0;text-align:center;">
                 <span class="material-symbols-rounded" style="font-size:48px;color:var(--accent-glow);">rocket_launch</span>
                 <h3 style="color:#fff;margin:12px 0;">You are on the Free Plan</h3>
                 <p style="color:var(--text-muted);font-size:14px;">Unlock unlimited extractions, UI generations, and priority support.</p>
-                <button class="modal-submit-btn" onclick="openUpgradeModal()" style="margin-top:20px;">View Upgrade Options</button>
             </div>
         `;
     } else {
         content.innerHTML = `
             <div style="display:flex;flex-direction:column;gap:5px;">
                 <div class="profile-stat-row"><span class="profile-stat-label">Current Plan</span><span class="profile-stat-value" style="color:#fff;">${planName}</span></div>
-                <button class="modal-submit-btn" style="background:transparent;border:1px solid var(--accent-glow);color:var(--accent-glow);margin-top:15px;" onclick="openUpgradeModal()">Change Plan</button>
             </div>
         `;
     }
@@ -2204,9 +2134,23 @@ function updateSubscriptionModal() {
 }
 
 // ============================================================
+// RESIZE HANDLER - SINGLE CLEAN VERSION
+// ============================================================
+let resizeHandlerTimeout;
+window.addEventListener('resize', () => {
+    clearTimeout(resizeHandlerTimeout);
+    resizeHandlerTimeout = setTimeout(() => {
+        const currentWorkspace = getWorkspace();
+        if (document.body.classList.contains('workspace-data') || document.body.classList.contains('workspace-design')) {
+            adjustViewportPadding();
+        }
+    }, 200);
+});
+
+// ============================================================
 // INIT
 // ============================================================
-console.log('🟢 Axelr AI Frontend Loaded (v3.1)');
+console.log('🟢 Axelr AI Frontend Loaded (v4.3.0)');
 console.log('📡 API Base URL:', API_BASE_URL);
 
 window.onerror = function(message, source, lineno, colno, error) {
@@ -2224,13 +2168,12 @@ if (!lastVisit || new Date(lastVisit) < today) {
 // ============================================================
 // VERSION & CACHE CONTROL
 // ============================================================
-const APP_VERSION = '4.0.0';
-const BUILD_DATE = '2026-07-27';
+const APP_VERSION = '4.3.0';
+const BUILD_DATE = '2026-07-28';
 
 console.log(`🟢 Axelr AI v${APP_VERSION} (Build: ${BUILD_DATE})`);
 console.log('📡 API Base URL:', API_BASE_URL);
 
-// Force reload if version mismatch
 const storedVersion = localStorage.getItem('axelr_app_version');
 if (storedVersion && storedVersion !== APP_VERSION) {
     console.log('🔄 Version mismatch, clearing cache...');
@@ -2240,7 +2183,6 @@ if (storedVersion && storedVersion !== APP_VERSION) {
     localStorage.setItem('axelr_app_version', APP_VERSION);
 }
 
-// Check for service worker updates
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(registrations => {
         for (let registration of registrations) {
@@ -2249,7 +2191,6 @@ if ('serviceWorker' in navigator) {
     }).catch(() => {});
 }
 
-// Load user profile and history
 loadUserProfile().then(() => {
     loadArchiveLogs().then(() => {
         const storedSessionId = localStorage.getItem('axelr_active_session');

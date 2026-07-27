@@ -355,39 +355,37 @@
             </div>
         </div>
     </div>
-
-    <!-- Subscription Modal (fixed) -->
-    <div class="modal-overlay" id="subscription-modal">
-        <div class="modal-card">
-            <div class="modal-header">
-                <button class="back-btn" onclick="closeModals()" title="Back">
-                    <span class="material-symbols-rounded">arrow_back</span>
-                </button>
-                <div class="modal-title">Manage Subscription</div>
-                <button class="close-modal-btn" onclick="closeModals()">
-                    <span class="material-symbols-rounded">close</span>
-                </button>
-            </div>
-            <div id="subscription-content" style="display:flex;flex-direction:column;gap:5px;padding:10px 0;">
-                <!-- injected by JS -->
-            </div>
-            <div style="display:flex;flex-direction:column;gap:5px;">
-                <div class="profile-stat-row"><span class="profile-stat-label">Current Plan</span><span class="profile-stat-value" id="sub-plan-name" style="color:#fff;">Free Allocation</span></div>
-                <!-- Free tier message -->
-                <div id="free-tier-message" style="display:none;background:rgba(234,179,8,0.15);border-left:4px solid #eab308;padding:12px;border-radius:6px;color:#fde047;font-size:13px;margin:10px 0;">
-                    <span class="material-symbols-rounded" style="font-size:18px;vertical-align:middle;">info</span>
-                    You are on the <strong>Free</strong> tier. <br>Upgrade to unlock premium features and higher limits.
-                </div>
-                <div id="paid-tier-message" style="display:none;background:rgba(16,185,129,0.1);border-left:4px solid #10b981;padding:12px;border-radius:6px;color:#10b981;font-size:13px;margin:10px 0;">
-                    <span class="material-symbols-rounded" style="font-size:18px;vertical-align:middle;">check_circle</span>
-                    You are on the <strong id="paid-tier-name">Pro</strong> tier. <br>
-                    Plan details: <span id="subscription-details">Loading...</span>
-                </div>
-            </div>
-            <button class="modal-submit-btn" style="background:transparent;border:1px solid var(--accent-glow);color:var(--accent-glow);margin-top:15px;" onclick="openUpgradeModal()">View Upgrade Options</button>
+   <!-- Subscription Modal -->
+<div class="modal-overlay" id="subscription-modal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <button class="back-btn" onclick="closeModals()" title="Back">
+                <span class="material-symbols-rounded">arrow_back</span>
+            </button>
+            <div class="modal-title">Manage Subscription</div>
+            <button class="close-modal-btn" onclick="closeModals()">
+                <span class="material-symbols-rounded">close</span>
+            </button>
         </div>
+        <div id="subscription-content" style="display:flex;flex-direction:column;gap:5px;padding:10px 0;">
+            <!-- injected by JS -->
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;">
+            <div class="profile-stat-row"><span class="profile-stat-label">Current Plan</span><span class="profile-stat-value" id="sub-plan-name" style="color:#fff;">Free Allocation</span></div>
+            <div id="free-tier-message" style="display:none;background:rgba(234,179,8,0.15);border-left:4px solid #eab308;padding:12px;border-radius:6px;color:#fde047;font-size:13px;margin:10px 0;">
+                <span class="material-symbols-rounded" style="font-size:18px;vertical-align:middle;">info</span>
+                You are on the <strong>Free</strong> tier. <br>Upgrade to unlock premium features and higher limits.
+            </div>
+            <div id="paid-tier-message" style="display:none;background:rgba(16,185,129,0.1);border-left:4px solid #10b981;padding:12px;border-radius:6px;color:#10b981;font-size:13px;margin:10px 0;">
+                <span class="material-symbols-rounded" style="font-size:18px;vertical-align:middle;">check_circle</span>
+                You are on the <strong id="paid-tier-name">Pro</strong> tier. <br>
+                Plan details: <span id="subscription-details">Loading...</span>
+            </div>
+        </div>
+        <!-- ✅ ONLY ONE BUTTON - REMOVED DUPLICATE -->
+        <button class="modal-submit-btn" style="background:transparent;border:1px solid var(--accent-glow);color:var(--accent-glow);margin-top:15px;" onclick="openUpgradeModal()">View Upgrade Options</button>
     </div>
-
+</div>
     <!-- Main App -->
     <div class="main-wrapper" id="content-mask">
         <!-- Sidebar Trigger -->
