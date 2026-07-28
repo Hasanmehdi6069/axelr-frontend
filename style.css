@@ -35,7 +35,6 @@ body.light-theme {
     --shadow-color: rgba(0,0,0,0.1);
     --text-on-accent: #000;
 
-    /* Logo colors - light */
     --logo-stroke-primary: #000000;
     --logo-fill-primary: rgba(0,0,0,0.05);
     --logo-stroke-secondary: #000000;
@@ -86,7 +85,6 @@ body.light-theme .dropdown-email {
 body.light-theme .sub-box-title {
     color: #000;
 }
-/* Additional light overrides */
 body.light-theme .modal-input {
     background: #f0f0f0;
     color: #000;
@@ -107,9 +105,8 @@ body.light-theme .quota-label {
 body.light-theme .quota-count {
     color: #000;
 }
-/* Improve contrast for pricing cards */
 body.light-theme .tier-card .price-output {
-    color: #000; /* black instead of white */
+    color: #000;
 }
 body.light-theme .tier-card .price-output span {
     color: #555;
@@ -131,7 +128,7 @@ body.light-theme .tier-card .options-group label {
     border-color: rgba(0,0,0,0.08);
 }
 body.light-theme .tier-card {
-    background: #f5f5f5; /* slightly darker than pure white */
+    background: #f5f5f5;
 }
 body.light-theme .axelr-pricing-container .tier-card.pro-premium {
     border-color: rgba(16,185,129,0.3);
@@ -139,10 +136,8 @@ body.light-theme .axelr-pricing-container .tier-card.pro-premium {
 body.light-theme .axelr-pricing-container .tier-card.business-premium {
     border-color: rgba(239,68,68,0.3);
 }
-
-/* Strengthen accent colours in light mode */
 body.light-theme .accent-glow {
-    color: #0ea5e9; /* more vivid blue */
+    color: #0ea5e9;
 }
 body.light-theme .accent-glow-pro {
     color: #7c3aed;
@@ -150,9 +145,8 @@ body.light-theme .accent-glow-pro {
 body.light-theme .accent-glow-designer {
     color: #dc2626;
 }
-/* Make the neon green stronger */
 body.light-theme .workspace-data .brand-logo {
-    color: #0d9488; /* teal */
+    color: #0d9488;
     text-shadow: 0 0 20px rgba(13,148,136,0.3);
 }
 body.light-theme .workspace-design .brand-logo {
@@ -167,21 +161,16 @@ body.light-theme .workspace-design .input-frame:focus-within {
     border-color: #dc2626 !important;
     box-shadow: 0 0 30px rgba(220,38,38,0.15) !important;
 }
-/* Make AXELR text black in light theme */
 body.light-theme .auth-logo span,
 body.light-theme .brand-logo span {
     color: #000 !important;
 }
 :root {
-    /* ... existing variables ... */
-    --logo-text-color: #ffffff;    /* dark mode */
+    --logo-text-color: #ffffff;
 }
-
 body.light-theme {
-    /* ... existing light variables ... */
-    --logo-text-color: #000000;    /* light mode */
+    --logo-text-color: #000000;
 }
-/* Fix workspace selector heading & cards in light theme */
 body.light-theme #workspace-selector h2 {
     color: #000;
 }
@@ -195,8 +184,6 @@ body.light-theme .workspace-card {
     background: #f5f5f5;
     border-color: #ddd;
 }
-
-/* Fix quota bar visibility */
 body.light-theme .axelr-quota-box .quota-track {
     background: #ddd;
 }
@@ -209,8 +196,6 @@ body.light-theme .axelr-quota-box .quota-count {
 body.light-theme .axelr-quota-box .quota-label {
     color: #555;
 }
-
-/* Ensure brand logo text is visible in light theme */
 body.light-theme .brand-logo {
     color: #0d9488 !important;
 }
@@ -221,7 +206,6 @@ body.light-theme .brand-logo svg path:last-child {
     stroke: #000;
 }
 
-/* Theme selector buttons */
 .theme-option {
     flex: 1;
     display: flex;
@@ -1003,7 +987,7 @@ body.designer-tier #model-selector .badge {
     align-items: center;
     justify-content: space-between;
     gap: 6px;
-    flex-wrap: wrap;          /* allows badge to wrap on small screens */
+    flex-wrap: wrap;
 }
 .model-option.designer .model-title span {
     font-size: 8px !important;
@@ -1391,7 +1375,7 @@ body.designer-tier #model-selector .badge {
 }
 
 /* ============================================================
-   COMMAND WRAPPER
+   COMMAND WRAPPER - FIXED MOBILE
    ============================================================ */
 .command-wrapper {
     position: fixed;
@@ -1534,7 +1518,7 @@ textarea::-webkit-scrollbar-thumb {
     cursor: not-allowed;
 }
 
-/* ===== STOP BUTTON ===== */
+/* STOP BUTTON */
 .send-btn.btn-stop-active {
     background: var(--bg-card) !important;
     color: var(--text-main) !important;
@@ -1987,7 +1971,7 @@ body.workspace-design .ai-avatar-bubble svg path:nth-child(2) {
 }
 
 /* ============================================================
-   RESPONSIVE
+   RESPONSIVE - FIXED MOBILE COMMAND BAR
    ============================================================ */
 @media (max-width: 768px) {
     :root {
@@ -2218,6 +2202,8 @@ body.workspace-design .ai-avatar-bubble svg path:nth-child(2) {
         font-size: 18px;
     }
 }
+
+/* additional fixes */
 .theme-option {
   flex: 1 1 auto;
   display: flex;
@@ -2282,9 +2268,8 @@ body.workspace-design .input-frame:focus-within {
 body.workspace-data { --accent-glow: #10b981; }
 body.workspace-design { --accent-glow: #ef4444; }
 
-/* Replace the existing light‑theme .sidebar-tabs block with: */
 body.light-theme .sidebar-tabs {
-    background: #e5e7eb !important;       /* light gray background */
+    background: #e5e7eb !important;
     border-radius: 8px;
     padding: 4px;
 }
@@ -2297,8 +2282,8 @@ body.light-theme .tab-btn {
     font-weight: 600;
 }
 body.light-theme .tab-btn.active {
-    background: #ffffff !important;       /* white background for active */
-    color: #000000 !important;           /* black text */
+    background: #ffffff !important;
+    color: #000000 !important;
     box-shadow: 0 2px 4px rgba(0,0,0,0.08) !important;
 }
 .back-btn {
@@ -2338,7 +2323,6 @@ body.light-theme .ai-avatar-bubble svg path:first-child {
 body.light-theme .ai-avatar-bubble svg path:last-child {
     stroke: #000000 !important;
 }
-/* Improved action buttons */
 .action-icon-btn {
     color: var(--text-muted);
     transition: all 0.2s ease;
@@ -2358,23 +2342,19 @@ body.light-theme .ai-avatar-bubble svg path:last-child {
     border-color: var(--accent-glow);
     box-shadow: 0 0 12px var(--accent-glow);
 }
-/* Ensure SVG icons are visible */
 .action-icon-btn svg {
     stroke: currentColor;
     fill: none;
 }
 .command-wrapper {
     overflow-y: auto;
-    max-height: 90vh; /* already present */
+    max-height: 90vh;
 }
 #file-staging-container {
     flex-shrink: 0;
-    max-height: 80px; /* limit file chips height */
+    max-height: 80px;
     overflow-y: auto;
 }
-/* ============================================================
-   ACTION BAR - FIXED visibility
-   ============================================================ */
 .bubble-action-bar {
     display: flex;
     gap: 8px;
@@ -2424,7 +2404,6 @@ body.light-theme .ai-avatar-bubble svg path:last-child {
     transform: scale(0.95);
 }
 
-/* FIX: Regenerate button - make it stand out */
 .action-icon-btn.regen-active {
     color: var(--accent-glow);
     border: 1px solid var(--border-muted);
@@ -2449,7 +2428,6 @@ body.light-theme .ai-avatar-bubble svg path:last-child {
     border-radius: 10px;
 }
 
-/* FIX: Like/Dislike buttons - full visibility */
 .action-icon-btn svg {
     opacity: 1 !important;
     fill: none !important;
@@ -2459,7 +2437,6 @@ body.light-theme .ai-avatar-bubble svg path:last-child {
     opacity: 1 !important;
 }
 
-/* Ensure buttons are visible in all themes */
 body.light-theme .action-icon-btn {
     color: #6b7280;
 }
@@ -2473,45 +2450,3 @@ body.light-theme .action-icon-btn.regen-active {
     color: #0ea5e9;
     border-color: rgba(14,165,233,0.3);
 }
-/* ============================================================
-   ROOT VARIABLES (Dark Theme - default)
-   ============================================================ */
-:root {
-    --bg-deep: #050505;
-    --bg-sidebar: #090909;
-    --bg-card: #101010;
-    --bg-input: #121212;
-    --text-main: #e5e7eb;
-    --text-muted: #9ca3af;
-    --accent-glow: #00f2fe;
-    --accent-glow-pro: #8b5cf6;
-    --accent-glow-designer: #f43f5e;
-    --accent-secondary: #10b981;
-    --border-muted: rgba(255, 255, 255, 0.06);
-    --text-on-accent: #000;
-    --sidebar-width: 320px;
-    --shadow-color: rgba(0,0,0,0.5);
-    --logo-stroke-primary: #ffffff;
-    --logo-fill-primary: rgba(255,255,255,0.05);
-    --logo-stroke-secondary: #ffffff;
-    --logo-text-color: #ffffff;
-}
-
-/* Light Theme - FIXED */
-body.light-theme {
-    --bg-deep: #f5f5f5;
-    --bg-sidebar: #ffffff;
-    --bg-card: #ffffff;
-    --bg-input: #f0f0f0;
-    --text-main: #1a1a1a;
-    --text-muted: #6b7280;
-    --border-muted: rgba(0, 0, 0, 0.08);
-    --shadow-color: rgba(0,0,0,0.1);
-    --text-on-accent: #000;
-    --logo-stroke-primary: #000000;
-    --logo-fill-primary: rgba(0,0,0,0.05);
-    --logo-stroke-secondary: #000000;
-    --logo-text-color: #000000;
-}
-
-/* ... rest of style.css remains the same ... */

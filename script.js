@@ -1613,6 +1613,10 @@ async function executeCommand(isRetry = false) {
                 contentDiv.innerHTML = `💥 Error: ${errorData.message || 'Pipeline failed.'}`;
             }
             scrollToBottom();
+            // Show hero if no messages exist
+            if (viewport.querySelectorAll('.chat-bubble').length === 0) {
+                document.getElementById('hero-display').style.display = 'flex';
+            }
             isProcessing = false;
             return;
         }
@@ -1670,6 +1674,10 @@ async function executeCommand(isRetry = false) {
 
         } else {
             contentDiv.innerHTML = `⚠️ ${result.message || 'Something went wrong.'}`;
+            // Show hero if no messages exist
+            if (viewport.querySelectorAll('.chat-bubble').length === 0) {
+                document.getElementById('hero-display').style.display = 'flex';
+            }
         }
 
     } catch (error) {
@@ -1680,6 +1688,10 @@ async function executeCommand(isRetry = false) {
         } else {
             console.error('Execute error:', error);
             contentDiv.innerHTML = `⚠️ Network connection dropped. Please retry.`;
+            // Show hero if no messages exist
+            if (viewport.querySelectorAll('.chat-bubble').length === 0) {
+                document.getElementById('hero-display').style.display = 'flex';
+            }
         }
         scrollToBottom();
     } finally {
@@ -1866,7 +1878,7 @@ async function openAdminModal() {
             document.getElementById('admin-metrics-container').innerHTML = `
                 <div class="profile-stat-row"><span class="profile-stat-label">Total Users</span><span class="profile-stat-value">${data.totalUsers}</span></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Pro Subscribers</span><span class="profile-stat-value" style="color:var(--accent-glow-pro)">${data.proUsers}</span></div>
-                <div class="profile-stat-row"><span class="profile-stat-label">Designer Subscribers</span><span class="profile-stat-value" style="color:var(--accent-glow-designer)">${data.designerUsers}</span></div>
+                <div class="profile-stat-row"><span class="profile-stat-label">Designer Subscribers</span><span class="profile-stat-value" style="color:var(--accent-glow-designer)">${data.businessUsers}</span></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Total Matrix Logs</span><span class="profile-stat-value">${data.totalChats}</span></div>
                 <div style="border-top:1px solid var(--border-muted);margin:10px 0;"></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Total Queries Processed</span><span class="profile-stat-value">${data.metrics?.totalQueries || 0}</span></div>
@@ -2309,7 +2321,7 @@ if (!lastVisit || new Date(lastVisit) < today) {
 }
 
 // ============================================================
-// VERSION & CACHE CONTROL
+// VERSION & CACHE CONTROL - FIXED: Only log mismatch, do NOT clear
 // ============================================================
 const APP_VERSION = '4.3.0';
 const BUILD_DATE = '2026-07-28';
@@ -2319,9 +2331,8 @@ console.log('📡 API Base URL:', API_BASE_URL);
 
 const storedVersion = localStorage.getItem('axelr_app_version');
 if (storedVersion && storedVersion !== APP_VERSION) {
-    console.log('🔄 Version mismatch, clearing cache...');
-    localStorage.clear();
-    localStorage.setItem('axelr_app_version', APP_VERSION);
+    console.log(`🔄 Version mismatch: stored=${storedVersion}, current=${APP_VERSION}. No cache cleared.`);
+    // We just log the difference – no localStorage.clear()
 } else if (!storedVersion) {
     localStorage.setItem('axelr_app_version', APP_VERSION);
 }
@@ -2353,124 +2364,3 @@ loadUserProfile().then(() => {
         setTimeout(setupViewportObserver, 500);
     });
 });
-
-
-// ... rest of the script.js remains the same, but ensure the following fixes are applied:
-
-// FIX 1: In viewPastLogById, prevent re-rendering on same session
-function viewPastLogById(logId) {
-    if (regenerateTimer) {
-        clearTimeout(regenerateTimer);
-        regenerateTimer = null;
-    }
-    
-    const log = cachedLogHistory.find(l => l._id === logId);
-    if (!log) return;
-    
-    // FIX: If already viewing this session, don't re-render
-    if (activeSessionId === logId && document.querySelector('.chat-bubble').length > 0) {
-        return;
-    }
-    
-    const hero = document.getElementById('hero-display');
-    if (hero) hero.style.display = 'none';
-    
-    document.querySelectorAll('.chat-bubble').forEach(b => b.remove());
-    activeSessionId = logId;
-    localStorage.setItem('axelr_active_session', activeSessionId);
-    runningFileTitle = log.filename;
-    runningStructuredCache = log.structuredData;
-    
-    const mainBackBtn = document.getElementById('main-back-btn');
-    if (mainBackBtn) mainBackBtn.style.display = 'flex';
-    
-    // ... rest of viewPastLogById
-}
-
-// FIX 2: In initializeApp - prevent double initialization
-let appInitialized = false;
-
-function initializeApp() {
-    if (appInitialized) return;
-    appInitialized = true;
-    
-    const saved = localStorage.getItem('axelr_theme') || 'system';
-    currentThemePreference = saved;
-    systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    if (saved === 'system') {
-        applyTheme(systemDark ? 'dark' : 'light');
-    } else {
-        applyTheme(saved);
-    }
-    
-    const savedToken = localStorage.getItem('google_auth_token');
-    if (savedToken) {
-        try {
-            const payload = decodeJwt(savedToken);
-            if (Date.now() < payload.exp * 1000) {
-                initializeSecureWorkspace(payload, savedToken);
-                return;
-            }
-        } catch (e) {
-            localStorage.removeItem('google_auth_token');
-        }
-    }
-    
-    document.getElementById('auth-wall').style.display = 'flex';
-}
-
-// FIX 3: Setup observer only once with proper cleanup
-let viewportObserver = null;
-let observerActive = true;
-
-function setupViewportObserver() {
-    if (viewportObserver) {
-        viewportObserver.disconnect();
-        viewportObserver = null;
-    }
-    viewportObserver = new MutationObserver(() => {
-        if (!isUserScrolling && observerActive) {
-            const lastMessage = viewport.querySelector('.chat-bubble:last-child');
-            if (lastMessage) {
-                const rect = lastMessage.getBoundingClientRect();
-                const viewportRect = viewport.getBoundingClientRect();
-                if (rect.bottom > viewportRect.bottom - 50) {
-                    scrollToBottom(true);
-                }
-            }
-        }
-    });
-    viewportObserver.observe(viewport, { 
-        childList: true, 
-        subtree: true, 
-        characterData: true,
-        attributes: true 
-    });
-}
-
-// FIX 4: Prevent double initialization of loadArchiveLogs
-let isLoadingHistory = false;
-
-async function loadArchiveLogs() {
-    if (isLoadingHistory) return;
-    isLoadingHistory = true;
-    
-    try {
-        const currentWorkspace = getWorkspace();
-        const response = await fetch(
-            `${API_BASE_URL}/api/history?status=${currentTab}&workspace=${currentWorkspace}`, {
-                headers: { 'Authorization': `Bearer ${googleAuthUserToken}` }
-            }
-        );
-        if (response.status === 401) {
-            isLoadingHistory = false;
-            return executeGlobalLogout();
-        }
-        cachedLogHistory = (await response.json()).logs;
-        // ... rest of loadArchiveLogs
-    } catch (e) {
-        console.warn('History load error:', e);
-    } finally {
-        isLoadingHistory = false;
-    }
-}
