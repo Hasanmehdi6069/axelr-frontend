@@ -174,35 +174,32 @@ document.addEventListener('DOMContentLoaded', () => {
 // ============================================================
 // VIEWPORT & KEYBOARD ADJUSTMENT
 // ============================================================
-function adjustViewportPadding() {
-    const wrapperHeight = commandWrapper.offsetHeight;
-    const bottomPadding = Math.max(wrapperHeight + 20, 160);
-    viewport.style.paddingBottom = bottomPadding + 'px';
-}
-
-function scrollToBottom() {
-    viewport.scrollTop = viewport.scrollHeight;
-}
-
-// Single version of adjustCommandWrapperAndViewport
+// // ============================================================
+// VIEWPORT & KEYBOARD ADJUSTMENT - FIXED for mobile
+// ============================================================
 function adjustCommandWrapperAndViewport() {
     const vv = window.visualViewport;
     if (!vv) return;
+    
     const offsetY = window.innerHeight - vv.height;
-    const maxBottom = Math.min(offsetY, window.innerHeight * 0.5);
-    if (Math.abs(parseFloat(commandWrapper.style.bottom || '0') - maxBottom) > 5) {
+    const maxBottom = Math.min(offsetY, window.innerHeight * 0.4);
+    
+    // Only update if change is significant
+    const currentBottom = parseFloat(commandWrapper.style.bottom || '0');
+    if (Math.abs(currentBottom - maxBottom) > 3) {
         commandWrapper.style.bottom = maxBottom + 'px';
     }
+    
     const fileChips = document.getElementById('file-staging-container');
-    const fileChipsHeight = fileChips ? fileChips.offsetHeight : 0;
+    const fileChipsHeight = fileChips && stagedFiles.length > 0 ? fileChips.offsetHeight : 0;
     const availableHeight = window.innerHeight - maxBottom - 20 - fileChipsHeight;
     commandWrapper.style.maxHeight = Math.min(availableHeight, window.innerHeight * 0.8) + 'px';
+    
     setTimeout(adjustViewportPadding, 50);
-    if (viewport.querySelector('.chat-bubble')) {
-        scrollToBottom();
-    }
+    // DO NOT auto-scroll - let user control scroll
 }
 
+// Debounced version - prevent excessive updates
 let resizeTimeout2 = null;
 function debouncedAdjust() {
     if (resizeTimeout2) {
@@ -212,6 +209,14 @@ function debouncedAdjust() {
         adjustCommandWrapperAndViewport();
         resizeTimeout2 = null;
     });
+    let scrollPos = viewport.scrollTop;
+// after adjusting, restore scroll position if not at bottom
+if (viewport.querySelector('.chat-bubble')) {
+    // if we have messages, keep scroll at bottom
+    scrollToBottom();
+} else {
+    viewport.scrollTop = scrollPos;
+}
 }
 
 if (window.visualViewport) {
@@ -240,24 +245,30 @@ viewportObserver.observe(viewport, { childList: true, subtree: true, characterDa
 // ============================================================
 // FILE HANDLING - SINGLE VERSION
 // ============================================================
+// ============================================================
+// FILE HANDLING - SINGLE VERSION (FIXED for mobile)
+// ============================================================
 function renderFileChips() {
     const container = document.getElementById('file-staging-container');
     if (!container) return;
+    
     if (stagedFiles.length === 0) {
         container.style.display = 'none';
         container.innerHTML = '';
         return;
     }
+    
     container.style.display = 'flex';
     container.innerHTML = stagedFiles.map((file, idx) =>
-        `<div class="file-chip" style="display:flex;align-items:center;gap:8px;max-width:100%;flex-shrink:0;background:rgba(0,242,254,0.08);border:1px solid rgba(0,242,254,0.15);color:var(--text-muted);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;margin-top:5px;display:inline-flex;align-items:center;gap:5px;">
-            <span class="material-symbols-rounded" style="font-size:16px;">description</span>
-            <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;display:inline-block;vertical-align:middle;">${escapeHtmlEntities(file.name)}</span>
-            <span style="cursor:pointer;color:#ef4444;font-weight:bold;font-size:14px;flex-shrink:0;padding-left:4px;" onclick="removeStagedFile(${idx})"><span class="material-symbols-rounded" style="font-size:16px;">close</span></span>
+        `<div class="file-chip" style="display:inline-flex;align-items:center;gap:5px;background:rgba(0,242,254,0.08);border:1px solid rgba(0,242,254,0.15);color:var(--text-muted);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;margin:2px 0;">
+            <span class="material-symbols-rounded" style="font-size:14px;">description</span>
+            <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px;display:inline-block;vertical-align:middle;">${escapeHtmlEntities(file.name)}</span>
+            <span style="cursor:pointer;color:#ef4444;font-weight:bold;font-size:14px;flex-shrink:0;padding-left:2px;" onclick="removeStagedFile(${idx})"><span class="material-symbols-rounded" style="font-size:14px;">close</span></span>
         </div>`
     ).join('');
+    
     container.style.display = 'flex';
-    requestAnimationFrame(debouncedAdjust);
+    // DO NOT call debouncedAdjust here - it causes flicker
 }
 
 function removeStagedFile(idx) {
@@ -2139,20 +2150,30 @@ function updateSubscriptionModal() {
         detailsSpan.innerText = 'Active subscription. Manage your plan via Stripe.';
     }
 }
-
 // ============================================================
-// RESIZE HANDLER - SINGLE CLEAN VERSION
+// RESIZE HANDLER - FIXED: NO STATE RESET
 // ============================================================
 let resizeHandlerTimeout;
+let isResizeHandling = false;
+
 window.addEventListener('resize', () => {
+    if (isResizeHandling) return;
+    isResizeHandling = true;
+    
     clearTimeout(resizeHandlerTimeout);
     resizeHandlerTimeout = setTimeout(() => {
-        const currentWorkspace = getWorkspace();
+        // ✅ ONLY adjust viewport padding - DO NOT reset state
         if (document.body.classList.contains('workspace-data') || document.body.classList.contains('workspace-design')) {
             adjustViewportPadding();
+            // Re-apply file chips styling
+            renderFileChips();
         }
-    }, 200);
+        isResizeHandling = false;
+    }, 150);
 });
+
+// ✅ Remove ANY other resize listeners that call activateWorkspace
+// Search and DELETE any: window.addEventListener('resize', () => { activateWorkspace(...) })
 
 // ============================================================
 // INIT
@@ -2206,3 +2227,11 @@ loadUserProfile().then(() => {
         }
     });
 });
+// Remove or comment out this block in script.js
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(registrations => {
+        for (let registration of registrations) {
+            registration.unregister(); // ✅ Unregister any existing SW
+        }
+    }).catch(() => {});
+}

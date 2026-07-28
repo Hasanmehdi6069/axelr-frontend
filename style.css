@@ -2338,3 +2338,37 @@ body.light-theme .ai-avatar-bubble svg path:first-child {
 body.light-theme .ai-avatar-bubble svg path:last-child {
     stroke: #000000 !important;
 }
+/* Improved action buttons */
+.action-icon-btn {
+    color: var(--text-muted);
+    transition: all 0.2s ease;
+}
+.action-icon-btn:hover {
+    color: var(--text-main);
+    background: rgba(255,255,255,0.08);
+    transform: scale(1.05);
+}
+.action-icon-btn.regen-active {
+    color: var(--accent-glow);
+    border: 1px solid var(--border-muted);
+    background: rgba(0,242,254,0.05);
+}
+.action-icon-btn.regen-active:hover {
+    background: rgba(0,242,254,0.15);
+    border-color: var(--accent-glow);
+    box-shadow: 0 0 12px var(--accent-glow);
+}
+/* Ensure SVG icons are visible */
+.action-icon-btn svg {
+    stroke: currentColor;
+    fill: none;
+}
+.command-wrapper {
+    overflow-y: auto;
+    max-height: 90vh; /* already present */
+}
+#file-staging-container {
+    flex-shrink: 0;
+    max-height: 80px; /* limit file chips height */
+    overflow-y: auto;
+}
