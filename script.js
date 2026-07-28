@@ -64,33 +64,45 @@ let regenerateTimer = null;
 let hasRegenerated = false;
 let currentUserId = null;
 let isProcessing = false;
+let isUserScrolling = false;
+let scrollTimeout = null;
+let viewportObserver = null;
+let observerActive = true;
 
 let ignoreSidebarClose = false;
 let manipulationCount = parseInt(sessionStorage.getItem('axelr_manipulation_count')) || 0;
 let manipulationLockUntil = parseInt(sessionStorage.getItem('axelr_manipulation_lock')) || 0;
 
-// Mobile viewport state
-let lastKeyboardHeight = 0;
-let isKeyboardVisible = false;
-let viewportScrollPosition = 0;
-let isUserScrolling = false;
-let scrollTimeout = null;
-let observerActive = true;
-let viewportObserver = null;
-let extendedTimeout = null;
-
 // ============================================================
-// SCROLL FUNCTIONS - MUST BE DEFINED EARLY
+// SCROLL FUNCTIONS - DEFINED EARLY
 // ============================================================
 function scrollToBottom(smooth = true) {
     if (!viewport) return;
+    if (isUserScrolling) return;
     const lastMessage = viewport.querySelector('.chat-bubble:last-child');
     if (lastMessage) {
-        lastMessage.scrollIntoView({ 
-            behavior: smooth ? 'smooth' : 'auto', 
-            block: 'end' 
-        });
+        try {
+            lastMessage.scrollIntoView({ 
+                behavior: smooth ? 'smooth' : 'auto', 
+                block: 'end' 
+            });
+        } catch (e) {
+            viewport.scrollTop = viewport.scrollHeight;
+        }
     }
+}
+
+function updateViewportAfterRender() {
+    if (window._viewportUpdateId) {
+        cancelAnimationFrame(window._viewportUpdateId);
+    }
+    window._viewportUpdateId = requestAnimationFrame(() => {
+        if (!isUserScrolling) {
+            scrollToBottom(true);
+        }
+        adjustViewportPadding();
+        window._viewportUpdateId = null;
+    });
 }
 
 // ============================================================
@@ -104,24 +116,30 @@ function escapeHtmlEntities(str) {
 
 function extractHtmlCode(text) {
     if (!text) return null;
-    
-    // Try code blocks first
-    const blockMatch = text.match(/```html\s*([\s\S]*?)```/i);
-    if (blockMatch) return blockMatch[1].trim();
-    
-    // Try direct HTML extraction with better pattern
-    const patterns = [
-        /<!DOCTYPE\s+html[\s\S]*?<\/html>/i,
-        /<html[\s\S]*?<\/html>/i,
-        /<body[\s\S]*?<\/body>/i,
-        /<div\s+class=["'].*?["'][\s\S]*?<\/div>/i
-    ];
-    
-    for (const pattern of patterns) {
-        const match = text.match(pattern);
-        if (match) return match[0].trim();
+    const htmlBlockRegex = /```html\s*([\s\S]*?)```/i;
+    let match = text.match(htmlBlockRegex);
+    if (match) return match[1].trim();
+    const genericBlockRegex = /```(?:\w+)?\s*([\s\S]*?)```/g;
+    let block;
+    while ((block = genericBlockRegex.exec(text)) !== null) {
+        const content = block[1].trim();
+        if (content.startsWith("<") && (content.includes("<html") || content.includes("<!DOCTYPE") || content
+                .includes("<div") || content.includes("<body"))) {
+            return content;
+        }
     }
-    
+    const htmlTagRegex = /(<!DOCTYPE html>|<html>|<html[\s\S]*?>)/i;
+    const startMatch = text.match(htmlTagRegex);
+    if (startMatch) {
+        const startIndex = startMatch.index;
+        const endMatch = text.match(/<\/html>/i);
+        if (endMatch) {
+            const endIndex = endMatch.index + endMatch[0].length;
+            return text.substring(startIndex, endIndex).trim();
+        } else {
+            return text.substring(startIndex).trim();
+        }
+    }
     return null;
 }
 
@@ -218,7 +236,7 @@ if (document.readyState === 'loading') {
 }
 
 // ============================================================
-// VIEWPORT & KEYBOARD ADJUSTMENT - COMPLETE FIX
+// VIEWPORT & KEYBOARD ADJUSTMENT - FIXED
 // ============================================================
 function adjustCommandWrapperAndViewport() {
     const vv = window.visualViewport;
@@ -226,76 +244,45 @@ function adjustCommandWrapperAndViewport() {
     
     const offsetY = window.innerHeight - vv.height;
     const maxBottom = Math.min(offsetY, window.innerHeight * 0.4);
-    const keyboardVisible = offsetY > 50;
     
-    // Track keyboard state changes
-    if (keyboardVisible !== isKeyboardVisible) {
-        isKeyboardVisible = keyboardVisible;
-        if (keyboardVisible) {
-            viewportScrollPosition = viewport.scrollTop;
-        }
-    }
-    
-    // Update command wrapper position
     const currentBottom = parseFloat(commandWrapper.style.bottom || '0');
     if (Math.abs(currentBottom - maxBottom) > 3) {
         commandWrapper.style.bottom = maxBottom + 'px';
     }
     
-    // Update file chips visibility - KEEP THEM TOGETHER
     const fileChips = document.getElementById('file-staging-container');
-    if (fileChips) {
-        const chipCount = stagedFiles.length;
-        if (chipCount > 0) {
-            fileChips.style.display = 'flex';
-            fileChips.style.visibility = 'visible';
-            fileChips.style.opacity = '1';
-            const chipsHeight = fileChips.offsetHeight || 40;
-            const availableHeight = window.innerHeight - maxBottom - 20 - chipsHeight;
-            commandWrapper.style.maxHeight = Math.min(availableHeight, window.innerHeight * 0.8) + 'px';
-        } else {
-            fileChips.style.display = 'none';
-        }
-    }
+    const fileChipsHeight = fileChips && stagedFiles.length > 0 ? fileChips.offsetHeight : 0;
+    const availableHeight = window.innerHeight - maxBottom - 20 - fileChipsHeight;
+    commandWrapper.style.maxHeight = Math.min(availableHeight, window.innerHeight * 0.8) + 'px';
     
-    // Preserve scroll position
-    if (isKeyboardVisible && viewport.scrollTop === 0) {
-        if (viewportScrollPosition > 0) {
-            viewport.scrollTop = viewportScrollPosition;
-        }
-    }
-    
+    // Only adjust padding, don't force scroll
     adjustViewportPadding();
 }
 
-// Debounced version for performance
-let resizeTimeout = null;
+let resizeTimeout2 = null;
 function debouncedAdjust() {
-    if (resizeTimeout) {
-        cancelAnimationFrame(resizeTimeout);
+    if (resizeTimeout2) {
+        cancelAnimationFrame(resizeTimeout2);
     }
-    resizeTimeout = requestAnimationFrame(() => {
+    resizeTimeout2 = requestAnimationFrame(() => {
         adjustCommandWrapperAndViewport();
-        resizeTimeout = null;
+        resizeTimeout2 = null;
     });
 }
 
-// Viewport scroll detection
-viewport.addEventListener('scroll', () => {
-    isUserScrolling = true;
-    clearTimeout(scrollTimeout);
-    scrollTimeout = setTimeout(() => {
-        isUserScrolling = false;
-    }, 500);
-}, { passive: true });
+if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', debouncedAdjust);
+    window.visualViewport.addEventListener('scroll', debouncedAdjust);
+}
 
-// FIX: Setup viewport observer with proper cleanup
+// ============================================================
+// VIEWPORT OBSERVER - FIXED
+// ============================================================
 function setupViewportObserver() {
     if (viewportObserver) {
         viewportObserver.disconnect();
         viewportObserver = null;
     }
-    
     viewportObserver = new MutationObserver(() => {
         if (!isUserScrolling && observerActive) {
             const lastMessage = viewport.querySelector('.chat-bubble:last-child');
@@ -308,73 +295,11 @@ function setupViewportObserver() {
             }
         }
     });
-    
     viewportObserver.observe(viewport, { 
         childList: true, 
         subtree: true, 
         characterData: true,
         attributes: true 
-    });
-}
-
-// Keyboard handling
-if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', debouncedAdjust);
-    window.visualViewport.addEventListener('scroll', debouncedAdjust);
-    setTimeout(debouncedAdjust, 100);
-}
-
-// FIX: Focus handling - don't reset state
-promptInput.addEventListener('focus', function() {
-    if (activeSessionId) {
-        const hero = document.getElementById('hero-display');
-        if (hero) hero.style.display = 'none';
-    }
-    setTimeout(() => {
-        adjustViewportPadding();
-    }, 100);
-});
-
-// Initialize observer
-setupViewportObserver();
-
-// ============================================================
-// ADJUST VIEWPORT PADDING
-// ============================================================
-function adjustViewportPadding() {
-    if (!commandWrapper) return;
-    
-    const wrapperHeight = commandWrapper.offsetHeight;
-    const fileChips = document.getElementById('file-staging-container');
-    const chipsHeight = fileChips && stagedFiles.length > 0 ? fileChips.offsetHeight : 0;
-    
-    let totalPadding = wrapperHeight + 20;
-    if (chipsHeight > 0) {
-        totalPadding += chipsHeight + 10;
-    }
-    
-    viewport.style.paddingBottom = totalPadding + 'px';
-    
-    const isAtBottom = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight < 50;
-    if (isAtBottom && viewport.querySelector('.chat-bubble')) {
-        scrollToBottom(true);
-    }
-}
-
-// ============================================================
-// VIEWPORT AFTER RENDER - SINGLE FUNCTION
-// ============================================================
-function updateViewportAfterRender() {
-    if (window._viewportUpdateId) {
-        cancelAnimationFrame(window._viewportUpdateId);
-    }
-    
-    window._viewportUpdateId = requestAnimationFrame(() => {
-        if (!isUserScrolling) {
-            scrollToBottom(true);
-        }
-        adjustViewportPadding();
-        window._viewportUpdateId = null;
     });
 }
 
@@ -387,36 +312,19 @@ function renderFileChips() {
     
     if (stagedFiles.length === 0) {
         container.style.display = 'none';
-        container.style.visibility = 'hidden';
         container.innerHTML = '';
         return;
     }
     
     container.style.display = 'flex';
-    container.style.visibility = 'visible';
-    container.style.opacity = '1';
-    
     container.innerHTML = stagedFiles.map((file, idx) =>
-        `<div class="file-chip" style="display:inline-flex;align-items:center;gap:5px;background:rgba(0,242,254,0.08);border:1px solid rgba(0,242,254,0.15);color:var(--text-muted);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;margin:2px 0;flex-shrink:0;">
+        `<div class="file-chip" style="display:inline-flex;align-items:center;gap:5px;background:rgba(0,242,254,0.08);border:1px solid rgba(0,242,254,0.15);color:var(--text-muted);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;margin:2px 0;">
             <span class="material-symbols-rounded" style="font-size:14px;">description</span>
             <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px;display:inline-block;vertical-align:middle;">${escapeHtmlEntities(file.name)}</span>
             <span style="cursor:pointer;color:#ef4444;font-weight:bold;font-size:14px;flex-shrink:0;padding-left:2px;" onclick="removeStagedFile(${idx})"><span class="material-symbols-rounded" style="font-size:14px;">close</span></span>
         </div>`
     ).join('');
-    
     container.style.display = 'flex';
-    container.style.visibility = 'visible';
-    
-    if (commandWrapper) {
-        const chipsHeight = container.offsetHeight || 40;
-        const vv = window.visualViewport;
-        if (vv) {
-            const offsetY = window.innerHeight - vv.height;
-            const maxBottom = Math.min(offsetY, window.innerHeight * 0.4);
-            const availableHeight = window.innerHeight - maxBottom - 20 - chipsHeight;
-            commandWrapper.style.maxHeight = Math.min(availableHeight, window.innerHeight * 0.8) + 'px';
-        }
-    }
 }
 
 function removeStagedFile(idx) {
@@ -468,15 +376,28 @@ fileInput.addEventListener('change', (e) => {
 });
 
 // ============================================================
+// SCROLL HANDLING
+// ============================================================
+viewport.addEventListener('scroll', () => {
+    isUserScrolling = true;
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(() => {
+        isUserScrolling = false;
+    }, 500);
+}, { passive: true });
+
+// ============================================================
 // SIDEBAR FUNCTIONS
 // ============================================================
 function toggleSidebar() {
     sidebarNode.classList.toggle('open');
 }
+
 sidebarTriggerArea.addEventListener('click', (e) => {
     e.stopPropagation();
     sidebarNode.classList.toggle('open');
 });
+
 window.addEventListener('click', (e) => {
     if (ignoreSidebarClose || document.activeElement === document.getElementById('sidebar-search-input')) {
         return;
@@ -642,6 +563,28 @@ function handleCredentialResponse(response) {
     dropdownFallback.innerText = payload.name.charAt(0).toUpperCase();
 }
 
+window.onload = function() {
+    try {
+        const savedToken = localStorage.getItem('google_auth_token');
+        if (savedToken) {
+            const payload = decodeJwt(savedToken);
+            if (Date.now() < payload.exp * 1000) {
+                return initializeSecureWorkspace(payload, savedToken);
+            } else {
+                localStorage.removeItem('google_auth_token');
+            }
+        }
+    } catch (err) {
+        localStorage.removeItem('google_auth_token');
+    }
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('billing') === 'success') {
+        alert('🎉 Payment successful! Your workspace has been upgraded.');
+        window.history.replaceState({}, document.title, window.location.pathname);
+        if (googleAuthUserToken) loadUserProfile();
+    }
+};
+
 async function initializeSecureWorkspace(payload, token) {
     googleAuthUserToken = token;
     currentUserId = payload.sub;
@@ -705,9 +648,6 @@ function activateWorkspace(type, isBoot = false) {
     if (!isBoot) loadArchiveLogs();
 }
 
-// ============================================================
-// RESET TO NEW CHAT - FIXED
-// ============================================================
 function resetToNewChat(isBoot = false) {
     // Disconnect observer during reset
     if (viewportObserver) {
@@ -715,19 +655,20 @@ function resetToNewChat(isBoot = false) {
         viewportObserver = null;
     }
     
+    activeSessionId = null;
+    runningStructuredCache = null;
+    
     // Clear file references
     if (stagedFiles.length > 0) {
         stagedFiles = [];
         renderFileChips();
     }
     
-    activeSessionId = null;
-    runningStructuredCache = null;
     localStorage.removeItem('Axelr_active_session');
     document.querySelectorAll('.chat-bubble').forEach(bubble => bubble.remove());
     
     const hero = document.getElementById('hero-display');
-    hero.style.display = 'flex';
+    if (hero) hero.style.display = 'flex';
     
     if (!isBoot) {
         promptInput.value = '';
@@ -743,7 +684,6 @@ function resetToNewChat(isBoot = false) {
             }, 10);
         }
     }
-    
     validateSendCommand();
     if (window.innerWidth <= 768) sidebarNode.classList.remove('open');
     hasRegenerated = false;
@@ -755,8 +695,8 @@ function resetToNewChat(isBoot = false) {
     if (mainBackBtn) mainBackBtn.style.display = 'none';
     adjustViewportPadding();
     
-    // Re-initialize observer
-    setupViewportObserver();
+    // Re-setup observer after reset
+    setTimeout(setupViewportObserver, 100);
 }
 
 // ============================================================
@@ -849,7 +789,7 @@ renderer.code = function(code, language) {
 marked.setOptions({ renderer: renderer, breaks: true });
 
 // ============================================================
-// USER PROFILE & QUOTA - FIXED
+// USER PROFILE & QUOTA
 // ============================================================
 async function loadUserProfile() {
     try {
@@ -860,7 +800,8 @@ async function loadUserProfile() {
             const data = await resp.json();
             document.getElementById('instructions-input').value = data.customInstructions || "";
 
-            const isAdmin = data.isAdmin === true || data.email === 'shanh1346@gmail.com';
+            // Admin check - ONLY for shanh1346@gmail.com
+            const isAdmin = data.isAdmin === true && data.email === 'shanh1346@gmail.com';
             if (isAdmin) {
                 document.getElementById('admin-dashboard-btn').style.display = 'block';
                 console.log('✅ Admin mode enabled for', data.email);
@@ -1113,12 +1054,13 @@ function viewPastLogById(logId) {
     const log = cachedLogHistory.find(l => l._id === logId);
     if (!log) return;
     
+    // Preserve hero state
     const hero = document.getElementById('hero-display');
     if (hero) hero.style.display = 'none';
     
-    const existingBubbles = viewport.querySelectorAll('.chat-bubble');
+    // Only clear if loading different session
     if (activeSessionId !== logId) {
-        existingBubbles.forEach(b => b.remove());
+        document.querySelectorAll('.chat-bubble').forEach(b => b.remove());
     }
     
     activeSessionId = logId;
@@ -1128,7 +1070,7 @@ function viewPastLogById(logId) {
     
     const mainBackBtn = document.getElementById('main-back-btn');
     if (mainBackBtn) mainBackBtn.style.display = 'flex';
-
+    
     if (currentTab === 'trashed') {
         const trashMsg = document.createElement('div');
         trashMsg.className = 'chat-bubble';
@@ -1245,7 +1187,9 @@ function viewPastLogById(logId) {
         viewport.appendChild(bubble);
     });
     
+    // Use updateViewportAfterRender instead of multiple timeouts
     updateViewportAfterRender();
+    
     if (window.innerWidth <= 768) sidebarNode.classList.remove('open');
 }
 
@@ -1488,17 +1432,7 @@ function showSecurityAlert(level) {
 }
 
 // ============================================================
-// EXTENDED TIMEOUT CLEANUP
-// ============================================================
-function clearExtendedTimeout() {
-    if (extendedTimeout) {
-        clearTimeout(extendedTimeout);
-        extendedTimeout = null;
-    }
-}
-
-// ============================================================
-// EXECUTE COMMAND - PRODUCTION READY
+// EXECUTE COMMAND - FIXED
 // ============================================================
 async function executeCommand(isRetry = false) {
     if (!activeSessionId) {
@@ -1513,24 +1447,6 @@ async function executeCommand(isRetry = false) {
         alert(`⛔ System temporarily locked due to security violations. Please wait ${remaining} seconds.`);
         isProcessing = false;
         return;
-    }
-
-    if (!isRetry) {
-        promptInput.value = '';
-        promptInput.style.height = 'auto';
-        validateSendCommand();
-    }
-    
-    if (window.innerWidth <= 768) {
-        const scrollPos = viewport.scrollTop;
-        setTimeout(() => {
-            if (scrollPos > 0) {
-                viewport.scrollTop = scrollPos;
-            }
-            if (!isUserScrolling) {
-                scrollToBottom(true);
-            }
-        }, 100);
     }
     
     if (currentTab === 'trashed') {
@@ -1581,9 +1497,11 @@ async function executeCommand(isRetry = false) {
         return;
     }
 
-    promptInput.value = '';
-    promptInput.style.height = 'auto';
-    validateSendCommand();
+    if (!isRetry) {
+        promptInput.value = '';
+        promptInput.style.height = 'auto';
+        validateSendCommand();
+    }
     sendBtn.disabled = true;
 
     const userBubble = document.createElement('div');
@@ -1636,7 +1554,7 @@ async function executeCommand(isRetry = false) {
     }
     contentDiv.appendChild(loader);
 
-    extendedTimeout = setTimeout(() => {
+    let extendedTimeout = setTimeout(() => {
         const extendedMsg = document.createElement('div');
         extendedMsg.className = 'thinking-extended';
         extendedMsg.innerText = 'Thinking a little bit longer... Don\'t close the tab.';
@@ -1681,7 +1599,7 @@ async function executeCommand(isRetry = false) {
             signal: globalAbortController.signal,
         });
 
-        clearExtendedTimeout();
+        clearTimeout(extendedTimeout);
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
@@ -1695,8 +1613,11 @@ async function executeCommand(isRetry = false) {
                 contentDiv.innerHTML = `💥 Error: ${errorData.message || 'Pipeline failed.'}`;
             }
             scrollToBottom();
+            // Show hero if no messages exist
+            if (viewport.querySelectorAll('.chat-bubble').length === 0) {
+                document.getElementById('hero-display').style.display = 'flex';
+            }
             isProcessing = false;
-            clearTimeout(timeoutFallback);
             return;
         }
 
@@ -1753,21 +1674,29 @@ async function executeCommand(isRetry = false) {
 
         } else {
             contentDiv.innerHTML = `⚠️ ${result.message || 'Something went wrong.'}`;
+            // Show hero if no messages exist
+            if (viewport.querySelectorAll('.chat-bubble').length === 0) {
+                document.getElementById('hero-display').style.display = 'flex';
+            }
         }
 
     } catch (error) {
-        clearExtendedTimeout();
+        clearTimeout(extendedTimeout);
         if (error.name === 'AbortError') {
             contentDiv.innerHTML +=
                 `<br><br><em style="color:var(--text-muted);">[Generation halted by user]</em>`;
         } else {
             console.error('Execute error:', error);
             contentDiv.innerHTML = `⚠️ Network connection dropped. Please retry.`;
+            // Show hero if no messages exist
+            if (viewport.querySelectorAll('.chat-bubble').length === 0) {
+                document.getElementById('hero-display').style.display = 'flex';
+            }
         }
         scrollToBottom();
     } finally {
         clearTimeout(timeoutFallback);
-        clearExtendedTimeout();
+        clearTimeout(extendedTimeout);
         globalAbortController = null;
         sendBtn.classList.remove('btn-stop-active');
         sendBtn.innerHTML = originalBtnHtml;
@@ -1949,7 +1878,7 @@ async function openAdminModal() {
             document.getElementById('admin-metrics-container').innerHTML = `
                 <div class="profile-stat-row"><span class="profile-stat-label">Total Users</span><span class="profile-stat-value">${data.totalUsers}</span></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Pro Subscribers</span><span class="profile-stat-value" style="color:var(--accent-glow-pro)">${data.proUsers}</span></div>
-                <div class="profile-stat-row"><span class="profile-stat-label">Designer Subscribers</span><span class="profile-stat-value" style="color:var(--accent-glow-designer)">${data.designerUsers}</span></div>
+                <div class="profile-stat-row"><span class="profile-stat-label">Designer Subscribers</span><span class="profile-stat-value" style="color:var(--accent-glow-designer)">${data.businessUsers}</span></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Total Matrix Logs</span><span class="profile-stat-value">${data.totalChats}</span></div>
                 <div style="border-top:1px solid var(--border-muted);margin:10px 0;"></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Total Queries Processed</span><span class="profile-stat-value">${data.metrics?.totalQueries || 0}</span></div>
@@ -2332,7 +2261,29 @@ function updateSubscriptionModal() {
 }
 
 // ============================================================
-// RESIZE HANDLER - FIXED
+// VIEWPORT PADDING
+// ============================================================
+function adjustViewportPadding() {
+    if (!commandWrapper) return;
+    
+    const wrapperHeight = commandWrapper.offsetHeight;
+    const fileChips = document.getElementById('file-staging-container');
+    const chipsHeight = fileChips && stagedFiles.length > 0 ? fileChips.offsetHeight : 0;
+    
+    let totalPadding = wrapperHeight + 20;
+    if (chipsHeight > 0) {
+        totalPadding += chipsHeight + 10;
+    }
+    
+    // Don't force padding if it's too small
+    const minPadding = 120;
+    totalPadding = Math.max(totalPadding, minPadding);
+    
+    viewport.style.paddingBottom = totalPadding + 'px';
+}
+
+// ============================================================
+// RESIZE HANDLER
 // ============================================================
 let resizeHandlerTimeout = null;
 let isResizeHandling = false;
@@ -2352,9 +2303,27 @@ window.addEventListener('resize', () => {
 });
 
 // ============================================================
-// VERSION & CACHE CONTROL
+// INIT
 // ============================================================
-const APP_VERSION = '4.3.1';
+console.log('🟢 Axelr AI Frontend Loaded (v4.3.0)');
+console.log('📡 API Base URL:', API_BASE_URL);
+
+window.onerror = function(message, source, lineno, colno, error) {
+    console.error('Global error:', message, error);
+    return true;
+};
+
+const today = new Date();
+today.setUTCHours(0, 0, 0, 0);
+const lastVisit = localStorage.getItem('axelr_last_visit');
+if (!lastVisit || new Date(lastVisit) < today) {
+    localStorage.setItem('axelr_last_visit', today.toISOString());
+}
+
+// ============================================================
+// VERSION & CACHE CONTROL - FIXED: Only log mismatch, do NOT clear
+// ============================================================
+const APP_VERSION = '4.3.0';
 const BUILD_DATE = '2026-07-28';
 
 console.log(`🟢 Axelr AI v${APP_VERSION} (Build: ${BUILD_DATE})`);
@@ -2362,9 +2331,8 @@ console.log('📡 API Base URL:', API_BASE_URL);
 
 const storedVersion = localStorage.getItem('axelr_app_version');
 if (storedVersion && storedVersion !== APP_VERSION) {
-    console.log('🔄 Version mismatch, clearing cache...');
-    localStorage.clear();
-    localStorage.setItem('axelr_app_version', APP_VERSION);
+    console.log(`🔄 Version mismatch: stored=${storedVersion}, current=${APP_VERSION}. No cache cleared.`);
+    // We just log the difference – no localStorage.clear()
 } else if (!storedVersion) {
     localStorage.setItem('axelr_app_version', APP_VERSION);
 }
@@ -2384,7 +2352,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ============================================================
-// INITIALIZATION
+// FINAL INIT
 // ============================================================
 loadUserProfile().then(() => {
     loadArchiveLogs().then(() => {
@@ -2392,12 +2360,7 @@ loadUserProfile().then(() => {
         if (storedSessionId) {
             viewPastLogById(storedSessionId);
         }
+        // Setup viewport observer after everything loads
+        setTimeout(setupViewportObserver, 500);
     });
 });
-
-window.onerror = function(message, source, lineno, colno, error) {
-    console.error('Global error:', message, error);
-    return true;
-};
-
-console.log('✅ Axelr AI v4.3.1 - Enterprise Production Ready');
