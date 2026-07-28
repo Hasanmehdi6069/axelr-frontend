@@ -80,15 +80,15 @@ let viewportObserver = null;
 let extendedTimeout = null;
 
 // ============================================================
-// SCROLL FUNCTIONS - MUST BE DEFINED EARLY
+// SCROLL FUNCTIONS
 // ============================================================
 function scrollToBottom(smooth = true) {
     if (!viewport) return;
     const lastMessage = viewport.querySelector('.chat-bubble:last-child');
     if (lastMessage) {
-        lastMessage.scrollIntoView({ 
-            behavior: smooth ? 'smooth' : 'auto', 
-            block: 'end' 
+        lastMessage.scrollIntoView({
+            behavior: smooth ? 'smooth' : 'auto',
+            block: 'end'
         });
     }
 }
@@ -173,7 +173,7 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e)
 });
 
 // ============================================================
-// SINGLE INITIALIZATION POINT
+// INITIALIZATION
 // ============================================================
 function initializeApp() {
     const saved = localStorage.getItem('axelr_theme') || 'system';
@@ -184,7 +184,7 @@ function initializeApp() {
     } else {
         applyTheme(saved);
     }
-    
+
     const savedToken = localStorage.getItem('google_auth_token');
     if (savedToken) {
         try {
@@ -283,11 +283,11 @@ function setupViewportObserver() {
             }
         }
     });
-    viewportObserver.observe(viewport, { 
-        childList: true, 
-        subtree: true, 
+    viewportObserver.observe(viewport, {
+        childList: true,
+        subtree: true,
         characterData: true,
-        attributes: true 
+        attributes: true
     });
 }
 
@@ -429,7 +429,7 @@ fileInput.addEventListener('change', (e) => {
 });
 
 // ============================================================
-// SIDEBAR FUNCTIONS (unchanged)
+// SIDEBAR FUNCTIONS
 // ============================================================
 function toggleSidebar() {
     sidebarNode.classList.toggle('open');
@@ -531,7 +531,7 @@ function updateSettingsQuota() {
 }
 
 // ============================================================
-// SEARCH OVERLAY (unchanged)
+// SEARCH OVERLAY
 // ============================================================
 function openSearchOverlay() {
     const overlay = document.getElementById('search-overlay');
@@ -929,7 +929,7 @@ async function loadArchiveLogs() {
 }
 
 // ============================================================
-// RENAME, PIN, SHARE, STATUS FUNCTIONS (unchanged)
+// RENAME, PIN, SHARE, STATUS FUNCTIONS
 // ============================================================
 async function renameChat(logId, currentName, e) {
     e.stopPropagation();
@@ -1049,7 +1049,7 @@ async function deleteLogPermanently(logId, e) {
 }
 
 // ============================================================
-// VIEW PAST LOG (unchanged – used only for history navigation)
+// VIEW PAST LOG – No regenerate button ever
 // ============================================================
 function viewPastLogById(logId) {
     if (regenerateTimer) {
@@ -1109,6 +1109,7 @@ function viewPastLogById(logId) {
             let lastUserIdx = -1;
             log.messages.forEach((m, i) => { if (m.role === 'user') lastUserIdx = i; });
             const isLastUser = (msg.role === 'user' && idx === lastUserIdx);
+            // No regenerate in history view – always false
             injectActionButtons(contentDiv, msg.text, true, false, null, null, isLastUser);
         } else {
             let rawResponse = msg.text || "";
@@ -1139,19 +1140,8 @@ function viewPastLogById(logId) {
                 iframeDoc.close();
                 injectDeployButton(contentDiv, rawCode);
             }
-            const isLast = idx === log.messages.length - 1;
-            const alreadyRegenerated = msg.variants && msg.variants.length > 1;
-            const isActive = log.status === 'active';
-            let showRegenerate = false;
-            if (isLast && isActive && !alreadyRegenerated) {
-                const msgDate = msg.createdAt ? new Date(msg.createdAt) : new Date(log.createdAt);
-                const now = new Date();
-                if (!isNaN(msgDate.getTime()) && (now - msgDate) < 30000) {
-                    showRegenerate = true;
-                }
-            }
-            injectActionButtons(contentDiv, rawResponse, false, showRegenerate, msg.createdAt || log.createdAt,
-                log._id);
+            // History view: no regenerate ever
+            injectActionButtons(contentDiv, rawResponse, false, false, null, null);
             if (msg.variants && msg.variants.length > 1) {
                 const currentIdx = msg.activeVariant || 0;
                 const variantBar = document.createElement('div');
@@ -1244,6 +1234,8 @@ function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRege
         actionBar.appendChild(copyBtn);
         actionBar.appendChild(likeBtn);
         actionBar.appendChild(dislikeBtn);
+
+        // Regenerate button only in fresh chat (showRegenerate = true)
         if (showRegenerate && createdAt && sessionId) {
             const now = Date.now();
             const msgTime = new Date(createdAt).getTime();
@@ -1417,7 +1409,7 @@ function clearExtendedTimeout() {
 }
 
 // ============================================================
-// EXECUTE COMMAND – FIXED (no viewPastLogById call)
+// EXECUTE COMMAND (Fresh conversation → regenerate enabled)
 // ============================================================
 async function executeCommand(isRetry = false) {
     if (!activeSessionId) {
@@ -1599,14 +1591,14 @@ async function executeCommand(isRetry = false) {
             const sessionId = result.sessionId;
             const structuredData = result.structuredData;
             const filename = result.filename || 'Export.csv';
-            // Update the current bubble with the response (no viewPastLogById)
+            // Update the current bubble with the response
             contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(fullResponse));
             if (sessionId) {
                 activeSessionId = sessionId;
                 localStorage.setItem('axelr_active_session', activeSessionId);
                 runningStructuredCache = structuredData;
                 runningFileTitle = filename;
-                // Refresh sidebar in background – do not block UI
+                // Refresh sidebar in background – non‑blocking
                 loadArchiveLogs().catch(() => {});
             }
             const rawCode = extractHtmlCode(fullResponse);
@@ -1633,6 +1625,7 @@ async function executeCommand(isRetry = false) {
                 regenerateTimer = null;
             }
             const now = new Date().toISOString();
+            // Regenerate button enabled for fresh chat
             injectActionButtons(contentDiv, fullResponse, false, true, now, activeSessionId);
             scrollToBottom();
             const mainBackBtn = document.getElementById('main-back-btn');
@@ -1665,7 +1658,7 @@ async function executeCommand(isRetry = false) {
 }
 
 // ============================================================
-// PAYLOAD / DEPLOY (unchanged but added sandbox)
+// PAYLOAD / DEPLOY
 // ============================================================
 function appendPayloadDownload(bubbleNode) {
     if (runningStructuredCache && runningStructuredCache.length > 0) {
@@ -1784,7 +1777,7 @@ function injectDeployButton(bubbleNode, rawHtml) {
 }
 
 // ============================================================
-// MODALS (unchanged)
+// MODALS
 // ============================================================
 function closeModals() {
     document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
@@ -2206,7 +2199,7 @@ window.addEventListener('resize', () => {
 });
 
 // ============================================================
-// VERSION & CACHE CONTROL
+// VERSION & CACHE CONTROL – No auto‑clear
 // ============================================================
 const APP_VERSION = '4.3.2';
 const BUILD_DATE = '2026-07-28';
@@ -2214,15 +2207,15 @@ console.log(`🟢 Axelr AI v${APP_VERSION} (Build: ${BUILD_DATE})`);
 console.log('📡 API Base URL:', API_BASE_URL);
 const storedVersion = localStorage.getItem('axelr_app_version');
 if (storedVersion && storedVersion !== APP_VERSION) {
-    console.log('🔄 Version mismatch, clearing cache...');
-    localStorage.clear();
+    console.warn('⚠️ Version mismatch – new version detected, but cache is preserved to avoid refresh.');
+    // We do NOT clear localStorage anymore to prevent unwanted reloads.
     localStorage.setItem('axelr_app_version', APP_VERSION);
 } else if (!storedVersion) {
     localStorage.setItem('axelr_app_version', APP_VERSION);
 }
 
 // ============================================================
-// SERVICE WORKER CLEANUP
+// SERVICE WORKER CLEANUP – Silent, non‑blocking
 // ============================================================
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations()
@@ -2252,4 +2245,4 @@ window.onerror = function(message, source, lineno, colno, error) {
     return true;
 };
 
-console.log('✅ Axelr AI v4.3.2 - Elite Enterprise Production Ready');
+console.log('✅ Axelr AI v4.3.2 – Elite Enterprise Production Ready');
