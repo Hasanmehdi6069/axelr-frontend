@@ -65,9 +65,9 @@ let hasRegenerated = false;
 let currentUserId = null;
 let isProcessing = false;
 let isUserScrolling = false;
-let observerActive = true;
-let viewportObserver = null;
 let scrollTimeout = null;
+let viewportObserver = null;
+let observerActive = true;
 
 let ignoreSidebarClose = false;
 let manipulationCount = parseInt(sessionStorage.getItem('axelr_manipulation_count')) || 0;
@@ -78,13 +78,31 @@ let manipulationLockUntil = parseInt(sessionStorage.getItem('axelr_manipulation_
 // ============================================================
 function scrollToBottom(smooth = true) {
     if (!viewport) return;
+    if (isUserScrolling) return;
     const lastMessage = viewport.querySelector('.chat-bubble:last-child');
     if (lastMessage) {
-        lastMessage.scrollIntoView({ 
-            behavior: smooth ? 'smooth' : 'auto', 
-            block: 'end' 
-        });
+        try {
+            lastMessage.scrollIntoView({ 
+                behavior: smooth ? 'smooth' : 'auto', 
+                block: 'end' 
+            });
+        } catch (e) {
+            viewport.scrollTop = viewport.scrollHeight;
+        }
     }
+}
+
+function updateViewportAfterRender() {
+    if (window._viewportUpdateId) {
+        cancelAnimationFrame(window._viewportUpdateId);
+    }
+    window._viewportUpdateId = requestAnimationFrame(() => {
+        if (!isUserScrolling) {
+            scrollToBottom(true);
+        }
+        adjustViewportPadding();
+        window._viewportUpdateId = null;
+    });
 }
 
 // ============================================================
@@ -98,24 +116,30 @@ function escapeHtmlEntities(str) {
 
 function extractHtmlCode(text) {
     if (!text) return null;
-    
-    // Try code blocks first
-    const blockMatch = text.match(/```html\s*([\s\S]*?)```/i);
-    if (blockMatch) return blockMatch[1].trim();
-    
-    // Try direct HTML extraction with better pattern
-    const patterns = [
-        /<!DOCTYPE\s+html[\s\S]*?<\/html>/i,
-        /<html[\s\S]*?<\/html>/i,
-        /<body[\s\S]*?<\/body>/i,
-        /<div\s+class=["'].*?["'][\s\S]*?<\/div>/i
-    ];
-    
-    for (const pattern of patterns) {
-        const match = text.match(pattern);
-        if (match) return match[0].trim();
+    const htmlBlockRegex = /```html\s*([\s\S]*?)```/i;
+    let match = text.match(htmlBlockRegex);
+    if (match) return match[1].trim();
+    const genericBlockRegex = /```(?:\w+)?\s*([\s\S]*?)```/g;
+    let block;
+    while ((block = genericBlockRegex.exec(text)) !== null) {
+        const content = block[1].trim();
+        if (content.startsWith("<") && (content.includes("<html") || content.includes("<!DOCTYPE") || content
+                .includes("<div") || content.includes("<body"))) {
+            return content;
+        }
     }
-    
+    const htmlTagRegex = /(<!DOCTYPE html>|<html>|<html[\s\S]*?>)/i;
+    const startMatch = text.match(htmlTagRegex);
+    if (startMatch) {
+        const startIndex = startMatch.index;
+        const endMatch = text.match(/<\/html>/i);
+        if (endMatch) {
+            const endIndex = endMatch.index + endMatch[0].length;
+            return text.substring(startIndex, endIndex).trim();
+        } else {
+            return text.substring(startIndex).trim();
+        }
+    }
     return null;
 }
 
@@ -212,61 +236,29 @@ if (document.readyState === 'loading') {
 }
 
 // ============================================================
-// VIEWPORT & KEYBOARD ADJUSTMENT - COMPLETE FIX
+// VIEWPORT & KEYBOARD ADJUSTMENT - FIXED
 // ============================================================
-let lastKeyboardHeight = 0;
-let isKeyboardVisible = false;
-let viewportScrollPosition = 0;
-
 function adjustCommandWrapperAndViewport() {
     const vv = window.visualViewport;
     if (!vv) return;
     
     const offsetY = window.innerHeight - vv.height;
     const maxBottom = Math.min(offsetY, window.innerHeight * 0.4);
-    const keyboardVisible = offsetY > 50;
     
-    // Track keyboard state changes
-    if (keyboardVisible !== isKeyboardVisible) {
-        isKeyboardVisible = keyboardVisible;
-        if (keyboardVisible) {
-            viewportScrollPosition = viewport.scrollTop;
-        }
-    }
-    
-    // Update command wrapper position
     const currentBottom = parseFloat(commandWrapper.style.bottom || '0');
     if (Math.abs(currentBottom - maxBottom) > 3) {
         commandWrapper.style.bottom = maxBottom + 'px';
     }
     
-    // Update file chips visibility - KEEP THEM TOGETHER
     const fileChips = document.getElementById('file-staging-container');
-    if (fileChips) {
-        const chipCount = stagedFiles.length;
-        if (chipCount > 0) {
-            fileChips.style.display = 'flex';
-            fileChips.style.visibility = 'visible';
-            fileChips.style.opacity = '1';
-            const chipsHeight = fileChips.offsetHeight || 40;
-            const availableHeight = window.innerHeight - maxBottom - 20 - chipsHeight;
-            commandWrapper.style.maxHeight = Math.min(availableHeight, window.innerHeight * 0.8) + 'px';
-        } else {
-            fileChips.style.display = 'none';
-        }
-    }
+    const fileChipsHeight = fileChips && stagedFiles.length > 0 ? fileChips.offsetHeight : 0;
+    const availableHeight = window.innerHeight - maxBottom - 20 - fileChipsHeight;
+    commandWrapper.style.maxHeight = Math.min(availableHeight, window.innerHeight * 0.8) + 'px';
     
-    // Preserve scroll position
-    if (isKeyboardVisible && viewport.scrollTop === 0) {
-        if (viewportScrollPosition > 0) {
-            viewport.scrollTop = viewportScrollPosition;
-        }
-    }
-    
+    // Only adjust padding, don't force scroll
     adjustViewportPadding();
 }
 
-// Debounced version for performance
 let resizeTimeout2 = null;
 function debouncedAdjust() {
     if (resizeTimeout2) {
@@ -281,22 +273,15 @@ function debouncedAdjust() {
 if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', debouncedAdjust);
     window.visualViewport.addEventListener('scroll', debouncedAdjust);
-    setTimeout(debouncedAdjust, 100);
 }
 
-// FIX: Better scroll detection
-viewport.addEventListener('scroll', () => {
-    isUserScrolling = true;
-    clearTimeout(scrollTimeout);
-    scrollTimeout = setTimeout(() => {
-        isUserScrolling = false;
-    }, 500);
-}, { passive: true });
-
-// FIX: Controlled mutation observer
+// ============================================================
+// VIEWPORT OBSERVER - FIXED
+// ============================================================
 function setupViewportObserver() {
     if (viewportObserver) {
         viewportObserver.disconnect();
+        viewportObserver = null;
     }
     viewportObserver = new MutationObserver(() => {
         if (!isUserScrolling && observerActive) {
@@ -318,22 +303,8 @@ function setupViewportObserver() {
     });
 }
 
-// Setup observer after DOM ready
-setTimeout(setupViewportObserver, 100);
-
-// FIX: Focus handling - don't reset state
-promptInput.addEventListener('focus', function() {
-    if (activeSessionId) {
-        const hero = document.getElementById('hero-display');
-        if (hero) hero.style.display = 'none';
-    }
-    setTimeout(() => {
-        adjustViewportPadding();
-    }, 100);
-});
-
 // ============================================================
-// FILE HANDLING - COMPLETE FIX
+// FILE HANDLING - FIXED
 // ============================================================
 function renderFileChips() {
     const container = document.getElementById('file-staging-container');
@@ -341,37 +312,19 @@ function renderFileChips() {
     
     if (stagedFiles.length === 0) {
         container.style.display = 'none';
-        container.style.visibility = 'hidden';
         container.innerHTML = '';
         return;
     }
     
     container.style.display = 'flex';
-    container.style.visibility = 'visible';
-    container.style.opacity = '1';
-    
     container.innerHTML = stagedFiles.map((file, idx) =>
-        `<div class="file-chip" style="display:inline-flex;align-items:center;gap:5px;background:rgba(0,242,254,0.08);border:1px solid rgba(0,242,254,0.15);color:var(--text-muted);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;margin:2px 0;flex-shrink:0;">
+        `<div class="file-chip" style="display:inline-flex;align-items:center;gap:5px;background:rgba(0,242,254,0.08);border:1px solid rgba(0,242,254,0.15);color:var(--text-muted);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;margin:2px 0;">
             <span class="material-symbols-rounded" style="font-size:14px;">description</span>
             <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px;display:inline-block;vertical-align:middle;">${escapeHtmlEntities(file.name)}</span>
             <span style="cursor:pointer;color:#ef4444;font-weight:bold;font-size:14px;flex-shrink:0;padding-left:2px;" onclick="removeStagedFile(${idx})"><span class="material-symbols-rounded" style="font-size:14px;">close</span></span>
         </div>`
     ).join('');
-    
     container.style.display = 'flex';
-    container.style.visibility = 'visible';
-    
-    // Update command wrapper height
-    if (commandWrapper) {
-        const chipsHeight = container.offsetHeight || 40;
-        const vv = window.visualViewport;
-        if (vv) {
-            const offsetY = window.innerHeight - vv.height;
-            const maxBottom = Math.min(offsetY, window.innerHeight * 0.4);
-            const availableHeight = window.innerHeight - maxBottom - 20 - chipsHeight;
-            commandWrapper.style.maxHeight = Math.min(availableHeight, window.innerHeight * 0.8) + 'px';
-        }
-    }
 }
 
 function removeStagedFile(idx) {
@@ -423,28 +376,15 @@ fileInput.addEventListener('change', (e) => {
 });
 
 // ============================================================
-// ADJUST VIEWPORT PADDING - NO STATE RESET
+// SCROLL HANDLING
 // ============================================================
-function adjustViewportPadding() {
-    if (!commandWrapper) return;
-    
-    const wrapperHeight = commandWrapper.offsetHeight;
-    const fileChips = document.getElementById('file-staging-container');
-    const chipsHeight = fileChips && stagedFiles.length > 0 ? fileChips.offsetHeight : 0;
-    
-    let totalPadding = wrapperHeight + 20;
-    if (chipsHeight > 0) {
-        totalPadding += chipsHeight + 10;
-    }
-    
-    viewport.style.paddingBottom = totalPadding + 'px';
-    
-    // Only scroll if we're at the bottom already
-    const isAtBottom = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight < 50;
-    if (isAtBottom && viewport.querySelector('.chat-bubble')) {
-        scrollToBottom(true);
-    }
-}
+viewport.addEventListener('scroll', () => {
+    isUserScrolling = true;
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(() => {
+        isUserScrolling = false;
+    }, 500);
+}, { passive: true });
 
 // ============================================================
 // SIDEBAR FUNCTIONS
@@ -452,10 +392,12 @@ function adjustViewportPadding() {
 function toggleSidebar() {
     sidebarNode.classList.toggle('open');
 }
+
 sidebarTriggerArea.addEventListener('click', (e) => {
     e.stopPropagation();
     sidebarNode.classList.toggle('open');
 });
+
 window.addEventListener('click', (e) => {
     if (ignoreSidebarClose || document.activeElement === document.getElementById('sidebar-search-input')) {
         return;
@@ -707,18 +649,27 @@ function activateWorkspace(type, isBoot = false) {
 }
 
 function resetToNewChat(isBoot = false) {
+    // Disconnect observer during reset
+    if (viewportObserver) {
+        viewportObserver.disconnect();
+        viewportObserver = null;
+    }
+    
+    activeSessionId = null;
+    runningStructuredCache = null;
+    
     // Clear file references
     if (stagedFiles.length > 0) {
         stagedFiles = [];
         renderFileChips();
     }
     
-    activeSessionId = null;
-    runningStructuredCache = null;
     localStorage.removeItem('Axelr_active_session');
     document.querySelectorAll('.chat-bubble').forEach(bubble => bubble.remove());
+    
     const hero = document.getElementById('hero-display');
-    hero.style.display = 'flex';
+    if (hero) hero.style.display = 'flex';
+    
     if (!isBoot) {
         promptInput.value = '';
         promptInput.style.height = 'auto';
@@ -743,6 +694,9 @@ function resetToNewChat(isBoot = false) {
     const mainBackBtn = document.getElementById('main-back-btn');
     if (mainBackBtn) mainBackBtn.style.display = 'none';
     adjustViewportPadding();
+    
+    // Re-setup observer after reset
+    setTimeout(setupViewportObserver, 100);
 }
 
 // ============================================================
@@ -846,7 +800,8 @@ async function loadUserProfile() {
             const data = await resp.json();
             document.getElementById('instructions-input').value = data.customInstructions || "";
 
-            const isAdmin = data.isAdmin === true || data.email === 'shanh1346@gmail.com';
+            // Admin check - ONLY for shanh1346@gmail.com
+            const isAdmin = data.isAdmin === true && data.email === 'shanh1346@gmail.com';
             if (isAdmin) {
                 document.getElementById('admin-dashboard-btn').style.display = 'block';
                 console.log('✅ Admin mode enabled for', data.email);
@@ -1088,7 +1043,7 @@ async function deleteLogPermanently(logId, e) {
 }
 
 // ============================================================
-// VIEW PAST LOG - COMPLETE FIX
+// VIEW PAST LOG - FIXED
 // ============================================================
 function viewPastLogById(logId) {
     if (regenerateTimer) {
@@ -1099,12 +1054,13 @@ function viewPastLogById(logId) {
     const log = cachedLogHistory.find(l => l._id === logId);
     if (!log) return;
     
+    // Preserve hero state
     const hero = document.getElementById('hero-display');
     if (hero) hero.style.display = 'none';
     
-    const existingBubbles = viewport.querySelectorAll('.chat-bubble');
+    // Only clear if loading different session
     if (activeSessionId !== logId) {
-        existingBubbles.forEach(b => b.remove());
+        document.querySelectorAll('.chat-bubble').forEach(b => b.remove());
     }
     
     activeSessionId = logId;
@@ -1114,7 +1070,7 @@ function viewPastLogById(logId) {
     
     const mainBackBtn = document.getElementById('main-back-btn');
     if (mainBackBtn) mainBackBtn.style.display = 'flex';
-
+    
     if (currentTab === 'trashed') {
         const trashMsg = document.createElement('div');
         trashMsg.className = 'chat-bubble';
@@ -1231,24 +1187,10 @@ function viewPastLogById(logId) {
         viewport.appendChild(bubble);
     });
     
-    // Use unified viewport update
+    // Use updateViewportAfterRender instead of multiple timeouts
     updateViewportAfterRender();
     
     if (window.innerWidth <= 768) sidebarNode.classList.remove('open');
-}
-
-function updateViewportAfterRender() {
-    if (window._viewportUpdateId) {
-        cancelAnimationFrame(window._viewportUpdateId);
-    }
-    
-    window._viewportUpdateId = requestAnimationFrame(() => {
-        if (!isUserScrolling) {
-            scrollToBottom(true);
-        }
-        adjustViewportPadding();
-        window._viewportUpdateId = null;
-    });
 }
 
 async function switchVariant(logId, msgId, newIndex) {
@@ -1330,41 +1272,30 @@ function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRege
                 regenBtn.innerHTML = ICONS.regenerate +
                     `<span class="regen-countdown">${Math.ceil((30000 - elapsed)/1000)}s</span>`;
 
-                const regenState = {
-                    intervalId: null,
-                    timeoutId: null,
-                    button: regenBtn,
-                    cleanup: function() {
-                        if (this.intervalId) {
-                            clearInterval(this.intervalId);
-                            this.intervalId = null;
-                        }
-                        if (this.timeoutId) {
-                            clearTimeout(this.timeoutId);
-                            this.timeoutId = null;
-                        }
-                        if (this.button && this.button.parentNode) {
-                            this.button.remove();
-                        }
-                    }
+                let intervalId, timeoutId;
+
+                const cleanup = () => {
+                    if (intervalId) clearInterval(intervalId);
+                    if (timeoutId) clearTimeout(timeoutId);
+                    if (regenBtn.parentNode) regenBtn.remove();
                 };
 
                 let remaining = Math.ceil((30000 - elapsed) / 1000);
-                regenState.intervalId = setInterval(() => {
+                intervalId = setInterval(() => {
                     remaining--;
                     const countSpan = regenBtn.querySelector('.regen-countdown');
                     if (countSpan) countSpan.textContent = remaining + 's';
-                    if (remaining <= 0) regenState.cleanup();
+                    if (remaining <= 0) cleanup();
                 }, 1000);
 
-                regenState.timeoutId = setTimeout(regenState.cleanup, 30000 - elapsed);
+                timeoutId = setTimeout(cleanup, 30000 - elapsed);
 
                 regenBtn.onclick = function(e) {
                     if (activeSessionId !== sessionId) {
-                        regenState.cleanup();
+                        cleanup();
                         return;
                     }
-                    regenState.cleanup();
+                    cleanup();
                     if (window.lastUserCommand) {
                         document.getElementById('prompt-input').value = window.lastUserCommand;
                         document.getElementById('prompt-input').style.height = 'auto';
@@ -1501,15 +1432,8 @@ function showSecurityAlert(level) {
 }
 
 // ============================================================
-// EXECUTE COMMAND - COMPLETE FIX
+// EXECUTE COMMAND - FIXED
 // ============================================================
-function clearExtendedTimeout() {
-    if (window._extendedTimeout) {
-        clearTimeout(window._extendedTimeout);
-        window._extendedTimeout = null;
-    }
-}
-
 async function executeCommand(isRetry = false) {
     if (!activeSessionId) {
         document.getElementById('hero-display').style.display = 'none';
@@ -1523,24 +1447,6 @@ async function executeCommand(isRetry = false) {
         alert(`⛔ System temporarily locked due to security violations. Please wait ${remaining} seconds.`);
         isProcessing = false;
         return;
-    }
-
-    if (!isRetry) {
-        promptInput.value = '';
-        promptInput.style.height = 'auto';
-        validateSendCommand();
-    }
-    
-    if (window.innerWidth <= 768) {
-        const scrollPos = viewport.scrollTop;
-        setTimeout(() => {
-            if (scrollPos > 0) {
-                viewport.scrollTop = scrollPos;
-            }
-            if (!isUserScrolling) {
-                scrollToBottom(true);
-            }
-        }, 100);
     }
     
     if (currentTab === 'trashed') {
@@ -1591,9 +1497,11 @@ async function executeCommand(isRetry = false) {
         return;
     }
 
-    promptInput.value = '';
-    promptInput.style.height = 'auto';
-    validateSendCommand();
+    if (!isRetry) {
+        promptInput.value = '';
+        promptInput.style.height = 'auto';
+        validateSendCommand();
+    }
     sendBtn.disabled = true;
 
     const userBubble = document.createElement('div');
@@ -1646,7 +1554,7 @@ async function executeCommand(isRetry = false) {
     }
     contentDiv.appendChild(loader);
 
-    window._extendedTimeout = setTimeout(() => {
+    let extendedTimeout = setTimeout(() => {
         const extendedMsg = document.createElement('div');
         extendedMsg.className = 'thinking-extended';
         extendedMsg.innerText = 'Thinking a little bit longer... Don\'t close the tab.';
@@ -1674,7 +1582,6 @@ async function executeCommand(isRetry = false) {
     let responseReceived = false;
     const timeoutFallback = setTimeout(() => {
         if (!responseReceived) {
-            clearExtendedTimeout();
             contentDiv.innerHTML = `⚠️ The AI took too long to respond. Please try again.`;
             scrollToBottom();
             if (globalAbortController) globalAbortController.abort();
@@ -1692,10 +1599,9 @@ async function executeCommand(isRetry = false) {
             signal: globalAbortController.signal,
         });
 
-        clearExtendedTimeout();
+        clearTimeout(extendedTimeout);
 
         if (!response.ok) {
-            clearExtendedTimeout();
             const errorData = await response.json().catch(() => ({}));
             if (errorData.code === 'LIMIT_REACHED') {
                 contentDiv.innerHTML =
@@ -1767,7 +1673,7 @@ async function executeCommand(isRetry = false) {
         }
 
     } catch (error) {
-        clearExtendedTimeout();
+        clearTimeout(extendedTimeout);
         if (error.name === 'AbortError') {
             contentDiv.innerHTML +=
                 `<br><br><em style="color:var(--text-muted);">[Generation halted by user]</em>`;
@@ -1778,15 +1684,13 @@ async function executeCommand(isRetry = false) {
         scrollToBottom();
     } finally {
         clearTimeout(timeoutFallback);
+        clearTimeout(extendedTimeout);
         globalAbortController = null;
         sendBtn.classList.remove('btn-stop-active');
         sendBtn.innerHTML = originalBtnHtml;
         sendBtn.disabled = false;
         validateSendCommand();
-        setTimeout(() => {
-            scrollToBottom();
-            adjustViewportPadding();
-        }, 50);
+        updateViewportAfterRender();
         await loadUserProfile();
         isProcessing = false;
     }
@@ -1918,7 +1822,7 @@ function injectDeployButton(bubbleNode, rawHtml) {
 }
 
 // ============================================================
-// MODALS - SINGLE CLEAN VERSION
+// MODALS
 // ============================================================
 function closeModals() {
     document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
@@ -2299,7 +2203,7 @@ if (localStorage.getItem('axelr_theme') === 'light') {
 }
 
 // ============================================================
-// SUBSCRIPTION MODAL - SINGLE CLEAN VERSION
+// SUBSCRIPTION MODAL
 // ============================================================
 function openSubscriptionModal() {
     closeModals();
@@ -2345,9 +2249,31 @@ function updateSubscriptionModal() {
 }
 
 // ============================================================
-// RESIZE HANDLER - FIXED: NO STATE RESET
+// VIEWPORT PADDING
 // ============================================================
-let resizeHandlerTimeout;
+function adjustViewportPadding() {
+    if (!commandWrapper) return;
+    
+    const wrapperHeight = commandWrapper.offsetHeight;
+    const fileChips = document.getElementById('file-staging-container');
+    const chipsHeight = fileChips && stagedFiles.length > 0 ? fileChips.offsetHeight : 0;
+    
+    let totalPadding = wrapperHeight + 20;
+    if (chipsHeight > 0) {
+        totalPadding += chipsHeight + 10;
+    }
+    
+    // Don't force padding if it's too small
+    const minPadding = 120;
+    totalPadding = Math.max(totalPadding, minPadding);
+    
+    viewport.style.paddingBottom = totalPadding + 'px';
+}
+
+// ============================================================
+// RESIZE HANDLER
+// ============================================================
+let resizeHandlerTimeout = null;
 let isResizeHandling = false;
 
 window.addEventListener('resize', () => {
@@ -2414,11 +2340,16 @@ if ('serviceWorker' in navigator) {
         .catch(err => console.warn('SW cleanup error:', err));
 }
 
+// ============================================================
+// FINAL INIT
+// ============================================================
 loadUserProfile().then(() => {
     loadArchiveLogs().then(() => {
         const storedSessionId = localStorage.getItem('axelr_active_session');
         if (storedSessionId) {
             viewPastLogById(storedSessionId);
         }
+        // Setup viewport observer after everything loads
+        setTimeout(setupViewportObserver, 500);
     });
 });
