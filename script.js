@@ -64,23 +64,17 @@ let regenerateTimer = null;
 let hasRegenerated = false;
 let currentUserId = null;
 let isProcessing = false;
+let isUserScrolling = false;
+let observerActive = true;
+let viewportObserver = null;
+let scrollTimeout = null;
 
 let ignoreSidebarClose = false;
 let manipulationCount = parseInt(sessionStorage.getItem('axelr_manipulation_count')) || 0;
 let manipulationLockUntil = parseInt(sessionStorage.getItem('axelr_manipulation_lock')) || 0;
 
-// Mobile viewport state
-let lastKeyboardHeight = 0;
-let isKeyboardVisible = false;
-let viewportScrollPosition = 0;
-let isUserScrolling = false;
-let scrollTimeout = null;
-let observerActive = true;
-let viewportObserver = null;
-let extendedTimeout = null;
-
 // ============================================================
-// SCROLL FUNCTIONS - MUST BE DEFINED EARLY
+// SCROLL FUNCTIONS - DEFINED EARLY
 // ============================================================
 function scrollToBottom(smooth = true) {
     if (!viewport) return;
@@ -220,6 +214,10 @@ if (document.readyState === 'loading') {
 // ============================================================
 // VIEWPORT & KEYBOARD ADJUSTMENT - COMPLETE FIX
 // ============================================================
+let lastKeyboardHeight = 0;
+let isKeyboardVisible = false;
+let viewportScrollPosition = 0;
+
 function adjustCommandWrapperAndViewport() {
     const vv = window.visualViewport;
     if (!vv) return;
@@ -269,18 +267,24 @@ function adjustCommandWrapperAndViewport() {
 }
 
 // Debounced version for performance
-let resizeTimeout = null;
+let resizeTimeout2 = null;
 function debouncedAdjust() {
-    if (resizeTimeout) {
-        cancelAnimationFrame(resizeTimeout);
+    if (resizeTimeout2) {
+        cancelAnimationFrame(resizeTimeout2);
     }
-    resizeTimeout = requestAnimationFrame(() => {
+    resizeTimeout2 = requestAnimationFrame(() => {
         adjustCommandWrapperAndViewport();
-        resizeTimeout = null;
+        resizeTimeout2 = null;
     });
 }
 
-// Viewport scroll detection
+if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', debouncedAdjust);
+    window.visualViewport.addEventListener('scroll', debouncedAdjust);
+    setTimeout(debouncedAdjust, 100);
+}
+
+// FIX: Better scroll detection
 viewport.addEventListener('scroll', () => {
     isUserScrolling = true;
     clearTimeout(scrollTimeout);
@@ -289,13 +293,11 @@ viewport.addEventListener('scroll', () => {
     }, 500);
 }, { passive: true });
 
-// FIX: Setup viewport observer with proper cleanup
+// FIX: Controlled mutation observer
 function setupViewportObserver() {
     if (viewportObserver) {
         viewportObserver.disconnect();
-        viewportObserver = null;
     }
-    
     viewportObserver = new MutationObserver(() => {
         if (!isUserScrolling && observerActive) {
             const lastMessage = viewport.querySelector('.chat-bubble:last-child');
@@ -308,7 +310,6 @@ function setupViewportObserver() {
             }
         }
     });
-    
     viewportObserver.observe(viewport, { 
         childList: true, 
         subtree: true, 
@@ -317,12 +318,8 @@ function setupViewportObserver() {
     });
 }
 
-// Keyboard handling
-if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', debouncedAdjust);
-    window.visualViewport.addEventListener('scroll', debouncedAdjust);
-    setTimeout(debouncedAdjust, 100);
-}
+// Setup observer after DOM ready
+setTimeout(setupViewportObserver, 100);
 
 // FIX: Focus handling - don't reset state
 promptInput.addEventListener('focus', function() {
@@ -335,51 +332,8 @@ promptInput.addEventListener('focus', function() {
     }, 100);
 });
 
-// Initialize observer
-setupViewportObserver();
-
 // ============================================================
-// ADJUST VIEWPORT PADDING
-// ============================================================
-function adjustViewportPadding() {
-    if (!commandWrapper) return;
-    
-    const wrapperHeight = commandWrapper.offsetHeight;
-    const fileChips = document.getElementById('file-staging-container');
-    const chipsHeight = fileChips && stagedFiles.length > 0 ? fileChips.offsetHeight : 0;
-    
-    let totalPadding = wrapperHeight + 20;
-    if (chipsHeight > 0) {
-        totalPadding += chipsHeight + 10;
-    }
-    
-    viewport.style.paddingBottom = totalPadding + 'px';
-    
-    const isAtBottom = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight < 50;
-    if (isAtBottom && viewport.querySelector('.chat-bubble')) {
-        scrollToBottom(true);
-    }
-}
-
-// ============================================================
-// VIEWPORT AFTER RENDER - SINGLE FUNCTION
-// ============================================================
-function updateViewportAfterRender() {
-    if (window._viewportUpdateId) {
-        cancelAnimationFrame(window._viewportUpdateId);
-    }
-    
-    window._viewportUpdateId = requestAnimationFrame(() => {
-        if (!isUserScrolling) {
-            scrollToBottom(true);
-        }
-        adjustViewportPadding();
-        window._viewportUpdateId = null;
-    });
-}
-
-// ============================================================
-// FILE HANDLING - FIXED
+// FILE HANDLING - COMPLETE FIX
 // ============================================================
 function renderFileChips() {
     const container = document.getElementById('file-staging-container');
@@ -407,6 +361,7 @@ function renderFileChips() {
     container.style.display = 'flex';
     container.style.visibility = 'visible';
     
+    // Update command wrapper height
     if (commandWrapper) {
         const chipsHeight = container.offsetHeight || 40;
         const vv = window.visualViewport;
@@ -466,6 +421,30 @@ fileInput.addEventListener('change', (e) => {
     fileInput.value = '';
     validateSendCommand();
 });
+
+// ============================================================
+// ADJUST VIEWPORT PADDING - NO STATE RESET
+// ============================================================
+function adjustViewportPadding() {
+    if (!commandWrapper) return;
+    
+    const wrapperHeight = commandWrapper.offsetHeight;
+    const fileChips = document.getElementById('file-staging-container');
+    const chipsHeight = fileChips && stagedFiles.length > 0 ? fileChips.offsetHeight : 0;
+    
+    let totalPadding = wrapperHeight + 20;
+    if (chipsHeight > 0) {
+        totalPadding += chipsHeight + 10;
+    }
+    
+    viewport.style.paddingBottom = totalPadding + 'px';
+    
+    // Only scroll if we're at the bottom already
+    const isAtBottom = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight < 50;
+    if (isAtBottom && viewport.querySelector('.chat-bubble')) {
+        scrollToBottom(true);
+    }
+}
 
 // ============================================================
 // SIDEBAR FUNCTIONS
@@ -642,6 +621,28 @@ function handleCredentialResponse(response) {
     dropdownFallback.innerText = payload.name.charAt(0).toUpperCase();
 }
 
+window.onload = function() {
+    try {
+        const savedToken = localStorage.getItem('google_auth_token');
+        if (savedToken) {
+            const payload = decodeJwt(savedToken);
+            if (Date.now() < payload.exp * 1000) {
+                return initializeSecureWorkspace(payload, savedToken);
+            } else {
+                localStorage.removeItem('google_auth_token');
+            }
+        }
+    } catch (err) {
+        localStorage.removeItem('google_auth_token');
+    }
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('billing') === 'success') {
+        alert('🎉 Payment successful! Your workspace has been upgraded.');
+        window.history.replaceState({}, document.title, window.location.pathname);
+        if (googleAuthUserToken) loadUserProfile();
+    }
+};
+
 async function initializeSecureWorkspace(payload, token) {
     googleAuthUserToken = token;
     currentUserId = payload.sub;
@@ -705,16 +706,7 @@ function activateWorkspace(type, isBoot = false) {
     if (!isBoot) loadArchiveLogs();
 }
 
-// ============================================================
-// RESET TO NEW CHAT - FIXED
-// ============================================================
 function resetToNewChat(isBoot = false) {
-    // Disconnect observer during reset
-    if (viewportObserver) {
-        viewportObserver.disconnect();
-        viewportObserver = null;
-    }
-    
     // Clear file references
     if (stagedFiles.length > 0) {
         stagedFiles = [];
@@ -725,10 +717,8 @@ function resetToNewChat(isBoot = false) {
     runningStructuredCache = null;
     localStorage.removeItem('Axelr_active_session');
     document.querySelectorAll('.chat-bubble').forEach(bubble => bubble.remove());
-    
     const hero = document.getElementById('hero-display');
     hero.style.display = 'flex';
-    
     if (!isBoot) {
         promptInput.value = '';
         promptInput.style.height = 'auto';
@@ -743,7 +733,6 @@ function resetToNewChat(isBoot = false) {
             }, 10);
         }
     }
-    
     validateSendCommand();
     if (window.innerWidth <= 768) sidebarNode.classList.remove('open');
     hasRegenerated = false;
@@ -754,9 +743,6 @@ function resetToNewChat(isBoot = false) {
     const mainBackBtn = document.getElementById('main-back-btn');
     if (mainBackBtn) mainBackBtn.style.display = 'none';
     adjustViewportPadding();
-    
-    // Re-initialize observer
-    setupViewportObserver();
 }
 
 // ============================================================
@@ -849,7 +835,7 @@ renderer.code = function(code, language) {
 marked.setOptions({ renderer: renderer, breaks: true });
 
 // ============================================================
-// USER PROFILE & QUOTA - FIXED
+// USER PROFILE & QUOTA
 // ============================================================
 async function loadUserProfile() {
     try {
@@ -1102,7 +1088,7 @@ async function deleteLogPermanently(logId, e) {
 }
 
 // ============================================================
-// VIEW PAST LOG - FIXED
+// VIEW PAST LOG - COMPLETE FIX
 // ============================================================
 function viewPastLogById(logId) {
     if (regenerateTimer) {
@@ -1245,8 +1231,24 @@ function viewPastLogById(logId) {
         viewport.appendChild(bubble);
     });
     
+    // Use unified viewport update
     updateViewportAfterRender();
+    
     if (window.innerWidth <= 768) sidebarNode.classList.remove('open');
+}
+
+function updateViewportAfterRender() {
+    if (window._viewportUpdateId) {
+        cancelAnimationFrame(window._viewportUpdateId);
+    }
+    
+    window._viewportUpdateId = requestAnimationFrame(() => {
+        if (!isUserScrolling) {
+            scrollToBottom(true);
+        }
+        adjustViewportPadding();
+        window._viewportUpdateId = null;
+    });
 }
 
 async function switchVariant(logId, msgId, newIndex) {
@@ -1328,30 +1330,41 @@ function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRege
                 regenBtn.innerHTML = ICONS.regenerate +
                     `<span class="regen-countdown">${Math.ceil((30000 - elapsed)/1000)}s</span>`;
 
-                let intervalId, timeoutId;
-
-                const cleanup = () => {
-                    if (intervalId) clearInterval(intervalId);
-                    if (timeoutId) clearTimeout(timeoutId);
-                    if (regenBtn.parentNode) regenBtn.remove();
+                const regenState = {
+                    intervalId: null,
+                    timeoutId: null,
+                    button: regenBtn,
+                    cleanup: function() {
+                        if (this.intervalId) {
+                            clearInterval(this.intervalId);
+                            this.intervalId = null;
+                        }
+                        if (this.timeoutId) {
+                            clearTimeout(this.timeoutId);
+                            this.timeoutId = null;
+                        }
+                        if (this.button && this.button.parentNode) {
+                            this.button.remove();
+                        }
+                    }
                 };
 
                 let remaining = Math.ceil((30000 - elapsed) / 1000);
-                intervalId = setInterval(() => {
+                regenState.intervalId = setInterval(() => {
                     remaining--;
                     const countSpan = regenBtn.querySelector('.regen-countdown');
                     if (countSpan) countSpan.textContent = remaining + 's';
-                    if (remaining <= 0) cleanup();
+                    if (remaining <= 0) regenState.cleanup();
                 }, 1000);
 
-                timeoutId = setTimeout(cleanup, 30000 - elapsed);
+                regenState.timeoutId = setTimeout(regenState.cleanup, 30000 - elapsed);
 
                 regenBtn.onclick = function(e) {
                     if (activeSessionId !== sessionId) {
-                        cleanup();
+                        regenState.cleanup();
                         return;
                     }
-                    cleanup();
+                    regenState.cleanup();
                     if (window.lastUserCommand) {
                         document.getElementById('prompt-input').value = window.lastUserCommand;
                         document.getElementById('prompt-input').style.height = 'auto';
@@ -1488,18 +1501,15 @@ function showSecurityAlert(level) {
 }
 
 // ============================================================
-// EXTENDED TIMEOUT CLEANUP
+// EXECUTE COMMAND - COMPLETE FIX
 // ============================================================
 function clearExtendedTimeout() {
-    if (extendedTimeout) {
-        clearTimeout(extendedTimeout);
-        extendedTimeout = null;
+    if (window._extendedTimeout) {
+        clearTimeout(window._extendedTimeout);
+        window._extendedTimeout = null;
     }
 }
 
-// ============================================================
-// EXECUTE COMMAND - PRODUCTION READY
-// ============================================================
 async function executeCommand(isRetry = false) {
     if (!activeSessionId) {
         document.getElementById('hero-display').style.display = 'none';
@@ -1636,7 +1646,7 @@ async function executeCommand(isRetry = false) {
     }
     contentDiv.appendChild(loader);
 
-    extendedTimeout = setTimeout(() => {
+    window._extendedTimeout = setTimeout(() => {
         const extendedMsg = document.createElement('div');
         extendedMsg.className = 'thinking-extended';
         extendedMsg.innerText = 'Thinking a little bit longer... Don\'t close the tab.';
@@ -1664,6 +1674,7 @@ async function executeCommand(isRetry = false) {
     let responseReceived = false;
     const timeoutFallback = setTimeout(() => {
         if (!responseReceived) {
+            clearExtendedTimeout();
             contentDiv.innerHTML = `⚠️ The AI took too long to respond. Please try again.`;
             scrollToBottom();
             if (globalAbortController) globalAbortController.abort();
@@ -1684,6 +1695,7 @@ async function executeCommand(isRetry = false) {
         clearExtendedTimeout();
 
         if (!response.ok) {
+            clearExtendedTimeout();
             const errorData = await response.json().catch(() => ({}));
             if (errorData.code === 'LIMIT_REACHED') {
                 contentDiv.innerHTML =
@@ -1696,7 +1708,6 @@ async function executeCommand(isRetry = false) {
             }
             scrollToBottom();
             isProcessing = false;
-            clearTimeout(timeoutFallback);
             return;
         }
 
@@ -1767,13 +1778,15 @@ async function executeCommand(isRetry = false) {
         scrollToBottom();
     } finally {
         clearTimeout(timeoutFallback);
-        clearExtendedTimeout();
         globalAbortController = null;
         sendBtn.classList.remove('btn-stop-active');
         sendBtn.innerHTML = originalBtnHtml;
         sendBtn.disabled = false;
         validateSendCommand();
-        updateViewportAfterRender();
+        setTimeout(() => {
+            scrollToBottom();
+            adjustViewportPadding();
+        }, 50);
         await loadUserProfile();
         isProcessing = false;
     }
@@ -1905,7 +1918,7 @@ function injectDeployButton(bubbleNode, rawHtml) {
 }
 
 // ============================================================
-// MODALS
+// MODALS - SINGLE CLEAN VERSION
 // ============================================================
 function closeModals() {
     document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
@@ -2286,7 +2299,7 @@ if (localStorage.getItem('axelr_theme') === 'light') {
 }
 
 // ============================================================
-// SUBSCRIPTION MODAL
+// SUBSCRIPTION MODAL - SINGLE CLEAN VERSION
 // ============================================================
 function openSubscriptionModal() {
     closeModals();
@@ -2332,9 +2345,9 @@ function updateSubscriptionModal() {
 }
 
 // ============================================================
-// RESIZE HANDLER - FIXED
+// RESIZE HANDLER - FIXED: NO STATE RESET
 // ============================================================
-let resizeHandlerTimeout = null;
+let resizeHandlerTimeout;
 let isResizeHandling = false;
 
 window.addEventListener('resize', () => {
@@ -2352,9 +2365,27 @@ window.addEventListener('resize', () => {
 });
 
 // ============================================================
+// INIT
+// ============================================================
+console.log('🟢 Axelr AI Frontend Loaded (v4.3.0)');
+console.log('📡 API Base URL:', API_BASE_URL);
+
+window.onerror = function(message, source, lineno, colno, error) {
+    console.error('Global error:', message, error);
+    return true;
+};
+
+const today = new Date();
+today.setUTCHours(0, 0, 0, 0);
+const lastVisit = localStorage.getItem('axelr_last_visit');
+if (!lastVisit || new Date(lastVisit) < today) {
+    localStorage.setItem('axelr_last_visit', today.toISOString());
+}
+
+// ============================================================
 // VERSION & CACHE CONTROL
 // ============================================================
-const APP_VERSION = '4.3.1';
+const APP_VERSION = '4.3.0';
 const BUILD_DATE = '2026-07-28';
 
 console.log(`🟢 Axelr AI v${APP_VERSION} (Build: ${BUILD_DATE})`);
@@ -2383,9 +2414,6 @@ if ('serviceWorker' in navigator) {
         .catch(err => console.warn('SW cleanup error:', err));
 }
 
-// ============================================================
-// INITIALIZATION
-// ============================================================
 loadUserProfile().then(() => {
     loadArchiveLogs().then(() => {
         const storedSessionId = localStorage.getItem('axelr_active_session');
@@ -2394,10 +2422,3 @@ loadUserProfile().then(() => {
         }
     });
 });
-
-window.onerror = function(message, source, lineno, colno, error) {
-    console.error('Global error:', message, error);
-    return true;
-};
-
-console.log('✅ Axelr AI v4.3.1 - Enterprise Production Ready');
