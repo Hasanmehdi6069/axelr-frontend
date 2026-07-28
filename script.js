@@ -64,46 +64,11 @@ let regenerateTimer = null;
 let hasRegenerated = false;
 let currentUserId = null;
 let isProcessing = false;
-let isUserScrolling = false;
-let scrollTimeout = null;
-let viewportObserver = null;
-let observerActive = true;
+let userIsAdmin = false;
 
 let ignoreSidebarClose = false;
 let manipulationCount = parseInt(sessionStorage.getItem('axelr_manipulation_count')) || 0;
 let manipulationLockUntil = parseInt(sessionStorage.getItem('axelr_manipulation_lock')) || 0;
-
-// ============================================================
-// SCROLL FUNCTIONS - DEFINED EARLY
-// ============================================================
-function scrollToBottom(smooth = true) {
-    if (!viewport) return;
-    if (isUserScrolling) return;
-    const lastMessage = viewport.querySelector('.chat-bubble:last-child');
-    if (lastMessage) {
-        try {
-            lastMessage.scrollIntoView({ 
-                behavior: smooth ? 'smooth' : 'auto', 
-                block: 'end' 
-            });
-        } catch (e) {
-            viewport.scrollTop = viewport.scrollHeight;
-        }
-    }
-}
-
-function updateViewportAfterRender() {
-    if (window._viewportUpdateId) {
-        cancelAnimationFrame(window._viewportUpdateId);
-    }
-    window._viewportUpdateId = requestAnimationFrame(() => {
-        if (!isUserScrolling) {
-            scrollToBottom(true);
-        }
-        adjustViewportPadding();
-        window._viewportUpdateId = null;
-    });
-}
 
 // ============================================================
 // UTILITY FUNCTIONS
@@ -196,11 +161,7 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e)
     }
 });
 
-// ============================================================
-// SINGLE INITIALIZATION POINT
-// ============================================================
-function initializeApp() {
-    // Theme
+document.addEventListener('DOMContentLoaded', () => {
     const saved = localStorage.getItem('axelr_theme') || 'system';
     currentThemePreference = saved;
     systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -209,56 +170,41 @@ function initializeApp() {
     } else {
         applyTheme(saved);
     }
-    
-    // Auth check
-    const savedToken = localStorage.getItem('google_auth_token');
-    if (savedToken) {
-        try {
-            const payload = decodeJwt(savedToken);
-            if (Date.now() < payload.exp * 1000) {
-                initializeSecureWorkspace(payload, savedToken);
-                return;
-            }
-        } catch (e) {
-            localStorage.removeItem('google_auth_token');
-        }
-    }
-    
-    // Show auth wall
-    document.getElementById('auth-wall').style.display = 'flex';
-}
-
-// Run once when DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeApp);
-} else {
-    initializeApp();
-}
+});
 
 // ============================================================
-// VIEWPORT & KEYBOARD ADJUSTMENT - FIXED
+// VIEWPORT & KEYBOARD ADJUSTMENT
 // ============================================================
+function adjustViewportPadding() {
+    const wrapperHeight = commandWrapper.offsetHeight;
+    const bottomPadding = Math.max(wrapperHeight + 20, 160);
+    viewport.style.paddingBottom = bottomPadding + 'px';
+}
+
+function scrollToBottom() {
+    viewport.scrollTop = viewport.scrollHeight;
+}
+
+// Single version of adjustCommandWrapperAndViewport
 function adjustCommandWrapperAndViewport() {
     const vv = window.visualViewport;
     if (!vv) return;
-    
     const offsetY = window.innerHeight - vv.height;
-    const maxBottom = Math.min(offsetY, window.innerHeight * 0.4);
-    
-    const currentBottom = parseFloat(commandWrapper.style.bottom || '0');
-    if (Math.abs(currentBottom - maxBottom) > 3) {
+    const maxBottom = Math.min(offsetY, window.innerHeight * 0.5);
+    if (Math.abs(parseFloat(commandWrapper.style.bottom || '0') - maxBottom) > 5) {
         commandWrapper.style.bottom = maxBottom + 'px';
     }
-    
     const fileChips = document.getElementById('file-staging-container');
-    const fileChipsHeight = fileChips && stagedFiles.length > 0 ? fileChips.offsetHeight : 0;
+    const fileChipsHeight = fileChips ? fileChips.offsetHeight : 0;
     const availableHeight = window.innerHeight - maxBottom - 20 - fileChipsHeight;
     commandWrapper.style.maxHeight = Math.min(availableHeight, window.innerHeight * 0.8) + 'px';
-    
-    // Only adjust padding, don't force scroll
-    adjustViewportPadding();
+    setTimeout(adjustViewportPadding, 50);
+    if (viewport.querySelector('.chat-bubble')) {
+        scrollToBottom();
+    }
 }
 
+// Debounced version
 let resizeTimeout2 = null;
 function debouncedAdjust() {
     if (resizeTimeout2) {
@@ -273,64 +219,52 @@ function debouncedAdjust() {
 if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', debouncedAdjust);
     window.visualViewport.addEventListener('scroll', debouncedAdjust);
+    setTimeout(debouncedAdjust, 100);
 }
 
-// ============================================================
-// VIEWPORT OBSERVER - FIXED
-// ============================================================
-function setupViewportObserver() {
-    if (viewportObserver) {
-        viewportObserver.disconnect();
-        viewportObserver = null;
+promptInput.addEventListener('focus', function() {
+    if (activeSessionId) {
+        document.getElementById('hero-display').style.display = 'none';
     }
-    viewportObserver = new MutationObserver(() => {
-        if (!isUserScrolling && observerActive) {
-            const lastMessage = viewport.querySelector('.chat-bubble:last-child');
-            if (lastMessage) {
-                const rect = lastMessage.getBoundingClientRect();
-                const viewportRect = viewport.getBoundingClientRect();
-                if (rect.bottom > viewportRect.bottom - 50) {
-                    scrollToBottom(true);
-                }
-            }
+    setTimeout(() => {
+        adjustViewportPadding();
+        if (viewport.querySelector('.chat-bubble')) {
+            scrollToBottom();
         }
-    });
-    viewportObserver.observe(viewport, { 
-        childList: true, 
-        subtree: true, 
-        characterData: true,
-        attributes: true 
-    });
-}
+    }, 200);
+});
+
+const viewportObserver = new MutationObserver(() => {
+    scrollToBottom();
+});
+viewportObserver.observe(viewport, { childList: true, subtree: true, characterData: true });
 
 // ============================================================
-// FILE HANDLING - FIXED
+// FILE HANDLING - SINGLE VERSION
 // ============================================================
 function renderFileChips() {
     const container = document.getElementById('file-staging-container');
     if (!container) return;
-    
     if (stagedFiles.length === 0) {
         container.style.display = 'none';
         container.innerHTML = '';
         return;
     }
-    
     container.style.display = 'flex';
     container.innerHTML = stagedFiles.map((file, idx) =>
-        `<div class="file-chip" style="display:inline-flex;align-items:center;gap:5px;background:rgba(0,242,254,0.08);border:1px solid rgba(0,242,254,0.15);color:var(--text-muted);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;margin:2px 0;">
-            <span class="material-symbols-rounded" style="font-size:14px;">description</span>
-            <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px;display:inline-block;vertical-align:middle;">${escapeHtmlEntities(file.name)}</span>
-            <span style="cursor:pointer;color:#ef4444;font-weight:bold;font-size:14px;flex-shrink:0;padding-left:2px;" onclick="removeStagedFile(${idx})"><span class="material-symbols-rounded" style="font-size:14px;">close</span></span>
+        `<div class="file-chip" style="display:flex;align-items:center;gap:8px;max-width:100%;flex-shrink:0;background:rgba(0,242,254,0.08);border:1px solid rgba(0,242,254,0.15);color:var(--text-muted);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;margin-top:5px;display:inline-flex;align-items:center;gap:5px;">
+            <span class="material-symbols-rounded" style="font-size:16px;">description</span>
+            <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;display:inline-block;vertical-align:middle;">${escapeHtmlEntities(file.name)}</span>
+            <span style="cursor:pointer;color:#ef4444;font-weight:bold;font-size:14px;flex-shrink:0;padding-left:4px;" onclick="removeStagedFile(${idx})"><span class="material-symbols-rounded" style="font-size:16px;">close</span></span>
         </div>`
     ).join('');
     container.style.display = 'flex';
+    requestAnimationFrame(debouncedAdjust);
 }
 
 function removeStagedFile(idx) {
     stagedFiles.splice(idx, 1);
     renderFileChips();
-    validateSendCommand();
 }
 
 fileInput.addEventListener('change', (e) => {
@@ -376,28 +310,15 @@ fileInput.addEventListener('change', (e) => {
 });
 
 // ============================================================
-// SCROLL HANDLING
-// ============================================================
-viewport.addEventListener('scroll', () => {
-    isUserScrolling = true;
-    clearTimeout(scrollTimeout);
-    scrollTimeout = setTimeout(() => {
-        isUserScrolling = false;
-    }, 500);
-}, { passive: true });
-
-// ============================================================
 // SIDEBAR FUNCTIONS
 // ============================================================
 function toggleSidebar() {
     sidebarNode.classList.toggle('open');
 }
-
 sidebarTriggerArea.addEventListener('click', (e) => {
     e.stopPropagation();
     sidebarNode.classList.toggle('open');
 });
-
 window.addEventListener('click', (e) => {
     if (ignoreSidebarClose || document.activeElement === document.getElementById('sidebar-search-input')) {
         return;
@@ -649,27 +570,14 @@ function activateWorkspace(type, isBoot = false) {
 }
 
 function resetToNewChat(isBoot = false) {
-    // Disconnect observer during reset
-    if (viewportObserver) {
-        viewportObserver.disconnect();
-        viewportObserver = null;
-    }
-    
     activeSessionId = null;
     runningStructuredCache = null;
-    
-    // Clear file references
-    if (stagedFiles.length > 0) {
-        stagedFiles = [];
-        renderFileChips();
-    }
-    
+    stagedFiles = [];
+    renderFileChips();
     localStorage.removeItem('Axelr_active_session');
     document.querySelectorAll('.chat-bubble').forEach(bubble => bubble.remove());
-    
     const hero = document.getElementById('hero-display');
-    if (hero) hero.style.display = 'flex';
-    
+    hero.style.display = 'flex';
     if (!isBoot) {
         promptInput.value = '';
         promptInput.style.height = 'auto';
@@ -694,9 +602,6 @@ function resetToNewChat(isBoot = false) {
     const mainBackBtn = document.getElementById('main-back-btn');
     if (mainBackBtn) mainBackBtn.style.display = 'none';
     adjustViewportPadding();
-    
-    // Re-setup observer after reset
-    setTimeout(setupViewportObserver, 100);
 }
 
 // ============================================================
@@ -800,9 +705,7 @@ async function loadUserProfile() {
             const data = await resp.json();
             document.getElementById('instructions-input').value = data.customInstructions || "";
 
-            // Admin check - ONLY for shanh1346@gmail.com
-            const isAdmin = data.isAdmin === true && data.email === 'shanh1346@gmail.com';
-            if (isAdmin) {
+            if (data.isAdmin || data.email === 'shanh1346@gmail.com') {
                 document.getElementById('admin-dashboard-btn').style.display = 'block';
                 console.log('✅ Admin mode enabled for', data.email);
             } else {
@@ -922,9 +825,6 @@ async function loadArchiveLogs() {
     } catch (e) {}
 }
 
-// ============================================================
-// RENAME, PIN, SHARE, STATUS FUNCTIONS
-// ============================================================
 async function renameChat(logId, currentName, e) {
     e.stopPropagation();
     document.querySelectorAll('.actions-dropdown-list').forEach(d => d.classList.remove('active'));
@@ -1043,34 +943,25 @@ async function deleteLogPermanently(logId, e) {
 }
 
 // ============================================================
-// VIEW PAST LOG - FIXED
+// VIEW PAST LOG
 // ============================================================
 function viewPastLogById(logId) {
     if (regenerateTimer) {
         clearTimeout(regenerateTimer);
         regenerateTimer = null;
     }
-    
     const log = cachedLogHistory.find(l => l._id === logId);
     if (!log) return;
-    
-    // Preserve hero state
-    const hero = document.getElementById('hero-display');
-    if (hero) hero.style.display = 'none';
-    
-    // Only clear if loading different session
-    if (activeSessionId !== logId) {
-        document.querySelectorAll('.chat-bubble').forEach(b => b.remove());
-    }
-    
+    document.getElementById('hero-display').style.display = 'none';
+    document.querySelectorAll('.chat-bubble').forEach(b => b.remove());
     activeSessionId = logId;
     localStorage.setItem('axelr_active_session', activeSessionId);
     runningFileTitle = log.filename;
     runningStructuredCache = log.structuredData;
-    
+
     const mainBackBtn = document.getElementById('main-back-btn');
     if (mainBackBtn) mainBackBtn.style.display = 'flex';
-    
+
     if (currentTab === 'trashed') {
         const trashMsg = document.createElement('div');
         trashMsg.className = 'chat-bubble';
@@ -1186,10 +1077,10 @@ function viewPastLogById(logId) {
         }
         viewport.appendChild(bubble);
     });
-    
-    // Use updateViewportAfterRender instead of multiple timeouts
-    updateViewportAfterRender();
-    
+    setTimeout(() => {
+        scrollToBottom();
+        adjustViewportPadding();
+    }, 50);
     if (window.innerWidth <= 768) sidebarNode.classList.remove('open');
 }
 
@@ -1432,23 +1323,20 @@ function showSecurityAlert(level) {
 }
 
 // ============================================================
-// EXECUTE COMMAND - FIXED
+// EXECUTE COMMAND - SINGLE CLEAN VERSION
 // ============================================================
 async function executeCommand(isRetry = false) {
-    if (!activeSessionId) {
-        document.getElementById('hero-display').style.display = 'none';
-    }
-    
+    document.getElementById('hero-display').style.display = 'none';
+
     if (isProcessing) return;
     isProcessing = true;
-    
     if (manipulationLockUntil && Date.now() < manipulationLockUntil) {
         const remaining = Math.ceil((manipulationLockUntil - Date.now()) / 1000);
         alert(`⛔ System temporarily locked due to security violations. Please wait ${remaining} seconds.`);
         isProcessing = false;
         return;
     }
-    
+
     if (currentTab === 'trashed') {
         switchSidebarTab('active');
         activeSessionId = null;
@@ -1486,6 +1374,7 @@ async function executeCommand(isRetry = false) {
     }
 
     let finalCommand = command;
+
     const originalBtnHtml = sendBtn.innerHTML;
 
     if (globalAbortController) {
@@ -1497,11 +1386,9 @@ async function executeCommand(isRetry = false) {
         return;
     }
 
-    if (!isRetry) {
-        promptInput.value = '';
-        promptInput.style.height = 'auto';
-        validateSendCommand();
-    }
+    promptInput.value = '';
+    promptInput.style.height = 'auto';
+    validateSendCommand();
     sendBtn.disabled = true;
 
     const userBubble = document.createElement('div');
@@ -1613,10 +1500,6 @@ async function executeCommand(isRetry = false) {
                 contentDiv.innerHTML = `💥 Error: ${errorData.message || 'Pipeline failed.'}`;
             }
             scrollToBottom();
-            // Show hero if no messages exist
-            if (viewport.querySelectorAll('.chat-bubble').length === 0) {
-                document.getElementById('hero-display').style.display = 'flex';
-            }
             isProcessing = false;
             return;
         }
@@ -1674,10 +1557,6 @@ async function executeCommand(isRetry = false) {
 
         } else {
             contentDiv.innerHTML = `⚠️ ${result.message || 'Something went wrong.'}`;
-            // Show hero if no messages exist
-            if (viewport.querySelectorAll('.chat-bubble').length === 0) {
-                document.getElementById('hero-display').style.display = 'flex';
-            }
         }
 
     } catch (error) {
@@ -1688,21 +1567,19 @@ async function executeCommand(isRetry = false) {
         } else {
             console.error('Execute error:', error);
             contentDiv.innerHTML = `⚠️ Network connection dropped. Please retry.`;
-            // Show hero if no messages exist
-            if (viewport.querySelectorAll('.chat-bubble').length === 0) {
-                document.getElementById('hero-display').style.display = 'flex';
-            }
         }
         scrollToBottom();
     } finally {
         clearTimeout(timeoutFallback);
-        clearTimeout(extendedTimeout);
         globalAbortController = null;
         sendBtn.classList.remove('btn-stop-active');
         sendBtn.innerHTML = originalBtnHtml;
         sendBtn.disabled = false;
         validateSendCommand();
-        updateViewportAfterRender();
+        setTimeout(() => {
+            scrollToBottom();
+            adjustViewportPadding();
+        }, 50);
         await loadUserProfile();
         isProcessing = false;
     }
@@ -1834,7 +1711,7 @@ function injectDeployButton(bubbleNode, rawHtml) {
 }
 
 // ============================================================
-// MODALS
+// MODALS - SINGLE CLEAN VERSION
 // ============================================================
 function closeModals() {
     document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
@@ -1878,7 +1755,7 @@ async function openAdminModal() {
             document.getElementById('admin-metrics-container').innerHTML = `
                 <div class="profile-stat-row"><span class="profile-stat-label">Total Users</span><span class="profile-stat-value">${data.totalUsers}</span></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Pro Subscribers</span><span class="profile-stat-value" style="color:var(--accent-glow-pro)">${data.proUsers}</span></div>
-                <div class="profile-stat-row"><span class="profile-stat-label">Designer Subscribers</span><span class="profile-stat-value" style="color:var(--accent-glow-designer)">${data.businessUsers}</span></div>
+                <div class="profile-stat-row"><span class="profile-stat-label">Designer Subscribers</span><span class="profile-stat-value" style="color:var(--accent-glow-designer)">${data.designerUsers}</span></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Total Matrix Logs</span><span class="profile-stat-value">${data.totalChats}</span></div>
                 <div style="border-top:1px solid var(--border-muted);margin:10px 0;"></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Total Queries Processed</span><span class="profile-stat-value">${data.metrics?.totalQueries || 0}</span></div>
@@ -1886,10 +1763,6 @@ async function openAdminModal() {
                 <div style="border-top:1px solid var(--border-muted);margin:10px 0;"></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Total Tokens Used</span><span class="profile-stat-value">${data.tokenUsage?.total || 0}</span></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Free Tier Remaining</span><span class="profile-stat-value" style="color:${data.tokenUsage?.remaining > 0 ? 'var(--accent-secondary)' : '#ef4444'};">${data.tokenUsage?.remaining || 0} / ${data.tokenUsage?.limit || 1000000}</span></div>
-                <div style="border-top:1px solid var(--border-muted);margin:10px 0;"></div>
-                <div class="profile-stat-row"><span class="profile-stat-label">Daily AI Queries</span><span class="profile-stat-value">${data.dailyAIUsage?.totalQueries || 0}</span></div>
-                <div class="profile-stat-row"><span class="profile-stat-label">Daily Prompt Tokens</span><span class="profile-stat-value">${data.dailyAIUsage?.prompt || 0}</span></div>
-                <div class="profile-stat-row"><span class="profile-stat-label">Daily Completion Tokens</span><span class="profile-stat-value">${data.dailyAIUsage?.completion || 0}</span></div>
             `;
         } else {
             document.getElementById('admin-metrics-container').innerHTML =
@@ -2215,7 +2088,7 @@ if (localStorage.getItem('axelr_theme') === 'light') {
 }
 
 // ============================================================
-// SUBSCRIPTION MODAL
+// SUBSCRIPTION MODAL - SINGLE CLEAN VERSION
 // ============================================================
 function openSubscriptionModal() {
     closeModals();
@@ -2261,45 +2134,17 @@ function updateSubscriptionModal() {
 }
 
 // ============================================================
-// VIEWPORT PADDING
+// RESIZE HANDLER - SINGLE CLEAN VERSION
 // ============================================================
-function adjustViewportPadding() {
-    if (!commandWrapper) return;
-    
-    const wrapperHeight = commandWrapper.offsetHeight;
-    const fileChips = document.getElementById('file-staging-container');
-    const chipsHeight = fileChips && stagedFiles.length > 0 ? fileChips.offsetHeight : 0;
-    
-    let totalPadding = wrapperHeight + 20;
-    if (chipsHeight > 0) {
-        totalPadding += chipsHeight + 10;
-    }
-    
-    // Don't force padding if it's too small
-    const minPadding = 120;
-    totalPadding = Math.max(totalPadding, minPadding);
-    
-    viewport.style.paddingBottom = totalPadding + 'px';
-}
-
-// ============================================================
-// RESIZE HANDLER
-// ============================================================
-let resizeHandlerTimeout = null;
-let isResizeHandling = false;
-
+let resizeHandlerTimeout;
 window.addEventListener('resize', () => {
-    if (isResizeHandling) return;
-    isResizeHandling = true;
-    
     clearTimeout(resizeHandlerTimeout);
     resizeHandlerTimeout = setTimeout(() => {
+        const currentWorkspace = getWorkspace();
         if (document.body.classList.contains('workspace-data') || document.body.classList.contains('workspace-design')) {
             adjustViewportPadding();
-            renderFileChips();
         }
-        isResizeHandling = false;
-    }, 150);
+    }, 200);
 });
 
 // ============================================================
@@ -2321,7 +2166,7 @@ if (!lastVisit || new Date(lastVisit) < today) {
 }
 
 // ============================================================
-// VERSION & CACHE CONTROL - FIXED: Only log mismatch, do NOT clear
+// VERSION & CACHE CONTROL
 // ============================================================
 const APP_VERSION = '4.3.0';
 const BUILD_DATE = '2026-07-28';
@@ -2331,36 +2176,26 @@ console.log('📡 API Base URL:', API_BASE_URL);
 
 const storedVersion = localStorage.getItem('axelr_app_version');
 if (storedVersion && storedVersion !== APP_VERSION) {
-    console.log(`🔄 Version mismatch: stored=${storedVersion}, current=${APP_VERSION}. No cache cleared.`);
-    // We just log the difference – no localStorage.clear()
+    console.log('🔄 Version mismatch, clearing cache...');
+    localStorage.clear();
+    localStorage.setItem('axelr_app_version', APP_VERSION);
 } else if (!storedVersion) {
     localStorage.setItem('axelr_app_version', APP_VERSION);
 }
 
-// ============================================================
-// SERVICE WORKER CLEANUP - SINGLE CLEAN VERSION
-// ============================================================
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations()
-        .then(registrations => {
-            for (let registration of registrations) {
-                registration.unregister();
-                console.log('🧹 Unregistered service worker:', registration.scope);
-            }
-        })
-        .catch(err => console.warn('SW cleanup error:', err));
+    navigator.serviceWorker.getRegistrations().then(registrations => {
+        for (let registration of registrations) {
+            registration.update();
+        }
+    }).catch(() => {});
 }
 
-// ============================================================
-// FINAL INIT
-// ============================================================
 loadUserProfile().then(() => {
     loadArchiveLogs().then(() => {
         const storedSessionId = localStorage.getItem('axelr_active_session');
         if (storedSessionId) {
             viewPastLogById(storedSessionId);
         }
-        // Setup viewport observer after everything loads
-        setTimeout(setupViewportObserver, 500);
     });
 });
