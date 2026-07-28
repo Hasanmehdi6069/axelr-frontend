@@ -2353,3 +2353,124 @@ loadUserProfile().then(() => {
         setTimeout(setupViewportObserver, 500);
     });
 });
+
+
+// ... rest of the script.js remains the same, but ensure the following fixes are applied:
+
+// FIX 1: In viewPastLogById, prevent re-rendering on same session
+function viewPastLogById(logId) {
+    if (regenerateTimer) {
+        clearTimeout(regenerateTimer);
+        regenerateTimer = null;
+    }
+    
+    const log = cachedLogHistory.find(l => l._id === logId);
+    if (!log) return;
+    
+    // FIX: If already viewing this session, don't re-render
+    if (activeSessionId === logId && document.querySelector('.chat-bubble').length > 0) {
+        return;
+    }
+    
+    const hero = document.getElementById('hero-display');
+    if (hero) hero.style.display = 'none';
+    
+    document.querySelectorAll('.chat-bubble').forEach(b => b.remove());
+    activeSessionId = logId;
+    localStorage.setItem('axelr_active_session', activeSessionId);
+    runningFileTitle = log.filename;
+    runningStructuredCache = log.structuredData;
+    
+    const mainBackBtn = document.getElementById('main-back-btn');
+    if (mainBackBtn) mainBackBtn.style.display = 'flex';
+    
+    // ... rest of viewPastLogById
+}
+
+// FIX 2: In initializeApp - prevent double initialization
+let appInitialized = false;
+
+function initializeApp() {
+    if (appInitialized) return;
+    appInitialized = true;
+    
+    const saved = localStorage.getItem('axelr_theme') || 'system';
+    currentThemePreference = saved;
+    systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (saved === 'system') {
+        applyTheme(systemDark ? 'dark' : 'light');
+    } else {
+        applyTheme(saved);
+    }
+    
+    const savedToken = localStorage.getItem('google_auth_token');
+    if (savedToken) {
+        try {
+            const payload = decodeJwt(savedToken);
+            if (Date.now() < payload.exp * 1000) {
+                initializeSecureWorkspace(payload, savedToken);
+                return;
+            }
+        } catch (e) {
+            localStorage.removeItem('google_auth_token');
+        }
+    }
+    
+    document.getElementById('auth-wall').style.display = 'flex';
+}
+
+// FIX 3: Setup observer only once with proper cleanup
+let viewportObserver = null;
+let observerActive = true;
+
+function setupViewportObserver() {
+    if (viewportObserver) {
+        viewportObserver.disconnect();
+        viewportObserver = null;
+    }
+    viewportObserver = new MutationObserver(() => {
+        if (!isUserScrolling && observerActive) {
+            const lastMessage = viewport.querySelector('.chat-bubble:last-child');
+            if (lastMessage) {
+                const rect = lastMessage.getBoundingClientRect();
+                const viewportRect = viewport.getBoundingClientRect();
+                if (rect.bottom > viewportRect.bottom - 50) {
+                    scrollToBottom(true);
+                }
+            }
+        }
+    });
+    viewportObserver.observe(viewport, { 
+        childList: true, 
+        subtree: true, 
+        characterData: true,
+        attributes: true 
+    });
+}
+
+// FIX 4: Prevent double initialization of loadArchiveLogs
+let isLoadingHistory = false;
+
+async function loadArchiveLogs() {
+    if (isLoadingHistory) return;
+    isLoadingHistory = true;
+    
+    try {
+        const currentWorkspace = getWorkspace();
+        const response = await fetch(
+            `${API_BASE_URL}/api/history?status=${currentTab}&workspace=${currentWorkspace}`, {
+                headers: { 'Authorization': `Bearer ${googleAuthUserToken}` }
+            }
+        );
+        if (response.status === 401) {
+            isLoadingHistory = false;
+            return executeGlobalLogout();
+        }
+        cachedLogHistory = (await response.json()).logs;
+        // ... rest of loadArchiveLogs
+    } catch (e) {
+        console.warn('History load error:', e);
+    } finally {
+        isLoadingHistory = false;
+    }
+}
