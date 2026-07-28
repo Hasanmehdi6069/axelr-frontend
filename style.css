@@ -2372,3 +2372,104 @@ body.light-theme .ai-avatar-bubble svg path:last-child {
     max-height: 80px; /* limit file chips height */
     overflow-y: auto;
 }
+/* ============================================================
+   ACTION BAR - FIXED visibility
+   ============================================================ */
+.bubble-action-bar {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-muted);
+    flex-wrap: wrap;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.action-icon-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    font-size: 12px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    opacity: 1 !important;
+    visibility: visible !important;
+    min-width: 32px;
+    min-height: 32px;
+}
+
+.action-icon-btn svg {
+    width: 16px;
+    height: 16px;
+    transition: 0.2s;
+    opacity: 1 !important;
+}
+
+.action-icon-btn:hover {
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.08);
+    transform: scale(1.05);
+}
+
+.action-icon-btn:active {
+    transform: scale(0.95);
+}
+
+/* FIX: Regenerate button - make it stand out */
+.action-icon-btn.regen-active {
+    color: var(--accent-glow);
+    border: 1px solid var(--border-muted);
+    background: rgba(0,242,254,0.08);
+    position: relative;
+    padding: 6px 14px;
+    font-weight: 600;
+}
+
+.action-icon-btn.regen-active:hover {
+    background: rgba(0,242,254,0.18);
+    border-color: var(--accent-glow);
+    box-shadow: 0 0 20px rgba(0,242,254,0.15);
+}
+
+.action-icon-btn.regen-active .regen-countdown {
+    margin-left: 6px;
+    font-size: 10px;
+    color: var(--text-muted);
+    background: rgba(255,255,255,0.1);
+    padding: 1px 8px;
+    border-radius: 10px;
+}
+
+/* FIX: Like/Dislike buttons - full visibility */
+.action-icon-btn svg {
+    opacity: 1 !important;
+    fill: none !important;
+}
+
+.action-icon-btn:hover svg {
+    opacity: 1 !important;
+}
+
+/* Ensure buttons are visible in all themes */
+body.light-theme .action-icon-btn {
+    color: #6b7280;
+}
+
+body.light-theme .action-icon-btn:hover {
+    color: #1a1a1a;
+    background: rgba(0,0,0,0.05);
+}
+
+body.light-theme .action-icon-btn.regen-active {
+    color: #0ea5e9;
+    border-color: rgba(14,165,233,0.3);
+}
