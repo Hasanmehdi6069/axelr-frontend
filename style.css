@@ -2515,3 +2515,33 @@ body.light-theme .action-icon-btn:hover {
 #free-tier-message strong {
     color: var(--accent-glow) !important;
 }
+/* In the modal section */
+#sub-plan-name {
+    color: var(--text-main); /* instead of #fff */
+}
+
+/* Action buttons - ensure visibility */
+.action-icon-btn {
+    opacity: 1 !important;
+    color: var(--text-muted);
+    transition: all 0.2s ease;
+}
+.action-icon-btn:hover {
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.08);
+}
+/* In the modal section */
+#sub-plan-name {
+    color: var(--text-main); /* instead of #fff */
+}
+
+/* Action buttons - ensure visibility */
+.action-icon-btn {
+    opacity: 1 !important;
+    color: var(--text-muted);
+    transition: all 0.2s ease;
+}
+.action-icon-btn:hover {
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.08);
+}

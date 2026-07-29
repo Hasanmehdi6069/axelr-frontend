@@ -1,7 +1,7 @@
 // ============================================================
-// AXELR AI - FRONTEND v4.3.2
+// AXELR AI - FRONTEND v4.3.1
 // ============================================================
-// Enterprise-grade with silent token refresh & regenerate policy
+// Enterprise-grade with silent token refresh
 // ============================================================
 
 // ============================================================
@@ -37,7 +37,7 @@ const SIDEBAR_ICONS = {
 };
 
 // ============================================================
-// TOKEN MANAGEMENT
+// TOKEN MANAGEMENT (NEW)
 // ============================================================
 let googleAuthUserToken = localStorage.getItem('google_auth_token') || null;
 let tokenRefreshPromise = null;
@@ -57,6 +57,7 @@ function getTokenExpiry(token) {
     return payload ? payload.exp * 1000 : 0;
 }
 
+// Silent token refresh using Google Identity Services
 function refreshGoogleToken() {
     if (tokenRefreshPromise) return tokenRefreshPromise;
     tokenRefreshPromise = new Promise((resolve, reject) => {
@@ -91,6 +92,7 @@ async function ensureValidToken() {
 
     const expiry = getTokenExpiry(token);
     const now = Date.now();
+    // Refresh if token expires within 5 minutes or is already expired
     if (expiry - now < 5 * 60 * 1000) {
         try {
             const newToken = await refreshGoogleToken();
@@ -99,6 +101,7 @@ async function ensureValidToken() {
             return newToken;
         } catch (e) {
             console.warn('Token refresh failed:', e);
+            // Remove invalid token and force re-login
             localStorage.removeItem('google_auth_token');
             googleAuthUserToken = null;
             throw new Error('Session expired. Please sign in again.');
@@ -107,6 +110,7 @@ async function ensureValidToken() {
     return token;
 }
 
+// Fetch wrapper with automatic token refresh and retry on 401
 async function apiFetch(url, options = {}) {
     let token = await ensureValidToken();
     options.headers = {
@@ -116,6 +120,7 @@ async function apiFetch(url, options = {}) {
     try {
         const response = await fetch(url, options);
         if (response.status === 401) {
+            // Try one refresh
             try {
                 const newToken = await refreshGoogleToken();
                 googleAuthUserToken = newToken;
@@ -127,6 +132,7 @@ async function apiFetch(url, options = {}) {
                 }
                 return retryResponse;
             } catch (refreshError) {
+                // Refresh failed – logout
                 executeGlobalLogout();
                 throw new Error('Session expired');
             }
@@ -140,6 +146,7 @@ async function apiFetch(url, options = {}) {
     }
 }
 
+// Heartbeat: refresh token every 10 minutes
 setInterval(async () => {
     try {
         await ensureValidToken();
@@ -184,12 +191,20 @@ let scrollTimeout = null;
 let viewportObserver = null;
 let observerActive = true;
 
-// NEW: Fresh generation tracking for regenerate button
-let freshGenerationId = null; // { sessionId, timestamp }
-
 let ignoreSidebarClose = false;
 let manipulationCount = parseInt(sessionStorage.getItem('axelr_manipulation_count')) || 0;
 let manipulationLockUntil = parseInt(sessionStorage.getItem('axelr_manipulation_lock')) || 0;
+let suppressRegenerateForNextResponse = true;
+    if (window.lastUserCommand) {
+        document.getElementById('prompt-input').value = window.lastUserCommand;
+        document.getElementById('prompt-input').style.height = 'auto';
+        document.getElementById('prompt-input').style.height = document.getElementById('prompt-input').scrollHeight + 'px';
+        if (regenerateTimer) {
+            clearTimeout(regenerateTimer);
+            regenerateTimer = null;
+        }
+        executeCommand(true);
+    }; // moved here from local
 
 // ============================================================
 // SCROLL FUNCTIONS
@@ -307,11 +322,13 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e)
 // INITIALIZATION
 // ============================================================
 function initializeApp() {
+    // Theme
     const saved = localStorage.getItem('axelr_theme') || 'system';
     currentThemePreference = saved;
     systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     applyTheme(saved === 'system' ? (systemDark ? 'dark' : 'light') : saved);
 
+    // Auth check
     const savedToken = localStorage.getItem('google_auth_token');
     if (savedToken) {
         try {
@@ -325,10 +342,12 @@ function initializeApp() {
             localStorage.removeItem('google_auth_token');
         }
     }
+    // Show auth wall
     const wall = document.getElementById('auth-wall');
     if (wall) wall.style.display = 'flex';
 }
 
+// Run after DOM ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeApp);
 } else {
@@ -345,6 +364,7 @@ function handleCredentialResponse(response) {
     localStorage.setItem('google_auth_token', token);
     googleAuthUserToken = token;
     initializeSecureWorkspace(payload, token);
+    // Update avatar
     const avatarImg = document.getElementById('user-avatar');
     const fallback = document.getElementById('user-avatar-fallback');
     if (avatarImg) avatarImg.src = payload.picture;
@@ -871,7 +891,6 @@ async function loadUserProfile() {
             else if (data.tier === 'business') document.body.classList.add('designer-tier');
             else { document.body.classList.remove('pro-tier', 'designer-tier'); }
             updateSettingsQuota();
-            // Ensure subscription modal updates on profile load
             updateSubscriptionModal();
         }
     } catch (e) { console.warn('Profile load failed', e); }
@@ -1043,7 +1062,7 @@ async function deleteLogPermanently(logId, e) {
 }
 
 // ============================================================
-// VIEW PAST LOG - FIXED: no regenerate for old chats
+// VIEW PAST LOG
 // ============================================================
 function viewPastLogById(logId) {
     if (regenerateTimer) {
@@ -1075,9 +1094,6 @@ function viewPastLogById(logId) {
         clearTimeout(regenerateTimer);
         regenerateTimer = null;
     }
-    // Clear fresh generation flag when viewing an old chat
-    freshGenerationId = null;
-
     log.messages.forEach((msg, idx) => {
         if (!msg.variants || !Array.isArray(msg.variants)) {
             msg.variants = [msg.text];
@@ -1135,12 +1151,10 @@ function viewPastLogById(logId) {
             const alreadyRegenerated = msg.variants && msg.variants.length > 1;
             const isActive = log.status === 'active';
             let showRegenerate = false;
-            // Only show regenerate if this is the last assistant message, active, not yet regenerated,
-            // AND we have a fresh generation flag for this session.
-            if (isLast && isActive && !alreadyRegenerated && freshGenerationId && freshGenerationId.sessionId === logId) {
+            if (isLast && isActive && !alreadyRegenerated) {
                 const msgDate = msg.createdAt ? new Date(msg.createdAt) : new Date(log.createdAt);
-                const now = Date.now();
-                if (!isNaN(msgDate.getTime()) && (now - msgDate.getTime()) < 30000) {
+                const now = new Date();
+                if (!isNaN(msgDate.getTime()) && (now - msgDate) < 30000) {
                     showRegenerate = true;
                 }
             }
@@ -1255,15 +1269,12 @@ function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRege
                 }, 1000);
                 timeoutId = setTimeout(cleanup, 30000 - elapsed);
                 regenBtn.onclick = function(e) {
-                    if (activeSessionId !== sessionId) {
-                        cleanup();
-                        return;
-                    }
+    if (activeSessionId !== sessionId) {
+        cleanup();
+        return;
+    }
+    cleanup();
                     cleanup();
-                    // Clear fresh generation flag so regenerate won't appear again
-                    freshGenerationId = null;
-                    // Also suppress future regeneration on the new response
-                    window.suppressRegenerateForNextResponse = true;
                     if (window.lastUserCommand) {
                         document.getElementById('prompt-input').value = window.lastUserCommand;
                         document.getElementById('prompt-input').style.height = 'auto';
@@ -1383,9 +1394,8 @@ function showSecurityAlert(level) {
 }
 
 // ============================================================
-// EXECUTE COMMAND - FIXED: set fresh generation flag
+// EXECUTE COMMAND
 // ============================================================
-let suppressRegenerateForNextResponse = false; // used to suppress regenerate on the next response
 
 async function executeCommand(isRetry = false) {
     if (!activeSessionId) {
@@ -1393,23 +1403,27 @@ async function executeCommand(isRetry = false) {
     }
     if (isProcessing) return;
     isProcessing = true;
+
     if (manipulationLockUntil && Date.now() < manipulationLockUntil) {
         const remaining = Math.ceil((manipulationLockUntil - Date.now()) / 1000);
         alert(`⛔ System temporarily locked due to security violations. Please wait ${remaining} seconds.`);
         isProcessing = false;
         return;
     }
+
     if (currentTab === 'trashed') {
         switchSidebarTab('active');
         activeSessionId = null;
         localStorage.removeItem('axelr_active_session');
     }
+
     const command = promptInput.value.trim();
     window.lastUserCommand = command;
     if (!command && stagedFiles.length === 0 && !isRetry) {
         isProcessing = false;
         return;
     }
+
     if (detectManipulationAttempt(command)) {
         manipulationCount++;
         sessionStorage.setItem('axelr_manipulation_count', manipulationCount);
@@ -1431,8 +1445,10 @@ async function executeCommand(isRetry = false) {
         isProcessing = false;
         return;
     }
+
     let finalCommand = command;
     const originalBtnHtml = sendBtn.innerHTML;
+
     if (globalAbortController) {
         globalAbortController.abort();
         globalAbortController = null;
@@ -1441,12 +1457,14 @@ async function executeCommand(isRetry = false) {
         isProcessing = false;
         return;
     }
+
     if (!isRetry) {
         promptInput.value = '';
         promptInput.style.height = 'auto';
         validateSendCommand();
     }
     sendBtn.disabled = true;
+
     const userBubble = document.createElement('div');
     userBubble.className = 'chat-bubble user-bubble';
     let filesHtml = '';
@@ -1457,6 +1475,7 @@ async function executeCommand(isRetry = false) {
     }
     userBubble.innerHTML = `${filesHtml}${DOMPurify.sanitize(marked.parse(command || " "))}`;
     viewport.appendChild(userBubble);
+
     if (isRetry) {
         const allBubbles = viewport.querySelectorAll('.chat-bubble');
         if (allBubbles.length >= 2) {
@@ -1471,18 +1490,22 @@ async function executeCommand(isRetry = false) {
             regenerateTimer = null;
         }
     }
+
     const stagedFilesSnapshot = [...stagedFiles];
     stagedFiles = [];
     renderFileChips();
+
     const nexusBubble = document.createElement('div');
     nexusBubble.className = 'chat-bubble nexus-bubble';
     const avatarDiv = document.createElement('div');
     avatarDiv.className = 'ai-avatar-bubble';
     avatarDiv.innerHTML = AXELR_AVATAR_SVG;
     nexusBubble.appendChild(avatarDiv);
+
     const contentDiv = document.createElement('div');
     contentDiv.className = 'bubble-content';
     contentDiv.style.flex = '1';
+
     const loader = document.createElement('div');
     loader.className = 'matrix-loader';
     for (let i = 0; i < 3; i++) {
@@ -1491,15 +1514,18 @@ async function executeCommand(isRetry = false) {
         loader.appendChild(dot);
     }
     contentDiv.appendChild(loader);
+
     let extendedTimeout = setTimeout(() => {
         const extendedMsg = document.createElement('div');
         extendedMsg.className = 'thinking-extended';
         extendedMsg.innerText = 'Thinking a little bit longer... Don\'t close the tab.';
         contentDiv.appendChild(extendedMsg);
     }, 5000);
+
     nexusBubble.appendChild(contentDiv);
     viewport.appendChild(nexusBubble);
     scrollToBottom();
+
     const formData = new FormData();
     formData.append('command', finalCommand);
     formData.append('workspace', getWorkspace());
@@ -1508,8 +1534,10 @@ async function executeCommand(isRetry = false) {
     for (const file of stagedFilesSnapshot) {
         formData.append('files', file);
     }
+
     sendBtn.classList.add('btn-stop-active');
     sendBtn.innerHTML = ICONS.stop;
+
     globalAbortController = new AbortController();
     let responseReceived = false;
     const timeoutFallback = setTimeout(() => {
@@ -1522,13 +1550,16 @@ async function executeCommand(isRetry = false) {
             isProcessing = false;
         }
     }, 30000);
+
     try {
         const response = await apiFetch(`${API_BASE_URL}/api/extract`, {
             method: 'POST',
             body: formData,
             signal: globalAbortController.signal,
         });
+
         clearTimeout(extendedTimeout);
+
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             if (errorData.code === 'LIMIT_REACHED') {
@@ -1545,24 +1576,27 @@ async function executeCommand(isRetry = false) {
             isProcessing = false;
             return;
         }
+
         const result = await response.json();
         responseReceived = true;
+
         if (result.success) {
             const fullResponse = result.text || "No response from AI.";
             const sessionId = result.sessionId;
             const structuredData = result.structuredData;
             const filename = result.filename || 'Export.csv';
+
             contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(fullResponse));
+
             if (sessionId) {
                 activeSessionId = sessionId;
                 localStorage.setItem('axelr_active_session', activeSessionId);
                 runningStructuredCache = structuredData;
                 runningFileTitle = filename;
-                // Set fresh generation flag for this session
-                freshGenerationId = { sessionId: activeSessionId, timestamp: Date.now() };
                 await loadArchiveLogs();
                 viewPastLogById(activeSessionId);
             }
+
             const rawCode = extractHtmlCode(fullResponse);
             if (rawCode) {
                 const iframe = document.createElement('iframe');
@@ -1579,27 +1613,32 @@ async function executeCommand(isRetry = false) {
                 iframeDoc.close();
                 injectDeployButton(contentDiv, rawCode);
             }
+
             appendPayloadDownload(contentDiv);
             hasRegenerated = false;
             if (regenerateTimer) {
                 clearTimeout(regenerateTimer);
                 regenerateTimer = null;
             }
+
             const now = new Date().toISOString();
-            // Show regenerate only if not suppressed and not a retry
-            const showRegen = !isRetry && !suppressRegenerateForNextResponse;
-            // Reset the suppress flag after this response
-            suppressRegenerateForNextResponse = false;
+            // Use the suppress flag to decide whether to show regenerate on this new response
+            const showRegen = !suppressRegenerateForNextResponse;
+            // Reset the flag after this response
+            if (isRetry && suppressRegenerateForNextResponse) 
             injectActionButtons(contentDiv, fullResponse, false, showRegen, now, activeSessionId);
+
             scrollToBottom();
             const mainBackBtn = document.getElementById('main-back-btn');
             if (mainBackBtn) mainBackBtn.style.display = 'flex';
+
         } else {
             contentDiv.innerHTML = `⚠️ ${result.message || 'Something went wrong.'}`;
             if (viewport.querySelectorAll('.chat-bubble').length === 0) {
                 document.getElementById('hero-display').style.display = 'flex';
             }
         }
+
     } catch (error) {
         clearTimeout(extendedTimeout);
         if (error.name === 'AbortError') {
@@ -1625,7 +1664,6 @@ async function executeCommand(isRetry = false) {
         isProcessing = false;
     }
 }
-
 // ============================================================
 // PAYLOAD / DEPLOY
 // ============================================================
@@ -1743,6 +1781,7 @@ function injectDeployButton(bubbleNode, rawHtml) {
 // ============================================================
 // MODALS
 // ============================================================
+
 function closeModals() {
     document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
 }
@@ -1770,7 +1809,34 @@ function openFeedbackModal() {
 function openBillingFlow() {
     closeModals();
     document.getElementById('subscription-modal').classList.add('active');
-    updateSubscriptionModal(); // Ensure modal content is updated
+    updateSubscriptionModal();
+}
+
+// FIXED: Ensure updateSubscriptionModal is called when opening subscription modal
+function openSubscriptionModal() {
+    closeModals();
+    const modal = document.getElementById('subscription-modal');
+    const planName = document.getElementById('sub-plan-name').innerText;
+    const isFree = planName.toLowerCase().includes('free');
+    const content = document.getElementById('subscription-content');
+    if (isFree) {
+        content.innerHTML = `
+            <div style="padding:20px 0;text-align:center;">
+                <span class="material-symbols-rounded" style="font-size:48px;color:var(--accent-glow);">rocket_launch</span>
+                <h3 style="color:var(--text-main);margin:12px 0;">You are on the Free Plan</h3>
+                <p style="color:var(--text-muted);font-size:14px;">Unlock unlimited extractions, UI generations, and priority support.</p>
+            </div>
+        `;
+    } else {
+        content.innerHTML = `
+            <div style="display:flex;flex-direction:column;gap:5px;">
+                <div class="profile-stat-row"><span class="profile-stat-label">Current Plan</span><span class="profile-stat-value" style="color:var(--text-main);">${planName}</span></div>
+            </div>
+        `;
+    }
+    modal.classList.add('active');
+    // Ensure the free/paid messages are updated
+    updateSubscriptionModal();
 }
 
 async function openAdminModal() {
@@ -1780,25 +1846,28 @@ async function openAdminModal() {
         const resp = await apiFetch(`${API_BASE_URL}/api/admin/metrics`);
         if (resp.ok) {
             const data = await resp.json();
-            // Build a comprehensive dashboard
-            let html = `
+            document.getElementById('admin-metrics-container').innerHTML = `
                 <div class="profile-stat-row"><span class="profile-stat-label">Total Users</span><span class="profile-stat-value">${data.totalUsers}</span></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Pro Subscribers</span><span class="profile-stat-value" style="color:var(--accent-glow-pro)">${data.proUsers}</span></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Business Subscribers</span><span class="profile-stat-value" style="color:var(--accent-glow-designer)">${data.businessUsers}</span></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Total Chats</span><span class="profile-stat-value">${data.totalChats}</span></div>
                 <div style="border-top:1px solid var(--border-muted);margin:10px 0;"></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Total Queries Processed</span><span class="profile-stat-value">${data.metrics?.totalQueries || 0}</span></div>
+                <div class="profile-stat-row"><span class="profile-stat-label">Today's Queries</span><span class="profile-stat-value">${data.metrics?.dailyQueries || 0}</span></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Total Storage Used</span><span class="profile-stat-value">${(data.metrics?.totalBytes || 0) / (1024*1024)} MB</span></div>
                 <div style="border-top:1px solid var(--border-muted);margin:10px 0;"></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Total Tokens Used</span><span class="profile-stat-value">${data.tokenUsage?.total || 0}</span></div>
+                <div class="profile-stat-row"><span class="profile-stat-label">Today's Prompt Tokens</span><span class="profile-stat-value">${data.tokenUsage?.dailyPrompt || 0}</span></div>
+                <div class="profile-stat-row"><span class="profile-stat-label">Today's Completion Tokens</span><span class="profile-stat-value">${data.tokenUsage?.dailyCompletion || 0}</span></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Free Tier Remaining</span><span class="profile-stat-value" style="color:${data.tokenUsage?.remaining > 0 ? 'var(--accent-secondary)' : '#ef4444'};">${data.tokenUsage?.remaining || 0} / ${data.tokenUsage?.limit || 1000000}</span></div>
                 <div style="border-top:1px solid var(--border-muted);margin:10px 0;"></div>
-                <div class="profile-stat-row"><span class="profile-stat-label">Daily Groq Requests</span><span class="profile-stat-value">${data.aiQuota?.groq || 0}</span></div>
-                <div class="profile-stat-row"><span class="profile-stat-label">Daily OpenRouter Requests</span><span class="profile-stat-value">${data.aiQuota?.openRouter || 0}</span></div>
+                <div class="profile-stat-row"><span class="profile-stat-label">Total Groq Usage (All Time)</span><span class="profile-stat-value">${data.aiQuota?.groq || 0}</span></div>
+                <div class="profile-stat-row"><span class="profile-stat-label">Total OpenRouter Usage (All Time)</span><span class="profile-stat-value">${data.aiQuota?.openRouter || 0}</span></div>
+                <div class="profile-stat-row"><span class="profile-stat-label">Today's Groq Usage</span><span class="profile-stat-value">${data.aiQuota?.dailyGroq || 0}</span></div>
+                <div class="profile-stat-row"><span class="profile-stat-label">Today's OpenRouter Usage</span><span class="profile-stat-value">${data.aiQuota?.dailyOpenRouter || 0}</span></div>
                 <div style="border-top:1px solid var(--border-muted);margin:10px 0;"></div>
-                <div class="profile-stat-row"><span class="profile-stat-label">Last Updated</span><span class="profile-stat-value">${data.timestamp ? new Date(data.timestamp).toLocaleString() : 'N/A'}</span></div>
+                <div class="profile-stat-row"><span class="profile-stat-label">Last Updated</span><span class="profile-stat-value" style="font-size:12px;">${new Date(data.timestamp).toLocaleString()}</span></div>
             `;
-            document.getElementById('admin-metrics-container').innerHTML = html;
         } else {
             document.getElementById('admin-metrics-container').innerHTML = `<div style="color:#ef4444;text-align:center;">Unauthorized or service unavailable.</div>`;
         }
@@ -2018,6 +2087,22 @@ async function deleteAccount() {
     }
 }
 
+function updateSubscriptionModal() {
+    const planName = document.getElementById('sub-plan-name').innerText;
+    const freeMsg = document.getElementById('free-tier-message');
+    const paidMsg = document.getElementById('paid-tier-message');
+    const paidName = document.getElementById('paid-tier-name');
+    const detailsSpan = document.getElementById('subscription-details');
+    if (planName.toLowerCase().includes('free')) {
+        freeMsg.style.display = 'block';
+        paidMsg.style.display = 'none';
+    } else {
+        freeMsg.style.display = 'none';
+        paidMsg.style.display = 'block';
+        paidName.innerText = planName.replace(' ALLOCATION', '');
+        detailsSpan.innerText = 'Active subscription. Manage your plan via Stripe.';
+    }
+}
 // ============================================================
 // SIDEBAR SWIPE
 // ============================================================
@@ -2095,19 +2180,18 @@ function openSubscriptionModal() {
         content.innerHTML = `
             <div style="padding:20px 0;text-align:center;">
                 <span class="material-symbols-rounded" style="font-size:48px;color:var(--accent-glow);">rocket_launch</span>
-                <h3 style="color:var(--text-main);margin:12px 0;">You are on the Free Plan</h3>
+                <h3 style="color:#fff;margin:12px 0;">You are on the Free Plan</h3>
                 <p style="color:var(--text-muted);font-size:14px;">Unlock unlimited extractions, UI generations, and priority support.</p>
             </div>
         `;
     } else {
         content.innerHTML = `
             <div style="display:flex;flex-direction:column;gap:5px;">
-                <div class="profile-stat-row"><span class="profile-stat-label">Current Plan</span><span class="profile-stat-value" style="color:var(--text-main);">${planName}</span></div>
+                <div class="profile-stat-row"><span class="profile-stat-label">Current Plan</span><span class="profile-stat-value" style="color:#fff;">${planName}</span></div>
             </div>
         `;
     }
     modal.classList.add('active');
-    updateSubscriptionModal(); // Ensure the free/paid message is updated
 }
 
 function updateSubscriptionModal() {
@@ -2154,9 +2238,9 @@ window.addEventListener('resize', () => {
 });
 
 // ============================================================
-// VERSION & CACHE CONTROL
+// VERSION & CACHE CONTROL - No cache clearing
 // ============================================================
-const APP_VERSION = '4.3.2';
+const APP_VERSION = '4.3.1';
 const BUILD_DATE = '2026-07-29';
 console.log(`🟢 Axelr AI v${APP_VERSION} (Build: ${BUILD_DATE})`);
 console.log('📡 API Base URL:', API_BASE_URL);
