@@ -2478,3 +2478,40 @@ body.light-theme .action-icon-btn:hover {
 #sub-plan-name {
     color: var(--text-main);
 }
+/* ============================================================
+   FIXES FOR LIKE/DISLIKE VISIBILITY & SUBSCRIPTION TEXT
+   ============================================================ */
+
+/* Make like/dislike buttons more visible */
+.action-icon-btn svg {
+    opacity: 1 !important;
+    fill: none !important;
+    stroke: currentColor;
+}
+.action-icon-btn {
+    color: var(--text-muted);
+    transition: all 0.2s ease;
+}
+.action-icon-btn:hover {
+    color: var(--text-main);
+    background: rgba(255,255,255,0.08);
+    transform: scale(1.05);
+}
+.action-icon-btn:active {
+    transform: scale(0.95);
+}
+
+/* Ensure subscription modal text uses theme-aware color */
+#subscription-modal .modal-card .profile-stat-value,
+#subscription-modal .modal-card .sub-plan-name,
+#subscription-modal .modal-card h3 {
+    color: var(--text-main) !important;
+}
+
+/* Free tier message text color */
+#free-tier-message {
+    color: var(--text-main) !important;
+}
+#free-tier-message strong {
+    color: var(--accent-glow) !important;
+}
