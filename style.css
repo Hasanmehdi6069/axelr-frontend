@@ -2450,3 +2450,31 @@ body.light-theme .action-icon-btn.regen-active {
     color: #0ea5e9;
     border-color: rgba(14,165,233,0.3);
 }
+/* Improve like/dislike buttons visibility */
+.action-icon-btn {
+    color: var(--text-muted);
+    transition: all 0.2s ease;
+}
+.action-icon-btn:hover {
+    color: var(--text-main);
+    background: rgba(255,255,255,0.08);
+    transform: scale(1.05);
+}
+.action-icon-btn svg {
+    stroke: currentColor;
+    fill: none;
+}
+
+/* For light theme, ensure they are visible */
+body.light-theme .action-icon-btn {
+    color: #6b7280;
+}
+body.light-theme .action-icon-btn:hover {
+    color: #1a1a1a;
+    background: rgba(0,0,0,0.05);
+}
+
+/* Plan name text uses theme variable */
+#sub-plan-name {
+    color: var(--text-main);
+}

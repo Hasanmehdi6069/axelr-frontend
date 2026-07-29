@@ -194,6 +194,7 @@ let observerActive = true;
 let ignoreSidebarClose = false;
 let manipulationCount = parseInt(sessionStorage.getItem('axelr_manipulation_count')) || 0;
 let manipulationLockUntil = parseInt(sessionStorage.getItem('axelr_manipulation_lock')) || 0;
+let suppressRegenerateForNextResponse = false; // moved here from local
 
 // ============================================================
 // SCROLL FUNCTIONS
@@ -1384,29 +1385,34 @@ function showSecurityAlert(level) {
 // ============================================================
 // EXECUTE COMMAND
 // ============================================================
+
 async function executeCommand(isRetry = false) {
     if (!activeSessionId) {
         document.getElementById('hero-display').style.display = 'none';
     }
     if (isProcessing) return;
     isProcessing = true;
+
     if (manipulationLockUntil && Date.now() < manipulationLockUntil) {
         const remaining = Math.ceil((manipulationLockUntil - Date.now()) / 1000);
         alert(`⛔ System temporarily locked due to security violations. Please wait ${remaining} seconds.`);
         isProcessing = false;
         return;
     }
+
     if (currentTab === 'trashed') {
         switchSidebarTab('active');
         activeSessionId = null;
         localStorage.removeItem('axelr_active_session');
     }
+
     const command = promptInput.value.trim();
     window.lastUserCommand = command;
     if (!command && stagedFiles.length === 0 && !isRetry) {
         isProcessing = false;
         return;
     }
+
     if (detectManipulationAttempt(command)) {
         manipulationCount++;
         sessionStorage.setItem('axelr_manipulation_count', manipulationCount);
@@ -1428,8 +1434,10 @@ async function executeCommand(isRetry = false) {
         isProcessing = false;
         return;
     }
+
     let finalCommand = command;
     const originalBtnHtml = sendBtn.innerHTML;
+
     if (globalAbortController) {
         globalAbortController.abort();
         globalAbortController = null;
@@ -1438,12 +1446,14 @@ async function executeCommand(isRetry = false) {
         isProcessing = false;
         return;
     }
+
     if (!isRetry) {
         promptInput.value = '';
         promptInput.style.height = 'auto';
         validateSendCommand();
     }
     sendBtn.disabled = true;
+
     const userBubble = document.createElement('div');
     userBubble.className = 'chat-bubble user-bubble';
     let filesHtml = '';
@@ -1454,6 +1464,7 @@ async function executeCommand(isRetry = false) {
     }
     userBubble.innerHTML = `${filesHtml}${DOMPurify.sanitize(marked.parse(command || " "))}`;
     viewport.appendChild(userBubble);
+
     if (isRetry) {
         const allBubbles = viewport.querySelectorAll('.chat-bubble');
         if (allBubbles.length >= 2) {
@@ -1468,18 +1479,22 @@ async function executeCommand(isRetry = false) {
             regenerateTimer = null;
         }
     }
+
     const stagedFilesSnapshot = [...stagedFiles];
     stagedFiles = [];
     renderFileChips();
+
     const nexusBubble = document.createElement('div');
     nexusBubble.className = 'chat-bubble nexus-bubble';
     const avatarDiv = document.createElement('div');
     avatarDiv.className = 'ai-avatar-bubble';
     avatarDiv.innerHTML = AXELR_AVATAR_SVG;
     nexusBubble.appendChild(avatarDiv);
+
     const contentDiv = document.createElement('div');
     contentDiv.className = 'bubble-content';
     contentDiv.style.flex = '1';
+
     const loader = document.createElement('div');
     loader.className = 'matrix-loader';
     for (let i = 0; i < 3; i++) {
@@ -1488,15 +1503,18 @@ async function executeCommand(isRetry = false) {
         loader.appendChild(dot);
     }
     contentDiv.appendChild(loader);
+
     let extendedTimeout = setTimeout(() => {
         const extendedMsg = document.createElement('div');
         extendedMsg.className = 'thinking-extended';
         extendedMsg.innerText = 'Thinking a little bit longer... Don\'t close the tab.';
         contentDiv.appendChild(extendedMsg);
     }, 5000);
+
     nexusBubble.appendChild(contentDiv);
     viewport.appendChild(nexusBubble);
     scrollToBottom();
+
     const formData = new FormData();
     formData.append('command', finalCommand);
     formData.append('workspace', getWorkspace());
@@ -1505,8 +1523,10 @@ async function executeCommand(isRetry = false) {
     for (const file of stagedFilesSnapshot) {
         formData.append('files', file);
     }
+
     sendBtn.classList.add('btn-stop-active');
     sendBtn.innerHTML = ICONS.stop;
+
     globalAbortController = new AbortController();
     let responseReceived = false;
     const timeoutFallback = setTimeout(() => {
@@ -1519,13 +1539,16 @@ async function executeCommand(isRetry = false) {
             isProcessing = false;
         }
     }, 30000);
+
     try {
         const response = await apiFetch(`${API_BASE_URL}/api/extract`, {
             method: 'POST',
             body: formData,
             signal: globalAbortController.signal,
         });
+
         clearTimeout(extendedTimeout);
+
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             if (errorData.code === 'LIMIT_REACHED') {
@@ -1542,14 +1565,18 @@ async function executeCommand(isRetry = false) {
             isProcessing = false;
             return;
         }
+
         const result = await response.json();
         responseReceived = true;
+
         if (result.success) {
             const fullResponse = result.text || "No response from AI.";
             const sessionId = result.sessionId;
             const structuredData = result.structuredData;
             const filename = result.filename || 'Export.csv';
+
             contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(fullResponse));
+
             if (sessionId) {
                 activeSessionId = sessionId;
                 localStorage.setItem('axelr_active_session', activeSessionId);
@@ -1558,6 +1585,7 @@ async function executeCommand(isRetry = false) {
                 await loadArchiveLogs();
                 viewPastLogById(activeSessionId);
             }
+
             const rawCode = extractHtmlCode(fullResponse);
             if (rawCode) {
                 const iframe = document.createElement('iframe');
@@ -1574,23 +1602,32 @@ async function executeCommand(isRetry = false) {
                 iframeDoc.close();
                 injectDeployButton(contentDiv, rawCode);
             }
+
             appendPayloadDownload(contentDiv);
             hasRegenerated = false;
             if (regenerateTimer) {
                 clearTimeout(regenerateTimer);
                 regenerateTimer = null;
             }
+
             const now = new Date().toISOString();
-            injectActionButtons(contentDiv, fullResponse, false, true, now, activeSessionId);
+            // Use the suppress flag to decide whether to show regenerate on this new response
+            const showRegen = !suppressRegenerateForNextResponse;
+            // Reset the flag after this response
+            suppressRegenerateForNextResponse = false;
+            injectActionButtons(contentDiv, fullResponse, false, showRegen, now, activeSessionId);
+
             scrollToBottom();
             const mainBackBtn = document.getElementById('main-back-btn');
             if (mainBackBtn) mainBackBtn.style.display = 'flex';
+
         } else {
             contentDiv.innerHTML = `⚠️ ${result.message || 'Something went wrong.'}`;
             if (viewport.querySelectorAll('.chat-bubble').length === 0) {
                 document.getElementById('hero-display').style.display = 'flex';
             }
         }
+
     } catch (error) {
         clearTimeout(extendedTimeout);
         if (error.name === 'AbortError') {
@@ -1616,7 +1653,6 @@ async function executeCommand(isRetry = false) {
         isProcessing = false;
     }
 }
-
 // ============================================================
 // PAYLOAD / DEPLOY
 // ============================================================
@@ -1734,6 +1770,7 @@ function injectDeployButton(bubbleNode, rawHtml) {
 // ============================================================
 // MODALS
 // ============================================================
+
 function closeModals() {
     document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
 }
@@ -1764,6 +1801,33 @@ function openBillingFlow() {
     updateSubscriptionModal();
 }
 
+// FIXED: Ensure updateSubscriptionModal is called when opening subscription modal
+function openSubscriptionModal() {
+    closeModals();
+    const modal = document.getElementById('subscription-modal');
+    const planName = document.getElementById('sub-plan-name').innerText;
+    const isFree = planName.toLowerCase().includes('free');
+    const content = document.getElementById('subscription-content');
+    if (isFree) {
+        content.innerHTML = `
+            <div style="padding:20px 0;text-align:center;">
+                <span class="material-symbols-rounded" style="font-size:48px;color:var(--accent-glow);">rocket_launch</span>
+                <h3 style="color:var(--text-main);margin:12px 0;">You are on the Free Plan</h3>
+                <p style="color:var(--text-muted);font-size:14px;">Unlock unlimited extractions, UI generations, and priority support.</p>
+            </div>
+        `;
+    } else {
+        content.innerHTML = `
+            <div style="display:flex;flex-direction:column;gap:5px;">
+                <div class="profile-stat-row"><span class="profile-stat-label">Current Plan</span><span class="profile-stat-value" style="color:var(--text-main);">${planName}</span></div>
+            </div>
+        `;
+    }
+    modal.classList.add('active');
+    // Ensure the free/paid messages are updated
+    updateSubscriptionModal();
+}
+
 async function openAdminModal() {
     closeModals();
     document.getElementById('admin-modal').classList.add('active');
@@ -1774,18 +1838,24 @@ async function openAdminModal() {
             document.getElementById('admin-metrics-container').innerHTML = `
                 <div class="profile-stat-row"><span class="profile-stat-label">Total Users</span><span class="profile-stat-value">${data.totalUsers}</span></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Pro Subscribers</span><span class="profile-stat-value" style="color:var(--accent-glow-pro)">${data.proUsers}</span></div>
-                <div class="profile-stat-row"><span class="profile-stat-label">Designer Subscribers</span><span class="profile-stat-value" style="color:var(--accent-glow-designer)">${data.businessUsers}</span></div>
-                <div class="profile-stat-row"><span class="profile-stat-label">Total Matrix Logs</span><span class="profile-stat-value">${data.totalChats}</span></div>
+                <div class="profile-stat-row"><span class="profile-stat-label">Business Subscribers</span><span class="profile-stat-value" style="color:var(--accent-glow-designer)">${data.businessUsers}</span></div>
+                <div class="profile-stat-row"><span class="profile-stat-label">Total Chats</span><span class="profile-stat-value">${data.totalChats}</span></div>
                 <div style="border-top:1px solid var(--border-muted);margin:10px 0;"></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Total Queries Processed</span><span class="profile-stat-value">${data.metrics?.totalQueries || 0}</span></div>
+                <div class="profile-stat-row"><span class="profile-stat-label">Today's Queries</span><span class="profile-stat-value">${data.metrics?.dailyQueries || 0}</span></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Total Storage Used</span><span class="profile-stat-value">${(data.metrics?.totalBytes || 0) / (1024*1024)} MB</span></div>
                 <div style="border-top:1px solid var(--border-muted);margin:10px 0;"></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Total Tokens Used</span><span class="profile-stat-value">${data.tokenUsage?.total || 0}</span></div>
+                <div class="profile-stat-row"><span class="profile-stat-label">Today's Prompt Tokens</span><span class="profile-stat-value">${data.tokenUsage?.dailyPrompt || 0}</span></div>
+                <div class="profile-stat-row"><span class="profile-stat-label">Today's Completion Tokens</span><span class="profile-stat-value">${data.tokenUsage?.dailyCompletion || 0}</span></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Free Tier Remaining</span><span class="profile-stat-value" style="color:${data.tokenUsage?.remaining > 0 ? 'var(--accent-secondary)' : '#ef4444'};">${data.tokenUsage?.remaining || 0} / ${data.tokenUsage?.limit || 1000000}</span></div>
                 <div style="border-top:1px solid var(--border-muted);margin:10px 0;"></div>
-                <div class="profile-stat-row"><span class="profile-stat-label">Daily AI Queries</span><span class="profile-stat-value">${data.dailyAIUsage?.totalQueries || 0}</span></div>
-                <div class="profile-stat-row"><span class="profile-stat-label">Daily Prompt Tokens</span><span class="profile-stat-value">${data.dailyAIUsage?.prompt || 0}</span></div>
-                <div class="profile-stat-row"><span class="profile-stat-label">Daily Completion Tokens</span><span class="profile-stat-value">${data.dailyAIUsage?.completion || 0}</span></div>
+                <div class="profile-stat-row"><span class="profile-stat-label">Total Groq Usage (All Time)</span><span class="profile-stat-value">${data.aiQuota?.groq || 0}</span></div>
+                <div class="profile-stat-row"><span class="profile-stat-label">Total OpenRouter Usage (All Time)</span><span class="profile-stat-value">${data.aiQuota?.openRouter || 0}</span></div>
+                <div class="profile-stat-row"><span class="profile-stat-label">Today's Groq Usage</span><span class="profile-stat-value">${data.aiQuota?.dailyGroq || 0}</span></div>
+                <div class="profile-stat-row"><span class="profile-stat-label">Today's OpenRouter Usage</span><span class="profile-stat-value">${data.aiQuota?.dailyOpenRouter || 0}</span></div>
+                <div style="border-top:1px solid var(--border-muted);margin:10px 0;"></div>
+                <div class="profile-stat-row"><span class="profile-stat-label">Last Updated</span><span class="profile-stat-value" style="font-size:12px;">${new Date(data.timestamp).toLocaleString()}</span></div>
             `;
         } else {
             document.getElementById('admin-metrics-container').innerHTML = `<div style="color:#ef4444;text-align:center;">Unauthorized or service unavailable.</div>`;
@@ -2006,6 +2076,22 @@ async function deleteAccount() {
     }
 }
 
+function updateSubscriptionModal() {
+    const planName = document.getElementById('sub-plan-name').innerText;
+    const freeMsg = document.getElementById('free-tier-message');
+    const paidMsg = document.getElementById('paid-tier-message');
+    const paidName = document.getElementById('paid-tier-name');
+    const detailsSpan = document.getElementById('subscription-details');
+    if (planName.toLowerCase().includes('free')) {
+        freeMsg.style.display = 'block';
+        paidMsg.style.display = 'none';
+    } else {
+        freeMsg.style.display = 'none';
+        paidMsg.style.display = 'block';
+        paidName.innerText = planName.replace(' ALLOCATION', '');
+        detailsSpan.innerText = 'Active subscription. Manage your plan via Stripe.';
+    }
+}
 // ============================================================
 // SIDEBAR SWIPE
 // ============================================================

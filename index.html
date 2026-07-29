@@ -148,7 +148,6 @@
     <div class="modal-overlay" id="admin-modal">
         <div class="modal-card">
             <div class="modal-header">
-                <button class="back-btn" onclick="closeModals()" title="Back">
                     <span class="material-symbols-rounded">arrow_back</span>
                 </button>
                 <div class="modal-title">Admin Control Room</div>
@@ -165,9 +164,6 @@
     <div class="modal-overlay" id="settings-modal">
         <div class="modal-card">
             <div class="modal-header">
-                <button class="back-btn" onclick="closeModals()" title="Back">
-                    <span class="material-symbols-rounded">arrow_back</span>
-                </button>
                 <div class="modal-title"><span class="material-symbols-rounded">settings</span> Settings</div>
                 <button class="close-modal-btn" onclick="closeModals()">
                     <span class="material-symbols-rounded">close</span>
@@ -252,7 +248,6 @@
     <div class="modal-overlay" id="instructions-modal">
         <div class="modal-card">
             <div class="modal-header">
-                <button class="back-btn" onclick="closeModals()" title="Back">
                     <span class="material-symbols-rounded">arrow_back</span>
                 </button>
                 <div class="modal-title">Custom Instructions</div>
@@ -269,7 +264,6 @@
     <div class="modal-overlay" id="feedback-modal">
         <div class="modal-card">
             <div class="modal-header">
-                <button class="back-btn" onclick="closeModals()" title="Back">
                     <span class="material-symbols-rounded">arrow_back</span>
                 </button>
                 <div class="modal-title">System Report</div>
@@ -289,7 +283,6 @@
     <div class="modal-overlay" id="upgrade-modal">
         <div class="modal-card" style="max-width:900px;">
             <div class="modal-header">
-                <button class="back-btn" onclick="closeModals()" title="Back">
                     <span class="material-symbols-rounded">arrow_back</span>
                 </button>
                 <div class="modal-title">Upgrade Workspace</div>
@@ -370,9 +363,6 @@
     <div class="modal-overlay" id="profile-modal">
         <div class="modal-card">
             <div class="modal-header">
-                <button class="back-btn" onclick="closeModals()" title="Back">
-                    <span class="material-symbols-rounded">arrow_back</span>
-                </button>
                 <div class="modal-title">Identity Configuration</div>
                 <button class="close-modal-btn" onclick="closeModals()">
                     <span class="material-symbols-rounded">close</span>
@@ -410,9 +400,6 @@
     <div class="modal-overlay" id="subscription-modal">
         <div class="modal-card">
             <div class="modal-header">
-                <button class="back-btn" onclick="closeModals()" title="Back">
-                    <span class="material-symbols-rounded">arrow_back</span>
-                </button>
                 <div class="modal-title">Manage Subscription</div>
                 <button class="close-modal-btn" onclick="closeModals()">
                     <span class="material-symbols-rounded">close</span>
@@ -420,7 +407,7 @@
             </div>
             <div id="subscription-content" style="display:flex;flex-direction:column;gap:5px;padding:10px 0;"></div>
             <div style="display:flex;flex-direction:column;gap:5px;">
-                <div class="profile-stat-row"><span class="profile-stat-label">Current Plan</span><span class="profile-stat-value" id="sub-plan-name" style="color:#fff;">Free Allocation</span></div>
+                <div class="profile-stat-row"><span class="profile-stat-label">Current Plan</span><span class="profile-stat-value" id="sub-plan-name" style="color:var(--text-main);">Free Allocation</span></div>
                 <div id="free-tier-message" style="display:none;background:rgba(234,179,8,0.15);border-left:4px solid #eab308;padding:12px;border-radius:6px;color:#fde047;font-size:13px;margin:10px 0;">
                     <span class="material-symbols-rounded" style="font-size:18px;vertical-align:middle;">info</span>
                     You are on the <strong>Free</strong> tier. <br>Upgrade to unlock premium features and higher limits.
@@ -493,10 +480,6 @@
 
         <!-- Header -->
         <div class="workspace-header">
-            <button class="back-btn" id="main-back-btn" onclick="resetToNewChat()" style="display:none;" title="Back to new chat">
-                <span class="material-symbols-rounded">arrow_back</span>
-            </button>
-
             <div class="model-hub">
                 <button id="model-selector" onclick="toggleModelDropdown(event)">
                     <span id="model-text-display">Model 2.0</span> <span class="badge" id="model-badge-display">FLASH</span>
