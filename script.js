@@ -1,7 +1,7 @@
 // ============================================================
-// AXELR AI - FRONTEND v4.3.1
+// AXELR AI - FRONTEND v4.3.2
 // ============================================================
-// Enterprise-grade with silent token refresh
+// Enterprise-grade with silent token refresh & fixed regenerate
 // ============================================================
 
 // ============================================================
@@ -37,7 +37,7 @@ const SIDEBAR_ICONS = {
 };
 
 // ============================================================
-// TOKEN MANAGEMENT (NEW)
+// TOKEN MANAGEMENT
 // ============================================================
 let googleAuthUserToken = localStorage.getItem('google_auth_token') || null;
 let tokenRefreshPromise = null;
@@ -57,7 +57,6 @@ function getTokenExpiry(token) {
     return payload ? payload.exp * 1000 : 0;
 }
 
-// Silent token refresh using Google Identity Services
 function refreshGoogleToken() {
     if (tokenRefreshPromise) return tokenRefreshPromise;
     tokenRefreshPromise = new Promise((resolve, reject) => {
@@ -92,7 +91,6 @@ async function ensureValidToken() {
 
     const expiry = getTokenExpiry(token);
     const now = Date.now();
-    // Refresh if token expires within 5 minutes or is already expired
     if (expiry - now < 5 * 60 * 1000) {
         try {
             const newToken = await refreshGoogleToken();
@@ -101,7 +99,6 @@ async function ensureValidToken() {
             return newToken;
         } catch (e) {
             console.warn('Token refresh failed:', e);
-            // Remove invalid token and force re-login
             localStorage.removeItem('google_auth_token');
             googleAuthUserToken = null;
             throw new Error('Session expired. Please sign in again.');
@@ -110,7 +107,6 @@ async function ensureValidToken() {
     return token;
 }
 
-// Fetch wrapper with automatic token refresh and retry on 401
 async function apiFetch(url, options = {}) {
     let token = await ensureValidToken();
     options.headers = {
@@ -120,7 +116,6 @@ async function apiFetch(url, options = {}) {
     try {
         const response = await fetch(url, options);
         if (response.status === 401) {
-            // Try one refresh
             try {
                 const newToken = await refreshGoogleToken();
                 googleAuthUserToken = newToken;
@@ -132,7 +127,6 @@ async function apiFetch(url, options = {}) {
                 }
                 return retryResponse;
             } catch (refreshError) {
-                // Refresh failed – logout
                 executeGlobalLogout();
                 throw new Error('Session expired');
             }
@@ -146,7 +140,6 @@ async function apiFetch(url, options = {}) {
     }
 }
 
-// Heartbeat: refresh token every 10 minutes
 setInterval(async () => {
     try {
         await ensureValidToken();
@@ -194,17 +187,11 @@ let observerActive = true;
 let ignoreSidebarClose = false;
 let manipulationCount = parseInt(sessionStorage.getItem('axelr_manipulation_count')) || 0;
 let manipulationLockUntil = parseInt(sessionStorage.getItem('axelr_manipulation_lock')) || 0;
-let suppressRegenerateForNextResponse = true;
-    if (window.lastUserCommand) {
-        document.getElementById('prompt-input').value = window.lastUserCommand;
-        document.getElementById('prompt-input').style.height = 'auto';
-        document.getElementById('prompt-input').style.height = document.getElementById('prompt-input').scrollHeight + 'px';
-        if (regenerateTimer) {
-            clearTimeout(regenerateTimer);
-            regenerateTimer = null;
-        }
-        executeCommand(true);
-    }; // moved here from local
+
+// ============================================================
+// REGENERATE SUPPRESSION FLAG (FIXED)
+// ============================================================
+let suppressRegenerateForNextResponse = false; // starts false – regenerate is allowed by default
 
 // ============================================================
 // SCROLL FUNCTIONS
@@ -322,13 +309,11 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e)
 // INITIALIZATION
 // ============================================================
 function initializeApp() {
-    // Theme
     const saved = localStorage.getItem('axelr_theme') || 'system';
     currentThemePreference = saved;
     systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     applyTheme(saved === 'system' ? (systemDark ? 'dark' : 'light') : saved);
 
-    // Auth check
     const savedToken = localStorage.getItem('google_auth_token');
     if (savedToken) {
         try {
@@ -342,12 +327,10 @@ function initializeApp() {
             localStorage.removeItem('google_auth_token');
         }
     }
-    // Show auth wall
     const wall = document.getElementById('auth-wall');
     if (wall) wall.style.display = 'flex';
 }
 
-// Run after DOM ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeApp);
 } else {
@@ -364,7 +347,6 @@ function handleCredentialResponse(response) {
     localStorage.setItem('google_auth_token', token);
     googleAuthUserToken = token;
     initializeSecureWorkspace(payload, token);
-    // Update avatar
     const avatarImg = document.getElementById('user-avatar');
     const fallback = document.getElementById('user-avatar-fallback');
     if (avatarImg) avatarImg.src = payload.picture;
@@ -1268,13 +1250,15 @@ function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRege
                     if (remaining <= 0) cleanup();
                 }, 1000);
                 timeoutId = setTimeout(cleanup, 30000 - elapsed);
+                // On click: set suppress flag and trigger regeneration
                 regenBtn.onclick = function(e) {
-    if (activeSessionId !== sessionId) {
-        cleanup();
-        return;
-    }
-    cleanup();
+                    if (activeSessionId !== sessionId) {
+                        cleanup();
+                        return;
+                    }
                     cleanup();
+                    // Suppress regenerate on the new response
+                    suppressRegenerateForNextResponse = true;
                     if (window.lastUserCommand) {
                         document.getElementById('prompt-input').value = window.lastUserCommand;
                         document.getElementById('prompt-input').style.height = 'auto';
@@ -1396,7 +1380,6 @@ function showSecurityAlert(level) {
 // ============================================================
 // EXECUTE COMMAND
 // ============================================================
-
 async function executeCommand(isRetry = false) {
     if (!activeSessionId) {
         document.getElementById('hero-display').style.display = 'none';
@@ -1622,10 +1605,10 @@ async function executeCommand(isRetry = false) {
             }
 
             const now = new Date().toISOString();
-            // Use the suppress flag to decide whether to show regenerate on this new response
+            // Determine if we should show regenerate on this new response
             const showRegen = !suppressRegenerateForNextResponse;
-            // Reset the flag after this response
-            if (isRetry && suppressRegenerateForNextResponse) 
+            // Reset the flag for future responses
+            suppressRegenerateForNextResponse = false;
             injectActionButtons(contentDiv, fullResponse, false, showRegen, now, activeSessionId);
 
             scrollToBottom();
@@ -1664,6 +1647,7 @@ async function executeCommand(isRetry = false) {
         isProcessing = false;
     }
 }
+
 // ============================================================
 // PAYLOAD / DEPLOY
 // ============================================================
@@ -1781,7 +1765,6 @@ function injectDeployButton(bubbleNode, rawHtml) {
 // ============================================================
 // MODALS
 // ============================================================
-
 function closeModals() {
     document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
 }
@@ -1853,18 +1836,18 @@ async function openAdminModal() {
                 <div class="profile-stat-row"><span class="profile-stat-label">Total Chats</span><span class="profile-stat-value">${data.totalChats}</span></div>
                 <div style="border-top:1px solid var(--border-muted);margin:10px 0;"></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Total Queries Processed</span><span class="profile-stat-value">${data.metrics?.totalQueries || 0}</span></div>
-                <div class="profile-stat-row"><span class="profile-stat-label">Today's Queries</span><span class="profile-stat-value">${data.metrics?.dailyQueries || 0}</span></div>
-                <div class="profile-stat-row"><span class="profile-stat-label">Total Storage Used</span><span class="profile-stat-value">${(data.metrics?.totalBytes || 0) / (1024*1024)} MB</span></div>
+                <div class="profile-stat-row"><span class="profile-stat-label">Today's Queries</span><span class="profile-stat-value">${data.dailyQueries || 0}</span></div>
+                <div class="profile-stat-row"><span class="profile-stat-label">Total Storage Used</span><span class="profile-stat-value">${data.metrics?.totalBytesMB || 0} MB</span></div>
                 <div style="border-top:1px solid var(--border-muted);margin:10px 0;"></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Total Tokens Used</span><span class="profile-stat-value">${data.tokenUsage?.total || 0}</span></div>
-                <div class="profile-stat-row"><span class="profile-stat-label">Today's Prompt Tokens</span><span class="profile-stat-value">${data.tokenUsage?.dailyPrompt || 0}</span></div>
-                <div class="profile-stat-row"><span class="profile-stat-label">Today's Completion Tokens</span><span class="profile-stat-value">${data.tokenUsage?.dailyCompletion || 0}</span></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Free Tier Remaining</span><span class="profile-stat-value" style="color:${data.tokenUsage?.remaining > 0 ? 'var(--accent-secondary)' : '#ef4444'};">${data.tokenUsage?.remaining || 0} / ${data.tokenUsage?.limit || 1000000}</span></div>
                 <div style="border-top:1px solid var(--border-muted);margin:10px 0;"></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Total Groq Usage (All Time)</span><span class="profile-stat-value">${data.aiQuota?.groq || 0}</span></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Total OpenRouter Usage (All Time)</span><span class="profile-stat-value">${data.aiQuota?.openRouter || 0}</span></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Today's Groq Usage</span><span class="profile-stat-value">${data.aiQuota?.dailyGroq || 0}</span></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Today's OpenRouter Usage</span><span class="profile-stat-value">${data.aiQuota?.dailyOpenRouter || 0}</span></div>
+                <div class="profile-stat-row"><span class="profile-stat-label">Daily Groq Limit</span><span class="profile-stat-value">${data.aiQuota?.groqLimit || 1000}</span></div>
+                <div class="profile-stat-row"><span class="profile-stat-label">Daily OpenRouter Limit</span><span class="profile-stat-value">${data.aiQuota?.openRouterLimit || 1000}</span></div>
                 <div style="border-top:1px solid var(--border-muted);margin:10px 0;"></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Last Updated</span><span class="profile-stat-value" style="font-size:12px;">${new Date(data.timestamp).toLocaleString()}</span></div>
             `;
@@ -2103,6 +2086,7 @@ function updateSubscriptionModal() {
         detailsSpan.innerText = 'Active subscription. Manage your plan via Stripe.';
     }
 }
+
 // ============================================================
 // SIDEBAR SWIPE
 // ============================================================
@@ -2170,47 +2154,6 @@ if (localStorage.getItem('axelr_theme') === 'light') {
     document.body.classList.add('light-theme');
 }
 
-function openSubscriptionModal() {
-    closeModals();
-    const modal = document.getElementById('subscription-modal');
-    const planName = document.getElementById('sub-plan-name').innerText;
-    const isFree = planName.toLowerCase().includes('free');
-    const content = document.getElementById('subscription-content');
-    if (isFree) {
-        content.innerHTML = `
-            <div style="padding:20px 0;text-align:center;">
-                <span class="material-symbols-rounded" style="font-size:48px;color:var(--accent-glow);">rocket_launch</span>
-                <h3 style="color:#fff;margin:12px 0;">You are on the Free Plan</h3>
-                <p style="color:var(--text-muted);font-size:14px;">Unlock unlimited extractions, UI generations, and priority support.</p>
-            </div>
-        `;
-    } else {
-        content.innerHTML = `
-            <div style="display:flex;flex-direction:column;gap:5px;">
-                <div class="profile-stat-row"><span class="profile-stat-label">Current Plan</span><span class="profile-stat-value" style="color:#fff;">${planName}</span></div>
-            </div>
-        `;
-    }
-    modal.classList.add('active');
-}
-
-function updateSubscriptionModal() {
-    const planName = document.getElementById('sub-plan-name').innerText;
-    const freeMsg = document.getElementById('free-tier-message');
-    const paidMsg = document.getElementById('paid-tier-message');
-    const paidName = document.getElementById('paid-tier-name');
-    const detailsSpan = document.getElementById('subscription-details');
-    if (planName.toLowerCase().includes('free')) {
-        freeMsg.style.display = 'block';
-        paidMsg.style.display = 'none';
-    } else {
-        freeMsg.style.display = 'none';
-        paidMsg.style.display = 'block';
-        paidName.innerText = planName.replace(' ALLOCATION', '');
-        detailsSpan.innerText = 'Active subscription. Manage your plan via Stripe.';
-    }
-}
-
 function adjustViewportPadding() {
     if (!commandWrapper) return;
     const wrapperHeight = commandWrapper.offsetHeight;
@@ -2240,7 +2183,7 @@ window.addEventListener('resize', () => {
 // ============================================================
 // VERSION & CACHE CONTROL - No cache clearing
 // ============================================================
-const APP_VERSION = '4.3.1';
+const APP_VERSION = '4.3.2';
 const BUILD_DATE = '2026-07-29';
 console.log(`🟢 Axelr AI v${APP_VERSION} (Build: ${BUILD_DATE})`);
 console.log('📡 API Base URL:', API_BASE_URL);
