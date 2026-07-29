@@ -1,4 +1,10 @@
 // ============================================================
+// AXELR AI - FRONTEND v4.3.1
+// ============================================================
+// Enterprise-grade with silent token refresh
+// ============================================================
+
+// ============================================================
 // CONFIGURATION
 // ============================================================
 const API_BASE_URL = window.location.hostname === "localhost" ? "http://localhost:5000" :
@@ -31,6 +37,123 @@ const SIDEBAR_ICONS = {
 };
 
 // ============================================================
+// TOKEN MANAGEMENT (NEW)
+// ============================================================
+let googleAuthUserToken = localStorage.getItem('google_auth_token') || null;
+let tokenRefreshPromise = null;
+
+function decodeJwt(token) {
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        return JSON.parse(decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')));
+    } catch {
+        return null;
+    }
+}
+
+function getTokenExpiry(token) {
+    const payload = decodeJwt(token);
+    return payload ? payload.exp * 1000 : 0;
+}
+
+// Silent token refresh using Google Identity Services
+function refreshGoogleToken() {
+    if (tokenRefreshPromise) return tokenRefreshPromise;
+    tokenRefreshPromise = new Promise((resolve, reject) => {
+        if (typeof google === 'undefined' || !google.accounts || !google.accounts.oauth2) {
+            reject(new Error('Google Identity Services not loaded'));
+            return;
+        }
+        const client = google.accounts.oauth2.initTokenClient({
+            client_id: '474929925590-a0it7ijp845oqbni72iaqpsvqdvnu0jd.apps.googleusercontent.com',
+            scope: 'profile email',
+            callback: (resp) => {
+                if (resp.error) {
+                    reject(new Error(resp.error));
+                } else {
+                    resolve(resp.access_token);
+                }
+            }
+        });
+        client.requestAccessToken({ prompt: 'none' });
+    });
+    tokenRefreshPromise.finally(() => { tokenRefreshPromise = null; });
+    return tokenRefreshPromise;
+}
+
+async function ensureValidToken() {
+    let token = googleAuthUserToken;
+    if (!token) {
+        token = localStorage.getItem('google_auth_token');
+        if (token) googleAuthUserToken = token;
+    }
+    if (!token) throw new Error('No token available');
+
+    const expiry = getTokenExpiry(token);
+    const now = Date.now();
+    // Refresh if token expires within 5 minutes or is already expired
+    if (expiry - now < 5 * 60 * 1000) {
+        try {
+            const newToken = await refreshGoogleToken();
+            googleAuthUserToken = newToken;
+            localStorage.setItem('google_auth_token', newToken);
+            return newToken;
+        } catch (e) {
+            console.warn('Token refresh failed:', e);
+            // Remove invalid token and force re-login
+            localStorage.removeItem('google_auth_token');
+            googleAuthUserToken = null;
+            throw new Error('Session expired. Please sign in again.');
+        }
+    }
+    return token;
+}
+
+// Fetch wrapper with automatic token refresh and retry on 401
+async function apiFetch(url, options = {}) {
+    let token = await ensureValidToken();
+    options.headers = {
+        ...options.headers,
+        'Authorization': `Bearer ${token}`
+    };
+    try {
+        const response = await fetch(url, options);
+        if (response.status === 401) {
+            // Try one refresh
+            try {
+                const newToken = await refreshGoogleToken();
+                googleAuthUserToken = newToken;
+                localStorage.setItem('google_auth_token', newToken);
+                options.headers['Authorization'] = `Bearer ${newToken}`;
+                const retryResponse = await fetch(url, options);
+                if (retryResponse.status === 401) {
+                    throw new Error('Unauthorized');
+                }
+                return retryResponse;
+            } catch (refreshError) {
+                // Refresh failed – logout
+                executeGlobalLogout();
+                throw new Error('Session expired');
+            }
+        }
+        return response;
+    } catch (error) {
+        if (error.message === 'Session expired' || error.message === 'Unauthorized') {
+            executeGlobalLogout();
+        }
+        throw error;
+    }
+}
+
+// Heartbeat: refresh token every 10 minutes
+setInterval(async () => {
+    try {
+        await ensureValidToken();
+    } catch (_) { /* silent */ }
+}, 10 * 60 * 1000);
+
+// ============================================================
 // DOM REFS
 // ============================================================
 const promptInput = document.getElementById('prompt-input');
@@ -54,7 +177,6 @@ let cachedLogHistory = [];
 let activeSessionId = null;
 let runningStructuredCache = null;
 let runningFileTitle = 'Export.csv';
-let googleAuthUserToken = null;
 let isListeningForVocal = false;
 let currentTab = 'active';
 let isInitialAppLoad = true;
@@ -74,32 +196,24 @@ let manipulationCount = parseInt(sessionStorage.getItem('axelr_manipulation_coun
 let manipulationLockUntil = parseInt(sessionStorage.getItem('axelr_manipulation_lock')) || 0;
 
 // ============================================================
-// SCROLL FUNCTIONS - DEFINED EARLY
+// SCROLL FUNCTIONS
 // ============================================================
 function scrollToBottom(smooth = true) {
-    if (!viewport) return;
-    if (isUserScrolling) return;
+    if (!viewport || isUserScrolling) return;
     const lastMessage = viewport.querySelector('.chat-bubble:last-child');
     if (lastMessage) {
         try {
-            lastMessage.scrollIntoView({ 
-                behavior: smooth ? 'smooth' : 'auto', 
-                block: 'end' 
-            });
-        } catch (e) {
+            lastMessage.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'end' });
+        } catch (_) {
             viewport.scrollTop = viewport.scrollHeight;
         }
     }
 }
 
 function updateViewportAfterRender() {
-    if (window._viewportUpdateId) {
-        cancelAnimationFrame(window._viewportUpdateId);
-    }
+    if (window._viewportUpdateId) cancelAnimationFrame(window._viewportUpdateId);
     window._viewportUpdateId = requestAnimationFrame(() => {
-        if (!isUserScrolling) {
-            scrollToBottom(true);
-        }
+        if (!isUserScrolling) scrollToBottom(true);
         adjustViewportPadding();
         window._viewportUpdateId = null;
     });
@@ -123,8 +237,7 @@ function extractHtmlCode(text) {
     let block;
     while ((block = genericBlockRegex.exec(text)) !== null) {
         const content = block[1].trim();
-        if (content.startsWith("<") && (content.includes("<html") || content.includes("<!DOCTYPE") || content
-                .includes("<div") || content.includes("<body"))) {
+        if (content.startsWith("<") && (content.includes("<html") || content.includes("<!DOCTYPE") || content.includes("<div") || content.includes("<body"))) {
             return content;
         }
     }
@@ -191,44 +304,39 @@ function setTheme(pref) {
 
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
     systemDark = e.matches;
-    if (currentThemePreference === 'system') {
-        applyTheme(systemDark ? 'dark' : 'light');
-    }
+    if (currentThemePreference === 'system') applyTheme(systemDark ? 'dark' : 'light');
 });
 
 // ============================================================
-// SINGLE INITIALIZATION POINT
+// INITIALIZATION
 // ============================================================
 function initializeApp() {
     // Theme
     const saved = localStorage.getItem('axelr_theme') || 'system';
     currentThemePreference = saved;
     systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    if (saved === 'system') {
-        applyTheme(systemDark ? 'dark' : 'light');
-    } else {
-        applyTheme(saved);
-    }
-    
+    applyTheme(saved === 'system' ? (systemDark ? 'dark' : 'light') : saved);
+
     // Auth check
     const savedToken = localStorage.getItem('google_auth_token');
     if (savedToken) {
         try {
             const payload = decodeJwt(savedToken);
-            if (Date.now() < payload.exp * 1000) {
+            if (payload && Date.now() < payload.exp * 1000) {
+                googleAuthUserToken = savedToken;
                 initializeSecureWorkspace(payload, savedToken);
                 return;
             }
-        } catch (e) {
+        } catch (_) {
             localStorage.removeItem('google_auth_token');
         }
     }
-    
     // Show auth wall
-    document.getElementById('auth-wall').style.display = 'flex';
+    const wall = document.getElementById('auth-wall');
+    if (wall) wall.style.display = 'flex';
 }
 
-// Run once when DOM is ready
+// Run after DOM ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeApp);
 } else {
@@ -236,34 +344,76 @@ if (document.readyState === 'loading') {
 }
 
 // ============================================================
-// VIEWPORT & KEYBOARD ADJUSTMENT - FIXED
+// AUTH HANDLING
+// ============================================================
+function handleCredentialResponse(response) {
+    const token = response.credential;
+    const payload = decodeJwt(token);
+    if (!payload) return;
+    localStorage.setItem('google_auth_token', token);
+    googleAuthUserToken = token;
+    initializeSecureWorkspace(payload, token);
+    // Update avatar
+    const avatarImg = document.getElementById('user-avatar');
+    const fallback = document.getElementById('user-avatar-fallback');
+    if (avatarImg) avatarImg.src = payload.picture;
+    if (fallback) fallback.innerText = payload.name.charAt(0).toUpperCase();
+    const dropdownImg = document.getElementById('dropdown-avatar');
+    const dropdownFallback = document.getElementById('dropdown-avatar-fallback');
+    if (dropdownImg) dropdownImg.src = payload.picture;
+    if (dropdownFallback) dropdownFallback.innerText = payload.name.charAt(0).toUpperCase();
+}
+
+async function initializeSecureWorkspace(payload, token) {
+    googleAuthUserToken = token;
+    currentUserId = payload.sub;
+    const authWallEl = document.getElementById('auth-wall');
+    if (authWallEl) authWallEl.style.display = 'none';
+    mainWrapper.classList.add('visible');
+
+    const savedWorkspace = localStorage.getItem('Axelr_workspace');
+    if (savedWorkspace) {
+        activateWorkspace(savedWorkspace, true);
+    } else {
+        document.getElementById('workspace-selector').style.display = 'flex';
+    }
+    document.getElementById('user-avatar').src = payload.picture;
+    document.getElementById('user-avatar').style.display = 'block';
+    document.getElementById('dropdown-avatar').src = payload.picture;
+    document.getElementById('dropdown-name').innerText = payload.name;
+    document.getElementById('dropdown-email').innerText = payload.email;
+    await loadUserProfile();
+    await loadArchiveLogs();
+}
+
+function executeGlobalLogout() {
+    localStorage.removeItem('google_auth_token');
+    googleAuthUserToken = null;
+    location.reload();
+}
+
+// ============================================================
+// VIEWPORT & KEYBOARD ADJUSTMENT
 // ============================================================
 function adjustCommandWrapperAndViewport() {
     const vv = window.visualViewport;
     if (!vv) return;
-    
     const offsetY = window.innerHeight - vv.height;
     const maxBottom = Math.min(offsetY, window.innerHeight * 0.4);
-    
     const currentBottom = parseFloat(commandWrapper.style.bottom || '0');
     if (Math.abs(currentBottom - maxBottom) > 3) {
         commandWrapper.style.bottom = maxBottom + 'px';
     }
-    
     const fileChips = document.getElementById('file-staging-container');
     const fileChipsHeight = fileChips && stagedFiles.length > 0 ? fileChips.offsetHeight : 0;
     const availableHeight = window.innerHeight - maxBottom - 20 - fileChipsHeight;
     commandWrapper.style.maxHeight = Math.min(availableHeight, window.innerHeight * 0.8) + 'px';
-    
-    // Only adjust padding, don't force scroll
     adjustViewportPadding();
 }
 
 let resizeTimeout2 = null;
 function debouncedAdjust() {
-    if (resizeTimeout2) {
-        cancelAnimationFrame(resizeTimeout2);
-    }
+    if (resizeTimeout2) cancelAnimationFrame(resizeTimeout2);
     resizeTimeout2 = requestAnimationFrame(() => {
         adjustCommandWrapperAndViewport();
         resizeTimeout2 = null;
@@ -276,7 +426,7 @@ if (window.visualViewport) {
 }
 
 // ============================================================
-// VIEWPORT OBSERVER - FIXED
+// VIEWPORT OBSERVER
 // ============================================================
 function setupViewportObserver() {
     if (viewportObserver) {
@@ -295,27 +445,26 @@ function setupViewportObserver() {
             }
         }
     });
-    viewportObserver.observe(viewport, { 
-        childList: true, 
-        subtree: true, 
-        characterData: true,
-        attributes: true 
-    });
+    viewportObserver.observe(viewport, { childList: true, subtree: true, characterData: true, attributes: true });
 }
 
+viewport.addEventListener('scroll', () => {
+    isUserScrolling = true;
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(() => { isUserScrolling = false; }, 500);
+}, { passive: true });
+
 // ============================================================
-// FILE HANDLING - FIXED
+// FILE HANDLING
 // ============================================================
 function renderFileChips() {
     const container = document.getElementById('file-staging-container');
     if (!container) return;
-    
     if (stagedFiles.length === 0) {
         container.style.display = 'none';
         container.innerHTML = '';
         return;
     }
-    
     container.style.display = 'flex';
     container.innerHTML = stagedFiles.map((file, idx) =>
         `<div class="file-chip" style="display:inline-flex;align-items:center;gap:5px;background:rgba(0,242,254,0.08);border:1px solid rgba(0,242,254,0.15);color:var(--text-muted);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;margin:2px 0;">
@@ -324,7 +473,6 @@ function renderFileChips() {
             <span style="cursor:pointer;color:#ef4444;font-weight:bold;font-size:14px;flex-shrink:0;padding-left:2px;" onclick="removeStagedFile(${idx})"><span class="material-symbols-rounded" style="font-size:14px;">close</span></span>
         </div>`
     ).join('');
-    container.style.display = 'flex';
 }
 
 function removeStagedFile(idx) {
@@ -376,32 +524,18 @@ fileInput.addEventListener('change', (e) => {
 });
 
 // ============================================================
-// SCROLL HANDLING
-// ============================================================
-viewport.addEventListener('scroll', () => {
-    isUserScrolling = true;
-    clearTimeout(scrollTimeout);
-    scrollTimeout = setTimeout(() => {
-        isUserScrolling = false;
-    }, 500);
-}, { passive: true });
-
-// ============================================================
 // SIDEBAR FUNCTIONS
 // ============================================================
 function toggleSidebar() {
     sidebarNode.classList.toggle('open');
 }
-
 sidebarTriggerArea.addEventListener('click', (e) => {
     e.stopPropagation();
     sidebarNode.classList.toggle('open');
 });
 
 window.addEventListener('click', (e) => {
-    if (ignoreSidebarClose || document.activeElement === document.getElementById('sidebar-search-input')) {
-        return;
-    }
+    if (ignoreSidebarClose || document.activeElement === document.getElementById('sidebar-search-input')) return;
     if (e.target.closest('#sidebar-container-node')) return;
     if (e.target.closest('#sidebar-search-box') || e.target.closest('#sidebar-search-box input')) {
         e.stopPropagation();
@@ -410,8 +544,7 @@ window.addEventListener('click', (e) => {
     if (!sidebarNode.contains(e.target) && e.target !== sidebarTriggerArea) sidebarNode.classList.remove('open');
     if (!document.querySelector('.account-hub').contains(e.target)) accountDropdownCard.style.display = 'none';
     if (!document.querySelector('.model-hub').contains(e.target)) modelDropdownCard.style.display = 'none';
-    if (!e.target.closest('.history-options-btn')) document.querySelectorAll('.actions-dropdown-list').forEach(d =>
-        d.classList.remove('active'));
+    if (!e.target.closest('.history-options-btn')) document.querySelectorAll('.actions-dropdown-list').forEach(d => d.classList.remove('active'));
 });
 
 const searchInput = document.getElementById('sidebar-search-input');
@@ -420,14 +553,11 @@ const searchBox = document.getElementById('sidebar-search-box');
     el.addEventListener('click', (e) => e.stopPropagation());
     el.addEventListener('touchstart', (e) => e.stopPropagation());
 });
-
 searchInput.addEventListener('focus', () => {
     ignoreSidebarClose = true;
     setTimeout(() => { ignoreSidebarClose = false; }, 500);
 });
-searchInput.addEventListener('blur', () => {
-    ignoreSidebarClose = false;
-});
+searchInput.addEventListener('blur', () => { ignoreSidebarClose = false; });
 
 function toggleAccountDropdown(e) {
     e.stopPropagation();
@@ -456,11 +586,8 @@ function toggleHistoryOptions(e, id) {
 
 function switchSidebarTab(tab) {
     currentTab = tab;
-    document.querySelectorAll('.tab-btn').forEach(b => {
-        b.classList.remove('active');
-    });
-    const activeBtn = document.getElementById(`tab-${tab}`);
-    activeBtn.classList.add('active');
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`tab-${tab}`).classList.add('active');
     loadArchiveLogs();
 }
 
@@ -477,12 +604,8 @@ function updateSettingsQuota() {
     const quotaCount = document.getElementById('quota-numerical-count');
     const quotaFill = document.getElementById('quota-progress-bar-fill');
     const planBadge = document.getElementById('settings-plan-badge');
-    if (quotaCount) {
-        document.getElementById('settings-quota-count').innerText = quotaCount.innerText;
-    }
-    if (quotaFill) {
-        document.getElementById('settings-quota-fill').style.width = quotaFill.style.width;
-    }
+    if (quotaCount) document.getElementById('settings-quota-count').innerText = quotaCount.innerText;
+    if (quotaFill) document.getElementById('settings-quota-fill').style.width = quotaFill.style.width;
     if (planBadge) {
         document.getElementById('settings-plan-badge').innerText = planBadge.innerText;
         document.getElementById('settings-plan-badge').style.background = planBadge.style.background;
@@ -501,19 +624,16 @@ function openSearchOverlay() {
     input.focus();
     filterSearchOverlay();
 }
-
 function closeSearchOverlay() {
     document.getElementById('search-overlay').classList.remove('active');
 }
-
 function filterSearchOverlay() {
     const query = document.getElementById('search-overlay-input').value.toLowerCase();
     const resultsContainer = document.getElementById('search-overlay-results');
     const logs = cachedLogHistory.filter(log => log.status === currentTab);
     const filtered = query ? logs.filter(log => log.filename.toLowerCase().includes(query)) : logs;
     if (filtered.length === 0) {
-        resultsContainer.innerHTML =
-            `<div style="color:var(--text-muted);text-align:center;padding:30px;">No matching chats</div>`;
+        resultsContainer.innerHTML = `<div style="color:var(--text-muted);text-align:center;padding:30px;">No matching chats</div>`;
         return;
     }
     resultsContainer.innerHTML = filtered.map(log => `
@@ -523,7 +643,6 @@ function filterSearchOverlay() {
         </div>
     `).join('');
 }
-
 document.getElementById('search-overlay-input').addEventListener('input', filterSearchOverlay);
 
 const sidebarSearchInput = document.getElementById('sidebar-search-input');
@@ -538,94 +657,16 @@ document.getElementById('sidebar-search-box').addEventListener('click', function
 });
 
 // ============================================================
-// AUTH FUNCTIONS
-// ============================================================
-function decodeJwt(token) {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    return JSON.parse(decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16))
-        .slice(-2)).join('')));
-}
-
-function handleCredentialResponse(response) {
-    const token = response.credential;
-    const payload = decodeJwt(token);
-    localStorage.setItem('google_auth_token', token);
-    initializeSecureWorkspace(payload, token);
-    const avatarSrc = payload.picture;
-    const avatarImg = document.getElementById('user-avatar');
-    const fallback = document.getElementById('user-avatar-fallback');
-    avatarImg.src = avatarSrc;
-    fallback.innerText = payload.name.charAt(0).toUpperCase();
-    const dropdownImg = document.getElementById('dropdown-avatar');
-    const dropdownFallback = document.getElementById('dropdown-avatar-fallback');
-    dropdownImg.src = avatarSrc;
-    dropdownFallback.innerText = payload.name.charAt(0).toUpperCase();
-}
-
-window.onload = function() {
-    try {
-        const savedToken = localStorage.getItem('google_auth_token');
-        if (savedToken) {
-            const payload = decodeJwt(savedToken);
-            if (Date.now() < payload.exp * 1000) {
-                return initializeSecureWorkspace(payload, savedToken);
-            } else {
-                localStorage.removeItem('google_auth_token');
-            }
-        }
-    } catch (err) {
-        localStorage.removeItem('google_auth_token');
-    }
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('billing') === 'success') {
-        alert('🎉 Payment successful! Your workspace has been upgraded.');
-        window.history.replaceState({}, document.title, window.location.pathname);
-        if (googleAuthUserToken) loadUserProfile();
-    }
-};
-
-async function initializeSecureWorkspace(payload, token) {
-    googleAuthUserToken = token;
-    currentUserId = payload.sub;
-    const authWallEl = document.getElementById('auth-wall');
-    if (authWallEl) authWallEl.style.display = 'none';
-
-    mainWrapper.classList.add('visible');
-
-    const savedWorkspace = localStorage.getItem('Axelr_workspace');
-    if (savedWorkspace) {
-        activateWorkspace(savedWorkspace, true);
-    } else {
-        document.getElementById('workspace-selector').style.display = 'flex';
-    }
-    document.getElementById('user-avatar').src = payload.picture;
-    document.getElementById('user-avatar').style.display = 'block';
-    document.getElementById('dropdown-avatar').src = payload.picture;
-    document.getElementById('dropdown-name').innerText = payload.name;
-    document.getElementById('dropdown-email').innerText = payload.email;
-    await loadUserProfile();
-    await loadArchiveLogs();
-}
-
-function executeGlobalLogout() {
-    localStorage.removeItem('google_auth_token');
-    location.reload();
-}
-
-// ============================================================
 // WORKSPACE FUNCTIONS
 // ============================================================
 function showWorkspaceSelector() {
     document.getElementById('workspace-selector').style.display = 'flex';
 }
-
 function selectWorkspace(type) {
     localStorage.setItem('Axelr_workspace', type);
     document.getElementById('workspace-selector').style.display = 'none';
     activateWorkspace(type);
 }
-
 function activateWorkspace(type, isBoot = false) {
     mainWrapper.classList.add('visible');
     document.body.classList.remove('workspace-data', 'workspace-design');
@@ -635,41 +676,32 @@ function activateWorkspace(type, isBoot = false) {
         document.getElementById('sidebar-logo-text').innerText = 'AXELR DESIGN';
         document.getElementById('hero-title-text').innerText = 'What are we designing today?';
         document.getElementById('hero-sub-text').innerText = 'AI-powered UI/UX generation & live deployment.';
-        promptInput.placeholder = isMobile ? "Upload a mockup..." :
-            "Upload a mockup or request a UI component...";
+        promptInput.placeholder = isMobile ? "Upload a mockup..." : "Upload a mockup or request a UI component...";
     } else {
         document.getElementById('sidebar-logo-text').innerText = 'AXELR DATA';
         document.getElementById('hero-title-text').innerText = 'What are we building today?';
         document.getElementById('hero-sub-text').innerText = 'AI-powered architecture and data execution.';
-        promptInput.placeholder = isMobile ? "Upload a receipt..." :
-            "Upload a receipt, invoice, or CSV for extraction...";
+        promptInput.placeholder = isMobile ? "Upload a receipt..." : "Upload a receipt, invoice, or CSV for extraction...";
     }
     resetToNewChat(isBoot);
     if (!isBoot) loadArchiveLogs();
 }
 
 function resetToNewChat(isBoot = false) {
-    // Disconnect observer during reset
     if (viewportObserver) {
         viewportObserver.disconnect();
         viewportObserver = null;
     }
-    
     activeSessionId = null;
     runningStructuredCache = null;
-    
-    // Clear file references
     if (stagedFiles.length > 0) {
         stagedFiles = [];
         renderFileChips();
     }
-    
     localStorage.removeItem('Axelr_active_session');
     document.querySelectorAll('.chat-bubble').forEach(bubble => bubble.remove());
-    
     const hero = document.getElementById('hero-display');
     if (hero) hero.style.display = 'flex';
-    
     if (!isBoot) {
         promptInput.value = '';
         promptInput.style.height = 'auto';
@@ -694,8 +726,6 @@ function resetToNewChat(isBoot = false) {
     const mainBackBtn = document.getElementById('main-back-btn');
     if (mainBackBtn) mainBackBtn.style.display = 'none';
     adjustViewportPadding();
-    
-    // Re-setup observer after reset
     setTimeout(setupViewportObserver, 100);
 }
 
@@ -706,11 +736,8 @@ function validateSendCommand() {
     const hasInput = promptInput.value.trim().length > 0 || stagedFiles.length > 0;
     document.getElementById('send-trigger').disabled = !hasInput;
     const inputFrame = document.querySelector('.input-frame');
-    if (hasInput) {
-        inputFrame.classList.add('has-text');
-    } else {
-        inputFrame.classList.remove('has-text');
-    }
+    if (hasInput) inputFrame.classList.add('has-text');
+    else inputFrame.classList.remove('has-text');
 }
 
 promptInput.addEventListener('input', () => {
@@ -758,8 +785,7 @@ if (SpeechRecognition) {
     recognition.onerror = (event) => {
         isListeningForVocal = false;
         micBtn.classList.remove('listening');
-        if (event.error === 'not-allowed') alert(
-            "⚠️ Microphone access denied. Allow permissions in your browser URL bar.");
+        if (event.error === 'not-allowed') alert("⚠️ Microphone access denied. Allow permissions in your browser URL bar.");
         else if (event.error === 'no-speech') alert("⚠️ No audio detected. Check your microphone settings.");
     };
     recognition.onresult = (event) => {
@@ -786,21 +812,17 @@ const renderer = new marked.Renderer();
 renderer.code = function(code, language) {
     return `<pre><button class="copy-code-btn" onclick="navigator.clipboard.writeText(this.nextElementSibling.innerText); this.innerText='Copied!'; setTimeout(()=>this.innerText='Copy Code', 2000)">Copy Code</button><code>${code.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>`;
 };
-marked.setOptions({ renderer: renderer, breaks: true });
+marked.setOptions({ renderer, breaks: true });
 
 // ============================================================
 // USER PROFILE & QUOTA
 // ============================================================
 async function loadUserProfile() {
     try {
-        const resp = await fetch(`${API_BASE_URL}/api/user/profile`, {
-            headers: { 'Authorization': `Bearer ${googleAuthUserToken}` }
-        });
+        const resp = await apiFetch(`${API_BASE_URL}/api/user/profile`);
         if (resp.ok) {
             const data = await resp.json();
             document.getElementById('instructions-input').value = data.customInstructions || "";
-
-            // Admin check - ONLY for shanh1346@gmail.com
             const isAdmin = data.isAdmin === true && data.email === 'shanh1346@gmail.com';
             if (isAdmin) {
                 document.getElementById('admin-dashboard-btn').style.display = 'block';
@@ -808,15 +830,12 @@ async function loadUserProfile() {
             } else {
                 document.getElementById('admin-dashboard-btn').style.display = 'none';
             }
-
             const currentWorkspace = getWorkspace();
             const isDesign = currentWorkspace === 'design';
             const isFree = data.tier === 'free';
             const isPro = data.tier === 'pro';
             const isBusiness = data.tier === 'business';
-
             let used = 0, limit = 0;
-
             if (isFree) {
                 used = Math.max(0, data.dailyUsage || 0);
                 limit = 5;
@@ -826,7 +845,6 @@ async function loadUserProfile() {
                 let subTierType = 'full';
                 if (hasData && !hasDesign) subTierType = 'data';
                 else if (!hasData && hasDesign) subTierType = 'design';
-
                 let dataLimit = 0, uiLimit = 0;
                 if (isPro) {
                     if (subTierType === 'full') { dataLimit = 20; uiLimit = 15; }
@@ -845,12 +863,9 @@ async function loadUserProfile() {
                     limit = dataLimit;
                 }
             }
-
             const percentage = limit > 0 ? Math.min((used / limit) * 100, 100) : 0;
-            document.getElementById('quota-numerical-count').innerText =
-                `${used}/${limit} Used (${Math.round(percentage)}%)`;
+            document.getElementById('quota-numerical-count').innerText = `${used}/${limit} Used (${Math.round(percentage)}%)`;
             document.getElementById('quota-progress-bar-fill').style.width = `${percentage}%`;
-
             const planBadge = document.getElementById('sidebar-plan-badge');
             if (planBadge) {
                 planBadge.innerText = data.tier.toUpperCase();
@@ -864,7 +879,6 @@ async function loadUserProfile() {
             if (data.tier === 'pro') document.body.classList.add('pro-tier');
             else if (data.tier === 'business') document.body.classList.add('designer-tier');
             else { document.body.classList.remove('pro-tier', 'designer-tier'); }
-
             updateSettingsQuota();
             updateSubscriptionModal();
         }
@@ -877,16 +891,13 @@ async function loadUserProfile() {
 async function loadArchiveLogs() {
     try {
         const currentWorkspace = getWorkspace();
-        const response = await fetch(
-            `${API_BASE_URL}/api/history?status=${currentTab}&workspace=${currentWorkspace}`, {
-                headers: { 'Authorization': `Bearer ${googleAuthUserToken}` }
-            }
+        const response = await apiFetch(
+            `${API_BASE_URL}/api/history?status=${currentTab}&workspace=${currentWorkspace}`
         );
         if (response.status === 401) return executeGlobalLogout();
         cachedLogHistory = (await response.json()).logs;
         if (cachedLogHistory.length === 0) {
-            historyListContainer.innerHTML =
-                `<div style="color:#4b5563;font-size:12px;text-align:center;padding:15px;">No ${currentTab} chats.</div>`;
+            historyListContainer.innerHTML = `<div style="color:#4b5563;font-size:12px;text-align:center;padding:15px;">No ${currentTab} chats.</div>`;
             return;
         }
         historyListContainer.innerHTML = cachedLogHistory.map(log => `
@@ -919,7 +930,7 @@ async function loadArchiveLogs() {
                 validateSendCommand();
             }
         }
-    } catch (e) {}
+    } catch (e) { console.warn('Failed to load history:', e); }
 }
 
 // ============================================================
@@ -937,9 +948,9 @@ async function renameChat(logId, currentName, e) {
         if (titleEl) titleEl.innerHTML = `<span class="spinner"></span> Renaming...`;
     }
     try {
-        const resp = await fetch(`${API_BASE_URL}/api/history/${logId}`, {
+        const resp = await apiFetch(`${API_BASE_URL}/api/history/${logId}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${googleAuthUserToken}` },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'rename', payload: newName.trim() })
         });
         if (resp.ok) loadArchiveLogs();
@@ -960,9 +971,9 @@ async function pinChat(logId, e) {
         if (titleEl) titleEl.innerHTML = `<span class="spinner"></span> Updating...`;
     }
     try {
-        const resp = await fetch(`${API_BASE_URL}/api/history/${logId}`, {
+        const resp = await apiFetch(`${API_BASE_URL}/api/history/${logId}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${googleAuthUserToken}` },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'pin' })
         });
         if (resp.ok) loadArchiveLogs();
@@ -987,9 +998,7 @@ async function shareChat(logId, e) {
         textArea.value = shareText;
         document.body.appendChild(textArea);
         textArea.select();
-        try { document.execCommand('copy');
-            alert("✓ Chat copied to clipboard."); } catch (err) { alert(
-                "⚠️ Browser security blocked clipboard access."); }
+        try { document.execCommand('copy'); alert("✓ Chat copied to clipboard."); } catch (err) { alert("⚠️ Browser security blocked clipboard access."); }
         document.body.removeChild(textArea);
     }
 }
@@ -1004,9 +1013,9 @@ async function changeChatStatus(logId, status, e) {
         if (titleEl) titleEl.innerHTML = `<span class="spinner"></span> Moving...`;
     }
     try {
-        const resp = await fetch(`${API_BASE_URL}/api/history/${logId}/status`, {
+        const resp = await apiFetch(`${API_BASE_URL}/api/history/${logId}/status`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${googleAuthUserToken}` },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ status })
         });
         if (resp.ok) {
@@ -1029,9 +1038,8 @@ async function deleteLogPermanently(logId, e) {
         if (titleEl) titleEl.innerHTML = `<span class="spinner"></span> Deleting...`;
     }
     try {
-        const resp = await fetch(`${API_BASE_URL}/api/history/${logId}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${googleAuthUserToken}` }
+        const resp = await apiFetch(`${API_BASE_URL}/api/history/${logId}`, {
+            method: 'DELETE'
         });
         if (resp.ok) {
             if (activeSessionId === logId) resetToNewChat();
@@ -1043,50 +1051,38 @@ async function deleteLogPermanently(logId, e) {
 }
 
 // ============================================================
-// VIEW PAST LOG - FIXED
+// VIEW PAST LOG
 // ============================================================
 function viewPastLogById(logId) {
     if (regenerateTimer) {
         clearTimeout(regenerateTimer);
         regenerateTimer = null;
     }
-    
     const log = cachedLogHistory.find(l => l._id === logId);
     if (!log) return;
-    
-    // Preserve hero state
     const hero = document.getElementById('hero-display');
     if (hero) hero.style.display = 'none';
-    
-    // Only clear if loading different session
     if (activeSessionId !== logId) {
         document.querySelectorAll('.chat-bubble').forEach(b => b.remove());
     }
-    
     activeSessionId = logId;
     localStorage.setItem('axelr_active_session', activeSessionId);
     runningFileTitle = log.filename;
     runningStructuredCache = log.structuredData;
-    
     const mainBackBtn = document.getElementById('main-back-btn');
     if (mainBackBtn) mainBackBtn.style.display = 'flex';
-    
     if (currentTab === 'trashed') {
         const trashMsg = document.createElement('div');
         trashMsg.className = 'chat-bubble';
-        trashMsg.style.cssText =
-            "background:rgba(239,68,68,0.1);color:#ef4444;padding:15px;text-align:center;border-radius:8px;margin-bottom:20px;width:100%;";
-        trashMsg.innerHTML =
-            `<span class="material-symbols-rounded" style="font-size:20px;">delete</span> This chat is in the trash. Restore it to continue chatting.`;
+        trashMsg.style.cssText = "background:rgba(239,68,68,0.1);color:#ef4444;padding:15px;text-align:center;border-radius:8px;margin-bottom:20px;width:100%;";
+        trashMsg.innerHTML = `<span class="material-symbols-rounded" style="font-size:20px;">delete</span> This chat is in the trash. Restore it to continue chatting.`;
         viewport.appendChild(trashMsg);
     }
-
     hasRegenerated = false;
     if (regenerateTimer) {
         clearTimeout(regenerateTimer);
         regenerateTimer = null;
     }
-
     log.messages.forEach((msg, idx) => {
         if (!msg.variants || !Array.isArray(msg.variants)) {
             msg.variants = [msg.text];
@@ -1096,14 +1092,12 @@ function viewPastLogById(logId) {
         }
         const bubble = document.createElement('div');
         bubble.className = `chat-bubble ${msg.role === 'user' ? 'user-bubble' : 'nexus-bubble'}`;
-
         if (msg.role === 'user') {
             let filesHtml = '';
             if (msg.attachedFiles && msg.attachedFiles.length > 0) {
-                filesHtml = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">' + msg
-                    .attachedFiles.map(f =>
-                        `<div class="file-chip"><span class="material-symbols-rounded" style="font-size:14px;">description</span> ${escapeHtmlEntities(f)}</div>`
-                        ).join('') + '</div>';
+                filesHtml = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">' + msg.attachedFiles.map(f =>
+                    `<div class="file-chip"><span class="material-symbols-rounded" style="font-size:14px;">description</span> ${escapeHtmlEntities(f)}</div>`
+                ).join('') + '</div>';
             }
             const contentDiv = document.createElement('div');
             contentDiv.className = 'bubble-content';
@@ -1120,15 +1114,12 @@ function viewPastLogById(logId) {
             avatarDiv.className = 'ai-avatar-bubble';
             avatarDiv.innerHTML = AXELR_AVATAR_SVG;
             bubble.appendChild(avatarDiv);
-
             const contentDiv = document.createElement('div');
             contentDiv.className = 'bubble-content';
             contentDiv.style.flex = '1';
             contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(rawResponse));
             bubble.appendChild(contentDiv);
-
             appendPayloadDownload(contentDiv);
-
             const rawCode = extractHtmlCode(rawResponse);
             if (rawCode) {
                 const iframe = document.createElement('iframe');
@@ -1145,7 +1136,6 @@ function viewPastLogById(logId) {
                 iframeDoc.close();
                 injectDeployButton(contentDiv, rawCode);
             }
-
             const isLast = idx === log.messages.length - 1;
             const alreadyRegenerated = msg.variants && msg.variants.length > 1;
             const isActive = log.status === 'active';
@@ -1157,25 +1147,19 @@ function viewPastLogById(logId) {
                     showRegenerate = true;
                 }
             }
-            injectActionButtons(contentDiv, rawResponse, false, showRegenerate, msg.createdAt || log.createdAt,
-                log._id);
-
+            injectActionButtons(contentDiv, rawResponse, false, showRegenerate, msg.createdAt || log.createdAt, log._id);
             if (msg.variants && msg.variants.length > 1) {
                 const currentIdx = msg.activeVariant || 0;
                 const variantBar = document.createElement('div');
-                variantBar.style.cssText =
-                    "display:flex;align-items:center;gap:12px;margin-top:15px;padding-top:10px;border-top:1px solid var(--border-muted);font-size:12px;color:var(--text-muted);font-weight:600;";
+                variantBar.style.cssText = "display:flex;align-items:center;gap:12px;margin-top:15px;padding-top:10px;border-top:1px solid var(--border-muted);font-size:12px;color:var(--text-muted);font-weight:600;";
                 const prevBtn = document.createElement('button');
                 prevBtn.innerHTML = ICONS.leftArrow;
-                prevBtn.style.cssText =
-                    `background:transparent;border:none;cursor:${currentIdx === 0 ? 'default' : 'pointer'};color:${currentIdx === 0 ? 'var(--border-muted)' : 'var(--text-main)'};font-size:14px;`;
+                prevBtn.style.cssText = `background:transparent;border:none;cursor:${currentIdx === 0 ? 'default' : 'pointer'};color:${currentIdx === 0 ? 'var(--border-muted)' : 'var(--text-main)'};font-size:14px;`;
                 if (currentIdx > 0) prevBtn.onclick = () => switchVariant(logId, msg._id, currentIdx - 1);
                 const nextBtn = document.createElement('button');
                 nextBtn.innerHTML = ICONS.rightArrow;
-                nextBtn.style.cssText =
-                    `background:transparent;border:none;cursor:${currentIdx === msg.variants.length - 1 ? 'default' : 'pointer'};color:${currentIdx === msg.variants.length - 1 ? 'var(--border-muted)' : 'var(--text-main)'};font-size:14px;`;
-                if (currentIdx < msg.variants.length - 1) nextBtn.onclick = () => switchVariant(logId, msg
-                    ._id, currentIdx + 1);
+                nextBtn.style.cssText = `background:transparent;border:none;cursor:${currentIdx === msg.variants.length - 1 ? 'default' : 'pointer'};color:${currentIdx === msg.variants.length - 1 ? 'var(--border-muted)' : 'var(--text-main)'};font-size:14px;`;
+                if (currentIdx < msg.variants.length - 1) nextBtn.onclick = () => switchVariant(logId, msg._id, currentIdx + 1);
                 variantBar.appendChild(prevBtn);
                 const countSpan = document.createElement('span');
                 countSpan.innerText = `${currentIdx + 1} / ${msg.variants.length}`;
@@ -1186,18 +1170,15 @@ function viewPastLogById(logId) {
         }
         viewport.appendChild(bubble);
     });
-    
-    // Use updateViewportAfterRender instead of multiple timeouts
     updateViewportAfterRender();
-    
     if (window.innerWidth <= 768) sidebarNode.classList.remove('open');
 }
 
 async function switchVariant(logId, msgId, newIndex) {
     try {
-        await fetch(`${API_BASE_URL}/api/history/${logId}/variant`, {
+        await apiFetch(`${API_BASE_URL}/api/history/${logId}/variant`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${googleAuthUserToken}` },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ msgId, variantIndex: newIndex })
         });
         const log = cachedLogHistory.find(l => l._id === logId);
@@ -1219,7 +1200,6 @@ function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRege
     sessionId = null, isLastUserMsg = false) {
     const actionBar = document.createElement('div');
     actionBar.className = 'bubble-action-bar';
-
     if (isUserPrompt) {
         const copyBtn = document.createElement('button');
         copyBtn.className = 'action-icon-btn';
@@ -1227,7 +1207,6 @@ function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRege
         copyBtn.innerHTML = `${ICONS.copy} Copy`;
         copyBtn.onclick = () => handleActionClick('copy', rawText, copyBtn);
         actionBar.appendChild(copyBtn);
-
         if (isLastUserMsg) {
             const editBtn = document.createElement('button');
             editBtn.className = 'action-icon-btn';
@@ -1242,25 +1221,19 @@ function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRege
         copyBtn.title = "Copy Response";
         copyBtn.innerHTML = `${ICONS.copy} Copy`;
         copyBtn.onclick = () => handleActionClick('copy', rawText, copyBtn);
-
         const likeBtn = document.createElement('button');
         likeBtn.className = 'action-icon-btn';
         likeBtn.title = "Helpful Response";
         likeBtn.innerHTML = ICONS.thumbsUp;
-        likeBtn.onclick = () => { likeBtn.style.color = 'var(--accent-glow)';
-            dislikeBtn.style.color = 'var(--text-muted)'; };
-
+        likeBtn.onclick = () => { likeBtn.style.color = 'var(--accent-glow)'; dislikeBtn.style.color = 'var(--text-muted)'; };
         const dislikeBtn = document.createElement('button');
         dislikeBtn.className = 'action-icon-btn';
         dislikeBtn.title = "Not Helpful";
         dislikeBtn.innerHTML = ICONS.thumbsDown;
-        dislikeBtn.onclick = () => { dislikeBtn.style.color = '#ef4444';
-            likeBtn.style.color = 'var(--text-muted)'; };
-
+        dislikeBtn.onclick = () => { dislikeBtn.style.color = '#ef4444'; likeBtn.style.color = 'var(--text-muted)'; };
         actionBar.appendChild(copyBtn);
         actionBar.appendChild(likeBtn);
         actionBar.appendChild(dislikeBtn);
-
         if (showRegenerate && createdAt && sessionId) {
             const now = Date.now();
             const msgTime = new Date(createdAt).getTime();
@@ -1269,17 +1242,13 @@ function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRege
                 const regenBtn = document.createElement('button');
                 regenBtn.className = 'action-icon-btn regen-active';
                 regenBtn.title = "Regenerate response (available for 30s)";
-                regenBtn.innerHTML = ICONS.regenerate +
-                    `<span class="regen-countdown">${Math.ceil((30000 - elapsed)/1000)}s</span>`;
-
+                regenBtn.innerHTML = ICONS.regenerate + `<span class="regen-countdown">${Math.ceil((30000 - elapsed)/1000)}s</span>`;
                 let intervalId, timeoutId;
-
                 const cleanup = () => {
                     if (intervalId) clearInterval(intervalId);
                     if (timeoutId) clearTimeout(timeoutId);
                     if (regenBtn.parentNode) regenBtn.remove();
                 };
-
                 let remaining = Math.ceil((30000 - elapsed) / 1000);
                 intervalId = setInterval(() => {
                     remaining--;
@@ -1287,9 +1256,7 @@ function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRege
                     if (countSpan) countSpan.textContent = remaining + 's';
                     if (remaining <= 0) cleanup();
                 }, 1000);
-
                 timeoutId = setTimeout(cleanup, 30000 - elapsed);
-
                 regenBtn.onclick = function(e) {
                     if (activeSessionId !== sessionId) {
                         cleanup();
@@ -1299,8 +1266,7 @@ function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRege
                     if (window.lastUserCommand) {
                         document.getElementById('prompt-input').value = window.lastUserCommand;
                         document.getElementById('prompt-input').style.height = 'auto';
-                        document.getElementById('prompt-input').style.height = document.getElementById(
-                            'prompt-input').scrollHeight + 'px';
+                        document.getElementById('prompt-input').style.height = document.getElementById('prompt-input').scrollHeight + 'px';
                         if (regenerateTimer) {
                             clearTimeout(regenerateTimer);
                             regenerateTimer = null;
@@ -1308,7 +1274,6 @@ function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRege
                         executeCommand(true);
                     }
                 };
-
                 actionBar.appendChild(regenBtn);
             }
         }
@@ -1345,12 +1310,11 @@ async function enhanceUserPrompt() {
     promptInput.disabled = true;
     inputFrame.style.filter = 'blur(4px) brightness(0.8)';
     inputFrame.style.pointerEvents = 'none';
-    enhanceBtn.innerHTML =
-        '<span style="font-size:12px;font-weight:bold;letter-spacing:1px;color:var(--accent-glow);"><span class="material-symbols-rounded" style="font-size:16px;">auto_awesome</span> PROCESSING...</span>';
+    enhanceBtn.innerHTML = '<span style="font-size:12px;font-weight:bold;letter-spacing:1px;color:var(--accent-glow);"><span class="material-symbols-rounded" style="font-size:16px;">auto_awesome</span> PROCESSING...</span>';
     try {
-        const response = await fetch(`${API_BASE_URL}/api/enhance-prompt`, {
+        const response = await apiFetch(`${API_BASE_URL}/api/enhance-prompt`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${googleAuthUserToken}` },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ promptText: text })
         });
         if (!response.ok) throw new Error("API rejection");
@@ -1390,9 +1354,7 @@ function detectManipulationAttempt(command) {
         /reset your instructions/i
     ];
     for (let p of patterns) {
-        if (p.test(command)) {
-            return true;
-        }
+        if (p.test(command)) return true;
     }
     return false;
 }
@@ -1404,26 +1366,14 @@ function showSecurityAlert(level) {
     avatarDiv.className = 'ai-avatar-bubble';
     avatarDiv.innerHTML = AXELR_AVATAR_SVG;
     alertBubble.appendChild(avatarDiv);
-
     const contentDiv = document.createElement('div');
     contentDiv.className = 'bubble-content';
     contentDiv.style.flex = '1';
-
     let html = '';
     if (level === 1) {
-        html = `
-            <div class="security-alert-banner warning">
-                <span class="material-symbols-rounded">warning</span>
-                <span>⚠️ Warning: Detected attempt to bypass core system architecture. Please stay within operational parameters to avoid account restriction.</span>
-            </div>
-        `;
+        html = `<div class="security-alert-banner warning"><span class="material-symbols-rounded">warning</span><span>⚠️ Warning: Detected attempt to bypass core system architecture. Please stay within operational parameters to avoid account restriction.</span></div>`;
     } else if (level === 2) {
-        html = `
-            <div class="security-alert-banner critical">
-                <span class="material-symbols-rounded">error</span>
-                <span>🚨 SECURITY ALERT: Multiple manipulation attempts detected. System locking for 10 minutes. Please reset your operational behavior.</span>
-            </div>
-        `;
+        html = `<div class="security-alert-banner critical"><span class="material-symbols-rounded">error</span><span>🚨 SECURITY ALERT: Multiple manipulation attempts detected. System locking for 10 minutes. Please reset your operational behavior.</span></div>`;
     }
     contentDiv.innerHTML = html;
     alertBubble.appendChild(contentDiv);
@@ -1432,37 +1382,31 @@ function showSecurityAlert(level) {
 }
 
 // ============================================================
-// EXECUTE COMMAND - FIXED
+// EXECUTE COMMAND
 // ============================================================
 async function executeCommand(isRetry = false) {
     if (!activeSessionId) {
         document.getElementById('hero-display').style.display = 'none';
     }
-    
     if (isProcessing) return;
     isProcessing = true;
-    
     if (manipulationLockUntil && Date.now() < manipulationLockUntil) {
         const remaining = Math.ceil((manipulationLockUntil - Date.now()) / 1000);
         alert(`⛔ System temporarily locked due to security violations. Please wait ${remaining} seconds.`);
         isProcessing = false;
         return;
     }
-    
     if (currentTab === 'trashed') {
         switchSidebarTab('active');
         activeSessionId = null;
         localStorage.removeItem('axelr_active_session');
     }
-
     const command = promptInput.value.trim();
     window.lastUserCommand = command;
-
     if (!command && stagedFiles.length === 0 && !isRetry) {
         isProcessing = false;
         return;
     }
-
     if (detectManipulationAttempt(command)) {
         manipulationCount++;
         sessionStorage.setItem('axelr_manipulation_count', manipulationCount);
@@ -1484,10 +1428,8 @@ async function executeCommand(isRetry = false) {
         isProcessing = false;
         return;
     }
-
     let finalCommand = command;
     const originalBtnHtml = sendBtn.innerHTML;
-
     if (globalAbortController) {
         globalAbortController.abort();
         globalAbortController = null;
@@ -1496,25 +1438,22 @@ async function executeCommand(isRetry = false) {
         isProcessing = false;
         return;
     }
-
     if (!isRetry) {
         promptInput.value = '';
         promptInput.style.height = 'auto';
         validateSendCommand();
     }
     sendBtn.disabled = true;
-
     const userBubble = document.createElement('div');
     userBubble.className = 'chat-bubble user-bubble';
     let filesHtml = '';
     if (stagedFiles.length > 0) {
         filesHtml = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">' + stagedFiles.map(f =>
-                `<div class="file-chip"><span class="material-symbols-rounded" style="font-size:14px;">description</span> ${escapeHtmlEntities(f.name)}</div>`
-                ).join('') + '</div>';
+            `<div class="file-chip"><span class="material-symbols-rounded" style="font-size:14px;">description</span> ${escapeHtmlEntities(f.name)}</div>`
+        ).join('') + '</div>';
     }
     userBubble.innerHTML = `${filesHtml}${DOMPurify.sanitize(marked.parse(command || " "))}`;
     viewport.appendChild(userBubble);
-
     if (isRetry) {
         const allBubbles = viewport.querySelectorAll('.chat-bubble');
         if (allBubbles.length >= 2) {
@@ -1529,22 +1468,18 @@ async function executeCommand(isRetry = false) {
             regenerateTimer = null;
         }
     }
-
     const stagedFilesSnapshot = [...stagedFiles];
     stagedFiles = [];
     renderFileChips();
-
     const nexusBubble = document.createElement('div');
     nexusBubble.className = 'chat-bubble nexus-bubble';
     const avatarDiv = document.createElement('div');
     avatarDiv.className = 'ai-avatar-bubble';
     avatarDiv.innerHTML = AXELR_AVATAR_SVG;
     nexusBubble.appendChild(avatarDiv);
-
     const contentDiv = document.createElement('div');
     contentDiv.className = 'bubble-content';
     contentDiv.style.flex = '1';
-
     const loader = document.createElement('div');
     loader.className = 'matrix-loader';
     for (let i = 0; i < 3; i++) {
@@ -1553,18 +1488,15 @@ async function executeCommand(isRetry = false) {
         loader.appendChild(dot);
     }
     contentDiv.appendChild(loader);
-
     let extendedTimeout = setTimeout(() => {
         const extendedMsg = document.createElement('div');
         extendedMsg.className = 'thinking-extended';
         extendedMsg.innerText = 'Thinking a little bit longer... Don\'t close the tab.';
         contentDiv.appendChild(extendedMsg);
     }, 5000);
-
     nexusBubble.appendChild(contentDiv);
     viewport.appendChild(nexusBubble);
     scrollToBottom();
-
     const formData = new FormData();
     formData.append('command', finalCommand);
     formData.append('workspace', getWorkspace());
@@ -1573,12 +1505,9 @@ async function executeCommand(isRetry = false) {
     for (const file of stagedFilesSnapshot) {
         formData.append('files', file);
     }
-
     sendBtn.classList.add('btn-stop-active');
     sendBtn.innerHTML = ICONS.stop;
-
     globalAbortController = new AbortController();
-
     let responseReceived = false;
     const timeoutFallback = setTimeout(() => {
         if (!responseReceived) {
@@ -1590,44 +1519,37 @@ async function executeCommand(isRetry = false) {
             isProcessing = false;
         }
     }, 30000);
-
     try {
-        const response = await fetch(`${API_BASE_URL}/api/extract`, {
+        const response = await apiFetch(`${API_BASE_URL}/api/extract`, {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${googleAuthUserToken}` },
             body: formData,
             signal: globalAbortController.signal,
         });
-
         clearTimeout(extendedTimeout);
-
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             if (errorData.code === 'LIMIT_REACHED') {
-                contentDiv.innerHTML =
-                    `⚠️ <strong>Daily Quota Exceeded.</strong><br><button onclick="openUpgradeModal()" style="background:var(--accent-glow-pro);color:#000;padding:8px 12px;border:none;border-radius:6px;cursor:pointer;font-weight:600;margin-top:10px;">Upgrade Workspace</button>`;
+                contentDiv.innerHTML = `⚠️ <strong>Daily Quota Exceeded.</strong><br><button onclick="openUpgradeModal()" style="background:var(--accent-glow-pro);color:#000;padding:8px 12px;border:none;border-radius:6px;cursor:pointer;font-weight:600;margin-top:10px;">Upgrade Workspace</button>`;
             } else if (errorData.code === 'SUB_TIER_RESTRICTION') {
-                contentDiv.innerHTML =
-                    `⚠️ <strong>Access Restricted.</strong><br>${errorData.message || 'Your current plan does not include this workspace type.'}<br><button onclick="openUpgradeModal()" style="background:var(--accent-glow-pro);color:#000;padding:8px 12px;border:none;border-radius:6px;cursor:pointer;font-weight:600;margin-top:10px;">Upgrade Workspace</button>`;
+                contentDiv.innerHTML = `⚠️ <strong>Access Restricted.</strong><br>${errorData.message || 'Your current plan does not include this workspace type.'}<br><button onclick="openUpgradeModal()" style="background:var(--accent-glow-pro);color:#000;padding:8px 12px;border:none;border-radius:6px;cursor:pointer;font-weight:600;margin-top:10px;">Upgrade Workspace</button>`;
             } else {
                 contentDiv.innerHTML = `💥 Error: ${errorData.message || 'Pipeline failed.'}`;
             }
             scrollToBottom();
+            if (viewport.querySelectorAll('.chat-bubble').length === 0) {
+                document.getElementById('hero-display').style.display = 'flex';
+            }
             isProcessing = false;
             return;
         }
-
         const result = await response.json();
         responseReceived = true;
-
         if (result.success) {
             const fullResponse = result.text || "No response from AI.";
             const sessionId = result.sessionId;
             const structuredData = result.structuredData;
             const filename = result.filename || 'Export.csv';
-
             contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(fullResponse));
-
             if (sessionId) {
                 activeSessionId = sessionId;
                 localStorage.setItem('axelr_active_session', activeSessionId);
@@ -1636,7 +1558,6 @@ async function executeCommand(isRetry = false) {
                 await loadArchiveLogs();
                 viewPastLogById(activeSessionId);
             }
-
             const rawCode = extractHtmlCode(fullResponse);
             if (rawCode) {
                 const iframe = document.createElement('iframe');
@@ -1653,33 +1574,33 @@ async function executeCommand(isRetry = false) {
                 iframeDoc.close();
                 injectDeployButton(contentDiv, rawCode);
             }
-
             appendPayloadDownload(contentDiv);
             hasRegenerated = false;
             if (regenerateTimer) {
                 clearTimeout(regenerateTimer);
                 regenerateTimer = null;
             }
-
             const now = new Date().toISOString();
             injectActionButtons(contentDiv, fullResponse, false, true, now, activeSessionId);
             scrollToBottom();
-
             const mainBackBtn = document.getElementById('main-back-btn');
             if (mainBackBtn) mainBackBtn.style.display = 'flex';
-
         } else {
             contentDiv.innerHTML = `⚠️ ${result.message || 'Something went wrong.'}`;
+            if (viewport.querySelectorAll('.chat-bubble').length === 0) {
+                document.getElementById('hero-display').style.display = 'flex';
+            }
         }
-
     } catch (error) {
         clearTimeout(extendedTimeout);
         if (error.name === 'AbortError') {
-            contentDiv.innerHTML +=
-                `<br><br><em style="color:var(--text-muted);">[Generation halted by user]</em>`;
+            contentDiv.innerHTML += `<br><br><em style="color:var(--text-muted);">[Generation halted by user]</em>`;
         } else {
             console.error('Execute error:', error);
             contentDiv.innerHTML = `⚠️ Network connection dropped. Please retry.`;
+            if (viewport.querySelectorAll('.chat-bubble').length === 0) {
+                document.getElementById('hero-display').style.display = 'flex';
+            }
         }
         scrollToBottom();
     } finally {
@@ -1703,8 +1624,7 @@ function appendPayloadDownload(bubbleNode) {
     if (runningStructuredCache && runningStructuredCache.length > 0) {
         const btn = document.createElement('button');
         btn.className = 'download-btn-bubble';
-        btn.innerHTML =
-            `<span class="material-symbols-rounded" style="font-size:18px;">download</span> Download CSV`;
+        btn.innerHTML = `<span class="material-symbols-rounded" style="font-size:18px;">download</span> Download CSV`;
         btn.onclick = executeDownloadPipeline;
         bubbleNode.appendChild(btn);
     }
@@ -1726,29 +1646,23 @@ function executeDownloadPipeline() {
 function injectDeployButton(bubbleNode, rawHtml) {
     const deployContainer = document.createElement('div');
     deployContainer.style.marginTop = '15px';
-
     const deployBtn = document.createElement('button');
     deployBtn.className = 'download-btn-bubble';
     deployBtn.style.background = 'var(--accent-secondary)';
-    deployBtn.innerHTML =
-        `<span class="material-symbols-rounded" style="font-size:18px;">rocket_launch</span> Deploy Live`;
-
+    deployBtn.innerHTML = `<span class="material-symbols-rounded" style="font-size:18px;">rocket_launch</span> Deploy Live`;
     const debugBtn = document.createElement('button');
     debugBtn.className = 'deploy-debug-btn';
     debugBtn.innerText = 'Debug';
     debugBtn.style.display = 'none';
     const errorDetails = document.createElement('div');
     errorDetails.className = 'deploy-error-details';
-
     deployContainer.appendChild(deployBtn);
     deployContainer.appendChild(debugBtn);
     deployContainer.appendChild(errorDetails);
     bubbleNode.appendChild(deployContainer);
-
     let retryCount = 0;
     const maxRetries = 5;
     let isDeploying = false;
-
     async function attemptDeploy() {
         if (isDeploying) return;
         isDeploying = true;
@@ -1757,17 +1671,16 @@ function injectDeployButton(bubbleNode, rawHtml) {
         try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 30000);
-            const response = await fetch(`${API_BASE_URL}/api/deploy`, {
+            const response = await apiFetch(`${API_BASE_URL}/api/deploy`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${googleAuthUserToken}` },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ htmlContent: rawHtml }),
                 signal: controller.signal
             });
             clearTimeout(timeoutId);
             const result = await response.json();
             if (result.success) {
-                deployBtn.innerHTML =
-                    `<a href="${result.liveUrl}" target="_blank" style="color:#000;text-decoration:none;display:flex;align-items:center;gap:8px;"><span class="material-symbols-rounded" style="font-size:18px;">open_in_new</span> View Live Website</a>`;
+                deployBtn.innerHTML = `<a href="${result.liveUrl}" target="_blank" style="color:#000;text-decoration:none;display:flex;align-items:center;gap:8px;"><span class="material-symbols-rounded" style="font-size:18px;">open_in_new</span> View Live Website</a>`;
                 deployBtn.style.background = '#3b82f6';
                 deployBtn.onclick = null;
                 deployBtn.disabled = false;
@@ -1794,9 +1707,7 @@ function injectDeployButton(bubbleNode, rawHtml) {
                 debugBtn.style.display = 'inline-block';
                 errorDetails.textContent = `Error: ${err.message || 'Unknown error'}\nNetwork: ${navigator.onLine ? 'Online' : 'Offline'}`;
                 errorDetails.classList.add('show');
-                debugBtn.onclick = () => {
-                    errorDetails.classList.toggle('show');
-                };
+                debugBtn.onclick = () => { errorDetails.classList.toggle('show'); };
                 const retryBtn = document.createElement('button');
                 retryBtn.className = 'deploy-retry-btn';
                 retryBtn.innerText = 'Retry Deployment';
@@ -1817,7 +1728,6 @@ function injectDeployButton(bubbleNode, rawHtml) {
             }
         }
     }
-
     deployBtn.onclick = attemptDeploy;
 }
 
@@ -1858,15 +1768,13 @@ async function openAdminModal() {
     closeModals();
     document.getElementById('admin-modal').classList.add('active');
     try {
-        const resp = await fetch(`${API_BASE_URL}/api/admin/metrics`, {
-            headers: { 'Authorization': `Bearer ${googleAuthUserToken}` }
-        });
+        const resp = await apiFetch(`${API_BASE_URL}/api/admin/metrics`);
         if (resp.ok) {
             const data = await resp.json();
             document.getElementById('admin-metrics-container').innerHTML = `
                 <div class="profile-stat-row"><span class="profile-stat-label">Total Users</span><span class="profile-stat-value">${data.totalUsers}</span></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Pro Subscribers</span><span class="profile-stat-value" style="color:var(--accent-glow-pro)">${data.proUsers}</span></div>
-                <div class="profile-stat-row"><span class="profile-stat-label">Designer Subscribers</span><span class="profile-stat-value" style="color:var(--accent-glow-designer)">${data.designerUsers}</span></div>
+                <div class="profile-stat-row"><span class="profile-stat-label">Designer Subscribers</span><span class="profile-stat-value" style="color:var(--accent-glow-designer)">${data.businessUsers}</span></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Total Matrix Logs</span><span class="profile-stat-value">${data.totalChats}</span></div>
                 <div style="border-top:1px solid var(--border-muted);margin:10px 0;"></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Total Queries Processed</span><span class="profile-stat-value">${data.metrics?.totalQueries || 0}</span></div>
@@ -1880,13 +1788,11 @@ async function openAdminModal() {
                 <div class="profile-stat-row"><span class="profile-stat-label">Daily Completion Tokens</span><span class="profile-stat-value">${data.dailyAIUsage?.completion || 0}</span></div>
             `;
         } else {
-            document.getElementById('admin-metrics-container').innerHTML =
-                `<div style="color:#ef4444;text-align:center;">Unauthorized or service unavailable.</div>`;
+            document.getElementById('admin-metrics-container').innerHTML = `<div style="color:#ef4444;text-align:center;">Unauthorized or service unavailable.</div>`;
         }
     } catch (e) {
         console.error('Admin fetch error:', e);
-        document.getElementById('admin-metrics-container').innerHTML =
-            `<div style="color:#ef4444;text-align:center;">Network error. Check your connection.</div>`;
+        document.getElementById('admin-metrics-container').innerHTML = `<div style="color:#ef4444;text-align:center;">Network error. Check your connection.</div>`;
     }
 }
 
@@ -1902,19 +1808,16 @@ async function dispatchCheckoutPipeline(targetBaseTier) {
     checkoutBtn.innerText = "Connecting to Stripe...";
     checkoutBtn.style.opacity = "0.7";
     checkoutBtn.disabled = true;
-
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);
-
     try {
-        const response = await fetch(`${API_BASE_URL}/api/billing/checkout`, {
+        const response = await apiFetch(`${API_BASE_URL}/api/billing/checkout`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${googleAuthUserToken}` },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ tier: targetBaseTier, subTier: selectedSubConfig }),
             signal: controller.signal
         });
         clearTimeout(timeoutId);
-
         if (!response.ok) {
             let errorMsg = `HTTP ${response.status}`;
             try {
@@ -1923,7 +1826,6 @@ async function dispatchCheckoutPipeline(targetBaseTier) {
             } catch (_) {}
             throw new Error(errorMsg);
         }
-
         const data = await response.json();
         if (data.url) {
             window.location.href = data.url;
@@ -1955,9 +1857,9 @@ async function saveCustomInstructions() {
     btn.innerText = "Saving...";
     btn.disabled = true;
     try {
-        await fetch(`${API_BASE_URL}/api/user/instructions`, {
+        await apiFetch(`${API_BASE_URL}/api/user/instructions`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${googleAuthUserToken}` },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ instructions: input.value })
         });
         btn.innerText = "Saved!";
@@ -1985,9 +1887,9 @@ async function submitTelemetryReport() {
     btn.innerText = "Dispatching...";
     btn.disabled = true;
     try {
-        const response = await fetch(`${API_BASE_URL}/api/reports`, {
+        const response = await apiFetch(`${API_BASE_URL}/api/reports`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${googleAuthUserToken}` },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ type, description })
         });
         if (response.ok) {
@@ -2009,9 +1911,6 @@ async function submitTelemetryReport() {
     }
 }
 
-// ============================================================
-// PRIVACY & HELP
-// ============================================================
 function openPrivacyModal() {
     closeModals();
     const modal = document.createElement('div');
@@ -2057,9 +1956,6 @@ function openHelpCenter() {
     document.body.appendChild(modal);
 }
 
-// ============================================================
-// ADD ANOTHER ACCOUNT
-// ============================================================
 function addAnotherAccount() {
     if (confirm('Switch to another Google account?')) {
         localStorage.removeItem('google_auth_token');
@@ -2067,28 +1963,18 @@ function addAnotherAccount() {
     }
 }
 
-// ============================================================
-// PRICING / CHECKOUT
-// ============================================================
 function syncTierMatrixEngine(tierGroup, subTierSelection, derivedCostValue) {
     const targetOutputNode = document.getElementById(`${tierGroup}-base-price-output`);
     if (targetOutputNode) {
-        targetOutputNode.innerHTML =
-            `$${derivedCostValue}<span style="font-size:14px;color:#555;font-weight:400;">/mo</span>`;
+        targetOutputNode.innerHTML = `$${derivedCostValue}<span style="font-size:14px;color:#555;font-weight:400;">/mo</span>`;
     }
 }
 
-// ============================================================
-// DELETE ALL CHATS & DELETE ACCOUNT
-// ============================================================
 async function deleteAllChats() {
-    if (!confirm("⚠️ Are you sure you want to permanently delete ALL your chat history? This cannot be undone.")) {
-        return;
-    }
+    if (!confirm("⚠️ Are you sure you want to permanently delete ALL your chat history? This cannot be undone.")) return;
     try {
-        const response = await fetch(`${API_BASE_URL}/api/history/delete-all`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${googleAuthUserToken}` }
+        const response = await apiFetch(`${API_BASE_URL}/api/history/delete-all`, {
+            method: 'DELETE'
         });
         if (response.ok) {
             alert("All chats have been permanently deleted.");
@@ -2103,16 +1989,11 @@ async function deleteAllChats() {
 }
 
 async function deleteAccount() {
-    if (!confirm("⚠️ Do you really want to delete your account? This will permanently remove all your data and cannot be reversed.")) {
-        return;
-    }
-    if (!confirm("Are you absolutely sure? This action is irreversible.")) {
-        return;
-    }
+    if (!confirm("⚠️ Do you really want to delete your account? This will permanently remove all your data and cannot be reversed.")) return;
+    if (!confirm("Are you absolutely sure? This action is irreversible.")) return;
     try {
-        const response = await fetch(`${API_BASE_URL}/api/user/delete`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${googleAuthUserToken}` }
+        const response = await apiFetch(`${API_BASE_URL}/api/user/delete`, {
+            method: 'DELETE'
         });
         if (response.ok) {
             alert("Your account has been deleted. You will be logged out.");
@@ -2126,71 +2007,61 @@ async function deleteAccount() {
 }
 
 // ============================================================
-// SWIPE-TO-CLOSE SIDEBAR
+// SIDEBAR SWIPE
 // ============================================================
-const sidebar = document.getElementById('sidebar-container-node');
-const swipeHandle = document.createElement('div');
-swipeHandle.className = 'swipe-handle';
-sidebar.prepend(swipeHandle);
-
-let startX = 0, currentX = 0, isDragging = false;
-
-swipeHandle.addEventListener('touchstart', (e) => {
-    startX = e.touches[0].clientX;
-    isDragging = true;
+const sidebarEl = document.getElementById('sidebar-container-node');
+const swipeHandleEl = document.createElement('div');
+swipeHandleEl.className = 'swipe-handle';
+sidebarEl.prepend(swipeHandleEl);
+let startXPos = 0, currentXPos = 0, isDraggingSidebar = false;
+swipeHandleEl.addEventListener('touchstart', (e) => {
+    startXPos = e.touches[0].clientX;
+    isDraggingSidebar = true;
 });
-
 document.addEventListener('touchmove', (e) => {
-    if (!isDragging) return;
-    currentX = e.touches[0].clientX;
-    const delta = currentX - startX;
-    if (sidebar.classList.contains('open') && delta < 0) {
-        const newLeft = Math.min(0, delta);
-        sidebar.style.transition = 'none';
-        sidebar.style.left = `${newLeft}px`;
+    if (!isDraggingSidebar) return;
+    currentXPos = e.touches[0].clientX;
+    const delta = currentXPos - startXPos;
+    if (sidebarEl.classList.contains('open') && delta < 0) {
+        sidebarEl.style.transition = 'none';
+        sidebarEl.style.left = `${Math.min(0, delta)}px`;
     }
 });
-
 document.addEventListener('touchend', () => {
-    if (!isDragging) return;
-    isDragging = false;
-    sidebar.style.transition = 'all 0.3s ease';
-    if (sidebar.classList.contains('open')) {
-        const currentLeft = parseFloat(sidebar.style.left) || 0;
-        if (currentLeft < -50) {
-            sidebar.classList.remove('open');
-        }
-        sidebar.style.left = '';
+    if (!isDraggingSidebar) return;
+    isDraggingSidebar = false;
+    sidebarEl.style.transition = 'all 0.3s ease';
+    if (sidebarEl.classList.contains('open')) {
+        const currentLeft = parseFloat(sidebarEl.style.left) || 0;
+        if (currentLeft < -50) sidebarEl.classList.remove('open');
+        sidebarEl.style.left = '';
     }
-    startX = 0;
-    currentX = 0;
+    startXPos = 0;
+    currentXPos = 0;
 });
-
-let isMouseDown = false;
-swipeHandle.addEventListener('mousedown', (e) => {
-    isMouseDown = true;
-    startX = e.clientX;
+let isMouseDownSidebar = false;
+swipeHandleEl.addEventListener('mousedown', (e) => {
+    isMouseDownSidebar = true;
+    startXPos = e.clientX;
     e.preventDefault();
 });
 document.addEventListener('mousemove', (e) => {
-    if (!isMouseDown) return;
-    currentX = e.clientX;
-    const delta = currentX - startX;
-    if (sidebar.classList.contains('open') && delta < 0) {
-        sidebar.style.transition = 'none';
-        sidebar.style.left = `${delta}px`;
+    if (!isMouseDownSidebar) return;
+    currentXPos = e.clientX;
+    const delta = currentXPos - startXPos;
+    if (sidebarEl.classList.contains('open') && delta < 0) {
+        sidebarEl.style.transition = 'none';
+        sidebarEl.style.left = `${delta}px`;
     }
 });
 document.addEventListener('mouseup', () => {
-    if (!isMouseDown) return;
-    isMouseDown = false;
-    sidebar.style.transition = 'all 0.3s ease';
-    if (sidebar.classList.contains('open')) {
-        const currentLeft = parseFloat(sidebar.style.left) || 0;
-        if (currentLeft < -50) {
-            sidebar.classList.remove('open');
-        }
-        sidebar.style.left = '';
+    if (!isMouseDownSidebar) return;
+    isMouseDownSidebar = false;
+    sidebarEl.style.transition = 'all 0.3s ease';
+    if (sidebarEl.classList.contains('open')) {
+        const currentLeft = parseFloat(sidebarEl.style.left) || 0;
+        if (currentLeft < -50) sidebarEl.classList.remove('open');
+        sidebarEl.style.left = '';
     }
 });
 
@@ -2202,16 +2073,12 @@ if (localStorage.getItem('axelr_theme') === 'light') {
     document.body.classList.add('light-theme');
 }
 
-// ============================================================
-// SUBSCRIPTION MODAL
-// ============================================================
 function openSubscriptionModal() {
     closeModals();
     const modal = document.getElementById('subscription-modal');
     const planName = document.getElementById('sub-plan-name').innerText;
     const isFree = planName.toLowerCase().includes('free');
     const content = document.getElementById('subscription-content');
-    
     if (isFree) {
         content.innerHTML = `
             <div style="padding:20px 0;text-align:center;">
@@ -2236,7 +2103,6 @@ function updateSubscriptionModal() {
     const paidMsg = document.getElementById('paid-tier-message');
     const paidName = document.getElementById('paid-tier-name');
     const detailsSpan = document.getElementById('subscription-details');
-
     if (planName.toLowerCase().includes('free')) {
         freeMsg.style.display = 'block';
         paidMsg.style.display = 'none';
@@ -2248,38 +2114,22 @@ function updateSubscriptionModal() {
     }
 }
 
-// ============================================================
-// VIEWPORT PADDING
-// ============================================================
 function adjustViewportPadding() {
     if (!commandWrapper) return;
-    
     const wrapperHeight = commandWrapper.offsetHeight;
     const fileChips = document.getElementById('file-staging-container');
     const chipsHeight = fileChips && stagedFiles.length > 0 ? fileChips.offsetHeight : 0;
-    
     let totalPadding = wrapperHeight + 20;
-    if (chipsHeight > 0) {
-        totalPadding += chipsHeight + 10;
-    }
-    
-    // Don't force padding if it's too small
-    const minPadding = 120;
-    totalPadding = Math.max(totalPadding, minPadding);
-    
+    if (chipsHeight > 0) totalPadding += chipsHeight + 10;
+    totalPadding = Math.max(totalPadding, 120);
     viewport.style.paddingBottom = totalPadding + 'px';
 }
 
-// ============================================================
-// RESIZE HANDLER
-// ============================================================
 let resizeHandlerTimeout = null;
 let isResizeHandling = false;
-
 window.addEventListener('resize', () => {
     if (isResizeHandling) return;
     isResizeHandling = true;
-    
     clearTimeout(resizeHandlerTimeout);
     resizeHandlerTimeout = setTimeout(() => {
         if (document.body.classList.contains('workspace-data') || document.body.classList.contains('workspace-design')) {
@@ -2291,31 +2141,29 @@ window.addEventListener('resize', () => {
 });
 
 // ============================================================
-// VERSION & CACHE CONTROL - FIXED (no clear on mismatch)
+// VERSION & CACHE CONTROL - No cache clearing
 // ============================================================
-const APP_VERSION = '4.3.0';
-const BUILD_DATE = '2026-07-28';
-
+const APP_VERSION = '4.3.1';
+const BUILD_DATE = '2026-07-29';
 console.log(`🟢 Axelr AI v${APP_VERSION} (Build: ${BUILD_DATE})`);
 console.log('📡 API Base URL:', API_BASE_URL);
 
 const storedVersion = localStorage.getItem('axelr_app_version');
 if (storedVersion && storedVersion !== APP_VERSION) {
-    console.log(`🔄 Version mismatch (stored: ${storedVersion}, current: ${APP_VERSION}) – logging only, no cache clear.`);
-    // Do NOT clear localStorage – only log
+    console.log(`🔄 Version mismatch: stored=${storedVersion}, current=${APP_VERSION}. No cache cleared.`);
 } else if (!storedVersion) {
     localStorage.setItem('axelr_app_version', APP_VERSION);
 }
 
 // ============================================================
-// SERVICE WORKER CLEANUP - SINGLE CLEAN VERSION
+// SERVICE WORKER CLEANUP
 // ============================================================
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations()
         .then(registrations => {
-            for (let registration of registrations) {
-                registration.unregister();
-                console.log('🧹 Unregistered service worker:', registration.scope);
+            for (let reg of registrations) {
+                reg.unregister();
+                console.log('🧹 Unregistered service worker:', reg.scope);
             }
         })
         .catch(err => console.warn('SW cleanup error:', err));
@@ -2330,7 +2178,11 @@ loadUserProfile().then(() => {
         if (storedSessionId) {
             viewPastLogById(storedSessionId);
         }
-        // Setup viewport observer after everything loads
         setTimeout(setupViewportObserver, 500);
     });
 });
+
+window.onerror = function(message, source, lineno, colno, error) {
+    console.error('Global error:', message, error);
+    return true;
+};
