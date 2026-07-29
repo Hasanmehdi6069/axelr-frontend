@@ -1613,10 +1613,6 @@ async function executeCommand(isRetry = false) {
                 contentDiv.innerHTML = `💥 Error: ${errorData.message || 'Pipeline failed.'}`;
             }
             scrollToBottom();
-            // Show hero if no messages exist
-            if (viewport.querySelectorAll('.chat-bubble').length === 0) {
-                document.getElementById('hero-display').style.display = 'flex';
-            }
             isProcessing = false;
             return;
         }
@@ -1674,10 +1670,6 @@ async function executeCommand(isRetry = false) {
 
         } else {
             contentDiv.innerHTML = `⚠️ ${result.message || 'Something went wrong.'}`;
-            // Show hero if no messages exist
-            if (viewport.querySelectorAll('.chat-bubble').length === 0) {
-                document.getElementById('hero-display').style.display = 'flex';
-            }
         }
 
     } catch (error) {
@@ -1688,10 +1680,6 @@ async function executeCommand(isRetry = false) {
         } else {
             console.error('Execute error:', error);
             contentDiv.innerHTML = `⚠️ Network connection dropped. Please retry.`;
-            // Show hero if no messages exist
-            if (viewport.querySelectorAll('.chat-bubble').length === 0) {
-                document.getElementById('hero-display').style.display = 'flex';
-            }
         }
         scrollToBottom();
     } finally {
@@ -1878,7 +1866,7 @@ async function openAdminModal() {
             document.getElementById('admin-metrics-container').innerHTML = `
                 <div class="profile-stat-row"><span class="profile-stat-label">Total Users</span><span class="profile-stat-value">${data.totalUsers}</span></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Pro Subscribers</span><span class="profile-stat-value" style="color:var(--accent-glow-pro)">${data.proUsers}</span></div>
-                <div class="profile-stat-row"><span class="profile-stat-label">Designer Subscribers</span><span class="profile-stat-value" style="color:var(--accent-glow-designer)">${data.businessUsers}</span></div>
+                <div class="profile-stat-row"><span class="profile-stat-label">Designer Subscribers</span><span class="profile-stat-value" style="color:var(--accent-glow-designer)">${data.designerUsers}</span></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Total Matrix Logs</span><span class="profile-stat-value">${data.totalChats}</span></div>
                 <div style="border-top:1px solid var(--border-muted);margin:10px 0;"></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Total Queries Processed</span><span class="profile-stat-value">${data.metrics?.totalQueries || 0}</span></div>
@@ -2303,25 +2291,7 @@ window.addEventListener('resize', () => {
 });
 
 // ============================================================
-// INIT
-// ============================================================
-console.log('🟢 Axelr AI Frontend Loaded (v4.3.0)');
-console.log('📡 API Base URL:', API_BASE_URL);
-
-window.onerror = function(message, source, lineno, colno, error) {
-    console.error('Global error:', message, error);
-    return true;
-};
-
-const today = new Date();
-today.setUTCHours(0, 0, 0, 0);
-const lastVisit = localStorage.getItem('axelr_last_visit');
-if (!lastVisit || new Date(lastVisit) < today) {
-    localStorage.setItem('axelr_last_visit', today.toISOString());
-}
-
-// ============================================================
-// VERSION & CACHE CONTROL - FIXED: Only log mismatch, do NOT clear
+// VERSION & CACHE CONTROL - FIXED (no clear on mismatch)
 // ============================================================
 const APP_VERSION = '4.3.0';
 const BUILD_DATE = '2026-07-28';
@@ -2331,8 +2301,8 @@ console.log('📡 API Base URL:', API_BASE_URL);
 
 const storedVersion = localStorage.getItem('axelr_app_version');
 if (storedVersion && storedVersion !== APP_VERSION) {
-    console.log(`🔄 Version mismatch: stored=${storedVersion}, current=${APP_VERSION}. No cache cleared.`);
-    // We just log the difference – no localStorage.clear()
+    console.log(`🔄 Version mismatch (stored: ${storedVersion}, current: ${APP_VERSION}) – logging only, no cache clear.`);
+    // Do NOT clear localStorage – only log
 } else if (!storedVersion) {
     localStorage.setItem('axelr_app_version', APP_VERSION);
 }

@@ -34,3 +34,20 @@ git push origin main
 echo "✅ Deployment complete!"
 echo "📍 Version: $VERSION"
 echo "🕐 Timestamp: $TIMESTAMP"
+
+#!/bin/bash
+# Axelr AI Deployment Script
+
+echo "🚀 Deploying Axelr AI..."
+
+# Backend
+cd backend
+npm install
+pm2 restart axelr-backend || pm2 start server.js --name axelr-backend
+
+# Python orchestrator
+cd ../orchestrator
+pip install -r requirements.txt
+pm2 restart axelr-orchestrator || pm2 start "python main.py" --name axelr-orchestrator
+
+echo "✅ Deployment complete."
