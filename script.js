@@ -1198,7 +1198,11 @@ function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRege
     sessionId = null, isLastUserMsg = false, isHistoryView = false) {
     const actionBar = document.createElement('div');
     actionBar.className = 'bubble-action-bar';
-
+// in viewPastLogById, inside user branch:
+injectActionButtons(contentDiv, msg.text, true, false, null, null, isLastUser, true); // pass isHistoryView = true
+// in viewPastLogById, inside model branch, after the other logic:
+const isHistoryView = true;
+injectActionButtons(contentDiv, rawResponse, false, showRegenerate, msg.createdAt || log.createdAt, log._id, false, isHistoryView);
     if (isUserPrompt) {
         const copyBtn = document.createElement('button');
         copyBtn.className = 'action-icon-btn';
@@ -1207,26 +1211,26 @@ function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRege
         copyBtn.onclick = () => handleActionClick('copy', rawText, copyBtn);
         actionBar.appendChild(copyBtn);
 
-        // Edit button: only for last user message and not in history view, and one-time use
+        // Edit button: only for last user message, not in history, and one-time
         if (isLastUserMsg && !isHistoryView) {
             const editBtn = document.createElement('button');
             editBtn.className = 'action-icon-btn';
-            editBtn.title = "Edit this prompt";
+            editBtn.title = "Edit & Retry";
             editBtn.innerHTML = `${ICONS.edit} Edit`;
             editBtn.onclick = () => {
-                // Fill the input and trigger a send, then disable the button
                 promptInput.value = rawText;
                 promptInput.style.height = 'auto';
                 promptInput.style.height = promptInput.scrollHeight + 'px';
                 promptInput.focus();
                 validateSendCommand();
-                // One-time use: disable and visually mark
+                // Auto-submit after 300ms so user sees the change
+                setTimeout(() => {
+                    executeCommand(false);
+                }, 300);
+                // Disable the button after use (one-time)
                 editBtn.disabled = true;
                 editBtn.style.opacity = '0.5';
                 editBtn.title = "Edit used";
-                // Optionally, we could auto-submit, but we let user confirm.
-                // If you want auto-submit, uncomment:
-                // executeCommand();
             };
             actionBar.appendChild(editBtn);
         }
@@ -1251,7 +1255,7 @@ function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRege
         actionBar.appendChild(likeBtn);
         actionBar.appendChild(dislikeBtn);
 
-        // Regenerate: only if showRegenerate is true, not in history view, and we have a valid createdAt
+        // Regenerate: only if showRegenerate, not in history, and we have valid data
         if (showRegenerate && createdAt && sessionId && !isHistoryView) {
             const now = Date.now();
             const msgTime = new Date(createdAt).getTime();
@@ -1280,8 +1284,8 @@ function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRege
                         cleanup();
                         return;
                     }
-                    cleanup(); // Remove the button immediately
-                    suppressRegenerateForNextResponse = true; // Prevent reappearing
+                    cleanup(); // remove button immediately
+                    suppressRegenerateForNextResponse = true; // prevent reappearing
                     if (window.lastUserCommand) {
                         document.getElementById('prompt-input').value = window.lastUserCommand;
                         document.getElementById('prompt-input').style.height = 'auto';
@@ -1314,7 +1318,28 @@ function handleActionClick(actionType, rawText, btnRef) {
         validateSendCommand();
     }
 }
-
+// Stripe loading overlay
+function showStripeLoading() {
+    const overlay = document.createElement('div');
+    overlay.id = 'stripe-loading';
+    overlay.style.cssText = `
+        position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 99999; backdrop-filter: blur(4px);
+    `;
+    overlay.innerHTML = `
+        <div style="background: var(--bg-card); padding: 30px 40px; border-radius: 16px; text-align: center; border: 1px solid var(--border-muted);">
+            <span class="material-symbols-rounded" style="font-size: 48px; color: var(--accent-glow); animation: spin 1s linear infinite;">sync</span>
+            <div style="margin-top: 15px; color: var(--text-main); font-weight: 600;">Redirecting to Stripe...</div>
+            <div style="font-size: 13px; color: var(--text-muted);">Please wait</div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+}
+function hideStripeLoading() {
+    const el = document.getElementById('stripe-loading');
+    if (el) el.remove();
+}
 // ============================================================
 // ENHANCE PROMPT
 // ============================================================
@@ -1707,7 +1732,7 @@ function injectDeployButton(bubbleNode, rawHtml) {
     const debugBtn = document.createElement('button');
     debugBtn.className = 'deploy-debug-btn';
     debugBtn.innerText = 'Debug';
-    debugBtn.style.display = 'inline-block';  // always visible now
+    debugBtn.style.display = 'inline-block';
     const errorDetails = document.createElement('div');
     errorDetails.className = 'deploy-error-details';
     deployContainer.appendChild(deployBtn);
@@ -1736,7 +1761,7 @@ function injectDeployButton(bubbleNode, rawHtml) {
                     doc.write(result.fixed_code);
                     doc.close();
                 }
-                rawHtml = result.fixed_code;  // update for future deploys
+                rawHtml = result.fixed_code;
                 debugBtn.innerText = 'Fixed!';
                 setTimeout(() => { debugBtn.innerText = 'Debug'; debugBtn.disabled = false; }, 2000);
             } else {
@@ -1822,7 +1847,6 @@ function injectDeployButton(bubbleNode, rawHtml) {
     }
     deployBtn.onclick = attemptDeploy;
 }
-
 // ============================================================
 // MODALS
 // ============================================================
@@ -1920,7 +1944,6 @@ async function openAdminModal() {
         document.getElementById('admin-metrics-container').innerHTML = `<div style="color:#ef4444;text-align:center;">Network error. Check your connection.</div>`;
     }
 }
-
 async function dispatchCheckoutPipeline(targetBaseTier) {
     const selectedRadio = document.querySelector(`input[name="${targetBaseTier}-sub-selector"]:checked`);
     if (!selectedRadio) {
@@ -1930,9 +1953,12 @@ async function dispatchCheckoutPipeline(targetBaseTier) {
     const selectedSubConfig = selectedRadio.value;
     const checkoutBtn = document.querySelector(`.${targetBaseTier}-premium .upgrade-btn`);
     const originalText = checkoutBtn.innerText;
-    checkoutBtn.innerText = "Connecting to Stripe...";
+    checkoutBtn.innerText = "Connecting...";
     checkoutBtn.style.opacity = "0.7";
     checkoutBtn.disabled = true;
+
+    showStripeLoading(); // <-- show overlay
+
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);
     try {
@@ -1953,12 +1979,13 @@ async function dispatchCheckoutPipeline(targetBaseTier) {
         }
         const data = await response.json();
         if (data.url) {
-            window.location.href = data.url;
+            window.location.href = data.url; // redirect – overlay will be hidden by page unload
         } else {
             throw new Error(data.message || "No checkout URL returned.");
         }
     } catch (e) {
         console.error("Checkout error:", e);
+        hideStripeLoading(); // hide on error
         let userMsg = "Checkout Failed";
         if (e.name === 'AbortError') {
             userMsg = "Request timed out. Please try again.";
