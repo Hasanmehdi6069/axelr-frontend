@@ -1101,7 +1101,11 @@ function viewPastLogById(logId) {
             let lastUserIdx = -1;
             log.messages.forEach((m, i) => { if (m.role === 'user') lastUserIdx = i; });
             const isLastUser = (msg.role === 'user' && idx === lastUserIdx);
-            injectActionButtons(contentDiv, msg.text, true, false, null, null, isLastUser);
+         // For user messages
+injectActionButtons(contentDiv, msg.text, true, false, null, null, isLastUser, true);
+
+// For model messages
+injectActionButtons(contentDiv, rawResponse, false, showRegenerate, msg.createdAt || log.createdAt, log._id, false, true);
         } else {
             let rawResponse = msg.text || "";
             const avatarDiv = document.createElement('div');
@@ -1191,9 +1195,10 @@ async function switchVariant(logId, msgId, newIndex) {
 // ACTION BUTTONS
 // ============================================================
 function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRegenerate = false, createdAt = null,
-    sessionId = null, isLastUserMsg = false) {
+    sessionId = null, isLastUserMsg = false, isHistoryView = false) {
     const actionBar = document.createElement('div');
     actionBar.className = 'bubble-action-bar';
+
     if (isUserPrompt) {
         const copyBtn = document.createElement('button');
         copyBtn.className = 'action-icon-btn';
@@ -1201,15 +1206,32 @@ function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRege
         copyBtn.innerHTML = `${ICONS.copy} Copy`;
         copyBtn.onclick = () => handleActionClick('copy', rawText, copyBtn);
         actionBar.appendChild(copyBtn);
-        if (isLastUserMsg) {
+
+        // Edit button: only for last user message and not in history view, and one-time use
+        if (isLastUserMsg && !isHistoryView) {
             const editBtn = document.createElement('button');
             editBtn.className = 'action-icon-btn';
             editBtn.title = "Edit this prompt";
             editBtn.innerHTML = `${ICONS.edit} Edit`;
-            editBtn.onclick = () => handleActionClick('edit', rawText, editBtn);
+            editBtn.onclick = () => {
+                // Fill the input and trigger a send, then disable the button
+                promptInput.value = rawText;
+                promptInput.style.height = 'auto';
+                promptInput.style.height = promptInput.scrollHeight + 'px';
+                promptInput.focus();
+                validateSendCommand();
+                // One-time use: disable and visually mark
+                editBtn.disabled = true;
+                editBtn.style.opacity = '0.5';
+                editBtn.title = "Edit used";
+                // Optionally, we could auto-submit, but we let user confirm.
+                // If you want auto-submit, uncomment:
+                // executeCommand();
+            };
             actionBar.appendChild(editBtn);
         }
     } else {
+        // Copy, Like, Dislike (always visible)
         const copyBtn = document.createElement('button');
         copyBtn.className = 'action-icon-btn';
         copyBtn.title = "Copy Response";
@@ -1228,7 +1250,9 @@ function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRege
         actionBar.appendChild(copyBtn);
         actionBar.appendChild(likeBtn);
         actionBar.appendChild(dislikeBtn);
-        if (showRegenerate && createdAt && sessionId) {
+
+        // Regenerate: only if showRegenerate is true, not in history view, and we have a valid createdAt
+        if (showRegenerate && createdAt && sessionId && !isHistoryView) {
             const now = Date.now();
             const msgTime = new Date(createdAt).getTime();
             const elapsed = now - msgTime;
@@ -1251,15 +1275,13 @@ function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRege
                     if (remaining <= 0) cleanup();
                 }, 1000);
                 timeoutId = setTimeout(cleanup, 30000 - elapsed);
-                // On click: set suppress flag and trigger regeneration
                 regenBtn.onclick = function(e) {
                     if (activeSessionId !== sessionId) {
                         cleanup();
                         return;
                     }
-                    cleanup();
-                    // Suppress regenerate on the new response
-                    suppressRegenerateForNextResponse = true;
+                    cleanup(); // Remove the button immediately
+                    suppressRegenerateForNextResponse = true; // Prevent reappearing
                     if (window.lastUserCommand) {
                         document.getElementById('prompt-input').value = window.lastUserCommand;
                         document.getElementById('prompt-input').style.height = 'auto';
@@ -1275,9 +1297,9 @@ function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRege
             }
         }
     }
+
     bubbleNode.appendChild(actionBar);
 }
-
 function handleActionClick(actionType, rawText, btnRef) {
     if (actionType === 'copy') {
         navigator.clipboard.writeText(rawText);
