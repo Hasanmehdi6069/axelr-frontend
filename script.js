@@ -1,5 +1,5 @@
 // ============================================================
-// AXELR AI - FRONTEND v4.3.2
+// AXELR AI - FRONTEND v4.3.2 (ELITE FIXED)
 // ============================================================
 // Enterprise-grade with silent token refresh & fixed regenerate
 // ============================================================
@@ -9,7 +9,6 @@
 // ============================================================
 const API_BASE_URL = window.location.hostname === "localhost" ? "http://localhost:5000" :
     "https://axelr-backend.onrender.com";
-    
 
 const AXELR_AVATAR_SVG =
     `<svg viewBox="0 0 100 100" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M50 15 L20 32.5 L20 67.5 L50 85" stroke="#ffffff" stroke-width="6" stroke-linejoin="bevel" fill="rgba(255,255,255,0.05)"/><path d="M50 15 L80 32.5 L50 50 L80 67.5 L50 85" stroke="currentColor" stroke-width="6" stroke-linejoin="bevel" fill="none"/><path d="M20 32.5 L50 50 L20 67.5" stroke="#ffffff" stroke-width="3" stroke-linejoin="bevel" opacity="0.5"/></svg>`;
@@ -189,10 +188,7 @@ let ignoreSidebarClose = false;
 let manipulationCount = parseInt(sessionStorage.getItem('axelr_manipulation_count')) || 0;
 let manipulationLockUntil = parseInt(sessionStorage.getItem('axelr_manipulation_lock')) || 0;
 
-// ============================================================
-// REGENERATE SUPPRESSION FLAG (FIXED)
-// ============================================================
-let suppressRegenerateForNextResponse = false; // starts false – regenerate is allowed by default
+let suppressRegenerateForNextResponse = false;
 
 // ============================================================
 // SCROLL FUNCTIONS
@@ -518,7 +514,7 @@ fileInput.addEventListener('change', (e) => {
 });
 
 // ============================================================
-// SIDEBAR FUNCTIONS
+// SIDEBAR FUNCTIONS (unchanged)
 // ============================================================
 function toggleSidebar() {
     sidebarNode.classList.toggle('open');
@@ -1101,11 +1097,7 @@ function viewPastLogById(logId) {
             let lastUserIdx = -1;
             log.messages.forEach((m, i) => { if (m.role === 'user') lastUserIdx = i; });
             const isLastUser = (msg.role === 'user' && idx === lastUserIdx);
-         // For user messages
-injectActionButtons(contentDiv, msg.text, true, false, null, null, isLastUser, true);
-
-// For model messages
-injectActionButtons(contentDiv, rawResponse, false, showRegenerate, msg.createdAt || log.createdAt, log._id, false, true);
+            injectActionButtons(contentDiv, msg.text, true, false, null, null, isLastUser, true);
         } else {
             let rawResponse = msg.text || "";
             const avatarDiv = document.createElement('div');
@@ -1145,7 +1137,7 @@ injectActionButtons(contentDiv, rawResponse, false, showRegenerate, msg.createdA
                     showRegenerate = true;
                 }
             }
-            injectActionButtons(contentDiv, rawResponse, false, showRegenerate, msg.createdAt || log.createdAt, log._id);
+            injectActionButtons(contentDiv, rawResponse, false, showRegenerate, msg.createdAt || log.createdAt, log._id, false, true);
             if (msg.variants && msg.variants.length > 1) {
                 const currentIdx = msg.activeVariant || 0;
                 const variantBar = document.createElement('div');
@@ -1192,17 +1184,13 @@ async function switchVariant(logId, msgId, newIndex) {
 }
 
 // ============================================================
-// ACTION BUTTONS
+// ACTION BUTTONS (CLEAN)
 // ============================================================
 function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRegenerate = false, createdAt = null,
     sessionId = null, isLastUserMsg = false, isHistoryView = false) {
     const actionBar = document.createElement('div');
     actionBar.className = 'bubble-action-bar';
-// in viewPastLogById, inside user branch:
-injectActionButtons(contentDiv, msg.text, true, false, null, null, isLastUser, true); // pass isHistoryView = true
-// in viewPastLogById, inside model branch, after the other logic:
-const isHistoryView = true;
-injectActionButtons(contentDiv, rawResponse, false, showRegenerate, msg.createdAt || log.createdAt, log._id, false, isHistoryView);
+
     if (isUserPrompt) {
         const copyBtn = document.createElement('button');
         copyBtn.className = 'action-icon-btn';
@@ -1211,7 +1199,6 @@ injectActionButtons(contentDiv, rawResponse, false, showRegenerate, msg.createdA
         copyBtn.onclick = () => handleActionClick('copy', rawText, copyBtn);
         actionBar.appendChild(copyBtn);
 
-        // Edit button: only for last user message, not in history, and one-time
         if (isLastUserMsg && !isHistoryView) {
             const editBtn = document.createElement('button');
             editBtn.className = 'action-icon-btn';
@@ -1223,11 +1210,9 @@ injectActionButtons(contentDiv, rawResponse, false, showRegenerate, msg.createdA
                 promptInput.style.height = promptInput.scrollHeight + 'px';
                 promptInput.focus();
                 validateSendCommand();
-                // Auto-submit after 300ms so user sees the change
                 setTimeout(() => {
                     executeCommand(false);
                 }, 300);
-                // Disable the button after use (one-time)
                 editBtn.disabled = true;
                 editBtn.style.opacity = '0.5';
                 editBtn.title = "Edit used";
@@ -1235,7 +1220,6 @@ injectActionButtons(contentDiv, rawResponse, false, showRegenerate, msg.createdA
             actionBar.appendChild(editBtn);
         }
     } else {
-        // Copy, Like, Dislike (always visible)
         const copyBtn = document.createElement('button');
         copyBtn.className = 'action-icon-btn';
         copyBtn.title = "Copy Response";
@@ -1255,7 +1239,6 @@ injectActionButtons(contentDiv, rawResponse, false, showRegenerate, msg.createdA
         actionBar.appendChild(likeBtn);
         actionBar.appendChild(dislikeBtn);
 
-        // Regenerate: only if showRegenerate, not in history, and we have valid data
         if (showRegenerate && createdAt && sessionId && !isHistoryView) {
             const now = Date.now();
             const msgTime = new Date(createdAt).getTime();
@@ -1284,8 +1267,8 @@ injectActionButtons(contentDiv, rawResponse, false, showRegenerate, msg.createdA
                         cleanup();
                         return;
                     }
-                    cleanup(); // remove button immediately
-                    suppressRegenerateForNextResponse = true; // prevent reappearing
+                    cleanup();
+                    suppressRegenerateForNextResponse = true;
                     if (window.lastUserCommand) {
                         document.getElementById('prompt-input').value = window.lastUserCommand;
                         document.getElementById('prompt-input').style.height = 'auto';
@@ -1301,9 +1284,9 @@ injectActionButtons(contentDiv, rawResponse, false, showRegenerate, msg.createdA
             }
         }
     }
-
     bubbleNode.appendChild(actionBar);
 }
+
 function handleActionClick(actionType, rawText, btnRef) {
     if (actionType === 'copy') {
         navigator.clipboard.writeText(rawText);
@@ -1318,6 +1301,7 @@ function handleActionClick(actionType, rawText, btnRef) {
         validateSendCommand();
     }
 }
+
 // Stripe loading overlay
 function showStripeLoading() {
     const overlay = document.createElement('div');
@@ -1340,6 +1324,7 @@ function hideStripeLoading() {
     const el = document.getElementById('stripe-loading');
     if (el) el.remove();
 }
+
 // ============================================================
 // ENHANCE PROMPT
 // ============================================================
