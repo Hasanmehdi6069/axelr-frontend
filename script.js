@@ -589,17 +589,26 @@ function openSettingsModal() {
         btn.classList.toggle('active', btn.dataset.theme === currentThemePreference);
     });
 }
-
 function updateSettingsQuota() {
     const quotaCount = document.getElementById('quota-numerical-count');
     const quotaFill = document.getElementById('quota-progress-bar-fill');
     const planBadge = document.getElementById('settings-plan-badge');
-    if (quotaCount) document.getElementById('settings-quota-count').innerText = quotaCount.innerText;
-    if (quotaFill) document.getElementById('settings-quota-fill').style.width = quotaFill.style.width;
-    if (planBadge) {
-        document.getElementById('settings-plan-badge').innerText = planBadge.innerText;
-        document.getElementById('settings-plan-badge').style.background = planBadge.style.background;
-        document.getElementById('settings-plan-badge').style.color = planBadge.style.color;
+
+    // Safely update settings modal elements if they exist
+    const settingsQuotaCount = document.getElementById('settings-quota-count');
+    const settingsQuotaFill = document.getElementById('settings-quota-fill');
+    const settingsPlanBadge = document.getElementById('settings-plan-badge');
+
+    if (quotaCount && settingsQuotaCount) {
+        settingsQuotaCount.innerText = quotaCount.innerText;
+    }
+    if (quotaFill && settingsQuotaFill) {
+        settingsQuotaFill.style.width = quotaFill.style.width;
+    }
+    if (planBadge && settingsPlanBadge) {
+        settingsPlanBadge.innerText = planBadge.innerText;
+        settingsPlanBadge.style.background = planBadge.style.background;
+        settingsPlanBadge.style.color = planBadge.style.color;
     }
 }
 
