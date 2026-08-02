@@ -1685,13 +1685,51 @@ function injectDeployButton(bubbleNode, rawHtml) {
     const debugBtn = document.createElement('button');
     debugBtn.className = 'deploy-debug-btn';
     debugBtn.innerText = 'Debug';
-    debugBtn.style.display = 'none';
+    debugBtn.style.display = 'inline-block';  // always visible now
     const errorDetails = document.createElement('div');
     errorDetails.className = 'deploy-error-details';
     deployContainer.appendChild(deployBtn);
     deployContainer.appendChild(debugBtn);
     deployContainer.appendChild(errorDetails);
     bubbleNode.appendChild(deployContainer);
+
+    // ----- DEBUG BUTTON LOGIC (FIXED) -----
+    debugBtn.onclick = async function() {
+        const errorMsg = prompt("Paste the error message from the console or browser:");
+        if (!errorMsg) return;
+        debugBtn.innerText = 'Fixing...';
+        debugBtn.disabled = true;
+        try {
+            const response = await apiFetch(`${API_BASE_URL}/api/touch_fix`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: rawHtml, error_message: errorMsg })
+            });
+            const result = await response.json();
+            if (result.success) {
+                const iframe = bubbleNode.querySelector('iframe');
+                if (iframe) {
+                    const doc = iframe.contentDocument || iframe.contentWindow.document;
+                    doc.open();
+                    doc.write(result.fixed_code);
+                    doc.close();
+                }
+                rawHtml = result.fixed_code;  // update for future deploys
+                debugBtn.innerText = 'Fixed!';
+                setTimeout(() => { debugBtn.innerText = 'Debug'; debugBtn.disabled = false; }, 2000);
+            } else {
+                alert('Fix failed: ' + (result.message || 'Unknown error'));
+                debugBtn.innerText = 'Debug';
+                debugBtn.disabled = false;
+            }
+        } catch (e) {
+            alert('Network error: ' + e.message);
+            debugBtn.innerText = 'Debug';
+            debugBtn.disabled = false;
+        }
+    };
+
+    // ----- DEPLOY BUTTON LOGIC (unchanged) -----
     let retryCount = 0;
     const maxRetries = 5;
     let isDeploying = false;
@@ -1736,44 +1774,27 @@ function injectDeployButton(bubbleNode, rawHtml) {
                 deployBtn.innerText = '⚠️ Deployment Failed';
                 deployBtn.style.background = '#ef4444';
                 deployBtn.disabled = false;
-               // Inside injectDeployButton, after creating deployBtn and debugBtn
-debugBtn.style.display = 'inline-block'; // make visible
-debugBtn.onclick = async function() {
-    const errorMsg = prompt("Paste the error message from the console or browser:");
-    if (!errorMsg) return;
-    debugBtn.innerText = 'Fixing...';
-    debugBtn.disabled = true;
-    try {
-        const response = await apiFetch(`${API_BASE_URL}/api/touch_fix`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code: rawHtml, error_message: errorMsg })
-        });
-        const result = await response.json();
-        if (result.success) {
-            // Replace the iframe content
-            const iframe = bubbleNode.querySelector('iframe');
-            if (iframe) {
-                const doc = iframe.contentDocument || iframe.contentWindow.document;
-                doc.open();
-                doc.write(result.fixed_code);
-                doc.close();
-            }
-            // Optionally update the rawHtml variable for future deploys
-            rawHtml = result.fixed_code;
-            debugBtn.innerText = 'Fixed!';
-            setTimeout(() => { debugBtn.innerText = 'Debug'; debugBtn.disabled = false; }, 2000);
-        } else {
-            alert('Fix failed: ' + (result.message || 'Unknown error'));
-            debugBtn.innerText = 'Debug';
-            debugBtn.disabled = false;
-        }
-    } catch (e) {
-        alert('Network error: ' + e.message);
-        debugBtn.innerText = 'Debug';
-        debugBtn.disabled = false;
-    }
-};
+                debugBtn.style.display = 'inline-block';
+                errorDetails.textContent = `Error: ${err.message || 'Unknown error'}\nNetwork: ${navigator.onLine ? 'Online' : 'Offline'}`;
+                errorDetails.classList.add('show');
+                debugBtn.onclick = () => { errorDetails.classList.toggle('show'); };
+                const retryBtn = document.createElement('button');
+                retryBtn.className = 'deploy-retry-btn';
+                retryBtn.innerText = 'Retry Deployment';
+                retryBtn.onclick = () => {
+                    retryCount = 0;
+                    errorDetails.classList.remove('show');
+                    deployBtn.style.background = 'var(--accent-secondary)';
+                    deployBtn.innerText = 'Deploy Live';
+                    deployBtn.disabled = false;
+                    debugBtn.style.display = 'inline-block';
+                    const oldRetry = deployContainer.querySelector('.deploy-retry-btn');
+                    if (oldRetry) oldRetry.remove();
+                    isDeploying = false;
+                    attemptDeploy();
+                };
+                deployContainer.appendChild(retryBtn);
+                isDeploying = false;
             }
         }
     }
