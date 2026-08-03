@@ -830,42 +830,15 @@ async function loadUserProfile() {
             } else {
                 document.getElementById('admin-dashboard-btn').style.display = 'none';
             }
-            const currentWorkspace = getWorkspace();
-            const isDesign = currentWorkspace === 'design';
-            const isFree = data.tier === 'free';
-            const isPro = data.tier === 'pro';
-            const isBusiness = data.tier === 'business';
-            let used = 0, limit = 0;
-            if (isFree) {
-                used = Math.max(0, data.dailyUsage || 0);
-                limit = 5;
-            } else {
-                const hasData = data.subTierOptions?.hasDataAccess || false;
-                const hasDesign = data.subTierOptions?.hasDesignAccess || false;
-                let subTierType = 'full';
-                if (hasData && !hasDesign) subTierType = 'data';
-                else if (!hasData && hasDesign) subTierType = 'design';
-                let dataLimit = 0, uiLimit = 0;
-                if (isPro) {
-                    if (subTierType === 'full') { dataLimit = 20; uiLimit = 15; }
-                    else if (subTierType === 'data') { dataLimit = 19; uiLimit = 0; }
-                    else if (subTierType === 'design') { dataLimit = 0; uiLimit = 13; }
-                } else if (isBusiness) {
-                    if (subTierType === 'full') { dataLimit = 30; uiLimit = 25; }
-                    else if (subTierType === 'data') { dataLimit = 28; uiLimit = 0; }
-                    else if (subTierType === 'design') { dataLimit = 0; uiLimit = 20; }
-                }
-                if (isDesign) {
-                    used = Math.max(0, data.quotas?.dailyGenerationsUsed || 0);
-                    limit = uiLimit;
-                } else {
-                    used = Math.max(0, data.quotas?.dailyExtractionsUsed || 0);
-                    limit = dataLimit;
-                }
-            }
+
+            // SIMPLIFIED QUOTA: single dailyUsage and dailyLimit from backend
+            const used = data.dailyUsage || 0;
+            const limit = data.dailyLimit || 5;  // backend sends limit
             const percentage = limit > 0 ? Math.min((used / limit) * 100, 100) : 0;
+
             document.getElementById('quota-numerical-count').innerText = `${used}/${limit} Used (${Math.round(percentage)}%)`;
             document.getElementById('quota-progress-bar-fill').style.width = `${percentage}%`;
+
             const planBadge = document.getElementById('sidebar-plan-badge');
             if (planBadge) {
                 planBadge.innerText = data.tier.toUpperCase();
@@ -876,15 +849,16 @@ async function loadUserProfile() {
             }
             document.getElementById('sub-plan-name').innerText = data.tier.toUpperCase() + ' ALLOCATION';
             document.getElementById('tier-badge').innerText = data.tier.toUpperCase() + ' TIER';
+
             if (data.tier === 'pro') document.body.classList.add('pro-tier');
             else if (data.tier === 'business') document.body.classList.add('designer-tier');
             else { document.body.classList.remove('pro-tier', 'designer-tier'); }
+
             updateSettingsQuota();
             updateSubscriptionModal();
         }
     } catch (e) { console.warn('Profile load failed', e); }
 }
-
 // ============================================================
 // HISTORY
 // ============================================================
