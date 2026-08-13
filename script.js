@@ -1,7 +1,8 @@
 // ============================================================
-// AXELR AI - FRONTEND v4.3.2 (ELITE FIXED)
+// AXELR AI - FRONTEND v4.3.3 (ELITE FINAL)
 // ============================================================
-// Enterprise-grade with silent token refresh & fixed regenerate
+// Enterprise-grade with silent token refresh, fixed regenerate,
+// Stripe cancel, no duplicate messages, and clean admin metrics.
 // ============================================================
 
 // ============================================================
@@ -38,7 +39,7 @@ const SIDEBAR_ICONS = {
 };
 
 // ============================================================
-// TOKEN MANAGEMENT
+// TOKEN MANAGEMENT (unchanged)
 // ============================================================
 let googleAuthUserToken = localStorage.getItem('google_auth_token') || null;
 let tokenRefreshPromise = null;
@@ -192,7 +193,7 @@ let manipulationLockUntil = parseInt(sessionStorage.getItem('axelr_manipulation_
 let suppressRegenerateForNextResponse = false;
 
 // ============================================================
-// SCROLL FUNCTIONS
+// SCROLL FUNCTIONS (unchanged)
 // ============================================================
 function scrollToBottom(smooth = true) {
     if (!viewport || isUserScrolling) return;
@@ -216,7 +217,7 @@ function updateViewportAfterRender() {
 }
 
 // ============================================================
-// UTILITY FUNCTIONS
+// UTILITY FUNCTIONS (unchanged)
 // ============================================================
 function escapeHtmlEntities(str) {
     const div = document.createElement('div');
@@ -261,7 +262,7 @@ function getDraftKey() {
 }
 
 // ============================================================
-// THEME FUNCTIONS
+// THEME FUNCTIONS (unchanged)
 // ============================================================
 let currentThemePreference = localStorage.getItem('axelr_theme') || 'system';
 let systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -304,7 +305,7 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e)
 });
 
 // ============================================================
-// INITIALIZATION
+// INITIALIZATION (unchanged)
 // ============================================================
 function initializeApp() {
     const saved = localStorage.getItem('axelr_theme') || 'system';
@@ -336,7 +337,7 @@ if (document.readyState === 'loading') {
 }
 
 // ============================================================
-// AUTH HANDLING
+// AUTH HANDLING (unchanged)
 // ============================================================
 function handleCredentialResponse(response) {
     const token = response.credential;
@@ -384,7 +385,7 @@ function executeGlobalLogout() {
 }
 
 // ============================================================
-// VIEWPORT & KEYBOARD ADJUSTMENT
+// VIEWPORT & KEYBOARD ADJUSTMENT (unchanged)
 // ============================================================
 function adjustCommandWrapperAndViewport() {
     const vv = window.visualViewport;
@@ -417,7 +418,7 @@ if (window.visualViewport) {
 }
 
 // ============================================================
-// VIEWPORT OBSERVER
+// VIEWPORT OBSERVER (unchanged)
 // ============================================================
 function setupViewportObserver() {
     if (viewportObserver) {
@@ -446,7 +447,7 @@ viewport.addEventListener('scroll', () => {
 }, { passive: true });
 
 // ============================================================
-// FILE HANDLING
+// FILE HANDLING (unchanged)
 // ============================================================
 function renderFileChips() {
     const container = document.getElementById('file-staging-container');
@@ -595,7 +596,6 @@ function updateSettingsQuota() {
     const quotaFill = document.getElementById('quota-progress-bar-fill');
     const planBadge = document.getElementById('settings-plan-badge');
 
-    // Safely update settings modal elements if they exist
     const settingsQuotaCount = document.getElementById('settings-quota-count');
     const settingsQuotaFill = document.getElementById('settings-quota-fill');
     const settingsPlanBadge = document.getElementById('settings-plan-badge');
@@ -614,7 +614,7 @@ function updateSettingsQuota() {
 }
 
 // ============================================================
-// SEARCH OVERLAY
+// SEARCH OVERLAY (unchanged)
 // ============================================================
 function openSearchOverlay() {
     const overlay = document.getElementById('search-overlay');
@@ -657,7 +657,7 @@ document.getElementById('sidebar-search-box').addEventListener('click', function
 });
 
 // ============================================================
-// WORKSPACE FUNCTIONS
+// WORKSPACE FUNCTIONS (unchanged)
 // ============================================================
 function showWorkspaceSelector() {
     document.getElementById('workspace-selector').style.display = 'flex';
@@ -730,7 +730,7 @@ function resetToNewChat(isBoot = false) {
 }
 
 // ============================================================
-// VALIDATION
+// VALIDATION (unchanged)
 // ============================================================
 function validateSendCommand() {
     const hasInput = promptInput.value.trim().length > 0 || stagedFiles.length > 0;
@@ -757,7 +757,7 @@ window.addEventListener('online', () => {
 });
 
 // ============================================================
-// VOICE INPUT
+// VOICE INPUT (unchanged)
 // ============================================================
 const micBtn = document.getElementById('mic-trigger');
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -806,7 +806,7 @@ if (SpeechRecognition) {
 }
 
 // ============================================================
-// MARKED RENDERER
+// MARKED RENDERER (unchanged)
 // ============================================================
 const renderer = new marked.Renderer();
 renderer.code = function(code, language) {
@@ -815,7 +815,7 @@ renderer.code = function(code, language) {
 marked.setOptions({ renderer, breaks: true });
 
 // ============================================================
-// USER PROFILE & QUOTA
+// USER PROFILE & QUOTA (unchanged)
 // ============================================================
 async function loadUserProfile() {
     try {
@@ -831,9 +831,8 @@ async function loadUserProfile() {
                 document.getElementById('admin-dashboard-btn').style.display = 'none';
             }
 
-            // SIMPLIFIED QUOTA: single dailyUsage and dailyLimit from backend
             const used = data.dailyUsage || 0;
-            const limit = data.dailyLimit || 5;  // backend sends limit
+            const limit = data.dailyLimit || 5;
             const percentage = limit > 0 ? Math.min((used / limit) * 100, 100) : 0;
 
             document.getElementById('quota-numerical-count').innerText = `${used}/${limit} Used (${Math.round(percentage)}%)`;
@@ -859,8 +858,9 @@ async function loadUserProfile() {
         }
     } catch (e) { console.warn('Profile load failed', e); }
 }
+
 // ============================================================
-// HISTORY
+// HISTORY (unchanged)
 // ============================================================
 async function loadArchiveLogs() {
     try {
@@ -908,7 +908,7 @@ async function loadArchiveLogs() {
 }
 
 // ============================================================
-// RENAME, PIN, SHARE, STATUS FUNCTIONS
+// RENAME, PIN, SHARE, STATUS FUNCTIONS (unchanged)
 // ============================================================
 async function renameChat(logId, currentName, e) {
     e.stopPropagation();
@@ -1025,7 +1025,7 @@ async function deleteLogPermanently(logId, e) {
 }
 
 // ============================================================
-// VIEW PAST LOG
+// VIEW PAST LOG (UPDATED: uses canRegenerate flag)
 // ============================================================
 function viewPastLogById(logId) {
     if (regenerateTimer) {
@@ -1111,14 +1111,19 @@ function viewPastLogById(logId) {
                 injectDeployButton(contentDiv, rawCode);
             }
             const isLast = idx === log.messages.length - 1;
-            const alreadyRegenerated = msg.variants && msg.variants.length > 1;
             const isActive = log.status === 'active';
+            // Use canRegenerate flag if present, else fallback to time check
             let showRegenerate = false;
-            if (isLast && isActive && !alreadyRegenerated) {
-                const msgDate = msg.createdAt ? new Date(msg.createdAt) : new Date(log.createdAt);
-                const now = new Date();
-                if (!isNaN(msgDate.getTime()) && (now - msgDate) < 30000) {
-                    showRegenerate = true;
+            if (isLast && isActive) {
+                if (msg.canRegenerate === true) {
+                    // Only if not already regenerated (variants length 1)
+                    if (!msg.variants || msg.variants.length <= 1) {
+                        const msgDate = msg.createdAt ? new Date(msg.createdAt) : new Date(log.createdAt);
+                        const now = new Date();
+                        if (!isNaN(msgDate.getTime()) && (now - msgDate) < 30000) {
+                            showRegenerate = true;
+                        }
+                    }
                 }
             }
             injectActionButtons(contentDiv, rawResponse, false, showRegenerate, msg.createdAt || log.createdAt, log._id, false, true);
@@ -1168,7 +1173,7 @@ async function switchVariant(logId, msgId, newIndex) {
 }
 
 // ============================================================
-// ACTION BUTTONS (CLEAN)
+// ACTION BUTTONS (unchanged)
 // ============================================================
 function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRegenerate = false, createdAt = null,
     sessionId = null, isLastUserMsg = false, isHistoryView = false) {
@@ -1286,31 +1291,41 @@ function handleActionClick(actionType, rawText, btnRef) {
     }
 }
 
-// Stripe loading overlay
-function showStripeLoading() {
+// ============================================================
+// STRIPE LOADING OVERLAY (FIXED)
+// ============================================================
+function showStripeLoading(onCancel) {
     const overlay = document.createElement('div');
     overlay.id = 'stripe-loading';
     overlay.style.cssText = `
-        position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+        position: fixed; inset: 0; background: rgba(0,0,0,0.7);
         display: flex; align-items: center; justify-content: center;
         z-index: 99999; backdrop-filter: blur(4px);
     `;
     overlay.innerHTML = `
-        <div style="background: var(--bg-card); padding: 30px 40px; border-radius: 16px; text-align: center; border: 1px solid var(--border-muted);">
+        <div style="background: var(--bg-card); padding: 30px 40px; border-radius: 16px; text-align: center; border: 1px solid var(--border-muted); position: relative; max-width: 90%;">
+            <button onclick="hideStripeLoading(); if (typeof onCancel === 'function') onCancel();" style="position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 24px; color: var(--text-muted); cursor: pointer;">&times;</button>
             <span class="material-symbols-rounded" style="font-size: 48px; color: var(--accent-glow); animation: spin 1s linear infinite;">sync</span>
             <div style="margin-top: 15px; color: var(--text-main); font-weight: 600;">Redirecting to Stripe...</div>
             <div style="font-size: 13px; color: var(--text-muted);">Please wait</div>
+            <button onclick="hideStripeLoading(); if (typeof onCancel === 'function') onCancel();" style="margin-top: 20px; padding: 8px 20px; border: 1px solid var(--border-muted); border-radius: 8px; background: transparent; color: var(--text-main); cursor: pointer;">Cancel</button>
         </div>
     `;
     document.body.appendChild(overlay);
+    window._stripeCancelCallback = onCancel || null;
 }
+
 function hideStripeLoading() {
     const el = document.getElementById('stripe-loading');
     if (el) el.remove();
+    if (typeof window._stripeCancelCallback === 'function') {
+        window._stripeCancelCallback();
+        window._stripeCancelCallback = null;
+    }
 }
 
 // ============================================================
-// ENHANCE PROMPT
+// ENHANCE PROMPT (unchanged)
 // ============================================================
 async function enhanceUserPrompt() {
     const text = promptInput.value.trim();
@@ -1353,7 +1368,7 @@ async function enhanceUserPrompt() {
 }
 
 // ============================================================
-// SECURITY LAYER
+// SECURITY LAYER (unchanged)
 // ============================================================
 function detectManipulationAttempt(command) {
     const patterns = [
@@ -1395,7 +1410,7 @@ function showSecurityAlert(level) {
 }
 
 // ============================================================
-// EXECUTE COMMAND
+// EXECUTE COMMAND (FIXED: no duplicate viewPastLogById)
 // ============================================================
 async function executeCommand(isRetry = false) {
     if (!activeSessionId) {
@@ -1593,8 +1608,9 @@ async function executeCommand(isRetry = false) {
                 localStorage.setItem('axelr_active_session', activeSessionId);
                 runningStructuredCache = structuredData;
                 runningFileTitle = filename;
+                // Only refresh sidebar – DO NOT re‑render the whole chat
                 await loadArchiveLogs();
-                viewPastLogById(activeSessionId);
+                // The bubble is already appended; no need to call viewPastLogById
             }
 
             const rawCode = extractHtmlCode(fullResponse);
@@ -1647,7 +1663,8 @@ async function executeCommand(isRetry = false) {
             console.error('Execute error:', error);
             contentDiv.innerHTML = `⚠️ All AI services are temporarily overloaded. Please try again in a moment.`;
             if (viewport.querySelectorAll('.chat-bubble').length === 0) {
-                document.getElementById('hero-display').style.display = 'flex';
+                document.getElementById('hero-display').style.display = 'none';
+                document.getElementById('main-back-btn').style.display = 'flex';
             }
         }
         scrollToBottom();
@@ -1666,7 +1683,7 @@ async function executeCommand(isRetry = false) {
 }
 
 // ============================================================
-// PAYLOAD / DEPLOY
+// PAYLOAD / DEPLOY (unchanged)
 // ============================================================
 function appendPayloadDownload(bubbleNode) {
     if (runningStructuredCache && runningStructuredCache.length > 0) {
@@ -1709,7 +1726,6 @@ function injectDeployButton(bubbleNode, rawHtml) {
     deployContainer.appendChild(errorDetails);
     bubbleNode.appendChild(deployContainer);
 
-    // ----- DEBUG BUTTON LOGIC (FIXED) -----
     debugBtn.onclick = async function() {
         const errorMsg = prompt("Paste the error message from the console or browser:");
         if (!errorMsg) return;
@@ -1745,7 +1761,6 @@ function injectDeployButton(bubbleNode, rawHtml) {
         }
     };
 
-    // ----- DEPLOY BUTTON LOGIC (unchanged) -----
     let retryCount = 0;
     const maxRetries = 5;
     let isDeploying = false;
@@ -1816,8 +1831,9 @@ function injectDeployButton(bubbleNode, rawHtml) {
     }
     deployBtn.onclick = attemptDeploy;
 }
+
 // ============================================================
-// MODALS
+// MODALS (unchanged except admin)
 // ============================================================
 function closeModals() {
     document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
@@ -1849,7 +1865,6 @@ function openBillingFlow() {
     updateSubscriptionModal();
 }
 
-// FIXED: Ensure updateSubscriptionModal is called when opening subscription modal
 function openSubscriptionModal() {
     closeModals();
     const modal = document.getElementById('subscription-modal');
@@ -1872,10 +1887,12 @@ function openSubscriptionModal() {
         `;
     }
     modal.classList.add('active');
-    // Ensure the free/paid messages are updated
     updateSubscriptionModal();
 }
 
+// ============================================================
+// ADMIN MODAL (UPDATED: provider usage table, no fluff)
+// ============================================================
 async function openAdminModal() {
     closeModals();
     document.getElementById('admin-modal').classList.add('active');
@@ -1883,26 +1900,32 @@ async function openAdminModal() {
         const resp = await apiFetch(`${API_BASE_URL}/api/admin/metrics`);
         if (resp.ok) {
             const data = await resp.json();
+            // Build provider rows
+            const providerList = ['groq','openRouter','gemini','cloudflare','huggingFace','cerebras','mistral','github','nrouter','textCortex'];
+            let providerRows = '';
+            providerList.forEach(p => {
+                const total = data.aiQuota[p] || 0;
+                const daily = data.aiQuota[`daily${p.charAt(0).toUpperCase() + p.slice(1)}`] || 0;
+                const limit = data.aiQuota[`${p}Limit`] || 'N/A';
+                const status = data.providerStatus[p]?.status || 'unknown';
+                providerRows += `
+                    <div class="profile-stat-row">
+                        <span class="profile-stat-label">${p.toUpperCase()}</span>
+                        <span class="profile-stat-value">Daily: ${daily}/${limit} | Total: ${total} | Status: ${status}</span>
+                    </div>
+                `;
+            });
+
             document.getElementById('admin-metrics-container').innerHTML = `
+                <div style="margin-bottom:10px;font-weight:600;color:var(--text-main);">AI Provider Usage</div>
+                ${providerRows}
+                <div style="border-top:1px solid var(--border-muted);margin:10px 0;"></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Total Users</span><span class="profile-stat-value">${data.totalUsers}</span></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Pro Subscribers</span><span class="profile-stat-value" style="color:var(--accent-glow-pro)">${data.proUsers}</span></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Business Subscribers</span><span class="profile-stat-value" style="color:var(--accent-glow-designer)">${data.businessUsers}</span></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Total Chats</span><span class="profile-stat-value">${data.totalChats}</span></div>
-                <div style="border-top:1px solid var(--border-muted);margin:10px 0;"></div>
-                <div class="profile-stat-row"><span class="profile-stat-label">Total Queries Processed</span><span class="profile-stat-value">${data.metrics?.totalQueries || 0}</span></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Today's Queries</span><span class="profile-stat-value">${data.dailyQueries || 0}</span></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Total Storage Used</span><span class="profile-stat-value">${data.metrics?.totalBytesMB || 0} MB</span></div>
-                <div style="border-top:1px solid var(--border-muted);margin:10px 0;"></div>
-                <div class="profile-stat-row"><span class="profile-stat-label">Total Tokens Used</span><span class="profile-stat-value">${data.tokenUsage?.total || 0}</span></div>
-                <div class="profile-stat-row"><span class="profile-stat-label">Free Tier Remaining</span><span class="profile-stat-value" style="color:${data.tokenUsage?.remaining > 0 ? 'var(--accent-secondary)' : '#ef4444'};">${data.tokenUsage?.remaining || 0} / ${data.tokenUsage?.limit || 1000000}</span></div>
-                <div style="border-top:1px solid var(--border-muted);margin:10px 0;"></div>
-                <div class="profile-stat-row"><span class="profile-stat-label">Total Groq Usage (All Time)</span><span class="profile-stat-value">${data.aiQuota?.groq || 0}</span></div>
-                <div class="profile-stat-row"><span class="profile-stat-label">Total OpenRouter Usage (All Time)</span><span class="profile-stat-value">${data.aiQuota?.openRouter || 0}</span></div>
-                <div class="profile-stat-row"><span class="profile-stat-label">Today's Groq Usage</span><span class="profile-stat-value">${data.aiQuota?.dailyGroq || 0}</span></div>
-                <div class="profile-stat-row"><span class="profile-stat-label">Today's OpenRouter Usage</span><span class="profile-stat-value">${data.aiQuota?.dailyOpenRouter || 0}</span></div>
-                <div class="profile-stat-row"><span class="profile-stat-label">Daily Groq Limit</span><span class="profile-stat-value">${data.aiQuota?.groqLimit || 1000}</span></div>
-                <div class="profile-stat-row"><span class="profile-stat-label">Daily OpenRouter Limit</span><span class="profile-stat-value">${data.aiQuota?.openRouterLimit || 1000}</span></div>
-                <div style="border-top:1px solid var(--border-muted);margin:10px 0;"></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Last Updated</span><span class="profile-stat-value" style="font-size:12px;">${new Date(data.timestamp).toLocaleString()}</span></div>
             `;
         } else {
@@ -1913,6 +1936,10 @@ async function openAdminModal() {
         document.getElementById('admin-metrics-container').innerHTML = `<div style="color:#ef4444;text-align:center;">Network error. Check your connection.</div>`;
     }
 }
+
+// ============================================================
+// CHECKOUT PIPELINE (FIXED: showStripeLoading with cancel callback)
+// ============================================================
 async function dispatchCheckoutPipeline(targetBaseTier) {
     const selectedRadio = document.querySelector(`input[name="${targetBaseTier}-sub-selector"]:checked`);
     if (!selectedRadio) {
@@ -1926,7 +1953,10 @@ async function dispatchCheckoutPipeline(targetBaseTier) {
     checkoutBtn.style.opacity = "0.7";
     checkoutBtn.disabled = true;
 
-    showStripeLoading(); // <-- show overlay
+    // Show overlay with cancel callback to reopen subscription modal
+    showStripeLoading(() => {
+        document.getElementById('subscription-modal').classList.add('active');
+    });
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);
@@ -1971,6 +2001,9 @@ async function dispatchCheckoutPipeline(targetBaseTier) {
     }
 }
 
+// ============================================================
+// OTHER FUNCTIONS (unchanged)
+// ============================================================
 async function saveCustomInstructions() {
     const input = document.getElementById('instructions-input');
     const btn = document.querySelector('#instructions-modal .modal-submit-btn');
@@ -2145,7 +2178,7 @@ function updateSubscriptionModal() {
 }
 
 // ============================================================
-// SIDEBAR SWIPE
+// SIDEBAR SWIPE (unchanged)
 // ============================================================
 const sidebarEl = document.getElementById('sidebar-container-node');
 const swipeHandleEl = document.createElement('div');
@@ -2238,10 +2271,10 @@ window.addEventListener('resize', () => {
 });
 
 // ============================================================
-// VERSION & CACHE CONTROL - No cache clearing
+// VERSION & CACHE CONTROL
 // ============================================================
-const APP_VERSION = '4.3.2';
-const BUILD_DATE = '2026-07-29';
+const APP_VERSION = '4.3.3';
+const BUILD_DATE = '2026-08-13';
 console.log(`🟢 Axelr AI v${APP_VERSION} (Build: ${BUILD_DATE})`);
 console.log('📡 API Base URL:', API_BASE_URL);
 

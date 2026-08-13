@@ -2547,3 +2547,66 @@ body.light-theme .action-icon-btn:hover {
     color: var(--text-main);
     background: rgba(255, 255, 255, 0.08);
 }
+#viewport {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 120px; /* adjust as needed */
+    scroll-behavior: smooth;
+    max-height: calc(100vh - 200px); /* or use flex */
+}
+
+#sidebar-container-node {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 280px;
+    overflow-y: auto;
+    z-index: 100;
+    background: var(--bg-sidebar);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+}
+
+#sidebar-container-node.open {
+    transform: translateX(0);
+}
+/* Make sidebar fixed and independently scrollable */
+#sidebar-container-node {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: var(--sidebar-width);
+    background: var(--bg-sidebar);
+    display: flex;
+    flex-direction: column;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    z-index: 200;
+    border-right: 1px solid var(--border-muted);
+    overflow-y: auto; /* scrollable */
+}
+#sidebar-container-node.open {
+    transform: translateX(0);
+}
+
+/* Ensure viewport scrolls independently */
+#viewport {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 160px; /* room for command wrapper */
+    height: 100vh; /* fallback */
+    max-height: calc(100vh - 60px); /* subtract header height */
+    scroll-behavior: smooth;
+}
+
+/* Make main wrapper fill the viewport */
+.main-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+}
