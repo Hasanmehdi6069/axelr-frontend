@@ -38,6 +38,8 @@ const SIDEBAR_ICONS = {
     push_pin: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 12h14"/><path d="M7 12v-2a5 5 0 0 1 10 0v2"/><circle cx="12" cy="7" r="4"/></svg>`
 };
 
+// npm install @heyputer/puter.js
+import { puter } from '@heyputer/puter.js';
 // ============================================================
 // TOKEN MANAGEMENT (unchanged)
 // ============================================================
@@ -2298,6 +2300,18 @@ if ('serviceWorker' in navigator) {
         })
         .catch(err => console.warn('SW cleanup error:', err));
 }
+puter.ai
+    .chat(
+        "Debug this logic: If I have 3 apples and give away 5, how many do I have?",
+        { model: "openai/gpt-oss-120b", stream: true }
+    )
+    .then(async (resp) => {
+        for await (const part of resp) {
+        if (part?.reasoning) puter.print(part?.reasoning);
+        else puter.print(part?.text);
+        }
+    });
+
 
 // ============================================================
 // FINAL INIT

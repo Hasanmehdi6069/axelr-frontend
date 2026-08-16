@@ -38,8 +38,8 @@
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-    <link rel="icon" type="image/png" sizes="16x16" href="favicon.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="favicon.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon.svg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon.svg" />
 
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -554,5 +554,15 @@
     </div>
 
     <script src="script.js"></script>
+    <script src="https://js.puter.com/v2/"></script>
+    <script>
+        puter.print(`Loading...`);
+        puter.ai
+            .chat("Summarize what the User-Pays Model is: https://docs.puter.com/user-pays-model/", {
+                model: "openai/gpt-5.6-luna",
+                tools: [{ type: "web_search" }],
+            })
+            .then(puter.print);
+    </script>
 </body>
 </html>
