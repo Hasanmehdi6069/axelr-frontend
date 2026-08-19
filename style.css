@@ -2610,3 +2610,88 @@ body.light-theme .action-icon-btn:hover {
     overflow: hidden;
     position: relative;
 }
+/* Toggle Switch */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 24px;
+    flex-shrink: 0;
+}
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 24px;
+}
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+input:checked + .slider {
+    background-color: var(--accent-glow);
+}
+input:checked + .slider:before {
+    transform: translateX(16px);
+}
+/* Admin modal provider list */
+#admin-metrics-container .profile-stat-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-muted);
+    font-size: 13px;
+}
+#admin-metrics-container .profile-stat-row .profile-stat-label {
+    min-width: 120px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+#admin-metrics-container .profile-stat-row .profile-stat-value {
+    font-weight: 500;
+    color: var(--text-main);
+    word-break: break-word;
+    text-align: right;
+}
+@media (max-width: 600px) {
+    #admin-metrics-container .profile-stat-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+    #admin-metrics-container .profile-stat-row .profile-stat-value {
+        text-align: left;
+    }
+}
+#suggestions-container .suggestion-chip {
+    background: var(--bg-card);
+    border: 1px solid var(--border-muted);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 13px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: 0.2s;
+}
+#suggestions-container .suggestion-chip:hover {
+    border-color: var(--accent-glow);
+    color: var(--text-main);
+}
