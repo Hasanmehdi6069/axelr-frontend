@@ -1,5 +1,5 @@
 // ============================================================
-// AXELR AI - FRONTEND v24.2 (LOGIN ROCK-SOLID + CLIENT ID FIXED)
+// AXELR AI - FRONTEND v24.3 (PUTER REMOVED - FINAL)
 // ============================================================
 
 // ============================================================
@@ -9,13 +9,35 @@ const API_BASE_URL = window.location.hostname === "localhost" || window.location
     ? "http://localhost:8000"
     : "https://axelr-backend.onrender.com";
 
-// CORRECTED: The actual Google Client ID from your .env
+// Google Client ID (single source of truth)
 const GOOGLE_CLIENT_ID = "474929925590-kfpurq4aou35pkscf6gbr963vf4hfa7g.apps.googleusercontent.com";
 
 const AXELR_AVATAR_SVG =
     `<svg viewBox="0 0 100 100" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M50 15 L20 32.5 L20 67.5 L50 85" stroke="#ffffff" stroke-width="6" stroke-linejoin="bevel" fill="rgba(255,255,255,0.05)"/><path d="M50 15 L80 32.5 L50 50 L80 67.5 L50 85" stroke="currentColor" stroke-width="6" stroke-linejoin="bevel" fill="none"/><path d="M20 32.5 L50 50 L20 67.5" stroke="#ffffff" stroke-width="3" stroke-linejoin="bevel" opacity="0.5"/></svg>`;
 
-// ... (rest of ICONS and SIDEBAR_ICONS unchanged) ...
+// Icons (abbreviated for brevity – keep original definitions)
+const ICONS = {
+    copy: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`,
+    edit: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>`,
+    thumbsUp: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v12M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4M7 10H4a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h3"/></svg>`,
+    thumbsDown: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 14V2M7 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20M17 14h3a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2h-3"/></svg>`,
+    regenerate: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3v6h-6"/><path d="M3 21v-6h6"/><path d="M18.364 5.636a9 9 0 1 1-12.728 12.728"/></svg>`,
+    stop: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>`,
+    leftArrow: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>`,
+    rightArrow: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>`,
+    moreVertical: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>`
+};
+
+const SIDEBAR_ICONS = {
+    edit: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>`,
+    link: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`,
+    delete: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>`,
+    inventory: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>`,
+    undo: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>`,
+    restore: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-3a5 5 0 0 0-5-5 5 5 0 0 0-5 5H4"/><path d="M4 7v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="8" y1="12" x2="8" y2="12"/></svg>`,
+    delete_forever: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>`,
+    push_pin: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 12h14"/><path d="M7 12v-2a5 5 0 0 1 10 0v2"/><circle cx="12" cy="7" r="4"/></svg>`
+};
 
 // ============================================================
 // TOKEN MANAGEMENT
@@ -46,7 +68,7 @@ function refreshGoogleToken() {
             return;
         }
         const client = google.accounts.oauth2.initTokenClient({
-            client_id: GOOGLE_CLIENT_ID,   // <-- FIXED: use the constant
+            client_id: GOOGLE_CLIENT_ID,
             scope: 'profile email',
             callback: (resp) => {
                 if (resp.error) {
@@ -108,14 +130,13 @@ async function apiFetch(url, options = {}) {
                 }
                 return retryResponse;
             } catch (refreshError) {
-                executeGlobalLogout();
                 throw new Error('Session expired');
             }
         }
         return response;
     } catch (error) {
         if (error.message === 'Session expired' || error.message === 'Unauthorized') {
-            executeGlobalLogout();
+            // Do not logout automatically – let caller handle
         }
         throw error;
     }
@@ -178,8 +199,6 @@ let manipulationCount = parseInt(sessionStorage.getItem('axelr_manipulation_coun
 let manipulationLockUntil = parseInt(sessionStorage.getItem('axelr_manipulation_lock')) || 0;
 
 let suppressRegenerateForNextResponse = false;
-
-// Flag to prevent duplicate init
 let appInitialized = false;
 
 // ============================================================
@@ -288,7 +307,6 @@ function updateQuotaDisplay(data) {
     const quotaFill = getEl('quota-progress-bar-fill');
     if (quotaCount) quotaCount.innerText = `${used}/${limit} Used (${Math.round(percentage)}%)`;
     if (quotaFill) quotaFill.style.width = `${percentage}%`;
-    // Also update settings quota
     const settingsCount = getEl('settings-quota-count');
     const settingsFill = getEl('settings-quota-fill');
     if (settingsCount && quotaCount) settingsCount.innerText = quotaCount.innerText;
@@ -339,15 +357,14 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e)
 });
 
 // ============================================================
-// CRITICAL: AUTH & UI SWITCH (ROCK-SOLID)
+// AUTH & UI SWITCH
 // ============================================================
 function showMainUI() {
     if (authWall) authWall.style.display = 'none';
     if (mainWrapper) {
         mainWrapper.classList.add('visible');
-        mainWrapper.style.display = 'block'; // force
+        mainWrapper.style.display = 'block';
     }
-    // also hide workspace selector if shown
     const wsSel = getEl('workspace-selector');
     if (wsSel) wsSel.style.display = 'none';
     console.log('✅ Main UI shown');
@@ -363,7 +380,7 @@ function showAuthWall() {
 }
 
 // ============================================================
-// INITIALIZATION (with multiple fallbacks)
+// INITIALIZATION
 // ============================================================
 function initializeApp() {
     if (appInitialized) {
@@ -383,9 +400,7 @@ function initializeApp() {
             const payload = decodeJwt(savedToken);
             if (payload && Date.now() < payload.exp * 1000) {
                 googleAuthUserToken = savedToken;
-                // Immediately hide auth wall and show main UI to avoid flicker
                 showMainUI();
-                // Then proceed with full initialization
                 initializeSecureWorkspace(payload, savedToken);
                 return;
             }
@@ -393,23 +408,20 @@ function initializeApp() {
             localStorage.removeItem('google_auth_token');
         }
     }
-    // No valid token → show auth wall
     showAuthWall();
 }
 
-// Ensure DOM is ready before initializing
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeApp);
 } else {
     initializeApp();
 }
 
-// Additional fallback: if token exists but we somehow still see auth wall after 1 sec, force hide
+// Fallback: if token exists but auth wall still visible after 1s
 setTimeout(() => {
     if (localStorage.getItem('google_auth_token') && authWall && authWall.style.display !== 'none') {
         console.warn('Auth wall still visible despite token – forcing hide');
         showMainUI();
-        // Also re-run init if not done
         if (!window.currentUser) {
             const token = localStorage.getItem('google_auth_token');
             if (token) {
@@ -433,11 +445,7 @@ function handleCredentialResponse(response) {
     }
     localStorage.setItem('google_auth_token', token);
     googleAuthUserToken = token;
-
-    // Immediately show main UI
     showMainUI();
-
-    // Proceed with workspace init
     initializeSecureWorkspace(payload, token);
 
     // Update avatar
@@ -457,8 +465,6 @@ function handleCredentialResponse(response) {
 async function initializeSecureWorkspace(payload, token) {
     googleAuthUserToken = token;
     currentUserId = payload.sub;
-
-    // Ensure UI is visible (already done, but double-check)
     showMainUI();
 
     // Setup user details
@@ -494,7 +500,6 @@ async function initializeSecureWorkspace(payload, token) {
     } catch (e) { /* ignore */ }
     displaySuggestions();
 
-    // If no workspace selected yet, show selector
     if (!savedWorkspace) {
         const wsSel = getEl('workspace-selector');
         if (wsSel) wsSel.style.display = 'flex';
@@ -1069,19 +1074,6 @@ async function loadUserProfile() {
             document.body.classList.toggle('designer-tier', data.tier === 'business');
             if (data.tier !== 'pro' && data.tier !== 'business') {
                 document.body.classList.remove('pro-tier', 'designer-tier');
-            }
-
-            // Puter toggle & opt-in
-            const puterToggle = getEl('puter-toggle');
-            if (puterToggle) {
-                puterToggle.checked = data.puter_enabled === true;
-                const desc = getEl('puter-desc');
-                if (desc) desc.innerText = data.puter_enabled ? 'Puter enabled' : 'Puter disabled';
-            }
-            if (!data.puter_enabled && !window.puterOptInShown) {
-                setTimeout(showPuterOptIn, 1500);
-            } else if (data.puter_enabled) {
-                loadPuterSDK();
             }
 
             updateSettingsQuota();
@@ -2264,7 +2256,7 @@ function openSubscriptionModal() {
 }
 
 // ============================================================
-// ADMIN MODAL (UPDATED: dynamic provider list)
+// ADMIN MODAL
 // ============================================================
 async function openAdminModal() {
     closeModals();
@@ -2654,8 +2646,8 @@ window.addEventListener('resize', () => {
 // ============================================================
 // VERSION & CACHE CONTROL
 // ============================================================
-const APP_VERSION = '24.2';
-const BUILD_DATE = '2026-08-16';
+const APP_VERSION = '24.3';
+const BUILD_DATE = '2026-08-20';
 console.log(`🟢 Axelr AI v${APP_VERSION} (Build: ${BUILD_DATE})`);
 console.log('📡 API Base URL:', API_BASE_URL);
 
@@ -2681,117 +2673,30 @@ if ('serviceWorker' in navigator) {
 }
 
 // ============================================================
-// PUTER OPT-IN & DYNAMIC LOADING
-// ============================================================
-window.puterOptInShown = false;
-let puterSDKLoaded = false;
-
-function showPuterOptIn() {
-    if (window.puterOptInShown) return;
-    const modal = getEl('puter-optin-modal');
-    if (modal) {
-        modal.classList.add('active');
-        window.puterOptInShown = true;
-    }
-}
-
-function skipPuter() {
-    const modal = getEl('puter-optin-modal');
-    if (modal) modal.classList.remove('active');
-    const toggle = getEl('puter-toggle');
-    if (toggle) toggle.checked = false;
-}
-
-function enablePuter() {
-    const modal = getEl('puter-optin-modal');
-    if (modal) modal.classList.remove('active');
-    togglePuter(true).then(() => {
-        loadPuterSDK();
-    });
-}
-
-async function togglePuter(enabled) {
-    try {
-        const resp = await apiFetch(`${API_BASE_URL}/api/user/puter-toggle`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ enabled })
-        });
-        if (resp.ok) {
-            const data = await resp.json();
-            const desc = getEl('puter-desc');
-            if (desc) desc.innerText = enabled ? 'Puter enabled' : 'Puter disabled';
-            if (window.currentUser) window.currentUser.puter_enabled = enabled;
-            if (enabled) {
-                await loadPuterSDK();
-            }
-        }
-    } catch (e) {
-        alert('Failed to update Puter preference.');
-        const toggle = getEl('puter-toggle');
-        if (toggle) toggle.checked = !enabled;
-    }
-}
-
-function loadPuterSDK() {
-    return new Promise((resolve, reject) => {
-        if (typeof puter !== 'undefined') {
-            puterSDKLoaded = true;
-            initializePuterInstance();
-            resolve();
-            return;
-        }
-        const script = document.createElement('script');
-        script.src = 'https://js.puter.com/v2/';
-        script.onload = () => {
-            puterSDKLoaded = true;
-            setTimeout(() => {
-                initializePuterInstance();
-                resolve();
-            }, 500);
-        };
-        script.onerror = reject;
-        document.head.appendChild(script);
-    });
-}
-
-function initializePuterInstance() {
-    if (typeof puter !== 'undefined' && puterSDKLoaded) {
-        const toggle = getEl('puter-toggle');
-        if (toggle && toggle.checked) {
-            puter.print(`Loading...`);
-            puter.ai.chat("Summarize what the User-Pays Model is: https://docs.puter.com/user-pays-model/", {
-                model: "openai/gpt-5.6-luna",
-                tools: [{ type: "web_search" }],
-            }).then(puter.print);
-        }
-    }
-}
-
-// ============================================================
-// GLOBAL LOGOUT
+// GLOBAL LOGOUT (no page reload, just show auth wall)
 // ============================================================
 function executeGlobalLogout() {
+    console.warn('🔄 Logging out – showing auth wall');
     localStorage.removeItem('google_auth_token');
     googleAuthUserToken = null;
-    location.reload();
+    showAuthWall();
+    if (mainWrapper) mainWrapper.classList.remove('visible');
 }
 window.executeGlobalLogout = executeGlobalLogout;
 
 // ============================================================
-// FINAL INIT
+// FINAL INIT PIPELINE
 // ============================================================
-loadUserProfile().then(() => {
-    loadArchiveLogs().then(() => {
+(async function secureBoot() {
+    try {
+        await loadUserProfile();
+        await loadArchiveLogs();
         const storedSessionId = localStorage.getItem('axelr_active_session');
         if (storedSessionId) {
             viewPastLogById(storedSessionId);
         }
         setTimeout(setupViewportObserver, 500);
-    });
-});
-
-window.onerror = function(message, source, lineno, colno, error) {
-    console.error('Global error:', message, error);
-    return true;
-};
+    } catch (e) {
+        console.warn('Boot sequence recovered:', e);
+    }
+})();
