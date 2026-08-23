@@ -2695,3 +2695,12 @@ input:checked + .slider:before {
     border-color: var(--accent-glow);
     color: var(--text-main);
 }
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid var(--border-muted);
+    cursor: pointer;
+    display: block; /* changed from none */
+    object-fit: cover;
+}

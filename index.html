@@ -144,7 +144,8 @@
         </div>
     </div>
 
-    <!-- Modals -->
+    <!-- Modals (top-level) -->
+    <!-- Admin Modal -->
     <div class="modal-overlay" id="admin-modal">
         <div class="modal-card">
             <div class="modal-header">
@@ -159,6 +160,7 @@
         </div>
     </div>
 
+    <!-- Settings Modal -->
     <div class="modal-overlay" id="settings-modal">
         <div class="modal-card">
             <div class="modal-header">
@@ -239,11 +241,44 @@
                     </div>
                     <span class="material-symbols-rounded arrow">chevron_right</span>
                 </div>
+                <div class="settings-item" style="flex-direction:column;align-items:stretch;gap:8px;cursor:default;">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <span class="material-symbols-rounded icon">computer</span>
+                        <div class="content" style="flex:1;">
+                            <div class="title">Puter AI</div>
+                            <div class="desc" id="puter-desc">Enable Puter integration (advanced)</div>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="puter-toggle" onchange="togglePuter(this.checked)">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- Puter Opt‑in Modal (top‑level) -->
+    <div class="modal-overlay" id="puter-optin-modal">
+        <div class="modal-card" style="max-width:450px;">
+            <div class="modal-header">
+                <div class="modal-title">Enhance with Puter AI</div>
+                <button class="close-modal-btn" onclick="skipPuter()">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+            </div>
+            <p style="color:var(--text-muted);font-size:14px;line-height:1.6;">
+                Axelr can leverage <strong>Puter AI</strong> to access additional models and advanced capabilities.
+                This is completely optional and requires a Puter account (free sign‑up, no credit card required).
+            </p>
+            <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end;">
+                <button class="modal-submit-btn" style="background:transparent;border:1px solid var(--border-muted);color:var(--text-muted);width:auto;padding:8px 20px;" onclick="skipPuter()">Skip & Continue</button>
+                <button class="modal-submit-btn" style="width:auto;padding:8px 20px;background:var(--accent-glow);color:#000;" onclick="enablePuter()">Enable Puter</button>
+            </div>
+        </div>
+    </div>
 
+    <!-- Instructions Modal -->
     <div class="modal-overlay" id="instructions-modal">
         <div class="modal-card">
             <div class="modal-header">
@@ -258,6 +293,7 @@
         </div>
     </div>
 
+    <!-- Feedback Modal -->
     <div class="modal-overlay" id="feedback-modal">
         <div class="modal-card">
             <div class="modal-header">
@@ -275,6 +311,7 @@
         </div>
     </div>
 
+    <!-- Upgrade Modal -->
     <div class="modal-overlay" id="upgrade-modal">
         <div class="modal-card" style="max-width:900px;">
             <div class="modal-header">
@@ -353,6 +390,7 @@
         </div>
     </div>
 
+    <!-- Profile Modal -->
     <div class="modal-overlay" id="profile-modal">
         <div class="modal-card">
             <div class="modal-header">
@@ -390,6 +428,7 @@
         </div>
     </div>
 
+    <!-- Subscription Modal -->
     <div class="modal-overlay" id="subscription-modal">
         <div class="modal-card">
             <div class="modal-header">
@@ -400,7 +439,7 @@
             </div>
             <div id="subscription-content" style="display:flex;flex-direction:column;gap:5px;padding:10px 0;"></div>
             <div style="display:flex;flex-direction:column;gap:5px;">
-                <div class="profile-stat-row"><span class="profile-stat-label">Current Plan</span><span class="profile-stat-value" id="sub-plan-name" style="color:#fff;">Free Allocation</span></div>
+                <div class="profile-stat-row"><span class="profile-stat-label">Current Plan</span><span class="profile-stat-value" id="sub-plan-name" style="color:var(--text-main);">Free Allocation</span></div>
                 <div id="free-tier-message" style="display:none;background:rgba(234,179,8,0.15);border-left:4px solid #eab308;padding:12px;border-radius:6px;color:#fde047;font-size:13px;margin:10px 0;">
                     <span class="material-symbols-rounded" style="font-size:18px;vertical-align:middle;">info</span>
                     You are on the <strong>Free</strong> tier. <br>Upgrade to unlock premium features and higher limits.
@@ -415,7 +454,6 @@
         </div>
     </div>
 
-    
     <!-- Main App -->
     <div class="main-wrapper" id="content-mask">
         <!-- Sidebar Trigger -->
@@ -554,5 +592,7 @@
         </div>
     </div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="script.js"></script>
 </body>
 </html>
