@@ -9,13 +9,11 @@ const API_BASE_URL = window.location.hostname === "localhost" || window.location
     ? "http://localhost:8000"
     : "https://axelr-backend.onrender.com";
 
-// CORRECTED: The actual Google Client ID from your .env
 const GOOGLE_CLIENT_ID = "474929925590-kfpurq4aou35pkscf6gbr963vf4hfa7g.apps.googleusercontent.com";
 
 const AXELR_AVATAR_SVG =
     `<svg viewBox="0 0 100 100" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M50 15 L20 32.5 L20 67.5 L50 85" stroke="#ffffff" stroke-width="6" stroke-linejoin="bevel" fill="rgba(255,255,255,0.05)"/><path d="M50 15 L80 32.5 L50 50 L80 67.5 L50 85" stroke="currentColor" stroke-width="6" stroke-linejoin="bevel" fill="none"/><path d="M20 32.5 L50 50 L20 67.5" stroke="#ffffff" stroke-width="3" stroke-linejoin="bevel" opacity="0.5"/></svg>`;
 
-// Icons for action bar (using material symbols)
 const ICONS = {
     copy: `<span class="material-symbols-rounded" style="font-size:16px;">content_copy</span>`,
     edit: `<span class="material-symbols-rounded" style="font-size:16px;">edit</span>`,
@@ -111,6 +109,10 @@ async function ensureValidToken() {
 }
 
 async function apiFetch(url, options = {}) {
+    // For guest endpoints, do not attach token
+    if (url.includes('/api/guest/') || url.includes('/api/auth/github') || url.includes('/api/auth/webauthn')) {
+        return fetch(url, options);
+    }
     let token = await ensureValidToken();
     options.headers = {
         ...options.headers,
@@ -150,7 +152,7 @@ setInterval(async () => {
 }, 10 * 60 * 1000);
 
 // ============================================================
-// DOM REFS (with fallback)
+// DOM REFS
 // ============================================================
 function getEl(id) {
     const el = document.getElementById(id);
@@ -194,15 +196,13 @@ let isUserScrolling = false;
 let scrollTimeout = null;
 let viewportObserver = null;
 let observerActive = true;
-
 let ignoreSidebarClose = false;
 let manipulationCount = parseInt(sessionStorage.getItem('axelr_manipulation_count')) || 0;
 let manipulationLockUntil = parseInt(sessionStorage.getItem('axelr_manipulation_lock')) || 0;
-
 let suppressRegenerateForNextResponse = false;
-
-// Flag to prevent duplicate init
 let appInitialized = false;
+let isGuestMode = false;
+let guestSessionId = null;
 
 // ============================================================
 // SCROLL FUNCTIONS
@@ -280,7 +280,7 @@ function getDailyLimit(tier, subTierOptions, workspace) {
     const hasData = subTierOptions?.hasDataAccess || false;
     const hasDesign = subTierOptions?.hasDesignAccess || false;
     const isDesign = workspace === 'design';
-    if (tier === 'free') {
+    if (tier === 'free' || tier === 'guest') {
         return isDesign ? 3 : 5;
     } else if (tier === 'pro') {
         if (hasData && hasDesign) return isDesign ? 15 : 20;
@@ -310,7 +310,6 @@ function updateQuotaDisplay(data) {
     const quotaFill = getEl('quota-progress-bar-fill');
     if (quotaCount) quotaCount.innerText = `${used}/${limit} Used (${Math.round(percentage)}%)`;
     if (quotaFill) quotaFill.style.width = `${percentage}%`;
-    // Also update settings quota
     const settingsCount = getEl('settings-quota-count');
     const settingsFill = getEl('settings-quota-fill');
     if (settingsCount && quotaCount) settingsCount.innerText = quotaCount.innerText;
@@ -361,15 +360,14 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e)
 });
 
 // ============================================================
-// CRITICAL: AUTH & UI SWITCH (ROCK-SOLID)
+// AUTH & UI SWITCH
 // ============================================================
 function showMainUI() {
     if (authWall) authWall.style.display = 'none';
     if (mainWrapper) {
         mainWrapper.classList.add('visible');
-        mainWrapper.style.display = 'block'; // force
+        mainWrapper.style.display = 'block';
     }
-    // also hide workspace selector if shown
     const wsSel = getEl('workspace-selector');
     if (wsSel) wsSel.style.display = 'none';
     console.log('✅ Main UI shown');
@@ -382,16 +380,120 @@ function showAuthWall() {
         mainWrapper.style.display = 'none';
     }
     console.log('🔒 Auth wall shown');
+    // Hide guest banner when auth wall is shown
+    const banner = getEl('guest-banner');
+    if (banner) banner.style.display = 'none';
 }
 
 // ============================================================
-// INITIALIZATION (with multiple fallbacks)
+// LOGIN FUNCTIONS (implemented)
 // ============================================================
-function initializeApp() {
-    if (appInitialized) {
-        console.warn('App already initialized, skipping.');
+function triggerGoogleLogin() {
+    if (typeof google === 'undefined' || !google.accounts) {
+        alert('Google Identity Services not loaded. Please refresh.');
         return;
     }
+    // Initialize the Google Sign-In if not already done
+    google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleCredentialResponse,
+        cancel_on_tap_outside: false,
+        context: 'signin'
+    });
+    // Prompt the One Tap UI
+    google.accounts.id.prompt();
+}
+
+function triggerGitHubLogin() {
+    window.location.href = `${API_BASE_URL}/api/auth/github`;
+}
+
+function showEmailLogin() {
+    // Simple email/password login – for demo, we can show a prompt
+    const email = prompt('Enter your email:');
+    if (!email) return;
+    const password = prompt('Enter your password:');
+    if (!password) return;
+    // We'll call a backend endpoint (if implemented) or fallback to JWT
+    // For now, just show an alert
+    alert('Email login is not fully implemented yet. Please use Google or GitHub.');
+}
+
+function triggerPasskeyLogin() {
+    // For now, we redirect to a passkey flow or show a modal
+    alert('Passkey login is not fully implemented yet. Please use Google or GitHub.');
+}
+
+function continueAsGuest() {
+    // Initialize guest mode and show main UI
+    initGuestMode().then(() => {
+        showMainUI();
+        // Update sidebar to show "Login" instead of Settings
+        updateSidebarForGuest(true);
+    });
+}
+
+function updateSidebarForGuest(isGuest) {
+    const container = getEl('sidebar-settings-or-login');
+    const title = getEl('settings-or-login-title');
+    const desc = getEl('settings-or-login-desc');
+    if (!container || !title || !desc) return;
+    if (isGuest) {
+        title.innerHTML = 'Sign In <span class="material-symbols-rounded" style="font-size:18px;color:var(--accent-glow);">login</span>';
+        desc.textContent = 'Unlock unlimited access & save your data';
+        container.onclick = () => { showAuthWall(); };
+    } else {
+        title.innerHTML = 'Settings <span class="material-symbols-rounded" style="font-size:18px;color:var(--text-muted);">settings</span>';
+        desc.textContent = 'Quota, Plan, Instructions & Feedback';
+        container.onclick = () => { openSettingsModal(); };
+    }
+}
+
+// Override openSettingsOrLogin to handle guest mode
+function openSettingsOrLogin() {
+    if (isGuestMode) {
+        showAuthWall();
+    } else {
+        openSettingsModal();
+    }
+}
+
+// ============================================================
+// GUEST MODE INIT
+// ============================================================
+async function initGuestMode() {
+    if (localStorage.getItem('google_auth_token')) {
+        isGuestMode = false;
+        return;
+    }
+    isGuestMode = true;
+    const banner = getEl('guest-banner');
+    if (banner) banner.style.display = 'block';
+    const bannerText = getEl('guest-banner-text');
+    if (bannerText) {
+        bannerText.innerHTML = `
+            You are in <strong style="color:#fde047;">Explorer Mode</strong> — your conversations are ephemeral and will not be saved.
+            <a href="#" onclick="showAuthWall(); return false;" style="color:var(--accent-glow); text-decoration:none; font-weight:600;">Sign in</a> to unlock persistent memory, unlimited generations, and premium AI models.
+        `;
+    }
+    try {
+        const resp = await fetch(`${API_BASE_URL}/api/guest/session`, { method: 'POST' });
+        const data = await resp.json();
+        guestSessionId = data.sessionId;
+        console.log('🟢 Guest session created:', guestSessionId);
+    } catch (e) {
+        console.warn('Guest session creation failed:', e);
+    }
+    updateQuotaDisplay({ tier: 'guest', subTierOptions: { hasDataAccess: false, hasDesignAccess: false }, quotas: { dailyExtractionsUsed: 0, dailyGenerationsUsed: 0 } });
+    // Update sidebar to show login
+    updateSidebarForGuest(true);
+}
+
+// ============================================================
+// INITIALIZATION
+// ============================================================
+function initializeApp() {
+    if (appInitialized) return;
     appInitialized = true;
 
     const saved = localStorage.getItem('axelr_theme') || 'system';
@@ -405,9 +507,7 @@ function initializeApp() {
             const payload = decodeJwt(savedToken);
             if (payload && Date.now() < payload.exp * 1000) {
                 googleAuthUserToken = savedToken;
-                // Immediately hide auth wall and show main UI to avoid flicker
                 showMainUI();
-                // Then proceed with full initialization
                 initializeSecureWorkspace(payload, savedToken);
                 return;
             }
@@ -415,23 +515,22 @@ function initializeApp() {
             localStorage.removeItem('google_auth_token');
         }
     }
-    // No valid token → show auth wall
+    // No token: show auth wall (do NOT auto-enter guest mode)
     showAuthWall();
+    // Ensure guest mode is not active yet
+    isGuestMode = false;
 }
 
-// Ensure DOM is ready before initializing
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeApp);
 } else {
     initializeApp();
 }
 
-// Additional fallback: if token exists but we somehow still see auth wall after 1 sec, force hide
 setTimeout(() => {
     if (localStorage.getItem('google_auth_token') && authWall && authWall.style.display !== 'none') {
         console.warn('Auth wall still visible despite token – forcing hide');
         showMainUI();
-        // Also re-run init if not done
         if (!window.currentUser) {
             const token = localStorage.getItem('google_auth_token');
             if (token) {
@@ -443,7 +542,7 @@ setTimeout(() => {
 }, 1000);
 
 // ============================================================
-// AUTH HANDLING (GLOBAL CALLBACK)
+// AUTH HANDLING (Google)
 // ============================================================
 function handleCredentialResponse(response) {
     console.log('🔑 Google callback received');
@@ -455,22 +554,12 @@ function handleCredentialResponse(response) {
     }
     localStorage.setItem('google_auth_token', token);
     googleAuthUserToken = token;
-
-    // Immediately show main UI
+    isGuestMode = false;
     showMainUI();
-
-    // Proceed with workspace init
+    // Update sidebar to settings
+    updateSidebarForGuest(false);
     initializeSecureWorkspace(payload, token);
-
-    // Update avatar
-    const avatarImg = getEl('user-avatar');
-    const fallback = getEl('user-avatar-fallback');
-    if (avatarImg) avatarImg.src = payload.picture;
-    if (fallback) fallback.innerText = payload.name.charAt(0).toUpperCase();
-    const dropdownImg = getEl('dropdown-avatar');
-    const dropdownFallback = getEl('dropdown-avatar-fallback');
-    if (dropdownImg) dropdownImg.src = payload.picture;
-    if (dropdownFallback) dropdownFallback.innerText = payload.name.charAt(0).toUpperCase();
+    setAvatar(payload.picture, payload.name);
 }
 
 // ============================================================
@@ -479,19 +568,13 @@ function handleCredentialResponse(response) {
 async function initializeSecureWorkspace(payload, token) {
     googleAuthUserToken = token;
     currentUserId = payload.sub;
-
-    // Ensure UI is visible (already done, but double-check)
     showMainUI();
-
-    // Setup user details
-    const avatarImg = getEl('user-avatar');
-    if (avatarImg) avatarImg.src = payload.picture;
+    setAvatar(payload.picture, payload.name);
     const dropdownName = getEl('dropdown-name');
     if (dropdownName) dropdownName.innerText = payload.name;
     const dropdownEmail = getEl('dropdown-email');
     if (dropdownEmail) dropdownEmail.innerText = payload.email;
 
-    // Load workspace preference
     const savedWorkspace = localStorage.getItem('Axelr_workspace');
     if (savedWorkspace) {
         await activateWorkspace(savedWorkspace, true);
@@ -500,29 +583,57 @@ async function initializeSecureWorkspace(payload, token) {
         if (wsSel) wsSel.style.display = 'flex';
     }
 
-    // Load profile and history (with error handling)
     try {
         await loadUserProfile();
-    } catch (e) {
-        console.warn('Profile load failed but UI is already active:', e);
-    }
+    } catch (e) { console.warn('Profile load failed:', e); }
     try {
         await loadArchiveLogs();
-    } catch (e) {
-        console.warn('History load failed:', e);
-    }
+    } catch (e) { console.warn('History load failed:', e); }
     try {
         await loadUserPreferences();
     } catch (e) { /* ignore */ }
     displaySuggestions();
 
-    // If no workspace selected yet, show selector
     if (!savedWorkspace) {
         const wsSel = getEl('workspace-selector');
         if (wsSel) wsSel.style.display = 'flex';
     } else {
         const wsSel = getEl('workspace-selector');
         if (wsSel) wsSel.style.display = 'none';
+    }
+}
+
+function setAvatar(picture, name) {
+    const avatarImg = getEl('user-avatar');
+    const fallback = getEl('user-avatar-fallback');
+    const dropdownImg = getEl('dropdown-avatar');
+    const dropdownFallback = getEl('dropdown-avatar-fallback');
+
+    if (avatarImg) {
+        if (picture) {
+            avatarImg.src = picture;
+            avatarImg.style.display = 'block';
+            if (fallback) fallback.style.display = 'none';
+        } else {
+            avatarImg.style.display = 'none';
+            if (fallback) {
+                fallback.style.display = 'flex';
+                fallback.innerText = name ? name.charAt(0).toUpperCase() : 'U';
+            }
+        }
+    }
+    if (dropdownImg) {
+        if (picture) {
+            dropdownImg.src = picture;
+            dropdownImg.style.display = 'block';
+            if (dropdownFallback) dropdownFallback.style.display = 'none';
+        } else {
+            dropdownImg.style.display = 'none';
+            if (dropdownFallback) {
+                dropdownFallback.style.display = 'flex';
+                dropdownFallback.innerText = name ? name.charAt(0).toUpperCase() : 'U';
+            }
+        }
     }
 }
 
@@ -1093,7 +1204,6 @@ async function loadUserProfile() {
                 document.body.classList.remove('pro-tier', 'designer-tier');
             }
 
-            // Puter toggle & opt-in
             const puterToggle = getEl('puter-toggle');
             if (puterToggle) {
                 puterToggle.checked = data.puter_enabled === true;
@@ -1163,7 +1273,7 @@ async function loadArchiveLogs() {
 }
 
 // ============================================================
-// EXPORT CHAT (Markdown)
+// EXPORT CHAT
 // ============================================================
 async function exportChat(logId, e) {
     e.stopPropagation();
@@ -1189,7 +1299,7 @@ async function exportChat(logId, e) {
 }
 
 // ============================================================
-// RENAME, PIN, SHARE, STATUS FUNCTIONS
+// RENAME, PIN, SHARE, STATUS
 // ============================================================
 async function renameChat(logId, currentName, e) {
     e.stopPropagation();
@@ -1603,15 +1713,16 @@ function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRege
                 actionBar.appendChild(regenBtn);
             }
         }
-        // Add Refactor button for code blocks
+
+        // ADD: Refactor, Explain, Tests buttons if code block exists
         if (!isUserPrompt && rawText && extractHtmlCode(rawText)) {
+            const code = extractHtmlCode(rawText);
+            // Refactor
             const refactorBtn = document.createElement('button');
             refactorBtn.className = 'action-icon-btn';
             refactorBtn.title = "Refactor Code";
             refactorBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/><path d="M21 7L17 3"/></svg> Refactor`;
             refactorBtn.onclick = async () => {
-                const code = extractHtmlCode(rawText);
-                if (!code) return;
                 const originalHtml = refactorBtn.innerHTML;
                 refactorBtn.innerHTML = 'Refactoring...';
                 refactorBtn.disabled = true;
@@ -1648,6 +1759,96 @@ function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRege
                 }
             };
             actionBar.appendChild(refactorBtn);
+
+            // Explain
+            const explainBtn = document.createElement('button');
+            explainBtn.className = 'action-icon-btn';
+            explainBtn.title = "Explain Code";
+            explainBtn.innerHTML = `<span class="material-symbols-rounded" style="font-size:16px;">psychology</span> Explain`;
+            explainBtn.onclick = async () => {
+                const originalHtml = explainBtn.innerHTML;
+                explainBtn.innerHTML = 'Explaining...';
+                explainBtn.disabled = true;
+                try {
+                    const resp = await apiFetch(`${API_BASE_URL}/api/explain-code`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ code })
+                    });
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        const explanation = data.explanation || 'No explanation provided.';
+                        const bubble = document.createElement('div');
+                        bubble.className = 'chat-bubble nexus-bubble';
+                        const avatarDiv = document.createElement('div');
+                        avatarDiv.className = 'ai-avatar-bubble';
+                        avatarDiv.innerHTML = AXELR_AVATAR_SVG;
+                        bubble.appendChild(avatarDiv);
+                        const contentDiv = document.createElement('div');
+                        contentDiv.className = 'bubble-content';
+                        contentDiv.style.flex = '1';
+                        contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(explanation));
+                        bubble.appendChild(contentDiv);
+                        if (viewport) viewport.appendChild(bubble);
+                        scrollToBottom();
+                        explainBtn.innerHTML = '✅ Explained';
+                    } else {
+                        alert('Explain failed.');
+                    }
+                } catch (e) {
+                    alert('Error: ' + e.message);
+                }
+                setTimeout(() => {
+                    explainBtn.innerHTML = originalHtml;
+                    explainBtn.disabled = false;
+                }, 2000);
+            };
+            actionBar.appendChild(explainBtn);
+
+            // Tests
+            const testsBtn = document.createElement('button');
+            testsBtn.className = 'action-icon-btn';
+            testsBtn.title = "Generate Tests";
+            testsBtn.innerHTML = `<span class="material-symbols-rounded" style="font-size:16px;">fact_check</span> Tests`;
+            testsBtn.onclick = async () => {
+                const originalHtml = testsBtn.innerHTML;
+                testsBtn.innerHTML = 'Generating...';
+                testsBtn.disabled = true;
+                try {
+                    const resp = await apiFetch(`${API_BASE_URL}/api/generate-tests`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ code })
+                    });
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        const tests = data.tests || 'No tests generated.';
+                        const bubble = document.createElement('div');
+                        bubble.className = 'chat-bubble nexus-bubble';
+                        const avatarDiv = document.createElement('div');
+                        avatarDiv.className = 'ai-avatar-bubble';
+                        avatarDiv.innerHTML = AXELR_AVATAR_SVG;
+                        bubble.appendChild(avatarDiv);
+                        const contentDiv = document.createElement('div');
+                        contentDiv.className = 'bubble-content';
+                        contentDiv.style.flex = '1';
+                        contentDiv.innerHTML = DOMPurify.sanitize(marked.parse('```javascript\n' + tests + '\n```'));
+                        bubble.appendChild(contentDiv);
+                        if (viewport) viewport.appendChild(bubble);
+                        scrollToBottom();
+                        testsBtn.innerHTML = '✅ Tests Ready';
+                    } else {
+                        alert('Test generation failed.');
+                    }
+                } catch (e) {
+                    alert('Error: ' + e.message);
+                }
+                setTimeout(() => {
+                    testsBtn.innerHTML = originalHtml;
+                    testsBtn.disabled = false;
+                }, 2000);
+            };
+            actionBar.appendChild(testsBtn);
         }
     }
     bubbleNode.appendChild(actionBar);
@@ -1789,7 +1990,7 @@ function showSecurityAlert(level) {
 }
 
 // ============================================================
-// EXECUTE COMMAND
+// EXECUTE COMMAND (with guest support)
 // ============================================================
 async function executeCommand(isRetry = false) {
     if (!activeSessionId && heroDisplay) heroDisplay.style.display = 'none';
@@ -1927,7 +2128,15 @@ async function executeCommand(isRetry = false) {
     formData.append('command', finalCommand);
     formData.append('workspace', getWorkspace());
     formData.append('isRetry', isRetry ? 'true' : 'false');
-    if (activeSessionId) formData.append('sessionId', activeSessionId);
+
+    const isGuest = isGuestMode && !localStorage.getItem('google_auth_token');
+    if (isGuest) {
+        formData.append('isGuest', 'true');
+        if (guestSessionId) formData.append('sessionId', guestSessionId);
+    } else if (activeSessionId) {
+        formData.append('sessionId', activeSessionId);
+    }
+
     for (const file of stagedFilesSnapshot) {
         formData.append('files', file);
     }
@@ -1953,7 +2162,8 @@ async function executeCommand(isRetry = false) {
     }, 30000);
 
     try {
-        const response = await apiFetch(`${API_BASE_URL}/api/extract`, {
+        const endpoint = isGuest ? '/api/guest/extract' : '/api/extract';
+        const response = await apiFetch(`${API_BASE_URL}${endpoint}`, {
             method: 'POST',
             body: formData,
             signal: globalAbortController.signal,
@@ -1963,10 +2173,8 @@ async function executeCommand(isRetry = false) {
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            if (errorData.code === 'LIMIT_REACHED') {
+            if (errorData.code === 'LIMIT_REACHED' || errorData.code === 'GUEST_LIMIT_REACHED') {
                 contentDiv.innerHTML = `⚠️ <strong>Daily Quota Exceeded.</strong><br><button onclick="openUpgradeModal()" style="background:var(--accent-glow-pro);color:#000;padding:8px 12px;border:none;border-radius:6px;cursor:pointer;font-weight:600;margin-top:10px;">Upgrade Workspace</button>`;
-            } else if (errorData.code === 'SUB_TIER_RESTRICTION') {
-                contentDiv.innerHTML = `⚠️ <strong>Access Restricted.</strong><br>${errorData.message || 'Your current plan does not include this workspace type.'}<br><button onclick="openUpgradeModal()" style="background:var(--accent-glow-pro);color:#000;padding:8px 12px;border:none;border-radius:6px;cursor:pointer;font-weight:600;margin-top:10px;">Upgrade Workspace</button>`;
             } else {
                 contentDiv.innerHTML = `💥 Error: ${errorData.message || 'Pipeline failed.'}`;
             }
@@ -1990,11 +2198,16 @@ async function executeCommand(isRetry = false) {
             contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(fullResponse));
 
             if (sessionId) {
-                activeSessionId = sessionId;
-                localStorage.setItem('axelr_active_session', activeSessionId);
-                runningStructuredCache = structuredData;
-                runningFileTitle = filename;
-                await loadArchiveLogs();
+                if (!isGuest) {
+                    activeSessionId = sessionId;
+                    localStorage.setItem('axelr_active_session', activeSessionId);
+                    runningStructuredCache = structuredData;
+                    runningFileTitle = filename;
+                    await loadArchiveLogs();
+                } else {
+                    // Guest: just store sessionId for subsequent requests
+                    guestSessionId = sessionId;
+                }
             }
 
             const rawCode = extractHtmlCode(fullResponse);
@@ -2024,7 +2237,7 @@ async function executeCommand(isRetry = false) {
             const now = new Date().toISOString();
             const showRegen = !suppressRegenerateForNextResponse;
             suppressRegenerateForNextResponse = false;
-            injectActionButtons(contentDiv, fullResponse, false, showRegen, now, activeSessionId);
+            injectActionButtons(contentDiv, fullResponse, false, showRegen, now, activeSessionId || guestSessionId);
 
             if (getWorkspace() === 'data' && structuredData && structuredData.length > 0) {
                 renderChart(contentDiv, structuredData);
@@ -2286,7 +2499,7 @@ function openSubscriptionModal() {
 }
 
 // ============================================================
-// ADMIN MODAL (UPDATED: dynamic provider list)
+// ADMIN MODAL
 // ============================================================
 async function openAdminModal() {
     closeModals();
@@ -2767,7 +2980,6 @@ function loadPuterSDK() {
         script.src = 'https://js.puter.com/v2/';
         script.onload = () => {
             puterSDKLoaded = true;
-            // Wait for puter to be ready (if a ready method exists) or fallback to 1s delay
             setTimeout(() => {
                 initializePuterInstance();
                 resolve();
@@ -2782,108 +2994,11 @@ function initializePuterInstance() {
     if (typeof puter !== 'undefined' && puterSDKLoaded) {
         const toggle = getEl('puter-toggle');
         if (toggle && toggle.checked) {
-            // Example: print a test message
             puter.print(`Puter AI enabled for Axelr.`);
-            // Optionally, we could integrate deeper but this demonstrates readiness.
         }
     }
 }
-// In injectActionButtons, inside the !isUserPrompt block, after the refactor button:
-// Add Explain and Tests buttons if code block exists
-if (!isUserPrompt && rawText && extractHtmlCode(rawText)) {
-    const code = extractHtmlCode(rawText);
-    // Explain button
-    const explainBtn = document.createElement('button');
-    explainBtn.className = 'action-icon-btn';
-    explainBtn.title = "Explain Code";
-    explainBtn.innerHTML = `<span class="material-symbols-rounded" style="font-size:16px;">psychology</span> Explain`;
-    explainBtn.onclick = async () => {
-        const originalHtml = explainBtn.innerHTML;
-        explainBtn.innerHTML = 'Explaining...';
-        explainBtn.disabled = true;
-        try {
-            const resp = await apiFetch(`${API_BASE_URL}/api/explain-code`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ code })
-            });
-            if (resp.ok) {
-                const data = await resp.json();
-                // Insert explanation as a new message from Axelr
-                const explanation = data.explanation || 'No explanation provided.';
-                const bubble = document.createElement('div');
-                bubble.className = 'chat-bubble nexus-bubble';
-                const avatarDiv = document.createElement('div');
-                avatarDiv.className = 'ai-avatar-bubble';
-                avatarDiv.innerHTML = AXELR_AVATAR_SVG;
-                bubble.appendChild(avatarDiv);
-                const contentDiv = document.createElement('div');
-                contentDiv.className = 'bubble-content';
-                contentDiv.style.flex = '1';
-                contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(explanation));
-                bubble.appendChild(contentDiv);
-                if (viewport) viewport.appendChild(bubble);
-                scrollToBottom();
-                explainBtn.innerHTML = '✅ Explained';
-            } else {
-                alert('Explain failed.');
-            }
-        } catch (e) {
-            alert('Error: ' + e.message);
-        }
-        setTimeout(() => {
-            explainBtn.innerHTML = originalHtml;
-            explainBtn.disabled = false;
-        }, 2000);
-    };
-    actionBar.appendChild(explainBtn);
 
-    // Tests button
-    const testsBtn = document.createElement('button');
-    testsBtn.className = 'action-icon-btn';
-    testsBtn.title = "Generate Tests";
-    testsBtn.innerHTML = `<span class="material-symbols-rounded" style="font-size:16px;">fact_check</span> Tests`;
-    testsBtn.onclick = async () => {
-        const originalHtml = testsBtn.innerHTML;
-        testsBtn.innerHTML = 'Generating...';
-        testsBtn.disabled = true;
-        try {
-            const resp = await apiFetch(`${API_BASE_URL}/api/generate-tests`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ code })
-            });
-            if (resp.ok) {
-                const data = await resp.json();
-                const tests = data.tests || 'No tests generated.';
-                // Insert as a new message from Axelr
-                const bubble = document.createElement('div');
-                bubble.className = 'chat-bubble nexus-bubble';
-                const avatarDiv = document.createElement('div');
-                avatarDiv.className = 'ai-avatar-bubble';
-                avatarDiv.innerHTML = AXELR_AVATAR_SVG;
-                bubble.appendChild(avatarDiv);
-                const contentDiv = document.createElement('div');
-                contentDiv.className = 'bubble-content';
-                contentDiv.style.flex = '1';
-                contentDiv.innerHTML = DOMPurify.sanitize(marked.parse('```javascript\n' + tests + '\n```'));
-                bubble.appendChild(contentDiv);
-                if (viewport) viewport.appendChild(bubble);
-                scrollToBottom();
-                testsBtn.innerHTML = '✅ Tests Ready';
-            } else {
-                alert('Test generation failed.');
-            }
-        } catch (e) {
-            alert('Error: ' + e.message);
-        }
-        setTimeout(() => {
-            testsBtn.innerHTML = originalHtml;
-            testsBtn.disabled = false;
-        }, 2000);
-    };
-    actionBar.appendChild(testsBtn);
-}
 // ============================================================
 // GLOBAL LOGOUT
 // ============================================================

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>AXELR AI – Intelligence Execution Platform</title>
 
-    <!-- SEO Meta Tags (Single source) -->
+    <!-- SEO Meta Tags -->
     <meta name="description" content="Axelr AI is the elite enterprise-grade AI platform for data extraction, UI/UX generation, and intelligent automation. Unlock unstructured data conversion and real-time deployment." />
     <meta name="keywords" content="Axelr AI, AXELR, axelr, axelr.in, Intelligence Execution, AI platform, data extraction, UI generation, AI assistant, enterprise AI, automation, AI data extraction, AI UI generation, business intelligence, AI automation, AI workflow, unstructured data, document processing, AI analytics, machine learning, AI tools, intelligent automation, data conversion, AI deployment, Axelera AI, axelera" />
     <link rel="canonical" href="https://axelr.in" />
@@ -89,7 +89,8 @@
 
     <!-- Styles -->
     <link rel="stylesheet" href="style.css" />
-</head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@docsearch/css@3" />
+    </head>
 <body class="workspace-data dark-theme">
     <!-- Offline Banner -->
     <div id="offline-banner">⚠️ Network Disconnected. Axelr is in standby mode. Data preserved locally.</div>
@@ -97,34 +98,101 @@
     <!-- Auth Wall -->
     <div id="auth-wall">
         <div class="auth-card">
-            <div class="auth-logo">
-                <svg viewBox="0 0 100 100" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 0 12px rgba(123,0,254,0.4));">
-                    <path d="M50 15 L20 32.5 L20 67.5 L50 85" stroke="var(--logo-stroke-primary)" stroke-width="6" stroke-linejoin="bevel" fill="var(--logo-fill-primary)" />
-                    <path d="M50 15 L80 32.5 L50 50 L80 67.5 L50 85" stroke="var(--accent-glow)" stroke-width="6" stroke-linejoin="bevel" fill="none" />
-                    <path d="M20 32.5 L50 50 L20 67.5" stroke="var(--logo-stroke-secondary)" stroke-width="3" stroke-linejoin="bevel" opacity="0.5" />
-                </svg>
-                <span style="font-weight:900;letter-spacing:3px;font-family:'JetBrains Mono',monospace;color:var(--logo-text-color);">AXELR</span>
-            </div>
-            <p class="auth-sub">Intelligence Execution Platform.<br />Sign in to Continue.</p>
-            <div id="g_id_onload"
-                data-client_id="474929925590-kfpurq4aou35pkscf6gbr963vf4hfa7g.apps.googleusercontent.com"
-                data-context="signin"
-                data-ux_mode="popup"
-                data-callback="handleCredentialResponse"
-                data-auto_prompt="false">
-            </div>
-            <div style="display:flex;justify-content:center;min-height:44px;margin-top:10px;">
-                <div class="g_id_signin"
-                    data-type="standard"
-                    data-shape="pill"
-                    data-theme="filled_black"
-                    data-text="continue_with"
-                    data-size="large"
-                    data-logo_alignment="left"
-                    data-width="280">
+            <div class="auth-header">
+                <div class="auth-logo">
+                     <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="56" height="56">
+                        <defs>
+                            <linearGradient id="axelrGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#00f2fe"/>
+                                <stop offset="50%" stop-color="#8b5cf6"/>
+                                <stop offset="100%" stop-color="#f43f5e"/>
+                            </linearGradient>
+                            <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                                <feGaussianBlur stdDeviation="3" result="blur"/>
+                                <feMerge>
+                                    <feMergeNode in="blur"/>
+                                    <feMergeNode in="SourceGraphic"/>
+                                </feMerge>
+                            </filter>
+                        </defs>
+                        <!-- Outer ring (orbital) -->
+                        <circle cx="50" cy="50" r="42" fill="none" stroke="url(#axelrGrad)" stroke-width="2" opacity="0.3"/>
+                        <circle cx="50" cy="50" r="36" fill="none" stroke="url(#axelrGrad)" stroke-width="1.5" opacity="0.2" stroke-dasharray="4 8"/>
+                        <!-- Inner diamond base -->
+                        <polygon points="50,12 88,38 88,62 50,88 12,62 12,38" fill="none" stroke="url(#axelrGrad)" stroke-width="4" stroke-linejoin="round"/>
+                        <!-- Core 'A' shape -->
+                        <path d="M50 24 L68 80 L32 80 L50 24Z" fill="url(#axelrGrad)" opacity="0.9" filter="url(#glow)"/>
+                        <!-- Horizontal bar -->
+                        <line x1="36" y1="55" x2="64" y2="55" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
+                        <!-- Glowing core dot -->
+                        <circle cx="50" cy="50" r="4" fill="#fff" filter="url(#glow)" opacity="0.8"/>
+                    </svg>
+                    <span style="font-weight:900;letter-spacing:4px;font-family:'JetBrains Mono',monospace;color:var(--logo-text-color);background:linear-gradient(135deg, #00f2fe, #8b5cf6, #f43f5e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-shadow:0 0 30px rgba(0,242,254,0.3);">AXELR</span>
                 </div>
+                <p class="auth-tagline">The Intelligence Execution Engine</p>
+                <p class="auth-sub">Where unstructured data meets structured intelligence.</p>
             </div>
+
+    
+            <div class="auth-divider">
+                <span>Continue with</span>
+            </div>
+
+            <div class="auth-providers">
+                <!-- Google -->
+                <button class="auth-provider-btn google" onclick="triggerGoogleLogin()">
+                    <svg width="20" height="20" viewBox="0 0 24 24">
+                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                    </svg>
+                    Google
+                </button>
+                <!-- GitHub -->
+                <button class="auth-provider-btn github" onclick="triggerGitHubLogin()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.15 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.62.24 2.85.12 3.15.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+                    </svg>
+                    GitHub
+                </button>
+
+                <!-- Email/Password -->
+                <button class="auth-provider-btn email" onclick="showEmailLogin()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                        <polyline points="22,6 12,13 2,6"/>
+                    </svg>
+                    Email
+                </button>
+
+                <!-- Passkey -->
+                <button class="auth-provider-btn passkey" onclick="triggerPasskeyLogin()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="8" r="4"/>
+                        <path d="M5.3 18.3C5.3 14.8 8.2 12 12 12s6.7 2.8 6.7 6.3"/>
+                        <path d="M18 13l2 2 4-4"/>
+                    </svg>
+                    Passkey
+                </button>
+            </div>
+
+            <!-- Continue as Guest Button -->
+            <button class="auth-guest-btn" onclick="continueAsGuest()">Continue as Guest</button>
+
+            <p class="auth-terms">
+                By continuing, you agree to our <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.
+            </p>
         </div>
+    </div>
+
+    <!-- Guest Banner -->
+    <div id="guest-banner" style="background:rgba(234,179,8,0.12);border-left:4px solid #eab308;padding:12px 20px;text-align:center;font-size:13px;color:var(--text-muted);backdrop-filter:blur(8px);width:100%;max-width:780px;margin:0 auto 12px auto;border-radius:8px;display:none;font-weight:500;letter-spacing:0.3px;">
+        <span class="material-symbols-rounded" style="font-size:18px;vertical-align:middle;margin-right:8px;color:#eab308;">info</span>
+        <span id="guest-banner-text">
+            You are in <strong style="color:#fde047;">Explorer Mode</strong> — your conversations are ephemeral and will not be saved.
+            <a href="#" onclick="showAuthWall(); return false;" style="color:var(--accent-glow);text-decoration:none;font-weight:600;">Sign in</a> to unlock persistent memory, unlimited generations, and premium AI models.
+        </span>
     </div>
 
     <!-- Workspace Selector -->
@@ -132,14 +200,48 @@
         <h2>Select Workspace</h2>
         <div class="ws-grid">
             <div class="workspace-card data" onclick="selectWorkspace('data')">
-                <span class="material-symbols-rounded" style="font-size:48px;">database</span>
-                <h3 class="ws-title">Axelr Data</h3>
-                <p class="ws-desc">Transform documents, receipts, and CSVs into structured business intelligence.</p>
+                <div class="ws-card-glow data-glow"></div>
+                <div class="ws-card-icon">
+                    <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M4 7h16M4 12h16M4 17h10"/>
+                        <rect x="2" y="3" width="20" height="18" rx="2" stroke="currentColor"/>
+                    </svg>
+                </div>
+                <div class="ws-card-content">
+                    <h3 class="ws-title">Axelr Data</h3>
+                    <p class="ws-desc">Enterprise-grade document intelligence — extract, structure, and analyze unstructured data with surgical precision.</p>
+                    <div class="ws-features">
+                        <span class="ws-feature-badge">📄 PDF Extraction</span>
+                        <span class="ws-feature-badge">📊 CSV Analysis</span>
+                        <span class="ws-feature-badge">📈 Visual Insights</span>
+                    </div>
+                </div>
+                <div class="ws-card-arrow">
+                    <span class="material-symbols-rounded">arrow_forward</span>
+                </div>
             </div>
+
             <div class="workspace-card design" onclick="selectWorkspace('design')">
-                <span class="material-symbols-rounded" style="font-size:48px;">web</span>
-                <h3 class="ws-title">Axelr Design</h3>
-                <p class="ws-desc">Convert mockups, wireframes, and screenshots into live React &amp; Tailwind code.</p>
+                <div class="ws-card-glow design-glow"></div>
+                <div class="ws-card-icon">
+                    <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="2" y="3" width="20" height="18" rx="2" stroke="currentColor"/>
+                        <path d="M8 7h8M8 12h6M8 17h4"/>
+                        <circle cx="18" cy="6" r="2" fill="currentColor"/>
+                    </svg>
+                </div>
+                <div class="ws-card-content">
+                    <h3 class="ws-title">Axelr Design</h3>
+                    <p class="ws-desc">Convert mockups, wireframes, and screenshots into live React, HTML, and Tailwind code with real-time preview.</p>
+                    <div class="ws-features">
+                        <span class="ws-feature-badge">🎨 UI/UX Generation</span>
+                        <span class="ws-feature-badge">⚡ Live Deploy</span>
+                        <span class="ws-feature-badge">🔧 Code Refactor</span>
+                    </div>
+                </div>
+                <div class="ws-card-arrow">
+                    <span class="material-symbols-rounded">arrow_forward</span>
+                </div>
             </div>
         </div>
     </div>
@@ -258,7 +360,7 @@
         </div>
     </div>
 
-    <!-- Puter Opt‑in Modal (top‑level) -->
+    <!-- Puter Opt‑in Modal -->
     <div class="modal-overlay" id="puter-optin-modal">
         <div class="modal-card" style="max-width:450px;">
             <div class="modal-header">
@@ -440,7 +542,7 @@
             <div id="subscription-content" style="display:flex;flex-direction:column;gap:5px;padding:10px 0;"></div>
             <div style="display:flex;flex-direction:column;gap:5px;">
                 <div class="profile-stat-row"><span class="profile-stat-label">Current Plan</span><span class="profile-stat-value" id="sub-plan-name" style="color:var(--text-main);">Free Allocation</span></div>
-                <div id="free-tier-message" style="display:none;background:rgba(234,179,8,0.15);border-left:4px solid #eab308;padding:12px;border-radius:6px;color:#fde047;font-size:13px;margin:10px 0;">
+                <div id="free-tier-message" style="display:none;background:rgba(234,179,8,0.15);border-left:4px solid #eab308;padding:12px;max-height:50px;border-radius:6px;color:#fde047;font-size:13px;margin:10px 0;">
                     <span class="material-symbols-rounded" style="font-size:18px;vertical-align:middle;">info</span>
                     You are on the <strong>Free</strong> tier. <br>Upgrade to unlock premium features and higher limits.
                 </div>
@@ -503,9 +605,10 @@
                     <div class="sub-box-title">Switch Workspace <span class="material-symbols-rounded" style="font-size:18px;color:var(--accent-glow);">swap_horiz</span></div>
                     <div class="sub-box-desc">Change between Data &amp; Design intelligence.</div>
                 </div>
-                <div class="sidebar-sub-box" onclick="openSettingsModal()">
-                    <div class="sub-box-title">Settings <span class="material-symbols-rounded" style="font-size:18px;color:var(--text-muted);">settings</span></div>
-                    <div class="sub-box-desc">Quota, Plan, Instructions &amp; Feedback</div>
+                <!-- Settings / Login toggle based on guest mode -->
+                <div class="sidebar-sub-box" id="sidebar-settings-or-login" onclick="openSettingsOrLogin()">
+                    <div class="sub-box-title" id="settings-or-login-title">Settings <span class="material-symbols-rounded" style="font-size:18px;color:var(--text-muted);">settings</span></div>
+                    <div class="sub-box-desc" id="settings-or-login-desc">Quota, Plan, Instructions &amp; Feedback</div>
                 </div>
             </div>
         </div>
@@ -591,8 +694,9 @@
             <div style="color:var(--text-muted);font-size:11px;margin-top:8px;text-align:center;">Axelr can make mistakes. Verify critical matrix outputs.</div>
         </div>
     </div>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-<script src="script.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="script.js"></script>
 </body>
 </html>
