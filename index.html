@@ -100,33 +100,82 @@
         <div class="auth-card">
             <div class="auth-header">
                 <div class="auth-logo">
-                     <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="56" height="56">
+                    
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" class="axelr-logo" role="img" aria-label="AXELR AI Logo">
                         <defs>
-                            <linearGradient id="axelrGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stop-color="#00f2fe"/>
-                                <stop offset="50%" stop-color="#8b5cf6"/>
-                                <stop offset="100%" stop-color="#f43f5e"/>
+                            <!-- Workspace‑aware gradient – controlled by CSS variables -->
+                            <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%"   stop-color="var(--grad-start, #00f2fe)" />
+                                <stop offset="50%"  stop-color="var(--grad-mid, #8b5cf6)" />
+                                <stop offset="100%" stop-color="var(--grad-end, #f43f5e)" />
                             </linearGradient>
-                            <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-                                <feGaussianBlur stdDeviation="3" result="blur"/>
+
+                            <!-- Soft glow for the core node and the 'A' -->
+                            <filter id="logoGlow" x="-40%" y="-40%" width="180%" height="180%">
+                                <feGaussianBlur stdDeviation="3.5" result="blur" />
                                 <feMerge>
-                                    <feMergeNode in="blur"/>
-                                    <feMergeNode in="SourceGraphic"/>
+                                    <feMergeNode in="blur" />
+                                    <feMergeNode in="SourceGraphic" />
+                                </feMerge>
+                            </filter>
+
+                            <!-- Stronger glow for the central node only -->
+                            <filter id="coreGlow" x="-80%" y="-80%" width="260%" height="260%">
+                                <feGaussianBlur stdDeviation="5" result="blur" />
+                                <feMerge>
+                                    <feMergeNode in="blur" />
+                                    <feMergeNode in="SourceGraphic" />
                                 </feMerge>
                             </filter>
                         </defs>
-                        <!-- Outer ring (orbital) -->
-                        <circle cx="50" cy="50" r="42" fill="none" stroke="url(#axelrGrad)" stroke-width="2" opacity="0.3"/>
-                        <circle cx="50" cy="50" r="36" fill="none" stroke="url(#axelrGrad)" stroke-width="1.5" opacity="0.2" stroke-dasharray="4 8"/>
-                        <!-- Inner diamond base -->
-                        <polygon points="50,12 88,38 88,62 50,88 12,62 12,38" fill="none" stroke="url(#axelrGrad)" stroke-width="4" stroke-linejoin="round"/>
-                        <!-- Core 'A' shape -->
-                        <path d="M50 24 L68 80 L32 80 L50 24Z" fill="url(#axelrGrad)" opacity="0.9" filter="url(#glow)"/>
-                        <!-- Horizontal bar -->
-                        <line x1="36" y1="55" x2="64" y2="55" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
-                        <!-- Glowing core dot -->
-                        <circle cx="50" cy="50" r="4" fill="#fff" filter="url(#glow)" opacity="0.8"/>
+
+                        <!-- ===== OUTER HEXAGON – Security & Intelligence ===== -->
+                        <polygon points="50,4 91,27 91,73 50,96 9,73 9,27"
+                        fill="none" stroke="var(--logo-stroke-primary, #fff)" stroke-width="1.8" opacity="0.12" />
+
+                        <!-- ===== SECONDARY HEXAGON – Dashed for tech rhythm ===== -->
+                        <polygon points="50,10 86,30.5 86,69.5 50,90 14,69.5 14,30.5"
+                        fill="none" stroke="var(--logo-stroke-secondary, #fff)" stroke-width="1.2" opacity="0.08" stroke-dasharray="4 8" />
+
+                        <!-- ===== INNER HEXAGON CORE – Sleek substrate ===== -->
+                        <polygon points="50,18 80,34 80,66 50,82 20,66 20,34"
+                        fill="var(--logo-fill-primary, rgba(255,255,255,0.03))" stroke="var(--logo-stroke-primary, #fff)" stroke-width="1.8" opacity="0.25" />
+
+                        <!-- ===== BOLD GEOMETRIC 'A' – The brand mark ===== -->
+                        <path d="M50 18 L74 84 L26 84 L50 18Z"
+                        fill="url(#logoGrad)" opacity="0.92" filter="url(#logoGlow)" />
+
+                        <!-- ===== CIRCUIT‑BREAK BAR – Diagonal intelligence ===== -->
+                        <line x1="34" y1="54" x2="66" y2="54"
+                        stroke="var(--logo-bar, #fff)" stroke-width="5.5" stroke-linecap="round" />
+
+                        <!-- ===== SUBTLE SECONDARY SLASH – Depth & motion ===== -->
+                        <line x1="44" y1="44" x2="56" y2="44"
+                        stroke="var(--logo-dot, #fff)" stroke-width="2.2" stroke-linecap="round" opacity="0.5" />
+
+                        <!-- ===== GLOWING CORE NODE – The “brain” ===== -->
+                        <circle cx="50" cy="50" r="5.5"
+                        fill="var(--logo-dot, #fff)" filter="url(#coreGlow)" opacity="0.95" />
+
+                        <!-- ===== NEURAL CONNECTIVITY DOTS – AI mesh ===== -->
+                        <circle cx="50" cy="30" r="1.8" fill="var(--logo-dot, #fff)" opacity="0.45" />
+                        <circle cx="50" cy="70" r="1.8" fill="var(--logo-dot, #fff)" opacity="0.45" />
+                        <circle cx="70" cy="50" r="1.8" fill="var(--logo-dot, #fff)" opacity="0.45" />
+                        <circle cx="30" cy="50" r="1.8" fill="var(--logo-dot, #fff)" opacity="0.45" />
+
+                        <!-- ===== EXTRA NEURAL DOTS – Richer connectivity ===== -->
+                        <circle cx="60" cy="35" r="1.2" fill="var(--logo-dot, #fff)" opacity="0.3" />
+                        <circle cx="40" cy="35" r="1.2" fill="var(--logo-dot, #fff)" opacity="0.3" />
+                        <circle cx="60" cy="65" r="1.2" fill="var(--logo-dot, #fff)" opacity="0.3" />
+                        <circle cx="40" cy="65" r="1.2" fill="var(--logo-dot, #fff)" opacity="0.3" />
+
+                        <!-- ===== ORBIT RINGS – Subtle orbital paths ===== -->
+                        <ellipse cx="50" cy="50" rx="22" ry="10"
+                        fill="none" stroke="var(--logo-stroke-secondary, #fff)" stroke-width="0.7" opacity="0.06" transform="rotate(-30 50 50)" />
+                        <ellipse cx="50" cy="50" rx="22" ry="10"
+                        fill="none" stroke="var(--logo-stroke-secondary, #fff)" stroke-width="0.7" opacity="0.06" transform="rotate(30 50 50)" />
                     </svg>
+                    
                     <span style="font-weight:900;letter-spacing:4px;font-family:'JetBrains Mono',monospace;color:var(--logo-text-color);background:linear-gradient(135deg, #00f2fe, #8b5cf6, #f43f5e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-shadow:0 0 30px rgba(0,242,254,0.3);">AXELR</span>
                 </div>
                 <p class="auth-tagline">The Intelligence Execution Engine</p>
@@ -565,11 +614,38 @@
         <div id="sidebar-container-node">
             <div class="sidebar-header">
                 <div class="brand-logo" onclick="showWorkspaceSelector()">
-                    <svg viewBox="0 0 100 100" width="30" height="30" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M50 15 L20 32.5 L20 67.5 L50 85" stroke="var(--logo-stroke-primary)" stroke-width="6" stroke-linejoin="bevel" fill="var(--logo-fill-primary)" />
-                        <path d="M50 15 L80 32.5 L50 50 L80 67.5 L50 85" stroke="currentColor" stroke-width="6" stroke-linejoin="bevel" fill="none" />
-                        <path d="M20 32.5 L50 50 L20 67.5" stroke="var(--logo-stroke-secondary)" stroke-width="3" stroke-linejoin="bevel" opacity="0.5" />
-                    </svg>
+                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="48" height="48" class="axelr-logo">
+  <defs>
+    <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="var(--grad-start, #00f2fe)"/>
+      <stop offset="50%" stop-color="var(--grad-mid, #8b5cf6)"/>
+      <stop offset="100%" stop-color="var(--grad-end, #f43f5e)"/>
+    </linearGradient>
+    <filter id="logoGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Outer ring – uses currentColor for theme adaptability -->
+  <circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" stroke-width="2" opacity="0.15"/>
+  <circle cx="50" cy="50" r="36" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.1" stroke-dasharray="4 8"/>
+
+  <!-- Inner diamond base -->
+  <polygon points="50,12 88,38 88,62 50,88 12,62 12,38" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" opacity="0.2"/>
+
+  <!-- Core 'A' shape – uses gradient and glow -->
+  <path d="M50 24 L68 80 L32 80 L50 24Z" fill="url(#logoGrad)" opacity="0.9" filter="url(#logoGlow)"/>
+
+  <!-- Horizontal bar – white for contrast -->
+  <line x1="36" y1="55" x2="64" y2="55" stroke="var(--logo-bar, #fff)" stroke-width="5" stroke-linecap="round"/>
+
+  <!-- Glowing core dot -->
+  <circle cx="50" cy="50" r="4" fill="var(--logo-dot, #fff)" filter="url(#logoGlow)" opacity="0.8"/>
+</svg>
                     <span style="font-weight:900;letter-spacing:3px;font-family:'JetBrains Mono',monospace;" id="sidebar-logo-text">AXELR</span>
                 </div>
                 <button class="new-chat-btn" onclick="resetToNewChat()">+ New</button>
@@ -700,3 +776,6 @@
     <script src="script.js"></script>
 </body>
 </html>
+
+
+

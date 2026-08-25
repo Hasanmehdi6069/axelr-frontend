@@ -1,5 +1,5 @@
 // ============================================================
-// AXELR AI - FRONTEND v24.2 (LOGIN ROCK-SOLID + CLIENT ID FIXED)
+// AXELR AI - FRONTEND v24.3 (PRODUCTION-READY)
 // ============================================================
 
 // ============================================================
@@ -380,82 +380,8 @@ function showAuthWall() {
         mainWrapper.style.display = 'none';
     }
     console.log('🔒 Auth wall shown');
-    // Hide guest banner when auth wall is shown
     const banner = getEl('guest-banner');
     if (banner) banner.style.display = 'none';
-}
-
-// ============================================================
-// LOGIN FUNCTIONS (implemented)
-// ============================================================
-function triggerGoogleLogin() {
-    if (typeof google === 'undefined' || !google.accounts) {
-        alert('Google Identity Services not loaded. Please refresh.');
-        return;
-    }
-    // Initialize the Google Sign-In if not already done
-    google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: handleCredentialResponse,
-        cancel_on_tap_outside: false,
-        context: 'signin'
-    });
-    // Prompt the One Tap UI
-    google.accounts.id.prompt();
-}
-
-function triggerGitHubLogin() {
-    window.location.href = `${API_BASE_URL}/api/auth/github`;
-}
-
-function showEmailLogin() {
-    // Simple email/password login – for demo, we can show a prompt
-    const email = prompt('Enter your email:');
-    if (!email) return;
-    const password = prompt('Enter your password:');
-    if (!password) return;
-    // We'll call a backend endpoint (if implemented) or fallback to JWT
-    // For now, just show an alert
-    alert('Email login is not fully implemented yet. Please use Google or GitHub.');
-}
-
-function triggerPasskeyLogin() {
-    // For now, we redirect to a passkey flow or show a modal
-    alert('Passkey login is not fully implemented yet. Please use Google or GitHub.');
-}
-
-function continueAsGuest() {
-    // Initialize guest mode and show main UI
-    initGuestMode().then(() => {
-        showMainUI();
-        // Update sidebar to show "Login" instead of Settings
-        updateSidebarForGuest(true);
-    });
-}
-
-function updateSidebarForGuest(isGuest) {
-    const container = getEl('sidebar-settings-or-login');
-    const title = getEl('settings-or-login-title');
-    const desc = getEl('settings-or-login-desc');
-    if (!container || !title || !desc) return;
-    if (isGuest) {
-        title.innerHTML = 'Sign In <span class="material-symbols-rounded" style="font-size:18px;color:var(--accent-glow);">login</span>';
-        desc.textContent = 'Unlock unlimited access & save your data';
-        container.onclick = () => { showAuthWall(); };
-    } else {
-        title.innerHTML = 'Settings <span class="material-symbols-rounded" style="font-size:18px;color:var(--text-muted);">settings</span>';
-        desc.textContent = 'Quota, Plan, Instructions & Feedback';
-        container.onclick = () => { openSettingsModal(); };
-    }
-}
-
-// Override openSettingsOrLogin to handle guest mode
-function openSettingsOrLogin() {
-    if (isGuestMode) {
-        showAuthWall();
-    } else {
-        openSettingsModal();
-    }
 }
 
 // ============================================================
@@ -485,9 +411,188 @@ async function initGuestMode() {
         console.warn('Guest session creation failed:', e);
     }
     updateQuotaDisplay({ tier: 'guest', subTierOptions: { hasDataAccess: false, hasDesignAccess: false }, quotas: { dailyExtractionsUsed: 0, dailyGenerationsUsed: 0 } });
-    // Update sidebar to show login
     updateSidebarForGuest(true);
 }
+
+function updateSidebarForGuest(isGuest) {
+    const container = getEl('sidebar-settings-or-login');
+    const title = getEl('settings-or-login-title');
+    const desc = getEl('settings-or-login-desc');
+    if (!container || !title || !desc) return;
+    if (isGuest) {
+        title.innerHTML = 'Sign In <span class="material-symbols-rounded" style="font-size:18px;color:var(--accent-glow);">login</span>';
+        desc.textContent = 'Unlock unlimited access & save your data';
+        container.onclick = () => { showAuthWall(); };
+    } else {
+        title.innerHTML = 'Settings <span class="material-symbols-rounded" style="font-size:18px;color:var(--text-muted);">settings</span>';
+        desc.textContent = 'Quota, Plan, Instructions & Feedback';
+        container.onclick = () => { openSettingsModal(); };
+    }
+}
+
+function openSettingsOrLogin() {
+    if (isGuestMode) {
+        showAuthWall();
+    } else {
+        openSettingsModal();
+    }
+}
+
+// ============================================================
+// AUTH HANDLING (Google) – Callback
+// ============================================================
+function handleCredentialResponse(response) {
+    console.log('🔑 Google callback received');
+    const token = response.credential;
+    const payload = decodeJwt(token);
+    if (!payload) {
+        console.error('Invalid Google credential');
+        return;
+    }
+    localStorage.setItem('google_auth_token', token);
+    googleAuthUserToken = token;
+    isGuestMode = false;
+    showMainUI();
+    updateSidebarForGuest(false);
+    initializeSecureWorkspace(payload, token);
+    setAvatar(payload.picture, payload.name);
+}
+
+// ============================================================
+// AUTH FUNCTIONS (Login buttons)
+// ============================================================
+function triggerGoogleLogin() {
+    if (typeof google === 'undefined' || !google.accounts) {
+        alert('Google Identity Services not loaded. Please refresh.');
+        return;
+    }
+    google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleCredentialResponse,
+        cancel_on_tap_outside: false,
+        context: 'signin'
+    });
+    google.accounts.id.prompt();
+}
+
+function triggerGitHubLogin() {
+    window.location.href = `${API_BASE_URL}/api/auth/github`;
+}
+
+function showEmailLogin() {
+    const email = prompt('Enter your email:');
+    if (!email) return;
+    const password = prompt('Enter your password:');
+    if (!password) return;
+    fetch(`${API_BASE_URL}/api/auth/email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.token) {
+            localStorage.setItem('google_auth_token', data.token);
+            location.reload();
+        } else {
+            alert(data.message || 'Login failed');
+        }
+    })
+    .catch(err => alert('Network error: ' + err.message));
+}
+
+function triggerPasskeyLogin() {
+    const email = prompt('Enter your email for passkey login:');
+    if (!email) return;
+    fetch(`${API_BASE_URL}/api/auth/webauthn/login/begin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+    })
+    .then(res => res.json())
+    .then(options => navigator.credentials.get({ publicKey: options }))
+    .then(credential => {
+        return fetch(`${API_BASE_URL}/api/auth/webauthn/login/finish`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, credential })
+        });
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.token) {
+            localStorage.setItem('google_auth_token', data.token);
+            location.reload();
+        } else {
+            alert(data.message || 'Passkey authentication failed');
+        }
+    })
+    .catch(err => alert('Passkey error: ' + err.message));
+}
+
+async function continueAsGuest() {
+    isGuestMode = true;
+    const banner = getEl('guest-banner');
+    if (banner) banner.style.display = 'block';
+    try {
+        const resp = await fetch(`${API_BASE_URL}/api/guest/session`, { method: 'POST' });
+        const data = await resp.json();
+        guestSessionId = data.sessionId;
+    } catch (e) {
+        console.warn('Guest session fallback');
+    }
+    showMainUI();
+    updateSidebarForGuest(true);
+    updateQuotaDisplay({ tier: 'guest', subTierOptions: { hasDataAccess: false, hasDesignAccess: false }, quotas: { dailyExtractionsUsed: 0, dailyGenerationsUsed: 0 } });
+}
+
+// Passkey Registration (for sign‑up)
+async function registerPasskey() {
+    const email = prompt('Enter your email to register a passkey:');
+    if (!email) return;
+    try {
+        const beginResp = await fetch(`${API_BASE_URL}/api/auth/webauthn/register/begin`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+        const options = await beginResp.json();
+        const credential = await navigator.credentials.create({ publicKey: options });
+        const finishResp = await fetch(`${API_BASE_URL}/api/auth/webauthn/register/finish`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, credential })
+        });
+        const result = await finishResp.json();
+        if (result.success) {
+            alert('Passkey registered successfully!');
+        } else {
+            alert('Registration failed: ' + (result.message || 'Unknown error'));
+        }
+    } catch (err) {
+        alert('Passkey error: ' + err.message);
+    }
+}
+
+// GitHub callback handler – automatically extracts token from URL
+(function handleGitHubCallback() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    if (token) {
+        localStorage.setItem('google_auth_token', token);
+        window.location.href = window.location.origin + window.location.pathname;
+    }
+})();
+
+// ============================================================
+// GLOBAL LOGOUT
+// ============================================================
+function executeGlobalLogout() {
+    localStorage.removeItem('google_auth_token');
+    googleAuthUserToken = null;
+    location.reload();
+}
+window.executeGlobalLogout = executeGlobalLogout;
 
 // ============================================================
 // INITIALIZATION
@@ -515,9 +620,7 @@ function initializeApp() {
             localStorage.removeItem('google_auth_token');
         }
     }
-    // No token: show auth wall (do NOT auto-enter guest mode)
     showAuthWall();
-    // Ensure guest mode is not active yet
     isGuestMode = false;
 }
 
@@ -540,27 +643,6 @@ setTimeout(() => {
         }
     }
 }, 1000);
-
-// ============================================================
-// AUTH HANDLING (Google)
-// ============================================================
-function handleCredentialResponse(response) {
-    console.log('🔑 Google callback received');
-    const token = response.credential;
-    const payload = decodeJwt(token);
-    if (!payload) {
-        console.error('Invalid Google credential');
-        return;
-    }
-    localStorage.setItem('google_auth_token', token);
-    googleAuthUserToken = token;
-    isGuestMode = false;
-    showMainUI();
-    // Update sidebar to settings
-    updateSidebarForGuest(false);
-    initializeSecureWorkspace(payload, token);
-    setAvatar(payload.picture, payload.name);
-}
 
 // ============================================================
 // SECURE WORKSPACE INIT
@@ -2205,7 +2287,6 @@ async function executeCommand(isRetry = false) {
                     runningFileTitle = filename;
                     await loadArchiveLogs();
                 } else {
-                    // Guest: just store sessionId for subsequent requests
                     guestSessionId = sessionId;
                 }
             }
@@ -2998,16 +3079,6 @@ function initializePuterInstance() {
         }
     }
 }
-
-// ============================================================
-// GLOBAL LOGOUT
-// ============================================================
-function executeGlobalLogout() {
-    localStorage.removeItem('google_auth_token');
-    googleAuthUserToken = null;
-    location.reload();
-}
-window.executeGlobalLogout = executeGlobalLogout;
 
 // ============================================================
 // FINAL INIT
