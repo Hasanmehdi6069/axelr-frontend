@@ -109,7 +109,6 @@ async function ensureValidToken() {
 }
 
 async function apiFetch(url, options = {}) {
-    // For guest endpoints, do not attach token
     if (url.includes('/api/guest/') || url.includes('/api/auth/github') || url.includes('/api/auth/webauthn')) {
         return fetch(url, options);
     }
@@ -156,7 +155,6 @@ setInterval(async () => {
 // ============================================================
 function getEl(id) {
     const el = document.getElementById(id);
-    if (!el) console.warn(`Element #${id} not found`);
     return el;
 }
 const promptInput = getEl('prompt-input');
@@ -203,7 +201,329 @@ let suppressRegenerateForNextResponse = false;
 let appInitialized = false;
 let isGuestMode = false;
 let guestSessionId = null;
+let streamingBubble = null;
+let streamingContentDiv = null;
 
+
+// ============================================================
+// WORKSPACE THEME
+// ============================================================
+function updateWorkspaceTheme(workspace) {
+    document.body.classList.remove('workspace-data', 'workspace-design', 'workspace-general');
+    if (workspace === 'design') {
+        document.body.classList.add('workspace-design');
+    } else if (workspace === 'general') {
+        document.body.classList.add('workspace-general');
+    } else {
+        document.body.classList.add('workspace-data');
+    }
+    localStorage.setItem('Axelr_workspace', workspace);
+    const isMobile = window.innerWidth <= 768;
+    const logo = getEl('sidebar-logo-text');
+    const heroTitle = getEl('hero-title-text');
+    const heroSub = getEl('hero-sub-text');
+    if (workspace === 'design') {
+        if (logo) logo.innerText = 'AXELR DESIGN';
+        if (heroTitle) heroTitle.innerText = 'What are we designing today?';
+        if (heroSub) heroSub.innerText = 'AI-powered UI/UX generation & live deployment.';
+        if (promptInput) promptInput.placeholder = isMobile ? "Upload a mockup..." : "Upload a mockup or request a UI component...";
+    } else if (workspace === 'general') {
+    if (logo) logo.innerText = 'AXELR';
+    if (heroTitle) heroTitle.innerText = 'What can I help you with?';
+    if (heroSub) heroSub.innerText = 'Intelligence execution for any task – from code to creativity.';
+    if (promptInput) promptInput.placeholder = isMobile ? "Ask anything..." : "Ask me anything – I\'m here to help...";
+    } else {
+        if (logo) logo.innerText = 'AXELR DATA';
+        if (heroTitle) heroTitle.innerText = 'What are we building today?';
+        if (heroSub) heroSub.innerText = 'AI-powered architecture and data execution.';
+        if (promptInput) promptInput.placeholder = isMobile ? "Upload a receipt..." : "Upload a receipt, invoice, or CSV for extraction...";
+    }
+    // Update model branding
+    updateModelBranding(workspace, window.currentUser?.tier || 'free');
+    updateFeaturesMenu(workspace);
+}
+let eli5Active = false;
+document.getElementById('eli5-toggle')?.addEventListener('click', function() {
+    eli5Active = !eli5Active;
+    this.classList.toggle('active');
+    this.innerHTML = eli5Active 
+        ? '<span class="material-symbols-rounded">child_care</span> ON' 
+        : '<span class="material-symbols-rounded">child_care</span>';
+    showToast(eli5Active ? 'ELI5 mode ON – responses will be simplified.' : 'ELI5 mode OFF', 'info');
+});
+
+async function brainstorm(topic) {
+    const resp = await apiFetch(`${API_BASE_URL}/api/brainstorm`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: topic })
+    });
+    const data = await resp.json();
+    if (data.success) {
+        const bubble = document.createElement('div');
+        bubble.className = 'chat-bubble nexus-bubble';
+        bubble.innerHTML = `<div class="bubble-content">${DOMPurify.sanitize(marked.parse(data.ideas))}</div>`;
+        viewport.appendChild(bubble);
+        scrollToBottom();
+    }
+}
+document.getElementById('multi-agent-btn')?.addEventListener('click', function() {
+    const task = prompt('Enter the task for the agents:');
+    if (!task) return;
+    const agents = [
+        { name: 'Researcher', role: 'research' },
+        { name: 'Coder', role: 'code' },
+        { name: 'Reviewer', role: 'review' }
+    ];
+    runMultiAgent(task, agents);
+});
+let currentPeriod = 'monthly';
+function setPricingPeriod(period) {
+    currentPeriod = period;
+    document.querySelectorAll('.period-btn').forEach(b => b.classList.toggle('active', b.dataset.period === period));
+    // Update prices in the upgrade cards
+    document.querySelectorAll('.price-output').forEach(el => {
+        const monthly = parseFloat(el.dataset.monthly);
+        const annual = monthly * 10; // 20% off = 10 months for price of 12
+        el.innerHTML = period === 'monthly' ? `$${monthly}<span>/mo</span>` : `$${annual}<span>/yr</span>`;
+    });
+}
+// Multi-Agent
+function createNexusBubble(markdown) {
+    const bubble = document.createElement('div');
+    bubble.className = 'chat-bubble nexus-bubble';
+    const avatar = document.createElement('div');
+    avatar.className = 'ai-avatar-bubble';
+    avatar.innerHTML = AXELR_AVATAR_SVG;
+    const content = document.createElement('div');
+    content.className = 'bubble-content';
+    content.innerHTML = DOMPurify.sanitize(marked.parse(markdown || ''));
+    bubble.append(avatar, content);
+    return bubble;
+}
+
+async function runMultiAgent(task, agents) {
+    const btn = document.getElementById('multi-agent-btn');
+    if (btn) { btn.disabled = true; btn.innerHTML = 'Spawning...'; }
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/agents/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ task, agents, workspace: getWorkspace() })
+        });
+        const data = await resp.json();
+        if (data.success) {
+            const bubble = createNexusBubble(data.combined);
+            viewport.appendChild(bubble);
+            scrollToBottom();
+        } else {
+            showToast('Agent error: ' + (data.message || 'Unknown'), 'error');
+        }
+    } catch (e) {
+        showToast('Error: ' + e.message, 'error');
+    } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = '🧠 Agents'; }
+    }
+}
+
+// Knowledge Vault
+async function saveKnowledge(key, value, tags = []) {
+    await apiFetch(`${API_BASE_URL}/api/knowledge`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key, value, tags })
+    });
+    showToast('Knowledge saved', 'success');
+}
+async function loadKnowledgeList() { /* ... */ }
+async function deleteKnowledge(id) { /* ... */ }
+
+// Workflow
+async function runWorkflow(steps) {
+    const response = await fetch(`${API_BASE_URL}/api/workflow/run`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${await ensureValidToken()}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ steps, workspace: getWorkspace() })
+    });
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const events = buffer.split('\n\n');
+        for (let i = 0; i < events.length - 1; i++) {
+            const event = events[i];
+            if (event.startsWith('data: ')) {
+                try {
+                    const json = JSON.parse(event.slice(6));
+                    if (json.status === 'completed' && json.output) {
+                        const bubble = createNexusBubble(`**${json.step}**\n\n${json.output}`);
+                        viewport.appendChild(bubble);
+                        scrollToBottom();
+                    } else if (json.status === 'done') {
+                        const bubble = createNexusBubble(`**✅ Workflow Complete**\n\n${json.final}`);
+                        viewport.appendChild(bubble);
+                        scrollToBottom();
+                    }
+                } catch (e) { /* ignore */ }
+            }
+        }
+        buffer = events[events.length - 1];
+    }
+}
+
+// Persona
+async function applyPersona(personaId) {
+    const resp = await apiFetch(`${API_BASE_URL}/api/personas/${personaId}`);
+    const data = await resp.json();
+    if (data.system_prompt) {
+        await apiFetch(`${API_BASE_URL}/api/user/instructions`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ instructions: data.system_prompt })
+        });
+        showToast('Persona applied!', 'success');
+        await loadUserProfile();
+        closeModals();
+    }
+}
+
+// Code Execution
+async function executeCodeBlock(btn, language) {
+    const pre = btn.closest('pre');
+    const code = pre ? pre.querySelector('code') : null;
+    if (!code) return;
+    const codeText = code.innerText;
+    btn.innerText = 'Running…';
+    btn.disabled = true;
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/execute-code`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ language, code: codeText })
+        });
+        const data = await resp.json();
+        const output = data.output || data.error || 'No output';
+        const bubble = createNexusBubble(`**▶️ Output**\n\n\`\`\`\n${output}\n\`\`\``);
+        viewport.appendChild(bubble);
+        scrollToBottom();
+    } catch (e) {
+        showToast('Execution error: ' + e.message, 'error');
+    } finally {
+        btn.innerText = '▶ Run';
+        btn.disabled = false;
+    }
+}
+// ============================================================
+// MODEL BRANDING & DROPDOWN
+// ============================================================
+// ============================================================
+// MODEL BRANDING & DROPDOWN – Per Workspace
+// ============================================================
+// ============================================================
+// MODEL BRANDING & DROPDOWN – Per Workspace
+// ============================================================
+// Fetch model config from backend
+let MODEL_CONFIG = { general: { models: [] }, data: { models: [] }, design: { models: [] } };
+
+async function loadModelConfig() {
+    try {
+        const resp = await fetch(`${API_BASE_URL}/api/model-config`);
+        if (resp.ok) {
+            MODEL_CONFIG = await resp.json();
+            // Ensure all workspaces exist
+            ['general', 'data', 'design'].forEach(w => {
+                if (!MODEL_CONFIG[w]) MODEL_CONFIG[w] = { models: [] };
+            });
+        }
+    } catch(e) {
+        console.warn('Using fallback model config');
+        // Fallback config (production ready)
+        MODEL_CONFIG = {
+            general: {
+                models: [
+                    { id: 'flash', label: 'AXELR‑FLASH', badge: 'FREE', desc: 'Instant answers for everyday questions', tier: 'free' },
+                    { id: 'pro', label: 'AXELR‑HYPER', badge: 'HYPER', desc: 'Deep reasoning & code generation', tier: 'pro' },
+                    { id: 'business', label: 'AXELR‑OMNI', badge: 'OMNI', desc: 'Unlimited context & multi‑agent orchestration', tier: 'business' }
+                ]
+            },
+            data: {
+                models: [
+                    { id: 'flash', label: 'AXELR‑FLASH', badge: 'DATA', desc: 'Lightning‑fast extractions & analysis', tier: 'free' },
+                    { id: 'pro', label: 'AXELR‑PRO DATA', badge: 'PRO', desc: 'Advanced extraction with higher limits', tier: 'pro' },
+                    { id: 'business', label: 'AXELR‑ENTERPRISE', badge: 'ENTERPRISE', desc: 'Massive throughput & custom pipelines', tier: 'business' }
+                ]
+            },
+            design: {
+                models: [
+                    { id: 'flash', label: 'AXELR‑ARCHITECT', badge: 'BUILDER', desc: 'Instant UI/UX components', tier: 'free' },
+                    { id: 'pro', label: 'AXELR‑STUDIO', badge: 'PRO', desc: 'Complex interactions & design systems', tier: 'pro' },
+                    { id: 'business', label: 'AXELR‑DESIGN OPS', badge: 'DESIGN OPS', desc: 'Team‑scale design & deployment', tier: 'business' }
+                ]
+            }
+        };
+    }
+}
+
+function renderModelDropdown(workspace) {
+    const container = document.getElementById('model-dropdown-card');
+    if (!container) return;
+    const config = MODEL_CONFIG[workspace] || MODEL_CONFIG.general;
+    const selectedId = localStorage.getItem('axelr_selected_model') || config.models[0]?.id || 'flash';
+
+    container.innerHTML = config.models.map((m) => {
+        const activeClass = (m.id === selectedId) ? 'active' : '';
+        let tierClass = '';
+        if (m.tier === 'pro') tierClass = 'pro';
+        else if (m.tier === 'business') tierClass = 'designer';
+        return `
+            <div class="model-option ${activeClass} ${tierClass}" data-model-id="${m.id}" onclick="selectModel(event, '${m.id}')">
+                <div class="model-title">${m.label} <span style="background:rgba(0,242,254,0.1);color:var(--accent-glow);padding:2px 8px;border-radius:4px;font-size:9px;">${m.badge}</span></div>
+                <div class="model-desc">${m.desc}</div>
+            </div>
+        `;
+    }).join('');
+
+    // Update the selected model label
+    const selectedModel = config.models.find(m => m.id === selectedId);
+    if (selectedModel) {
+        document.getElementById('model-text-display').innerText = selectedModel.label;
+        document.getElementById('model-badge-display').innerText = selectedModel.badge;
+    }
+}
+
+function updateModelBranding(workspace, tier) {
+    const config = MODEL_CONFIG[workspace] || MODEL_CONFIG.general;
+    // Determine best matching model based on tier
+    let defaultModel = config.models.find(m => m.tier === tier) || config.models[0];
+    if (!defaultModel) defaultModel = config.models[0];
+    // Store selected model id
+    const selectedId = defaultModel.id;
+    localStorage.setItem('axelr_selected_model', selectedId);
+    // Update UI
+    document.getElementById('model-text-display').innerText = defaultModel.label;
+    document.getElementById('model-badge-display').innerText = defaultModel.badge;
+    renderModelDropdown(workspace);
+}
+
+function selectModel(e, modelId) {
+    if (e) e.stopPropagation();
+    const workspace = getWorkspace();
+    const config = MODEL_CONFIG[workspace] || MODEL_CONFIG.general;
+    const model = config.models.find(m => m.id === modelId);
+    if (model) {
+        document.getElementById('model-text-display').innerText = model.label;
+        document.getElementById('model-badge-display').innerText = model.badge;
+        localStorage.setItem('axelr_selected_model', modelId);
+        renderModelDropdown(workspace);
+    }
+    document.getElementById('model-dropdown-card').style.display = 'none';
+}
+
+// Call this after loading profile and on workspace switch
+// Also call loadModelConfig() during initial app initialization
 // ============================================================
 // SCROLL FUNCTIONS
 // ============================================================
@@ -272,7 +592,19 @@ function getWorkspace() {
 function getDraftKey() {
     return `Axelr_prompt_draft_${currentUserId || 'anonymous'}`;
 }
-
+async function getRelevantKnowledge(query) {
+    if (!query || query.length < 3) return '';
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/knowledge/search?q=${encodeURIComponent(query)}`);
+        const data = await resp.json();
+        if (data.results && data.results.length > 0) {
+            return '📚 Relevant knowledge:\n' + data.results.map(k => `${k.key}: ${k.value}`).join('\n');
+        }
+    } catch (e) {
+        console.warn('Knowledge search failed:', e);
+    }
+    return '';
+}
 // ============================================================
 // QUOTA DISPLAY
 // ============================================================
@@ -362,6 +694,14 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e)
 // ============================================================
 // AUTH & UI SWITCH
 // ============================================================
+function showToast(message, type='error') {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 5000);
+}
+
 function showMainUI() {
     if (authWall) authWall.style.display = 'none';
     if (mainWrapper) {
@@ -462,17 +802,24 @@ function handleCredentialResponse(response) {
 // AUTH FUNCTIONS (Login buttons)
 // ============================================================
 function triggerGoogleLogin() {
-    if (typeof google === 'undefined' || !google.accounts) {
-        alert('Google Identity Services not loaded. Please refresh.');
-        return;
-    }
-    google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: handleCredentialResponse,
-        cancel_on_tap_outside: false,
-        context: 'signin'
-    });
-    google.accounts.id.prompt();
+    const start = () => {
+        if (typeof google === 'undefined' || !google.accounts?.id) return false;
+        google.accounts.id.initialize({
+            client_id: GOOGLE_CLIENT_ID,
+            callback: handleCredentialResponse,
+            cancel_on_tap_outside: false,
+            context: 'signin',
+            use_fedcm_for_prompt: false
+        });
+        google.accounts.id.prompt();
+        return true;
+    };
+    if (start()) return;
+    let attempts = 0;
+    const retry = setInterval(() => {
+        attempts += 1;
+        if (start() || attempts >= 30) clearInterval(retry);
+    }, 100);
 }
 
 function triggerGitHubLogin() {
@@ -546,7 +893,7 @@ async function continueAsGuest() {
     updateQuotaDisplay({ tier: 'guest', subTierOptions: { hasDataAccess: false, hasDesignAccess: false }, quotas: { dailyExtractionsUsed: 0, dailyGenerationsUsed: 0 } });
 }
 
-// Passkey Registration (for sign‑up)
+// Passkey Registration
 async function registerPasskey() {
     const email = prompt('Enter your email to register a passkey:');
     if (!email) return;
@@ -574,7 +921,7 @@ async function registerPasskey() {
     }
 }
 
-// GitHub callback handler – automatically extracts token from URL
+// GitHub callback handler
 (function handleGitHubCallback() {
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token');
@@ -590,7 +937,8 @@ async function registerPasskey() {
 function executeGlobalLogout() {
     localStorage.removeItem('google_auth_token');
     googleAuthUserToken = null;
-    location.reload();
+    isGuestMode = false;
+    showAuthWall();
 }
 window.executeGlobalLogout = executeGlobalLogout;
 
@@ -598,9 +946,13 @@ window.executeGlobalLogout = executeGlobalLogout;
 // INITIALIZATION
 // ============================================================
 function initializeApp() {
+    loadModelConfig().then(() => {
+    // Once config is loaded, update branding
+    const savedWorkspace = localStorage.getItem('Axelr_workspace') || 'general';
+    updateModelBranding(savedWorkspace, window.currentUser?.tier || 'free');
+});
     if (appInitialized) return;
     appInitialized = true;
-
     const saved = localStorage.getItem('axelr_theme') || 'system';
     currentThemePreference = saved;
     systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -658,12 +1010,7 @@ async function initializeSecureWorkspace(payload, token) {
     if (dropdownEmail) dropdownEmail.innerText = payload.email;
 
     const savedWorkspace = localStorage.getItem('Axelr_workspace');
-    if (savedWorkspace) {
-        await activateWorkspace(savedWorkspace, true);
-    } else {
-        const wsSel = getEl('workspace-selector');
-        if (wsSel) wsSel.style.display = 'flex';
-    }
+    updateWorkspaceTheme(savedWorkspace || 'data');
 
     try {
         await loadUserProfile();
@@ -675,14 +1022,6 @@ async function initializeSecureWorkspace(payload, token) {
         await loadUserPreferences();
     } catch (e) { /* ignore */ }
     displaySuggestions();
-
-    if (!savedWorkspace) {
-        const wsSel = getEl('workspace-selector');
-        if (wsSel) wsSel.style.display = 'flex';
-    } else {
-        const wsSel = getEl('workspace-selector');
-        if (wsSel) wsSel.style.display = 'none';
-    }
 }
 
 function setAvatar(picture, name) {
@@ -853,6 +1192,194 @@ function removeStagedFile(idx) {
     stagedFiles.splice(idx, 1);
     renderFileChips();
     validateSendCommand();
+}
+async function openWorkflowModal() {
+    closeModals();
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay active';
+    modal.id = 'workflow-modal';
+    modal.innerHTML = `
+        <div class="modal-card" style="max-width:600px;">
+            <div class="modal-header">
+                <div class="modal-title">Auto‑Workflow</div>
+                <button class="close-modal-btn" onclick="closeModals()">✕</button>
+            </div>
+            <div style="padding:10px 0;">
+                <div id="workflow-steps">
+                    <div class="workflow-step">
+                        <input placeholder="Step name" class="wf-step-name" value="Extract data">
+                        <textarea placeholder="Prompt (use {context} for previous output)" class="wf-step-prompt" rows="2">Extract all numbers and dates from the context.</textarea>
+                        <button class="remove-step-btn" onclick="this.parentElement.remove()">✕</button>
+                    </div>
+                </div>
+                <button class="add-step-btn" onclick="addWorkflowStep()">+ Add Step</button>
+                <button class="modal-submit-btn" onclick="runWorkflowFromModal()">▶ Run Workflow</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function addWorkflowStep() {
+    const container = document.getElementById('workflow-steps');
+    const step = document.createElement('div');
+    step.className = 'workflow-step';
+    step.innerHTML = `
+        <input placeholder="Step name" class="wf-step-name" value="Step ${container.children.length + 1}">
+        <textarea placeholder="Prompt (use {context})" class="wf-step-prompt" rows="2">Write your prompt here...</textarea>
+        <button class="remove-step-btn" onclick="this.parentElement.remove()">✕</button>
+    `;
+    container.appendChild(step);
+}
+
+async function runWorkflowFromModal() {
+    const steps = [];
+    document.querySelectorAll('.workflow-step').forEach(el => {
+        const name = el.querySelector('.wf-step-name').value.trim() || 'Step';
+        const prompt = el.querySelector('.wf-step-prompt').value.trim();
+        if (prompt) steps.push({ name, prompt, temperature: 0.2 });
+    });
+    if (steps.length === 0) return alert('Add at least one step.');
+    closeModals();
+    await runWorkflow(steps);
+}
+function openKnowledgePanel() {
+    closeModals();
+    let modal = getEl('knowledge-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'knowledge-modal';
+        modal.className = 'modal-overlay active';
+        modal.innerHTML = `
+            <div class="modal-card knowledge-modal-card">
+                <div class="modal-header">
+                    <div class="modal-title"><span class="material-symbols-rounded">bookmark</span> Knowledge Vault</div>
+                    <button class="close-modal-btn" onclick="closeModals()"><span class="material-symbols-rounded">close</span></button>
+                </div>
+                <p class="knowledge-modal-intro">Save reusable context for future workspaces and search it when needed.</p>
+                <div class="knowledge-form">
+                    <input id="knowledge-key" placeholder="Key or topic">
+                    <input id="knowledge-value" placeholder="Context to remember">
+                    <button class="modal-submit-btn" onclick="saveKnowledgeFromUI()">Save</button>
+                </div>
+                <input id="knowledge-search" class="knowledge-search-input" placeholder="Search saved knowledge..." oninput="searchKnowledge(this.value)">
+                <div id="knowledge-list" class="knowledge-list"></div>
+            </div>`;
+        document.body.appendChild(modal);
+    } else {
+        modal.classList.add('active');
+    }
+    loadKnowledgeList();
+}
+
+async function saveKnowledgeFromUI() {
+    const key = document.getElementById('knowledge-key')?.value.trim();
+    const value = document.getElementById('knowledge-value')?.value.trim();
+    if (!key || !value) return alert('Enter both key and value.');
+    await saveKnowledge(key, value, []);
+    document.getElementById('knowledge-key').value = '';
+    document.getElementById('knowledge-value').value = '';
+    loadKnowledgeList();
+}
+
+async function loadKnowledgeList() {
+    const data = await (await apiFetch(`${API_BASE_URL}/api/knowledge`)).json();
+    const container = document.getElementById('knowledge-list');
+    if (container) {
+        container.innerHTML = data.knowledge.map(k => `
+            <div class="knowledge-item" style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border-muted);">
+                <span><strong>${escapeHtmlEntities(k.key)}</strong>: ${escapeHtmlEntities(k.value)}</span>
+                <button onclick="deleteKnowledge('${k._id}')" style="background:none;border:none;color:#ef4444;cursor:pointer;">✕</button>
+            </div>
+        `).join('');
+    }
+}
+
+async function searchKnowledge(query) {
+    if (!query.trim()) { loadKnowledgeList(); return; }
+    const resp = await apiFetch(`${API_BASE_URL}/api/knowledge/search?q=${encodeURIComponent(query)}`);
+    const data = await resp.json();
+    const container = document.getElementById('knowledge-list');
+    if (container) {
+        container.innerHTML = data.results.map(k => `
+            <div class="knowledge-item" style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border-muted);">
+                <span><strong>${escapeHtmlEntities(k.key)}</strong>: ${escapeHtmlEntities(k.value)}</span>
+            </div>
+        `).join('');
+    }
+}
+
+async function deleteKnowledge(id) {
+    if (!confirm('Delete this knowledge?')) return;
+    await apiFetch(`${API_BASE_URL}/api/knowledge/${id}`, { method: 'DELETE' });
+    loadKnowledgeList();
+}
+async function openPersonaSelector() {
+    closeModals();
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay active';
+    modal.id = 'persona-modal';
+    modal.innerHTML = `
+        <div class="modal-card" style="max-width:500px;">
+            <div class="modal-header">
+                <div class="modal-title">🧑‍💼 Persona Library</div>
+                <button class="close-modal-btn" onclick="closeModals()">✕</button>
+            </div>
+            <div style="padding:10px 0;">
+                <div id="persona-list"></div>
+                <button onclick="createPersona()" style="margin-top:10px;padding:6px 12px;background:var(--accent-glow);color:#000;border:none;border-radius:4px;">+ New Persona</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    await loadPersonaList();
+}
+
+async function loadPersonaList() {
+    const resp = await apiFetch(`${API_BASE_URL}/api/personas`);
+    const data = await resp.json();
+    const container = document.getElementById('persona-list');
+    if (container) {
+        container.innerHTML = data.personas.map(p => `
+            <div class="persona-item" style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-muted);">
+                <div>
+                    <strong>${escapeHtmlEntities(p.name)}</strong>
+                    <div style="font-size:12px;color:var(--text-muted);">${escapeHtmlEntities(p.system_prompt?.slice(0,80))}…</div>
+                </div>
+                <button onclick="applyPersona('${p._id}')" style="padding:4px 12px;background:#3b82f6;color:#fff;border:none;border-radius:4px;">Apply</button>
+            </div>
+        `).join('');
+    }
+}
+
+async function createPersona() {
+    const name = prompt('Persona name:');
+    if (!name) return;
+    const prompt_text = prompt('System prompt for this persona:');
+    if (!prompt_text) return;
+    const isPublic = confirm('Make this persona public?');
+    await apiFetch(`${API_BASE_URL}/api/personas`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, system_prompt: prompt_text, is_public: isPublic })
+    });
+    loadPersonaList();
+}
+
+async function applyPersona(personaId) {
+    const resp = await apiFetch(`${API_BASE_URL}/api/personas/${personaId}`);
+    const data = await resp.json();
+    if (data.system_prompt) {
+        await apiFetch(`${API_BASE_URL}/api/user/instructions`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ instructions: data.system_prompt })
+        });
+        showToast('Persona applied as custom instructions.', 'success');
+        closeModals();
+        // Reload profile to reflect
+        await loadUserProfile();
+    }
 }
 
 if (fileInput) {
@@ -1083,7 +1610,7 @@ function selectWorkspace(type) {
 }
 function activateWorkspace(type, isBoot = false) {
     if (mainWrapper) mainWrapper.classList.add('visible');
-    document.body.classList.remove('workspace-data', 'workspace-design');
+    document.body.classList.remove('workspace-data', 'workspace-design', 'workspace-general');
     document.body.classList.add(`workspace-${type}`);
     const isMobile = window.innerWidth <= 768;
     const logo = getEl('sidebar-logo-text');
@@ -1094,6 +1621,11 @@ function activateWorkspace(type, isBoot = false) {
         if (heroTitle) heroTitle.innerText = 'What are we designing today?';
         if (heroSub) heroSub.innerText = 'AI-powered UI/UX generation & live deployment.';
         if (promptInput) promptInput.placeholder = isMobile ? "Upload a mockup..." : "Upload a mockup or request a UI component...";
+    } else if (type === 'general') {
+        if (logo) logo.innerText = 'AXELR';
+        if (heroTitle) heroTitle.innerText = 'What can I help you with?';
+        if (heroSub) heroSub.innerText = 'Intelligence execution for any task.';
+        if (promptInput) promptInput.placeholder = isMobile ? "Ask anything..." : "Ask me anything – I\'m here to help...";
     } else {
         if (logo) logo.innerText = 'AXELR DATA';
         if (heroTitle) heroTitle.innerText = 'What are we building today?';
@@ -1101,9 +1633,11 @@ function activateWorkspace(type, isBoot = false) {
         if (promptInput) promptInput.placeholder = isMobile ? "Upload a receipt..." : "Upload a receipt, invoice, or CSV for extraction...";
     }
     resetToNewChat(isBoot);
-    if (!isBoot) loadArchiveLogs();
+    if (!isBoot && !isGuestMode && localStorage.getItem('google_auth_token')) loadArchiveLogs();
     displaySuggestions();
+    updateFeaturesMenu(type);
     if (window.currentUser) updateQuotaDisplay(window.currentUser);
+    updateModelBranding(type, window.currentUser?.tier || 'free');
 }
 
 function resetToNewChat(isBoot = false) {
@@ -1300,6 +1834,8 @@ async function loadUserProfile() {
 
             updateSettingsQuota();
             updateSubscriptionModal();
+            // Update model branding based on workspace and tier
+            updateModelBranding(getWorkspace(), data.tier);
         }
     } catch (e) { console.warn('Profile load failed', e); }
 }
@@ -1512,6 +2048,9 @@ function viewPastLogById(logId) {
         if (viewport) viewport.querySelectorAll('.chat-bubble').forEach(b => b.remove());
     }
     activeSessionId = logId;
+    if (log.status === 'active') {
+    joinCollaborativeSession(logId);
+}
     localStorage.setItem('axelr_active_session', activeSessionId);
     runningFileTitle = log.filename;
     runningStructuredCache = log.structuredData;
@@ -1721,7 +2260,7 @@ function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRege
                     promptInput.style.height = promptInput.scrollHeight + 'px';
                     promptInput.focus();
                     validateSendCommand();
-                    setTimeout(() => {
+                    setTimeout(async () => {
                         executeCommand(false);
                     }, 300);
                 }
@@ -1738,19 +2277,35 @@ function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRege
         copyBtn.innerHTML = `${ICONS.copy} Copy`;
         copyBtn.onclick = () => handleActionClick('copy', rawText, copyBtn);
         const likeBtn = document.createElement('button');
-        likeBtn.className = 'action-icon-btn';
-        likeBtn.title = "Helpful Response";
-        likeBtn.innerHTML = ICONS.thumbsUp;
-        likeBtn.onclick = () => { likeBtn.style.color = 'var(--accent-glow)'; dislikeBtn.style.color = 'var(--text-muted)'; };
-        const dislikeBtn = document.createElement('button');
-        dislikeBtn.className = 'action-icon-btn';
-        dislikeBtn.title = "Not Helpful";
-        dislikeBtn.innerHTML = ICONS.thumbsDown;
-        dislikeBtn.onclick = () => { dislikeBtn.style.color = '#ef4444'; likeBtn.style.color = 'var(--text-muted)'; };
-        actionBar.appendChild(copyBtn);
-        actionBar.appendChild(likeBtn);
-        actionBar.appendChild(dislikeBtn);
+likeBtn.className = 'action-icon-btn';
+likeBtn.title = "Helpful Response";
+likeBtn.innerHTML = ICONS.thumbsUp;
+likeBtn.onclick = function(e) {
+    e.stopPropagation();
+    this.style.color = 'var(--accent-glow)';
+    this.style.transform = 'scale(1.2)';
+    setTimeout(() => this.style.transform = 'scale(1)', 200);
+    showToast('Thanks for the feedback!', 'success');
+    // Optionally send API call
+};
 
+const dislikeBtn = document.createElement('button');
+dislikeBtn.className = 'action-icon-btn';
+dislikeBtn.title = "Not Helpful";
+dislikeBtn.innerHTML = ICONS.thumbsDown;
+dislikeBtn.onclick = function(e) {
+    e.stopPropagation();
+    this.style.color = '#ef4444';
+    this.style.transform = 'scale(1.2)';
+    setTimeout(() => this.style.transform = 'scale(1)', 200);
+    showToast('We\'ll improve!', 'info');
+};
+actionBar.appendChild(likeBtn);
+actionBar.appendChild(dislikeBtn);
+// Append them to actionBar
+actionBar.appendChild(copyBtn);
+actionBar.appendChild(likeBtn);
+actionBar.appendChild(dislikeBtn);
         if (showRegenerate && createdAt && sessionId && !isHistoryView) {
             const now = Date.now();
             const msgTime = new Date(createdAt).getTime();
@@ -1774,7 +2329,7 @@ function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRege
                     if (remaining <= 0) cleanup();
                 }, 1000);
                 timeoutId = setTimeout(cleanup, 30000 - elapsed);
-                regenBtn.onclick = function(e) {
+                regenBtn.onclick = async function(e) {
                     if (activeSessionId !== sessionId) {
                         cleanup();
                         return;
@@ -1789,7 +2344,7 @@ function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRege
                             clearTimeout(regenerateTimer);
                             regenerateTimer = null;
                         }
-                        executeCommand(true);
+                        await executeCommand(true);
                     }
                 };
                 actionBar.appendChild(regenBtn);
@@ -1950,6 +2505,172 @@ function handleActionClick(actionType, rawText, btnRef) {
         validateSendCommand();
     }
 }
+// ============================================================
+// WORKSPACE FEATURES MAPPING (Complete)
+// ============================================================
+const WORKSPACE_FEATURES = {
+  general: [
+    { id: 'summarize', icon: 'summarize', label: 'Summarize Chat' },
+    { id: 'brainstorm', icon: 'lightbulb', label: 'Brainstorm' },
+    { id: 'multi-agent', icon: 'groups', label: 'Multi-Agent' },
+    { id: 'workflow', icon: 'flowchart', label: 'Workflow' },
+    { id: 'knowledge', icon: 'bookmark', label: 'Knowledge Vault' },
+    { id: 'personas', icon: 'person', label: 'Personas' },
+    { id: 'eli5', icon: 'child_care', label: 'Explain Like I\'m 5' }
+  ],
+  data: [
+    { id: 'summarize', icon: 'summarize', label: 'Summarize Data' },
+    { id: 'storyteller', icon: 'auto_stories', label: 'Data Storyteller' },
+    { id: 'export', icon: 'download', label: 'Export CSV' },
+    { id: 'chart', icon: 'bar_chart', label: 'Generate Chart' },
+    { id: 'workflow', icon: 'flowchart', label: 'Workflow' },
+    { id: 'knowledge', icon: 'bookmark', label: 'Knowledge Vault' },
+    { id: 'schema', icon: 'table_chart', label: 'Schema Discovery' }
+  ],
+  design: [
+    { id: 'touch-fix', icon: 'build', label: 'Touch & Fix' },
+    { id: 'refactor', icon: 'code', label: 'Refactor Code' },
+    { id: 'deploy', icon: 'rocket_launch', label: 'One-Click Deploy' },
+    { id: 'visual-debug', icon: 'visibility', label: 'Visual Debugger' },
+    { id: 'tests', icon: 'fact_check', label: 'Generate Tests' },
+    { id: 'explain', icon: 'psychology', label: 'Explain Code' },
+    { id: 'knowledge', icon: 'bookmark', label: 'Knowledge Vault' },
+    { id: 'personas', icon: 'person', label: 'Personas' }
+  ]
+};
+function updateFeaturesMenu(workspace) {
+    const menu = document.getElementById('features-menu');
+    if (!menu) return;
+    const features = WORKSPACE_FEATURES[workspace] || WORKSPACE_FEATURES.general;
+    menu.innerHTML = features.map(f => `
+        <div class="feature-item" data-feature="${f.id}">
+            <span class="material-symbols-rounded">${f.icon}</span>
+            <span>${f.label}</span>
+        </div>
+    `).join('');
+
+    // Attach click handlers (event delegation)
+    menu.querySelectorAll('.feature-item').forEach(item => {
+        item.removeEventListener('click', item._handler);
+        item._handler = function(e) {
+            e.stopPropagation();
+            const feature = this.dataset.feature;
+            handleFeatureAction(feature);
+            menu.classList.remove('open');
+        };
+        item.addEventListener('click', item._handler);
+    });
+}
+// Ensure features menu is populated and toggle works
+document.addEventListener('DOMContentLoaded', function() {
+    const trigger = document.getElementById('features-trigger');
+    const menu = document.getElementById('features-menu');
+    if (trigger && menu) {
+        // Remove any existing listeners to avoid duplicates
+        trigger.removeEventListener('click', trigger._listener);
+        trigger._listener = function(e) {
+            e.stopPropagation();
+            menu.classList.toggle('open');
+        };
+        trigger.addEventListener('click', trigger._listener);
+        document.addEventListener('click', function() {
+            menu.classList.remove('open');
+        });
+        // Populate with current workspace
+        updateFeaturesMenu(getWorkspace());
+    }
+});
+
+// Handle feature actions (complete implementation)
+async function handleFeatureAction(feature) {
+  switch(feature) {
+    case 'summarize': await summarizeCurrentChat(); break;
+    case 'brainstorm': 
+      const topic = prompt('Enter a topic to brainstorm:');
+      if (topic) await brainstorm(topic);
+      break;
+    case 'multi-agent': 
+      const task = prompt('Enter the main task for agents:');
+      if (task) {
+        const agents = [
+          { name: 'Researcher', role: 'research' },
+          { name: 'Coder', role: 'code' },
+          { name: 'Reviewer', role: 'review' }
+        ];
+        await runMultiAgent(task, agents);
+      }
+      break;
+    case 'workflow': await openWorkflowModal(); break;
+    case 'knowledge': openKnowledgePanel(); break;
+    case 'personas': openPersonaSelector(); break;
+    case 'eli5': 
+      eli5Active = !eli5Active;
+      showToast(eli5Active ? 'ELI5 mode ON – simplified responses' : 'ELI5 mode OFF', 'info');
+      break;
+    case 'storyteller': 
+      if (runningStructuredCache) {
+        const story = await generateStoryFromData(runningStructuredCache);
+        displayStory(story);
+      } else {
+        showToast('No data to storytell', 'error');
+      }
+      break;
+    case 'export': executeDownloadPipeline(); break;
+    case 'chart': 
+      if (runningStructuredCache) renderChartInViewport(runningStructuredCache);
+      break;
+    case 'touch-fix': 
+      const lastCode = extractLastCodeBlock();
+      if (lastCode) {
+        const error = prompt('Describe the error:');
+        if (error) await touchFix(lastCode, error);
+      }
+      break;
+    case 'refactor': 
+      const codeToRefactor = extractLastCodeBlock();
+      if (codeToRefactor) await refactorCode(codeToRefactor);
+      break;
+    case 'deploy': 
+      const deployCode = extractLastCodeBlock();
+      if (deployCode) await deployCodeBlock(deployCode);
+      break;
+    case 'visual-debug': openVisualDebugger(); break;
+    case 'tests': 
+      const testCode = extractLastCodeBlock();
+      if (testCode) await generateTests(testCode);
+      break;
+    case 'explain': 
+      const explainCode = extractLastCodeBlock();
+      if (explainCode) await explainCodeBlock(explainCode);
+      break;
+    case 'schema': 
+      if (stagedFiles.length) {
+        const schema = await discoverSchema(stagedFiles);
+        if (schema) showToast('Schema: ' + schema, 'info');
+      }
+      break;
+    default: showToast('Feature coming soon', 'info');
+  }
+}
+
+// Helper to extract last code block
+function extractLastCodeBlock() {
+  const codeBlocks = viewport.querySelectorAll('pre code');
+  if (codeBlocks.length === 0) return null;
+  return codeBlocks[codeBlocks.length - 1].innerText;
+}
+
+// Render chart in a new bubble
+function renderChartInViewport(data) {
+  const bubble = document.createElement('div');
+  bubble.className = 'chat-bubble nexus-bubble';
+  const content = document.createElement('div');
+  content.className = 'bubble-content';
+  bubble.appendChild(content);
+  viewport.appendChild(bubble);
+  renderChart(content, data);
+  scrollToBottom();
+}
 
 // ============================================================
 // STRIPE LOADING OVERLAY
@@ -2020,7 +2741,18 @@ async function enhanceUserPrompt() {
         alert("⚠️ Prompt Enhancer timeout. Payload too large or network dropped.");
     } finally {
         enhanceBtn.classList.remove('loading');
-        enhanceBtn.disabled = false;
+    function toggleKnowledgeSection() {
+  const content = document.getElementById('knowledge-content');
+  const icon = document.querySelector('.expand-icon');
+  if (content.style.display === 'none') {
+    content.style.display = 'block';
+    icon.textContent = 'expand_less';
+    loadKnowledgeList();
+  } else {
+    content.style.display = 'none';
+    icon.textContent = 'expand_more';
+  }
+}    enhanceBtn.disabled = false;
         promptInput.disabled = false;
         inputFrame.style.filter = 'none';
         inputFrame.style.pointerEvents = 'auto';
@@ -2028,7 +2760,12 @@ async function enhanceUserPrompt() {
         validateSendCommand();
     }
 }
-
+let savedWorkspace = localStorage.getItem('Axelr_workspace');
+if (!savedWorkspace) {
+  savedWorkspace = 'general';
+  localStorage.setItem('Axelr_workspace', savedWorkspace);
+}
+updateWorkspaceTheme(savedWorkspace);
 // ============================================================
 // SECURITY LAYER
 // ============================================================
@@ -2072,9 +2809,20 @@ function showSecurityAlert(level) {
 }
 
 // ============================================================
-// EXECUTE COMMAND (with guest support)
+// EXECUTE COMMAND (with streaming by default)
 // ============================================================
 async function executeCommand(isRetry = false) {
+    window.summarizeCurrentChat = summarizeCurrentChat;
+window.brainstorm = brainstorm;
+window.runMultiAgent = runMultiAgent;
+window.openWorkflowModal = openWorkflowModal;
+window.openKnowledgePanel = openKnowledgePanel;
+window.openPersonaSelector = openPersonaSelector;
+window.saveKnowledgeFromUI = saveKnowledgeFromUI;
+window.loadKnowledgeList = loadKnowledgeList;
+window.deleteKnowledge = deleteKnowledge;
+window.applyPersona = applyPersona;
+window.executeCodeBlock = executeCodeBlock;
     if (!activeSessionId && heroDisplay) heroDisplay.style.display = 'none';
     if (isProcessing) return;
     isProcessing = true;
@@ -2175,6 +2923,7 @@ async function executeCommand(isRetry = false) {
     stagedFiles = [];
     renderFileChips();
 
+    // Create AI bubble for streaming
     const nexusBubble = document.createElement('div');
     nexusBubble.className = 'chat-bubble nexus-bubble';
     const avatarDiv = document.createElement('div');
@@ -2185,33 +2934,26 @@ async function executeCommand(isRetry = false) {
     const contentDiv = document.createElement('div');
     contentDiv.className = 'bubble-content';
     contentDiv.style.flex = '1';
-
-    const loader = document.createElement('div');
-    loader.className = 'matrix-loader';
-    for (let i = 0; i < 3; i++) {
-        const dot = document.createElement('div');
-        dot.className = 'matrix-dot';
-        loader.appendChild(dot);
-    }
-    contentDiv.appendChild(loader);
-
-    let extendedTimeout = setTimeout(() => {
-        const extendedMsg = document.createElement('div');
-        extendedMsg.className = 'thinking-extended';
-        extendedMsg.innerText = 'Thinking a little bit longer... Don\'t close the tab.';
-        contentDiv.appendChild(extendedMsg);
-    }, 5000);
-
     nexusBubble.appendChild(contentDiv);
     if (viewport) viewport.appendChild(nexusBubble);
     scrollToBottom();
 
+    const isGuest = isGuestMode && !localStorage.getItem('google_auth_token');
+    let contextKnowledge = '';
+    if (!isGuest && finalCommand.length > 3) {
+        try {
+            contextKnowledge = await getRelevantKnowledge(finalCommand);
+        } catch (_) {
+            contextKnowledge = '';
+        }
+    }
+
+    // Build form data
     const formData = new FormData();
     formData.append('command', finalCommand);
     formData.append('workspace', getWorkspace());
     formData.append('isRetry', isRetry ? 'true' : 'false');
-
-    const isGuest = isGuestMode && !localStorage.getItem('google_auth_token');
+    if (contextKnowledge) formData.append('context', contextKnowledge);
     if (isGuest) {
         formData.append('isGuest', 'true');
         if (guestSessionId) formData.append('sessionId', guestSessionId);
@@ -2229,68 +2971,93 @@ async function executeCommand(isRetry = false) {
     }
 
     globalAbortController = new AbortController();
-    let responseReceived = false;
-    const timeoutFallback = setTimeout(() => {
-        if (!responseReceived) {
-            contentDiv.innerHTML = `⚠️ Axelr is still thinking – this can take up to 60s. Please wait...`;
-            scrollToBottom();
-            if (globalAbortController) globalAbortController.abort();
-            if (sendBtn) {
-                sendBtn.classList.remove('btn-stop-active');
-                sendBtn.disabled = false;
-            }
-            isProcessing = false;
-        }
-    }, 30000);
 
     try {
-        const endpoint = isGuest ? '/api/guest/extract' : '/api/extract';
-        const response = await apiFetch(`${API_BASE_URL}${endpoint}`, {
+        const endpoint = isGuest ? '/api/guest/extract' : '/api/extract_stream';
+        const token = await ensureValidToken();
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
             method: 'POST',
             body: formData,
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
             signal: globalAbortController.signal,
         });
 
-        clearTimeout(extendedTimeout);
-
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
+            let errorMsg = errorData.message || 'Pipeline failed.';
             if (errorData.code === 'LIMIT_REACHED' || errorData.code === 'GUEST_LIMIT_REACHED') {
                 contentDiv.innerHTML = `⚠️ <strong>Daily Quota Exceeded.</strong><br><button onclick="openUpgradeModal()" style="background:var(--accent-glow-pro);color:#000;padding:8px 12px;border:none;border-radius:6px;cursor:pointer;font-weight:600;margin-top:10px;">Upgrade Workspace</button>`;
             } else {
-                contentDiv.innerHTML = `💥 Error: ${errorData.message || 'Pipeline failed.'}`;
+                contentDiv.innerHTML = `💥 Error: ${errorMsg}`;
             }
             scrollToBottom();
-            if (viewport && viewport.querySelectorAll('.chat-bubble').length === 0 && heroDisplay) {
-                heroDisplay.style.display = 'flex';
-            }
             isProcessing = false;
             return;
         }
 
-        const result = await response.json();
-        responseReceived = true;
+        // Process streaming response
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let fullResponse = '';
+        let sessionIdFromStream = null;
+        let structuredData = null;
+        let filename = 'Export.csv';
 
-        if (result.success) {
-            const fullResponse = result.text || "No response from AI.";
-            const sessionId = result.sessionId;
-            const structuredData = result.structuredData;
-            const filename = result.filename || 'Export.csv';
-
-            contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(fullResponse));
-
-            if (sessionId) {
-                if (!isGuest) {
-                    activeSessionId = sessionId;
-                    localStorage.setItem('axelr_active_session', activeSessionId);
-                    runningStructuredCache = structuredData;
-                    runningFileTitle = filename;
-                    await loadArchiveLogs();
-                } else {
-                    guestSessionId = sessionId;
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            // Process SSE events: data: {...}\n\n
+            const events = buffer.split('\n\n');
+            for (let i = 0; i < events.length - 1; i++) {
+                const event = events[i];
+                if (event.startsWith('data: ')) {
+                    try {
+                        const json = JSON.parse(event.slice(6));
+                        if (json.text) {
+                            // Append text to the AI bubble
+                            const textPart = json.text;
+                            fullResponse += textPart;
+                            // Update contentDiv: we need to render markdown progressively? For simplicity, just append text.
+                            // But we should render it as markdown eventually. Since we're streaming, we can accumulate and re-render.
+                            // For better UX, we'll just append the raw text and let it be rendered at the end? But we want progressive display.
+                            // We'll create a temporary span for each text chunk.
+                            if (!streamingBubble) {
+                                streamingBubble = nexusBubble;
+                                streamingContentDiv = contentDiv;
+                            }
+                            // Append text as plain text (will be processed after stream ends)
+                            contentDiv.innerHTML += textPart;
+                            scrollToBottom();
+                        } else if (json.watermark) {
+                            // Append watermark
+                            contentDiv.innerHTML += json.watermark;
+                        } else if (json.sessionId) {
+                            sessionIdFromStream = json.sessionId;
+                        } else if (json.structuredData) {
+                            structuredData = json.structuredData;
+                        } else if (json.filename) {
+                            filename = json.filename;
+                        } else if (json.error) {
+                            contentDiv.innerHTML = `⚠️ ${json.error}`;
+                        }
+                    } catch (e) {
+                        // Ignore malformed JSON
+                    }
                 }
             }
+            buffer = events[events.length - 1]; // keep incomplete
+        }
 
+        // After streaming, finalize
+        if (contentDiv) {
+            // Re-render full response with markdown
+            contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(fullResponse));
+            // Append any extra (like watermark already appended)
+            // Inject code blocks, deploy buttons, etc.
             const rawCode = extractHtmlCode(fullResponse);
             if (rawCode) {
                 const iframe = document.createElement('iframe');
@@ -2307,35 +3074,33 @@ async function executeCommand(isRetry = false) {
                 iframeDoc.close();
                 injectDeployButton(contentDiv, rawCode);
             }
-
             appendPayloadDownload(contentDiv);
-            hasRegenerated = false;
-            if (regenerateTimer) {
-                clearTimeout(regenerateTimer);
-                regenerateTimer = null;
-            }
-
-            const now = new Date().toISOString();
+            // Inject action buttons (regenerate, etc.)
             const showRegen = !suppressRegenerateForNextResponse;
             suppressRegenerateForNextResponse = false;
-            injectActionButtons(contentDiv, fullResponse, false, showRegen, now, activeSessionId || guestSessionId);
-
+            injectActionButtons(contentDiv, fullResponse, false, showRegen, new Date().toISOString(), activeSessionId || guestSessionId);
             if (getWorkspace() === 'data' && structuredData && structuredData.length > 0) {
                 renderChart(contentDiv, structuredData);
             }
+        }
 
-            scrollToBottom();
-            if (mainBackBtn) mainBackBtn.style.display = 'flex';
-
-        } else {
-            contentDiv.innerHTML = `⚠️ ${result.message || 'Something went wrong.'}`;
-            if (viewport && viewport.querySelectorAll('.chat-bubble').length === 0 && heroDisplay) {
-                heroDisplay.style.display = 'flex';
+        // Update session
+        if (sessionIdFromStream) {
+            if (!isGuest) {
+                activeSessionId = sessionIdFromStream;
+                localStorage.setItem('axelr_active_session', activeSessionId);
+                runningStructuredCache = structuredData;
+                runningFileTitle = filename;
+                await loadArchiveLogs();
+            } else {
+                guestSessionId = sessionIdFromStream;
             }
         }
 
+        scrollToBottom();
+        if (mainBackBtn) mainBackBtn.style.display = 'flex';
+
     } catch (error) {
-        clearTimeout(extendedTimeout);
         if (error.name === 'AbortError') {
             contentDiv.innerHTML += `<br><br><em style="color:var(--text-muted);">[Generation halted by user]</em>`;
         } else {
@@ -2348,8 +3113,6 @@ async function executeCommand(isRetry = false) {
         }
         scrollToBottom();
     } finally {
-        clearTimeout(timeoutFallback);
-        clearTimeout(extendedTimeout);
         globalAbortController = null;
         if (sendBtn) {
             sendBtn.classList.remove('btn-stop-active');
@@ -2360,6 +3123,8 @@ async function executeCommand(isRetry = false) {
         updateViewportAfterRender();
         await loadUserProfile();
         isProcessing = false;
+        streamingBubble = null;
+        streamingContentDiv = null;
     }
 }
 
@@ -2959,19 +3724,366 @@ window.addEventListener('resize', () => {
     isResizeHandling = true;
     clearTimeout(resizeHandlerTimeout);
     resizeHandlerTimeout = setTimeout(() => {
-        if (document.body.classList.contains('workspace-data') || document.body.classList.contains('workspace-design')) {
+        if (document.body.classList.contains('workspace-data') || document.body.classList.contains('workspace-design') || document.body.classList.contains('workspace-general')) {
             adjustViewportPadding();
             renderFileChips();
         }
         isResizeHandling = false;
     }, 150);
 });
+// Multi-Agent Chat
+async function runMultiAgent(task, agents) {
+    const btn = document.getElementById('multi-agent-btn');
+    if (btn) { btn.disabled = true; btn.innerHTML = 'Spawning agents...'; }
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/agents/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ task, agents, workspace: getWorkspace() })
+        });
+        const data = await resp.json();
+        if (data.success) {
+            const bubble = document.createElement('div');
+            bubble.className = 'chat-bubble nexus-bubble';
+            const avatarDiv = document.createElement('div');
+            avatarDiv.className = 'ai-avatar-bubble';
+            avatarDiv.innerHTML = AXELR_AVATAR_SVG;
+            bubble.appendChild(avatarDiv);
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'bubble-content';
+            contentDiv.style.flex = '1';
+            contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(data.combined));
+            bubble.appendChild(contentDiv);
+            viewport.appendChild(bubble);
+            scrollToBottom();
+        } else {
+            showToast('Multi-agent failed: ' + (data.message || 'Unknown error'), 'error');
+        }
+    } catch (e) {
+        showToast('Error: ' + e.message, 'error');
+    } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = '🧠 Agents'; }
+    }
+}
+// Knowledge Vault functions
+async function saveKnowledge(key, value, tags = []) {
+    try {
+        await apiFetch(`${API_BASE_URL}/api/knowledge`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key, value, tags })
+        });
+        showToast('Knowledge saved', 'success');
+    } catch (e) {
+        showToast('Save failed: ' + e.message);
+    }
+}
+async function loadKnowledge() {
+    const resp = await apiFetch(`${API_BASE_URL}/api/knowledge`);
+    const data = await resp.json();
+    // Display in sidebar or modal
+    const container = document.getElementById('knowledge-list');
+    if (container) {
+        container.innerHTML = data.knowledge.map(k => 
+            `<div class="knowledge-item"><strong>${k.key}</strong>: ${k.value}</div>`
+        ).join('');
+    }
+}
+// Auto-inject knowledge into prompts (modified executeCommand)
+// In executeCommand, before sending, fetch relevant knowledge and add to context.
+// We'll add a function to get knowledge for context.
+async function getRelevantKnowledge(query) {
+    const resp = await apiFetch(`${API_BASE_URL}/api/knowledge/search?q=${encodeURIComponent(query)}`);
+    const data = await resp.json();
+    return data.results.map(k => `${k.key}: ${k.value}`).join('\n');
+}
+// Modify executeCommand to include knowledge:
+// After building formData, add a field 'context' with knowledge.
+async function runWorkflow(steps) {
+    const response = await fetch(`${API_BASE_URL}/api/workflow/run`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${await ensureValidToken()}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ steps, workspace: getWorkspace() })
+    });
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const events = buffer.split('\n\n');
+        for (let i = 0; i < events.length - 1; i++) {
+            const event = events[i];
+            if (event.startsWith('data: ')) {
+                try {
+                    const json = JSON.parse(event.slice(6));
+                    if (json.step && json.status === 'completed') {
+                        const stepBubble = document.createElement('div');
+                        stepBubble.className = 'chat-bubble nexus-bubble';
+                        stepBubble.innerHTML = `<div class="bubble-content"><strong>${json.step}</strong><br>${DOMPurify.sanitize(marked.parse(json.output))}</div>`;
+                        viewport.appendChild(stepBubble);
+                        scrollToBottom();
+                    } else if (json.status === 'done') {
+                        const finalBubble = document.createElement('div');
+                        finalBubble.className = 'chat-bubble nexus-bubble';
+                        finalBubble.innerHTML = `<div class="bubble-content"><strong>✅ Workflow Complete</strong><br>${DOMPurify.sanitize(marked.parse(json.final))}</div>`;
+                        viewport.appendChild(finalBubble);
+                        scrollToBottom();
+                    }
+                } catch (e) { /* ignore malformed JSON */ }
+            }
+        }
+        buffer = events[events.length - 1];
+    }
+}
+async function summarizeCurrentChat() {
+    if (!activeSessionId) return alert('No active chat to summarize.');
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/summarize-chat?session_id=${activeSessionId}`, { method: 'POST' });
+        const data = await resp.json();
+        if (data.success) {
+            const bubble = document.createElement('div');
+            bubble.className = 'chat-bubble nexus-bubble';
+            bubble.innerHTML = `<div class="bubble-content"><strong>📋 Summary</strong><br>${DOMPurify.sanitize(marked.parse(data.summary))}</div>`;
+            viewport.appendChild(bubble);
+            scrollToBottom();
+        } else {
+            showToast('Summary failed: ' + (data.message || 'Unknown error'), 'error');
+        }
+    } catch (e) {
+        showToast('Error: ' + e.message, 'error');
+    }
+}
+// Add a button in the chat header
+async function executeCodeBlock(code, language) {
+    const resp = await apiFetch(`${API_BASE_URL}/api/execute-code`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ language, code })
+    });
+    const data = await resp.json();
+    if (data.success) {
+        // Display output in a new bubble
+        const bubble = document.createElement('div');
+        bubble.className = 'chat-bubble nexus-bubble';
+        bubble.innerHTML = `<div class="bubble-content"><strong>▶️ Output</strong><pre>${escapeHtmlEntities(data.output)}</pre></div>`;
+        viewport.appendChild(bubble);
+        scrollToBottom();
+    } else {
+        alert('Execution error: ' + data.error);
+    }
+}
+// Add a "Run" button next to code blocks (modify marked renderer)
+async function loadPersonas() {
+    const resp = await apiFetch(`${API_BASE_URL}/api/personas`);
+    const data = await resp.json();
+    // Populate a dropdown in the model selection area
+    const container = document.getElementById('persona-select');
+    if (container) {
+        container.innerHTML = data.personas.map(p => 
+            `<option value="${p._id}">${p.name}</option>`
+        ).join('');
+    }
+}
+async function applyPersona(personaId) {
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/personas/${personaId}`);
+        if (!resp.ok) throw new Error('Persona not found');
+        const persona = await resp.json();
+        if (persona.system_prompt) {
+            await apiFetch(`${API_BASE_URL}/api/user/instructions`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ instructions: persona.system_prompt })
+            });
+            showToast('Persona "' + persona.name + '" applied!', 'success');
+            await loadUserProfile(); // refresh to reflect
+            closeModals();
+        } else {
+            showToast('Persona has no system prompt.', 'error');
+        }
+    } catch (e) {
+        showToast('Error: ' + e.message, 'error');
+    }
+}
+let eventSource = null;
+function joinCollaborativeSession(sessionId) {
+    if (window._eventSource) { window._eventSource.close(); }
+    const es = new EventSource(`${API_BASE_URL}/api/session/${sessionId}/stream`);
+    window._eventSource = es;
+    es.onmessage = function(event) {
+        try {
+            const data = JSON.parse(event.data);
+            if (data.type === 'new_message') {
+                const msg = data.message;
+                const bubble = document.createElement('div');
+                bubble.className = `chat-bubble ${msg.role === 'user' ? 'user-bubble' : 'nexus-bubble'}`;
+                // Render message (simplified)
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'bubble-content';
+                contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(msg.text || ''));
+                bubble.appendChild(contentDiv);
+                viewport.appendChild(bubble);
+                scrollToBottom();
+            }
+        } catch (e) { /* ignore */ }
+    };
+    es.onerror = function() {
+        es.close();
+        window._eventSource = null;
+    };
+}
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js');
+}
+function enableInlineEdit(bubbleContent, originalText, sessionId, msgId) {
+    // Remove any existing edit mode
+    const existing = bubbleContent.querySelector('.inline-edit-area');
+    if (existing) return;
+    const contentDiv = bubbleContent.closest('.bubble-content');
+    const currentHTML = contentDiv.innerHTML;
+    const textarea = document.createElement('textarea');
+    textarea.className = 'inline-edit-area';
+    textarea.value = originalText;
+    textarea.style.width = '100%';
+    textarea.style.minHeight = '120px';
+    textarea.style.background = 'var(--bg-input)';
+    textarea.style.color = 'var(--text-main)';
+    textarea.style.border = '1px solid var(--border-muted)';
+    textarea.style.borderRadius = '6px';
+    textarea.style.padding = '8px';
+    textarea.style.fontFamily = 'inherit';
+    textarea.style.fontSize = '14px';
+    contentDiv.innerHTML = '';
+    contentDiv.appendChild(textarea);
+    const actions = document.createElement('div');
+    actions.style.marginTop = '8px';
+    actions.innerHTML = `
+        <button class="action-icon-btn" style="background:var(--accent-glow);color:#000;border:none;padding:6px 12px;border-radius:4px;">Submit Refinement</button>
+        <button class="action-icon-btn" style="margin-left:8px;">Cancel</button>
+    `;
+    contentDiv.appendChild(actions);
+    const submitBtn = actions.querySelector('button:first-child');
+    const cancelBtn = actions.querySelector('button:last-child');
+    submitBtn.onclick = async function() {
+        const newText = textarea.value.trim();
+        if (!newText) return;
+        this.disabled = true;
+        this.innerText = 'Processing...';
+        try {
+            const resp = await apiFetch(`${API_BASE_URL}/api/refine-response`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sessionId, msgId, newText, originalText })
+            });
+            const data = await resp.json();
+            if (data.success) {
+                // Replace the current bubble with refined response
+                const parent = contentDiv.parentNode;
+                const newBubble = document.createElement('div');
+                newBubble.className = 'chat-bubble nexus-bubble';
+                newBubble.innerHTML = `<div class="ai-avatar-bubble">${AXELR_AVATAR_SVG}</div><div class="bubble-content">${DOMPurify.sanitize(marked.parse(data.refined))}</div>`;
+                parent.replaceWith(newBubble);
+                // Re‑inject action buttons
+                const newContent = newBubble.querySelector('.bubble-content');
+                injectActionButtons(newContent, data.refined, false, false, null, sessionId, false, false);
+                scrollToBottom();
+            } else {
+                showToast('Refinement failed: ' + (data.message || 'Unknown error'), 'error');
+                this.disabled = false;
+                this.innerText = 'Submit Refinement';
+            }
+        } catch (e) {
+            showToast('Error: ' + e.message, 'error');
+            this.disabled = false;
+            this.innerText = 'Submit Refinement';
+        }
+    };
+    cancelBtn.onclick = function() {
+        contentDiv.innerHTML = currentHTML;
+        if (sessionId) viewPastLogById(sessionId);
+        else location.reload();
+    };
+}
+// Add endpoint /api/refine-response in backend
+async function loadKnowledgeList() {
+    const data = await (await apiFetch(`${API_BASE_URL}/api/knowledge`)).json();
+    const container = document.getElementById('knowledge-list');
+    if (container) {
+        container.innerHTML = data.knowledge.map(k => 
+            `<div class="knowledge-item" title="${escapeHtmlEntities(k.value)}">
+                <strong>${escapeHtmlEntities(k.key)}</strong>
+                <button onclick="deleteKnowledge('${k._id}')">✕</button>
+            </div>`
+        ).join('');
+    }
+}
+renderer.code = function(code, language) {
+    const runBtn = (language === 'python' || language === 'javascript') 
+        ? `<button class="run-code-btn" onclick="executeCodeBlock(this, '${language}')">▶ Run</button>` 
+        : '';
+    return `<pre>${runBtn}<button class="copy-code-btn" onclick="navigator.clipboard.writeText(this.nextElementSibling.innerText);">Copy Code</button><code>${code.replace(/</g,'&lt;')}</code></pre>`;
+};
 
+// Global function to execute
+async function executeCodeBlock(btn, language) {
+    const pre = btn.closest('pre');
+    const code = pre ? pre.querySelector('code') : btn.parentElement.querySelector('code');
+    if (!code) return;
+    const codeText = code.innerText;
+    btn.innerText = 'Running…';
+    btn.disabled = true;
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/execute-code`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ language, code: codeText })
+        });
+        const data = await resp.json();
+        btn.innerText = '▶ Run';
+        btn.disabled = false;
+        const outputBubble = document.createElement('div');
+        outputBubble.className = 'chat-bubble nexus-bubble';
+        const outputPre = document.createElement('pre');
+        outputPre.style.whiteSpace = 'pre-wrap';
+        outputPre.style.wordWrap = 'break-word';
+        outputPre.textContent = data.output || data.error || 'No output';
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'bubble-content';
+        contentDiv.innerHTML = `<strong>▶️ Output</strong>`;
+        contentDiv.appendChild(outputPre);
+        outputBubble.appendChild(document.createElement('div')).className = 'ai-avatar-bubble';
+        // append avatar and content
+        const avatar = document.createElement('div');
+        avatar.className = 'ai-avatar-bubble';
+        avatar.innerHTML = AXELR_AVATAR_SVG;
+        outputBubble.prepend(avatar);
+        outputBubble.appendChild(contentDiv);
+        viewport.appendChild(outputBubble);
+        scrollToBottom();
+    } catch (e) {
+        showToast('Execution failed: ' + e.message, 'error');
+        btn.innerText = '▶ Run';
+        btn.disabled = false;
+    }
+}
+// In the model dropdown card, add a section for personas
+async function loadPersonaDropdown() {
+    const data = await (await apiFetch(`${API_BASE_URL}/api/personas`)).json();
+    const container = document.getElementById('persona-select');
+    if (!container) return;
+    container.innerHTML = data.personas.map(p => 
+        `<option value="${p._id}">${p.name}</option>`
+    ).join('');
+}
+// Call on UI load
+// After rendering chat, if the session is active, join collaboration
 // ============================================================
 // VERSION & CACHE CONTROL
 // ============================================================
-const APP_VERSION = '24.2';
-const BUILD_DATE = '2026-08-16';
+const APP_VERSION = '24.3';
+const BUILD_DATE = '2026-08-17';
 console.log(`🟢 Axelr AI v${APP_VERSION} (Build: ${BUILD_DATE})`);
 console.log('📡 API Base URL:', API_BASE_URL);
 
@@ -3025,52 +4137,59 @@ function enablePuter() {
         loadPuterSDK();
     });
 }
-
 async function togglePuter(enabled) {
     try {
-        const resp = await apiFetch(`${API_BASE_URL}/api/user/puter-toggle`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ enabled })
-        });
-        if (resp.ok) {
-            const data = await resp.json();
-            const desc = getEl('puter-desc');
-            if (desc) desc.innerText = enabled ? 'Puter enabled' : 'Puter disabled';
-            if (window.currentUser) window.currentUser.puter_enabled = enabled;
-            if (enabled) {
-                await loadPuterSDK();
+        if (enabled) {
+            // Attempt to load Puter SDK and sign in
+            await loadPuterSDK();
+            // If SDK loaded, sign in
+            if (typeof puter !== 'undefined') {
+                await puter.auth.signIn(); // Triggers OAuth popup
+                // After sign-in, enable in backend
+                const resp = await apiFetch(`${API_BASE_URL}/api/user/puter-toggle`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ enabled: true })
+                });
+                if (resp.ok) {
+                    showToast('Puter AI enabled successfully!', 'success');
+                    document.getElementById('puter-desc').innerText = 'Puter enabled';
+                }
+            } else {
+                throw new Error('Puter SDK not loaded');
+            }
+        } else {
+            // Disable
+            const resp = await apiFetch(`${API_BASE_URL}/api/user/puter-toggle`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ enabled: false })
+            });
+            if (resp.ok) {
+                showToast('Puter AI disabled.', 'info');
+                document.getElementById('puter-desc').innerText = 'Puter disabled';
             }
         }
     } catch (e) {
-        alert('Failed to update Puter preference.');
-        const toggle = getEl('puter-toggle');
-        if (toggle) toggle.checked = !enabled;
+        console.error('Puter toggle error:', e);
+        showToast('Failed to toggle Puter: ' + e.message, 'error');
+        document.getElementById('puter-toggle').checked = !enabled;
     }
 }
 
 function loadPuterSDK() {
     return new Promise((resolve, reject) => {
         if (typeof puter !== 'undefined') {
-            puterSDKLoaded = true;
-            initializePuterInstance();
             resolve();
             return;
         }
         const script = document.createElement('script');
         script.src = 'https://js.puter.com/v2/';
-        script.onload = () => {
-            puterSDKLoaded = true;
-            setTimeout(() => {
-                initializePuterInstance();
-                resolve();
-            }, 1000);
-        };
+        script.onload = resolve;
         script.onerror = reject;
         document.head.appendChild(script);
     });
 }
-
 function initializePuterInstance() {
     if (typeof puter !== 'undefined' && puterSDKLoaded) {
         const toggle = getEl('puter-toggle');
@@ -3079,19 +4198,61 @@ function initializePuterInstance() {
         }
     }
 }
+// After MODEL_CONFIG is loaded, call this on workspace change
+function renderModelDropdown(workspace) {
+  const container = document.getElementById('model-dropdown-card');
+  if (!container) return;
+  const config = MODEL_CONFIG[workspace] || MODEL_CONFIG.general;
+  const selectedId = localStorage.getItem('axelr_selected_model') || config.models[0]?.id || 'flash';
 
+  container.innerHTML = config.models.map(m => `
+    <div class="model-option ${m.id === selectedId ? 'active' : ''} ${m.tier === 'pro' ? 'pro' : m.tier === 'business' ? 'designer' : ''}" 
+         data-model-id="${m.id}" onclick="selectModel(event, '${m.id}')">
+      <div class="model-title">${m.label} <span style="background:rgba(0,242,254,0.1);color:var(--accent-glow);padding:2px 8px;border-radius:4px;font-size:9px;">${m.badge}</span></div>
+      <div class="model-desc">${m.desc}</div>
+    </div>
+  `).join('');
+
+  // Update the header labels
+  const selected = config.models.find(m => m.id === selectedId);
+  if (selected) {
+    document.getElementById('model-text-display').innerText = selected.label;
+    document.getElementById('model-badge-display').innerText = selected.badge;
+  }
+}
+async function loadPuterSDK() {
+    return new Promise((resolve, reject) => {
+        if (typeof puter !== 'undefined') {
+            puterSDKLoaded = true;
+            // Optionally authenticate if not already
+            // puter.auth.signIn(); // if required
+            resolve();
+            return;
+        }
+        const script = document.createElement('script');
+        script.src = 'https://js.puter.com/v2/';
+        script.onload = () => {
+            puterSDKLoaded = true;
+            // If the SDK requires explicit auth, trigger it.
+            if (typeof puter !== 'undefined' && puter.auth) {
+                puter.auth.signIn().catch(() => {});
+            }
+            resolve();
+        };
+        script.onerror = reject;
+        document.head.appendChild(script);
+    });
+}
 // ============================================================
 // FINAL INIT
 // ============================================================
-loadUserProfile().then(() => {
-    loadArchiveLogs().then(() => {
+if (localStorage.getItem('google_auth_token')) {
+    loadUserProfile().then(() => loadArchiveLogs()).then(() => {
         const storedSessionId = localStorage.getItem('axelr_active_session');
-        if (storedSessionId) {
-            viewPastLogById(storedSessionId);
-        }
+        if (storedSessionId) viewPastLogById(storedSessionId);
         setTimeout(setupViewportObserver, 500);
     });
-});
+}
 
 window.onerror = function(message, source, lineno, colno, error) {
     console.error('Global error:', message, error);

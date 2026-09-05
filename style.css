@@ -1596,7 +1596,7 @@ body.workspace-data .ai-avatar-bubble svg path:nth-child(2) {
     stroke: #10b981 !important;
 }
 body.workspace-design {
-    --accent-glow: #ef4444 !important;
+    --accent-glow: #d55454 !important;
     --accent-glow-designer: #ef4444 !important;
     --accent-secondary: #18ad7b !important;
     --border-muted: rgba(239, 68, 68, 0.3) !important;
@@ -3091,4 +3091,1374 @@ border-color: #775ca0;
   color: var(--text-main);
   border-color: var(--accent-glow);
   box-shadow: 0 0 20px rgba(0, 242, 254, 0.2);
+}
+/* ============================================================
+   AXELR AI - CORE DESIGN SYSTEM TOKENS
+   ============================================================ */
+:root {
+    /* Base Environment Grid (Deep Cosmic Obsidian Scales) */
+    --bg-deep: #030307;
+    --bg-sidebar: #05050b;
+    --bg-card: #090911;
+    --bg-input: #0c0c16;
+    
+    /* Off-White Typography Array (Contrast Defense Buffers) */
+    --text-main: #f4f8ff;
+    --text-muted: #a1b5cc;
+    --text-dim: #62778f;
+    
+    /* Frosted Plate Boundary Infrastructure */
+    --border-muted: rgba(255, 255, 255, 0.06);
+    --border-hover: rgba(255, 255, 255, 0.12);
+    --border-active: rgba(255, 255, 255, 0.20);
+    
+    /* Semantic Baseline Gradients & Ambient Focal Projections */
+    --shadow-cosmic: 0 25px 70px -10px rgba(0, 0, 0, 0.85);
+    --glow-dispersion: blur(40px);
+
+    /* --- THEME ALPHA: GENERAL UNIFIED (Cyan / Argent Matrix) --- */
+    --accent-glow: #00f2fe;
+    --accent-secondary: #0ea5e9;
+    --theme-surface-glow: radial-gradient(circle at 50% 0%, rgba(0, 242, 254, 0.05), transparent 70%);
+}
+
+/* ============================================================
+   WORKSPACE LAYER COMPOSITIONS (Semantic Mode Swapping)
+   ============================================================ */
+
+/* --- THEME BETA: DATA ANALYSIS WORKSPACE (Emerald / Moss Catalyst) --- */
+body.workspace-data {
+    --accent-glow: #10b981;
+    --accent-secondary: #059669;
+    --theme-surface-glow: radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.06), transparent 70%);
+}
+
+/* --- THEME GAMMA: CODE & DESIGN WORKSPACE (Crimson / Ember Catalyst) --- */
+body.workspace-design {
+    --accent-glow: #ef4444;
+    --accent-secondary: #dc2626;
+    --theme-surface-glow: radial-gradient(circle at 50% 0%, rgba(239, 68, 68, 0.06), transparent 70%);
+}
+
+/* ============================================================
+   HIGH-PERFORMANCE MOTION PHYSICS ENGINE
+   ============================================================ */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    transition: background-color 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body {
+    background-color: var(--bg-deep);
+    color: var(--text-main);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    height: 100vh;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    position: relative;
+}
+
+/* Persistent Ambient Atmospheric Underlay */
+body::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--theme-surface-glow);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ============================================================
+   COMPONENTS TIER A: SYSTEM INFRASTRUCTURE PANELS
+   ============================================================ */
+
+/* Main Adaptive Window Shell */
+.main-wrapper {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+}
+
+/* High-Utility Floating Header Panel */
+.workspace-header {
+    height: 64px;
+    background: rgba(3, 3, 7, 0.4);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border-bottom: 1px solid var(--border-muted);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 50;
+}
+
+/* Advanced Layered Independent Sidebar Shell */
+#sidebar-container-node {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: var(--sidebar-width, 280px);
+    background: var(--bg-sidebar);
+    border-right: 1px solid var(--border-muted);
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+    box-shadow: var(--shadow-cosmic);
+}
+
+/* ============================================================
+   COMPONENTS TIER B: THE RADIAL GOLDEN RATIO PANELS
+   ============================================================ */
+
+/* 20px Structural Grid Panel Base Configuration */
+.auth-card, 
+.workspace-card, 
+.modal-card {
+    border-radius: 20px;
+    background: rgba(9, 9, 17, 0.45);
+    backdrop-filter: blur(40px) saturate(200%);
+    -webkit-backdrop-filter: blur(40px) saturate(200%);
+    border: 1px solid var(--border-muted);
+    box-shadow: var(--shadow-cosmic), 
+                inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Absolute Luxury Interactive Physics Transformation */
+.workspace-card {
+    position: relative;
+    padding: 32px;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.workspace-card:hover {
+    transform: translateY(-4px) scale(1.01);
+    border-color: rgba(var(--accent-glow), 0.3);
+    border: 1px solid var(--border-active);
+    box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.9),
+                0 0 40px -5px rgba(var(--accent-glow), 0.1);
+}
+
+/* ============================================================
+   COMPONENTS TIER C: INTERIOR MICRO-CONTROLS & DIALOGS
+   ============================================================ */
+
+/* Tightly Locked Sharp Subelements (8px to 12px Architecture) */
+.theme-option,
+.tab-btn,
+.action-icon-btn,
+.file-chip,
+.model-option,
+.history-item,
+.modal-input {
+    border-radius: 10px; /* Locked Core Sweet Spot */
+    border: 1px solid var(--border-muted);
+    background: rgba(255, 255, 255, 0.02);
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.theme-option:hover,
+.history-item:hover,
+.model-option:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--border-hover);
+    color: var(--text-main);
+}
+
+/* Premium Selection State Matrices */
+.theme-option.active,
+.tab-btn.active,
+.model-option.active {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: var(--accent-glow);
+    color: var(--text-main);
+    box-shadow: 0 0 20px -5px rgba(var(--accent-glow), 0.2);
+}
+
+/* ============================================================
+   COMPONENTS TIER D: PREMIUM PRODUCTION CHAT ECOSYSTEM
+   ============================================================ */
+
+/* Spatial Optimization Matrix Overhaul */
+#viewport {
+    flex: 1;
+    overflow-y: auto;
+    width: 100%;
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 100px 24px 180px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+/* User Bubble Execution Block */
+.user-bubble {
+    align-self: flex-end;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-main);
+    border-radius: 18px 18px 4px 18px;
+    padding: 16px 20px;
+    max-width: 80%;
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+}
+
+/* Orchestrator/Nexus Bubble Execution Block */
+.nexus-bubble {
+    align-self: flex-start;
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    width: 100%;
+    padding: 0;
+    display: flex;
+    gap: 20px;
+}
+
+/* Monospace Block Architecture */
+.nexus-bubble pre {
+    background: #020205 !important;
+    border: 1px solid var(--border-muted) !important;
+    border-radius: 12px;
+    padding: 24px;
+    margin: 16px 0;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.8);
+}
+
+/* ============================================================
+   COMPONENTS TIER E: ULTRALUX HIGH-INPUT PRODUCTION DOCK
+   ============================================================ */
+.command-wrapper {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 48px);
+    max-width: 800px;
+    z-index: 100;
+    background: transparent;
+}
+
+.input-frame {
+    background: rgba(12, 12, 22, 0.6);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 1px solid var(--border-muted);
+    border-radius: 24px;
+    padding: 14px 18px;
+    box-shadow: var(--shadow-cosmic),
+                0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+}
+
+.input-frame:focus-within {
+    border-color: rgba(var(--accent-glow), 0.4);
+    box-shadow: var(--shadow-cosmic),
+                0 0 40px -10px rgba(var(--accent-glow), 0.15);
+}
+
+/* Real-Time Context-Aware Action Triggers */
+.send-btn {
+    background: var(--text-main);
+    color: var(--bg-deep);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.send-btn:hover:not(:disabled) {
+    transform: scale(1.05);
+    background: #ffffff;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+}
+
+/* Active Pipeline Interruption Overrides */
+.send-btn.btn-stop-active {
+    background: rgba(255, 255, 255, 0.05) !important;
+    color: var(--accent-glow) !important;
+    border: 1px solid var(--accent-glow) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 0 25px -5px rgba(var(--accent-glow), 0.25) !important;
+}
+
+/* ============================================================
+   COMPONENTS TIER F: LUXURY CINEMATIC SYSTEM ANIMATIONS
+   ============================================================ */
+
+/* Precision Engine Shimmer Metrics */
+@keyframes typingLine {
+    0% { transform: scaleX(0); transform-origin: left; }
+    50% { transform: scaleX(1); transform-origin: left; }
+    50.1% { transform-origin: right; }
+    100% { transform: scaleX(0); transform-origin: right; }
+}
+
+.typing-indicator::after {
+    content: '';
+    position: absolute;
+    bottom: -12px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent-glow), transparent);
+    animation: typingLine 1.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+/* Semantic Matrix Pulse */
+@keyframes pulseDot {
+    0%, 100% { transform: scale(0.6); opacity: 0.25; }
+    50% { transform: scale(1.1); opacity: 1; filter: drop-shadow(0 0 8px var(--accent-glow)); }
+}
+
+.matrix-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--accent-glow);
+    animation: pulseDot 1.6s ease-in-out infinite both;}
+    /* ============================================================LIGHT THEME EXTINCTION SYSTEM OVERRIDES (Preserving Authority)============================================================ */body.light-theme {--bg-deep: #f8fafc;--bg-sidebar: #f1f5f9;--bg-card: #ffffff;--bg-input: #ffffff;--text-main: #0f172a;--text-muted: #475569;--text-dim: #94a3b8;--border-muted: rgba(15, 23, 42, 0.06);--border-hover: rgba(15, 23, 42, 0.12);--border-active: rgba(15, 23, 42, 0.20);--shadow-cosmic: 0 20px 40px -15px rgba(15, 23, 42, 0.12);--theme-surface-glow: radial-gradient(circle at 50% 0%, rgba(14, 165, 233, 0.03), transparent 70%);}
+
+    .ws-grid {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.workspace-card {
+    flex: 1 1 280px;
+    max-width: 340px;
+    background: var(--bg-card);
+    border-radius: 20px;
+    padding: 24px 20px;
+    border: 1px solid var(--border-muted);
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+}
+.knowledge-section {
+    border-top: 1px solid var(--border-muted);
+    padding: 10px 0;
+}
+.sidebar-section-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 12px;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 13px;
+    transition: 0.2s;
+}
+.sidebar-section-header:hover {
+    color: var(--text-main);
+}
+.expand-icon {
+    margin-left: auto;
+    transition: transform 0.3s;
+}
+.knowledge-content {
+    padding: 0 12px 8px;
+}
+.ws-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    padding: 20px 10px;
+}
+.workspace-card {
+    flex: 1 1 280px;
+    max-width: 340px;
+    background: var(--bg-card);
+    border-radius: 20px;
+    padding: 24px;
+    border: 1px solid var(--border-muted);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.workspace-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+.workspace-card .ws-card-glow {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    border-radius: 50%;
+    opacity: 0.15;
+    filter: blur(60px);
+    z-index: 0;
+}
+.workspace-card.general .ws-card-glow { background: #3b82f6; }
+.workspace-card.data .ws-card-glow { background: #09edac; }
+.workspace-card.design .ws-card-glow { background: #ef4444; }
+
+.workspace-card .ws-card-icon {
+    position: relative;
+    z-index: 1;
+    color: var(--text-main);
+}
+.workspace-card .ws-card-content {
+    position: relative;
+    z-index: 1;
+}
+.workspace-card .ws-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 4px;
+}
+.workspace-card .ws-desc {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 8px;
+}
+.workspace-card .ws-features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.workspace-card .ws-feature-badge {
+    background: var(--bg-hover);
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+.workspace-card .ws-card-arrow {
+    position: relative;
+    z-index: 1;
+    margin-top: auto;
+    text-align: right;
+    color: var(--accent-glow);
+}
+.features-dropdown-wrapper {
+    position: relative;
+    display: inline-block;
+}
+.features-menu {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    right: 0;
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-muted);
+    border-radius: 12px;
+    padding: 8px 0;
+    min-width: 200px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    display: none;
+    z-index: 100;
+}
+.features-menu.open {
+    display: block;
+}
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: background 0.15s;
+    font-size: 14px;
+}
+.feature-item:hover {
+    background: var(--bg-hover);
+}
+.feature-item .material-symbols-rounded {
+    font-size: 20px;
+    color: var(--accent-glow);
+}
+.knowledge-section {
+    border-top: 1px solid var(--border-muted);
+    padding: 10px 0;
+}
+.sidebar-section-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 12px;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 13px;
+    transition: 0.2s;
+}
+.sidebar-section-header:hover {
+    color: var(--text-main);
+}
+.expand-icon {
+    margin-left: auto;
+    transition: transform 0.3s;
+}
+.knowledge-content {
+    padding: 0 12px 8px;
+}
+/* ============================================================
+   SIDEBAR – REFINED
+   ============================================================ */
+#sidebar-container-node {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: var(--sidebar-width, 280px);
+    background: var(--bg-sidebar);
+    border-right: 1px solid var(--border-muted);
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+    box-shadow: var(--shadow-cosmic);
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#sidebar-container-node.open {
+    transform: translateX(0);
+}
+
+/* Knowledge Vault Section */
+.sidebar-section {
+    padding: 0 12px;
+}
+
+.sidebar-section.knowledge-section {
+    border-top: 1px solid var(--border-muted);
+    margin-top: 8px;
+    padding-top: 8px;
+}
+
+.sidebar-section-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 12px;
+    border-radius: 8px;
+    transition: 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.sidebar-section-header:hover {
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.sidebar-section-header .expand-icon {
+    margin-left: auto;
+    transition: transform 0.3s;
+    font-size: 18px;
+}
+
+.sidebar-section-header .expand-icon.open {
+    transform: rotate(180deg);
+}
+
+.knowledge-content {
+    padding: 4px 8px 8px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 8px;
+    margin-top: 4px;
+}
+
+/* Light Theme Override */
+body.light-theme .knowledge-content {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+body.light-theme .sidebar-section-header:hover {
+    background: rgba(0, 0, 0, 0.03);
+}
+/* ============================================================
+   WORKSPACE THEME – CARD CONSISTENCY
+   ============================================================ */
+/* Data Workspace Card – Always Emerald */
+body.workspace-data .workspace-card.data {
+    border-color: rgba(16, 185, 129, 0.3);
+}
+body.workspace-data .workspace-card.data .ws-card-glow {
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.15), transparent 70%);
+}
+body.workspace-data .workspace-card.data .ws-card-icon {
+    color: #10b981;
+}
+body.workspace-data .workspace-card.data:hover {
+    border-color: #10b981;
+}
+
+/* Design Workspace Card – Always Crimson */
+body.workspace-design .workspace-card.design {
+    border-color: rgba(239, 68, 68, 0.3);
+}
+body.workspace-design .workspace-card.design .ws-card-glow {
+    background: radial-gradient(circle, rgba(239, 68, 68, 0.15), transparent 70%);
+}
+body.workspace-design .workspace-card.design .ws-card-icon {
+    color: #ef4444;
+}
+body.workspace-design .workspace-card.design:hover {
+    border-color: #ef4444;
+}
+
+/* General Workspace Card – Always Blue */
+body.workspace-general .workspace-card.general {
+    border-color: rgba(59, 130, 246, 0.3);
+}
+body.workspace-general .workspace-card.general .ws-card-glow {
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.15), transparent 70%);
+}
+body.workspace-general .workspace-card.general .ws-card-icon {
+    color: #3b82f6;
+}
+body.workspace-general .workspace-card.general:hover {
+    border-color: #3b82f6;
+}
+
+/* Ensure each card keeps its own theme regardless of active workspace */
+.workspace-card.data .ws-card-icon { color: #10b981; }
+.workspace-card.design .ws-card-icon { color: #ef4444; }
+.workspace-card.general .ws-card-icon { color: #3b82f6; }
+
+.workspace-card.data .ws-card-glow { background: radial-gradient(circle, rgba(16, 185, 129, 0.15), transparent 70%); }
+.workspace-card.design .ws-card-glow { background: radial-gradient(circle, rgba(239, 68, 68, 0.15), transparent 70%); }
+.workspace-card.general .ws-card-glow { background: radial-gradient(circle, rgba(59, 130, 246, 0.15), transparent 70%); }
+
+.workspace-card.data:hover { border-color: #10b981; }
+.workspace-card.design:hover { border-color: #ef4444; }
+.workspace-card.general:hover { border-color: #3b82f6; }
+/* ====== WORKSPACE CARDS – HORIZONTAL, SELF‑THEMED ====== */
+.ws-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 24px;
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.workspace-card {
+  flex: 1 1 280px;
+  max-width: 340px;
+  background: var(--bg-card);
+  border-radius: 24px;
+  padding: 28px 24px;
+  border: 1px solid var(--border-muted);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Each card keeps its own theme */
+.workspace-card.data .ws-card-glow { background: radial-gradient(circle, rgba(16,185,129,0.2), transparent 70%); }
+.workspace-card.data:hover { border-color: #10b981; box-shadow: 0 8px 30px rgba(16,185,129,0.15); }
+
+.workspace-card.design .ws-card-glow { background: radial-gradient(circle, rgba(239,68,68,0.2), transparent 70%); }
+.workspace-card.design:hover { border-color: #ef4444; box-shadow: 0 8px 30px rgba(239,68,68,0.15); }
+
+.workspace-card.general .ws-card-glow { background: radial-gradient(circle, rgba(59,130,246,0.2), transparent 70%); }
+.workspace-card.general:hover { border-color: #3b82f6; box-shadow: 0 8px 30px rgba(59,130,246,0.15); }
+
+/* Responsive */
+@media (max-width: 600px) {
+  .workspace-card { flex: 1 1 100%; max-width: 100%; }
+}
+@media (max-width: 320px) {
+  .workspace-card { padding: 18px 16px; }
+  .ws-title { font-size: 18px; }
+}
+
+/* ====== FEATURES DROPDOWN (Three Dots) ====== */
+.features-dropdown-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.features-menu {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  right: 0;
+  min-width: 220px;
+  background: var(--bg-card);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border-muted);
+  border-radius: 16px;
+  padding: 8px 0;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  display: none;
+  z-index: 300;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.features-menu.open {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 18px;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: background 0.15s;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 6px;
+  margin: 2px 6px;
+}
+.feature-item:hover {
+  background: rgba(255,255,255,0.06);
+}
+.feature-item .material-symbols-rounded {
+  font-size: 20px;
+  color: var(--accent-glow);
+}
+.feature-item .material-symbols-rounded {
+  width: 24px;
+  text-align: center;
+}
+
+/* ====== KNOWLEDGE VAULT (Sidebar) ====== */
+.knowledge-section {
+  border-top: 1px solid var(--border-muted);
+  padding-top: 8px;
+  margin-top: 8px;
+}
+
+.sidebar-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-weight: 500;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-radius: 8px;
+  transition: 0.2s;
+}
+.sidebar-section-header:hover {
+  color: var(--text-main);
+  background: rgba(255,255,255,0.04);
+}
+.sidebar-section-header .expand-icon {
+  margin-left: auto;
+  transition: transform 0.3s;
+  font-size: 18px;
+}
+.sidebar-section-header .expand-icon.open {
+  transform: rotate(180deg);
+}
+
+.knowledge-content {
+  padding: 4px 8px 8px;
+  background: rgba(255,255,255,0.02);
+  border-radius: 10px;
+  margin-top: 4px;
+  border: 1px solid var(--border-muted);
+  background: var(--bg-input);
+}
+
+.knowledge-content input {
+  font-size: 12px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border-muted);
+  background: var(--bg-card);
+  color: var(--text-main);
+}
+
+.knowledge-content button {
+  background: var(--accent-glow);
+  color: #000;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 12px;
+  font-size: 12px;
+  transition: 0.2s;
+}
+.knowledge-content button:hover {
+  opacity: 0.8;
+}
+
+#knowledge-list {
+  max-height: 200px;
+  overflow-y: auto;
+  font-size: 12px;
+}
+#knowledge-list .knowledge-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border-muted);
+}
+#knowledge-list .knowledge-item button {
+  background: none;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  font-size: 14px;
+}
+.ws-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 24px;
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.workspace-card {
+  flex: 1 1 280px;
+  max-width: 340px;
+  background: var(--bg-card);
+  border-radius: 24px;
+  padding: 28px 24px;
+  border: 1px solid var(--border-muted);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Each card keeps its own theme */
+.workspace-card.data .ws-card-glow { background: radial-gradient(circle, rgba(16,185,129,0.2), transparent 70%); }
+.workspace-card.data:hover { border-color: #10b981; box-shadow: 0 8px 30px rgba(16,185,129,0.15); }
+
+.workspace-card.design .ws-card-glow { background: radial-gradient(circle, rgba(239,68,68,0.2), transparent 70%); }
+.workspace-card.design:hover { border-color: #ef4444; box-shadow: 0 8px 30px rgba(239,68,68,0.15); }
+
+.workspace-card.general .ws-card-glow { background: radial-gradient(circle, rgba(59,130,246,0.2), transparent 70%); }
+.workspace-card.general:hover { border-color: #3b82f6; box-shadow: 0 8px 30px rgba(59,130,246,0.15); }
+
+/* Responsive */
+@media (max-width: 600px) {
+  .workspace-card { flex: 1 1 100%; max-width: 100%; }
+}
+@media (max-width: 320px) {
+  .workspace-card { padding: 18px 16px; }
+  .ws-title { font-size: 18px; }
+}
+#sidebar-container-node {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: var(--sidebar-width, 280px);
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-muted);
+  display: flex;
+  flex-direction: column;
+  z-index: 1000; /* Increased to stay above backdrop */
+  box-shadow: var(--shadow-cosmic);
+  transform: translateX(-100%);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.knowledge-section {
+  border-top: 1px solid var(--border-muted);
+  padding-top: 8px;
+  margin-top: 8px;
+}
+.sidebar-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-weight: 500;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-radius: 8px;
+  transition: 0.2s;
+}
+.sidebar-section-header:hover {
+  color: var(--text-main);
+  background: rgba(255,255,255,0.04);
+}
+.knowledge-content {
+  padding: 4px 8px 8px;
+  background: rgba(255,255,255,0.02);
+  border-radius: 10px;
+  margin-top: 4px;
+  border: 1px solid var(--border-muted);
+  background: var(--bg-input);
+}
+@media (max-width: 320px) {
+  .auth-card { padding: 24px 16px; }
+  .auth-logo span { font-size: 18px; }
+  .workspace-card { flex: 1 1 100%; max-width: 100%; padding: 16px; }
+  .ws-title { font-size: 16px; }
+  .ws-desc { font-size: 12px; }
+  #sidebar-container-node { width: 90%; }
+  .command-wrapper { padding: 0 8px; }
+  .input-frame { padding: 8px; }
+}
+
+
+/* Auth wall responsiveness */
+@media (max-width: 480px) {
+    .auth-card {
+        padding: 32px 20px 24px;
+        border-radius: 24px;
+    }
+    .auth-logo span {
+        font-size: 24px;
+    }
+    .auth-providers {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    .auth-provider-btn {
+        font-size: 12px;
+        padding: 10px 6px;
+    }
+    .auth-tagline {
+        font-size: 16px;
+    }
+    .auth-sub {
+        font-size: 13px;
+    }
+}
+
+/* Sidebar on mobile - ensure proper height and scrolling */
+#sidebar-container-node {
+    height: 100%;
+    max-height: 100dvh;
+    overflow-y: auto;
+}
+
+/* Workspace cards on small screens */
+@media (max-width: 600px) {
+    .ws-grid {
+        flex-direction: column;
+        align-items: center;
+    }
+    .workspace-card {
+        max-width: 100%;
+        width: 100%;
+        padding: 20px 16px;
+    }
+    .ws-title {
+        font-size: 20px;
+    }
+    .ws-desc {
+        font-size: 13px;
+    }
+}
+
+/* Backdrop and sidebar layering */
+#sidebar-backdrop {
+    transition: opacity 0.3s ease;
+}
+#sidebar-container-node {
+    z-index: 200;
+}
+#sidebar-backdrop {
+    z-index: 150;
+}
+
+/* ============================================================
+   FINAL WORKSPACE UX POLISH
+   ============================================================ */
+:root {
+    --workspace-general: #38bdf8;
+    --workspace-data: #10f5a0;
+    --workspace-design: #fb7185;
+}
+
+#sidebar-trigger-area {
+    z-index: 1;
+    pointer-events: auto;
+}
+#sidebar-trigger-area .trigger-text {
+    display: block;
+}
+
+body:has(#sidebar-container-node.open) #sidebar-trigger-area {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* The dock is intentionally quiet: only the five core controls remain visible. */
+.command-wrapper {
+    width: min(800px, calc(100% - 24px));
+    bottom: max(14px, env(safe-area-inset-bottom));
+    background: transparent !important;
+    padding: 0;
+}
+.input-frame {
+    padding: 8px 10px;
+    border-radius: 18px;
+    background: color-mix(in srgb, var(--bg-card) 88%, transparent);
+}
+.input-row {
+    min-height: 42px;
+    gap: 6px;
+}
+.input-actions {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    flex-shrink: 0;
+}
+.action-btn {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    border-radius: 10px;
+}
+.features-dropdown-wrapper {
+    position: relative;
+}
+.features-menu {
+    min-width: min(270px, calc(100vw - 24px));
+    max-height: min(420px, 65vh);
+    overflow-y: auto;
+    padding: 7px;
+    border-color: color-mix(in srgb, var(--workspace-accent) 32%, var(--border-muted));
+    background: color-mix(in srgb, var(--bg-card) 96%, transparent);
+    box-shadow: 0 18px 55px rgba(0,0,0,.42);
+}
+.feature-item {
+    min-height: 40px;
+    margin: 2px 0;
+    padding: 9px 11px;
+    border-radius: 9px;
+    font-size: 13px;
+    letter-spacing: .1px;
+}
+.feature-item:hover {
+    background: color-mix(in srgb, var(--workspace-accent) 12%, transparent);
+}
+.feature-item .material-symbols-rounded {
+    color: var(--workspace-accent);
+}
+
+body.workspace-general { --workspace-accent: var(--workspace-general); }
+body.workspace-data { --workspace-accent: var(--workspace-data); }
+body.workspace-design { --workspace-accent: var(--workspace-design); }
+
+/* Keep workspace cards horizontal on comfortable screens and compact at 280px. */
+#workspace-selector {
+    overflow-y: auto;
+    padding: clamp(14px, 3vw, 32px);
+}
+#workspace-selector h2 {
+    margin: 0 0 clamp(14px, 3vw, 26px);
+    font-size: clamp(21px, 3vw, 28px);
+}
+.ws-grid {
+    width: min(1100px, 100%);
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(10px, 2vw, 20px);
+    padding: 0;
+}
+.workspace-card {
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    min-height: 260px;
+    padding: clamp(16px, 2.4vw, 26px) clamp(14px, 2vw, 22px);
+    border-radius: 16px;
+    text-align: left;
+    gap: 8px;
+}
+.workspace-card .ws-card-icon {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    height: 42px;
+}
+.workspace-card .ws-card-icon .material-symbols-rounded,
+.workspace-card .ws-card-icon svg {
+    width: 42px;
+    height: 42px;
+    font-size: 42px;
+}
+.workspace-card.general { --card-accent: var(--workspace-general); }
+.workspace-card.data { --card-accent: var(--workspace-data); }
+.workspace-card.design { --card-accent: var(--workspace-design); }
+.workspace-card .ws-card-icon,
+.workspace-card .ws-card-arrow { color: var(--card-accent); }
+.workspace-card .ws-title { font-size: clamp(16px, 1.8vw, 20px); }
+.workspace-card .ws-desc { font-size: clamp(11px, 1.2vw, 13px); line-height: 1.45; }
+.workspace-card .ws-feature-badge {
+    color: color-mix(in srgb, var(--card-accent) 85%, var(--text-main));
+    background: color-mix(in srgb, var(--card-accent) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--card-accent) 22%, transparent);
+    padding: 3px 7px;
+    font-size: 10px;
+}
+.workspace-card.data:hover { border-color: var(--workspace-data); box-shadow: 0 10px 32px rgba(16,245,160,.16); }
+.workspace-card.design:hover { border-color: var(--workspace-design); box-shadow: 0 10px 32px rgba(251,113,133,.16); }
+.workspace-card.general:hover { border-color: var(--workspace-general); box-shadow: 0 10px 32px rgba(56,189,248,.16); }
+
+.knowledge-modal-card { max-width: 620px; }
+.knowledge-modal-intro { color: var(--text-muted); font-size: 13px; line-height: 1.5; margin: 0 0 14px; }
+.knowledge-form { display: grid; grid-template-columns: 1fr 1.6fr auto; gap: 8px; }
+.knowledge-form input, .knowledge-search-input {
+    min-width: 0;
+    border: 1px solid var(--border-muted);
+    border-radius: 9px;
+    padding: 10px 11px;
+    background: var(--bg-input);
+    color: var(--text-main);
+}
+.knowledge-search-input { width: 100%; margin-top: 10px; }
+.knowledge-list { max-height: 300px; overflow-y: auto; margin-top: 10px; }
+
+@media (max-width: 680px) {
+    .ws-grid { grid-template-columns: 1fr; max-width: 440px; }
+    .workspace-card { min-height: 0; display: grid; grid-template-columns: 44px 1fr auto; align-items: center; text-align: left; }
+    .workspace-card .ws-card-icon { grid-row: 1 / span 2; }
+    .workspace-card .ws-card-content { min-width: 0; }
+    .workspace-card .ws-desc { margin-bottom: 4px; }
+    .workspace-card .ws-card-arrow { grid-column: 3; grid-row: 1; }
+}
+@media (max-width: 360px) {
+    .command-wrapper { width: calc(100% - 12px); }
+    .input-frame { padding: 6px; }
+    .input-actions { gap: 0; }
+    .action-btn { width: 31px; height: 31px; flex-basis: 31px; }
+    .knowledge-form { grid-template-columns: 1fr; }
+    .knowledge-form .modal-submit-btn { width: 100%; }
+    .workspace-card { padding: 13px 12px; }
+    .workspace-card .ws-desc { font-size: 11px; }
+}
+/* ====== FEATURES DROPDOWN (Three Dots) ====== */
+.features-dropdown-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.features-menu {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  right: 0;
+  min-width: 240px;
+  background: var(--bg-card);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border-muted);
+  border-radius: 16px;
+  padding: 8px 0;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  display: none;
+  z-index: 300;
+  opacity: 0;
+  transform: translateY(8px) scale(0.98);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.features-menu.open {
+  display: block;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 18px;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: background 0.15s;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 8px;
+  margin: 2px 6px;
+  white-space: nowrap;
+}
+
+.feature-item:hover {
+  background: rgba(255,255,255,0.06);
+}
+
+.feature-item .material-symbols-rounded {
+  font-size: 20px;
+  color: var(--accent-glow);
+  width: 24px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.feature-item span:last-child {
+  flex: 1;
+}
+
+/* Light theme */
+body.light-theme .feature-item:hover {
+  background: rgba(0,0,0,0.04);
+}
+.bubble-action-bar {
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+.features-menu {
+  min-width: 240px;
+  padding: 6px 0;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 18px;
+  margin: 0 6px;
+  border-radius: 8px;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: background 0.15s;
+  font-size: 14px;
+  font-weight: 500;
+  border-bottom: 1px solid var(--border-muted);
+}
+
+.feature-item:last-child {
+  border-bottom: none;
+}
+
+.feature-item:hover {
+  background: rgba(255,255,255,0.06);
+}
+
+.feature-item .material-symbols-rounded {
+  font-size: 20px;
+  color: var(--accent-glow);
+  width: 24px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.action-icon-btn {
+  opacity: 1 !important;
+  color: var(--text-muted);
+  transition: all 0.2s;
+}
+.action-icon-btn:hover {
+  color: var(--text-main);
+  background: rgba(255,255,255,0.08);
+}
+.features-dropdown-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.features-menu {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  right: 0;
+  min-width: 240px;
+  background: var(--bg-card);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border-muted);
+  border-radius: 16px;
+  padding: 6px 0;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  display: none;
+  z-index: 300;
+  opacity: 0;
+  transform: translateY(8px) scale(0.98);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.features-menu.open {
+  display: block;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 18px;
+  margin: 0 6px;
+  border-radius: 8px;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: background 0.15s;
+  font-size: 14px;
+  font-weight: 500;
+  border-bottom: 1px solid var(--border-muted);
+}
+.feature-item:last-child {
+  border-bottom: none;
+}
+.feature-item:hover {
+  background: rgba(255,255,255,0.06);
+}
+.feature-item .material-symbols-rounded {
+  font-size: 20px;
+  color: var(--accent-glow);
+  width: 24px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.action-icon-btn svg {
+    opacity: 1 !important;
+    fill: none !important;
+    stroke: currentColor;
 }
