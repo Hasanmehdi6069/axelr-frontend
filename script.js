@@ -107,43 +107,53 @@ async function ensureValidToken() {
     }
     return token;
 }
-
 async function apiFetch(url, options = {}) {
-    if (url.includes('/api/guest/') || url.includes('/api/auth/github') || url.includes('/api/auth/webauthn')) {
-        return fetch(url, options);
-    }
-    let token = await ensureValidToken();
-    options.headers = {
-        ...options.headers,
-        'Authorization': `Bearer ${token}`
-    };
-    try {
-        const response = await fetch(url, options);
-        if (response.status === 401) {
-            try {
-                const newToken = await refreshGoogleToken();
-                googleAuthUserToken = newToken;
-                localStorage.setItem('google_auth_token', newToken);
-                options.headers['Authorization'] = `Bearer ${newToken}`;
-                const retryResponse = await fetch(url, options);
-                if (retryResponse.status === 401) {
-                    throw new Error('Unauthorized');
-                }
-                return retryResponse;
-            } catch (refreshError) {
-                executeGlobalLogout();
-                throw new Error('Session expired');
+    const maxRetries = 3;
+    let lastError;
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+            if (url.includes('/api/guest/') || url.includes('/api/auth/github') || url.includes('/api/auth/webauthn')) {
+                return fetch(url, options);
             }
+            let token = await ensureValidToken();
+            options.headers = {
+                ...options.headers,
+                'Authorization': `Bearer ${token}`
+            };
+            const response = await fetch(url, options);
+            if (response.status === 401) {
+                try {
+                    const newToken = await refreshGoogleToken();
+                    googleAuthUserToken = newToken;
+                    localStorage.setItem('google_auth_token', newToken);
+                    options.headers['Authorization'] = `Bearer ${newToken}`;
+                    const retryResponse = await fetch(url, options);
+                    if (retryResponse.status === 401) {
+                        throw new Error('Unauthorized');
+                    }
+                    return retryResponse;
+                } catch (refreshError) {
+                    executeGlobalLogout();
+                    throw new Error('Session expired');
+                }
+            }
+            return response;
+        } catch (error) {
+            lastError = error;
+            if (error.message === 'Session expired' || error.message === 'Unauthorized') {
+                executeGlobalLogout();
+                throw error;
+            }
+            // Only retry on network errors (not 4xx/5xx)
+            if (error instanceof TypeError && error.message.includes('network')) {
+                await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+                continue;
+            }
+            throw error;
         }
-        return response;
-    } catch (error) {
-        if (error.message === 'Session expired' || error.message === 'Unauthorized') {
-            executeGlobalLogout();
-        }
-        throw error;
     }
+    throw lastError;
 }
-
 setInterval(async () => {
     try {
         await ensureValidToken();
@@ -204,7 +214,11 @@ let guestSessionId = null;
 let streamingBubble = null;
 let streamingContentDiv = null;
 
-
+window.addEventListener('unhandledrejection', (event) => {
+    console.error('Unhandled rejection:', event.reason);
+    showToast('An unexpected error occurred. Please refresh.', 'error');
+    event.preventDefault();
+});
 // ============================================================
 // WORKSPACE THEME
 // ============================================================
@@ -694,12 +708,21 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e)
 // ============================================================
 // AUTH & UI SWITCH
 // ============================================================
-function showToast(message, type='error') {
+function showToast(message, type = 'error') {
+    // Remove existing toasts
+    document.querySelectorAll('.toast').forEach(t => t.remove());
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
     toast.textContent = message;
+    toast.style.transform = 'translateX(120%)';
     document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 5000);
+    requestAnimationFrame(() => {
+        toast.style.transform = 'translateX(0)';
+    });
+    setTimeout(() => {
+        toast.style.transform = 'translateX(120%)';
+        setTimeout(() => toast.remove(), 300);
+    }, 5000);
 }
 
 function showMainUI() {
@@ -1101,7 +1124,6 @@ async function displaySuggestions() {
         container.style.display = 'none';
     }
 }
-
 // ============================================================
 // VIEWPORT & KEYBOARD ADJUSTMENT
 // ============================================================
@@ -1769,15 +1791,6 @@ if (SpeechRecognition && micBtn) {
 }
 
 // ============================================================
-// MARKED RENDERER
-// ============================================================
-const renderer = new marked.Renderer();
-renderer.code = function(code, language) {
-    return `<pre><button class="copy-code-btn" onclick="navigator.clipboard.writeText(this.nextElementSibling.innerText); this.innerText='Copied!'; setTimeout(()=>this.innerText='Copy Code', 2000)">Copy Code</button><code>${code.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>`;
-};
-marked.setOptions({ renderer, breaks: true });
-
-// ============================================================
 // USER PROFILE & QUOTA
 // ============================================================
 async function loadUserProfile() {
@@ -2044,13 +2057,12 @@ function viewPastLogById(logId) {
     const log = cachedLogHistory.find(l => l._id === logId);
     if (!log) return;
     if (heroDisplay) heroDisplay.style.display = 'none';
+    
+    // Remove ONLY if switching to a different session
     if (activeSessionId !== logId) {
         if (viewport) viewport.querySelectorAll('.chat-bubble').forEach(b => b.remove());
     }
     activeSessionId = logId;
-    if (log.status === 'active') {
-    joinCollaborativeSession(logId);
-}
     localStorage.setItem('axelr_active_session', activeSessionId);
     runningFileTitle = log.filename;
     runningStructuredCache = log.structuredData;
@@ -2271,41 +2283,43 @@ function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRege
             actionBar.appendChild(editBtn);
         }
     } else {
+        // Copy button
         const copyBtn = document.createElement('button');
         copyBtn.className = 'action-icon-btn';
         copyBtn.title = "Copy Response";
         copyBtn.innerHTML = `${ICONS.copy} Copy`;
         copyBtn.onclick = () => handleActionClick('copy', rawText, copyBtn);
-        const likeBtn = document.createElement('button');
-likeBtn.className = 'action-icon-btn';
-likeBtn.title = "Helpful Response";
-likeBtn.innerHTML = ICONS.thumbsUp;
-likeBtn.onclick = function(e) {
-    e.stopPropagation();
-    this.style.color = 'var(--accent-glow)';
-    this.style.transform = 'scale(1.2)';
-    setTimeout(() => this.style.transform = 'scale(1)', 200);
-    showToast('Thanks for the feedback!', 'success');
-    // Optionally send API call
-};
+        actionBar.appendChild(copyBtn);
 
-const dislikeBtn = document.createElement('button');
-dislikeBtn.className = 'action-icon-btn';
-dislikeBtn.title = "Not Helpful";
-dislikeBtn.innerHTML = ICONS.thumbsDown;
-dislikeBtn.onclick = function(e) {
-    e.stopPropagation();
-    this.style.color = '#ef4444';
-    this.style.transform = 'scale(1.2)';
-    setTimeout(() => this.style.transform = 'scale(1)', 200);
-    showToast('We\'ll improve!', 'info');
-};
-actionBar.appendChild(likeBtn);
-actionBar.appendChild(dislikeBtn);
-// Append them to actionBar
-actionBar.appendChild(copyBtn);
-actionBar.appendChild(likeBtn);
-actionBar.appendChild(dislikeBtn);
+        // Like button – only once
+        const likeBtn = document.createElement('button');
+        likeBtn.className = 'action-icon-btn';
+        likeBtn.title = "Helpful Response";
+        likeBtn.innerHTML = ICONS.thumbsUp;
+        likeBtn.onclick = function(e) {
+            e.stopPropagation();
+            this.style.color = 'var(--accent-glow)';
+            this.style.transform = 'scale(1.2)';
+            setTimeout(() => this.style.transform = 'scale(1)', 200);
+            showToast('Thanks for the feedback!', 'success');
+        };
+        actionBar.appendChild(likeBtn);
+
+        // Dislike button – only once
+        const dislikeBtn = document.createElement('button');
+        dislikeBtn.className = 'action-icon-btn';
+        dislikeBtn.title = "Not Helpful";
+        dislikeBtn.innerHTML = ICONS.thumbsDown;
+        dislikeBtn.onclick = function(e) {
+            e.stopPropagation();
+            this.style.color = '#ef4444';
+            this.style.transform = 'scale(1.2)';
+            setTimeout(() => this.style.transform = 'scale(1)', 200);
+            showToast('We\'ll improve!', 'info');
+        };
+        actionBar.appendChild(dislikeBtn);
+
+        // Regenerate button
         if (showRegenerate && createdAt && sessionId && !isHistoryView) {
             const now = Date.now();
             const msgTime = new Date(createdAt).getTime();
@@ -2351,7 +2365,7 @@ actionBar.appendChild(dislikeBtn);
             }
         }
 
-        // ADD: Refactor, Explain, Tests buttons if code block exists
+        // Refactor, Explain, Tests buttons (if code block exists)
         if (!isUserPrompt && rawText && extractHtmlCode(rawText)) {
             const code = extractHtmlCode(rawText);
             // Refactor
@@ -2490,7 +2504,6 @@ actionBar.appendChild(dislikeBtn);
     }
     bubbleNode.appendChild(actionBar);
 }
-
 function handleActionClick(actionType, rawText, btnRef) {
     if (actionType === 'copy') {
         navigator.clipboard.writeText(rawText);
@@ -2562,24 +2575,54 @@ function updateFeaturesMenu(workspace) {
     });
 }
 // Ensure features menu is populated and toggle works
-document.addEventListener('DOMContentLoaded', function() {
-    const trigger = document.getElementById('features-trigger');
+// In DOMContentLoaded or after features menu creation
+const trigger = document.getElementById('features-trigger');
+const menu = document.getElementById('features-menu');
+
+if (trigger && menu) {
+    trigger.addEventListener('click', function(e) {
+        e.stopPropagation();
+        e.preventDefault();
+        menu.classList.toggle('open');
+    });
+    document.addEventListener('click', function(e) {
+        if (!menu.contains(e.target) && e.target !== trigger) {
+            menu.classList.remove('open');
+        }
+    });
+    // Prevent menu close when clicking inside
+    menu.addEventListener('click', function(e) {
+        e.stopPropagation();
+    });
+}
+
+// Ensure feature items are clickable
+function updateFeaturesMenu(workspace) {
     const menu = document.getElementById('features-menu');
-    if (trigger && menu) {
-        // Remove any existing listeners to avoid duplicates
-        trigger.removeEventListener('click', trigger._listener);
-        trigger._listener = function(e) {
+    if (!menu) return;
+    const features = WORKSPACE_FEATURES[workspace] || WORKSPACE_FEATURES.general;
+    menu.innerHTML = features.map(f => `
+        <div class="feature-item" data-feature="${f.id}" style="cursor:pointer;display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--border-muted);transition:background 0.15s;">
+            <span class="material-symbols-rounded" style="font-size:20px;color:var(--accent-glow);width:24px;text-align:center;">${f.icon}</span>
+            <span style="flex:1;font-size:14px;font-weight:500;">${f.label}</span>
+        </div>
+    `).join('');
+
+    menu.querySelectorAll('.feature-item').forEach(item => {
+        item.addEventListener('click', function(e) {
             e.stopPropagation();
-            menu.classList.toggle('open');
-        };
-        trigger.addEventListener('click', trigger._listener);
-        document.addEventListener('click', function() {
+            const feature = this.dataset.feature;
+            handleFeatureAction(feature);
             menu.classList.remove('open');
         });
-        // Populate with current workspace
-        updateFeaturesMenu(getWorkspace());
-    }
-});
+        item.addEventListener('mouseenter', function() {
+            this.style.background = 'rgba(255,255,255,0.05)';
+        });
+        item.addEventListener('mouseleave', function() {
+            this.style.background = 'transparent';
+        });
+    });
+}
 
 // Handle feature actions (complete implementation)
 async function handleFeatureAction(feature) {
@@ -2715,6 +2758,7 @@ async function enhanceUserPrompt() {
     const enhanceBtn = getEl('enhance-trigger');
     const inputFrame = document.querySelector('.input-frame');
     if (!enhanceBtn || !inputFrame) return;
+
     const originalText = enhanceBtn.innerHTML;
     enhanceBtn.classList.add('loading');
     enhanceBtn.disabled = true;
@@ -2722,6 +2766,7 @@ async function enhanceUserPrompt() {
     inputFrame.style.filter = 'blur(4px) brightness(0.8)';
     inputFrame.style.pointerEvents = 'none';
     enhanceBtn.innerHTML = '<span style="font-size:12px;font-weight:bold;letter-spacing:1px;color:var(--accent-glow);"><span class="material-symbols-rounded" style="font-size:16px;">auto_awesome</span> PROCESSING...</span>';
+
     try {
         const response = await apiFetch(`${API_BASE_URL}/api/enhance-prompt`, {
             method: 'POST',
@@ -2741,25 +2786,19 @@ async function enhanceUserPrompt() {
         alert("⚠️ Prompt Enhancer timeout. Payload too large or network dropped.");
     } finally {
         enhanceBtn.classList.remove('loading');
-    function toggleKnowledgeSection() {
-  const content = document.getElementById('knowledge-content');
-  const icon = document.querySelector('.expand-icon');
-  if (content.style.display === 'none') {
-    content.style.display = 'block';
-    icon.textContent = 'expand_less';
-    loadKnowledgeList();
-  } else {
-    content.style.display = 'none';
-    icon.textContent = 'expand_more';
-  }
-}    enhanceBtn.disabled = false;
+        enhanceBtn.disabled = false;
         promptInput.disabled = false;
         inputFrame.style.filter = 'none';
         inputFrame.style.pointerEvents = 'auto';
         enhanceBtn.innerHTML = originalText;
         validateSendCommand();
     }
-}
+    }    enhanceBtn.disabled = false;
+        promptInput.disabled = false;
+        inputFrame.style.filter = 'none';
+        inputFrame.style.pointerEvents = 'auto';
+        enhanceBtn.innerHTML = originalText;
+        validateSendCommand();
 let savedWorkspace = localStorage.getItem('Axelr_workspace');
 if (!savedWorkspace) {
   savedWorkspace = 'general';
@@ -2811,6 +2850,122 @@ function showSecurityAlert(level) {
 // ============================================================
 // EXECUTE COMMAND (with streaming by default)
 // ============================================================
+// ============================================================
+// GLOBAL EXPOSURE – Ensure all feature handlers are accessible
+// ============================================================
+window.summarizeCurrentChat = summarizeCurrentChat;
+window.brainstorm = brainstorm;
+window.runMultiAgent = runMultiAgent;
+window.openWorkflowModal = openWorkflowModal;
+window.openKnowledgePanel = openKnowledgePanel;
+window.openPersonaSelector = openPersonaSelector;
+window.saveKnowledgeFromUI = saveKnowledgeFromUI;
+window.loadKnowledgeList = loadKnowledgeList;
+window.deleteKnowledge = deleteKnowledge;
+window.applyPersona = applyPersona;
+window.executeCodeBlock = executeCodeBlock;
+window.touchFix = touchFix;
+window.refactorCode = refactorCode;
+window.deployCodeBlock = deployCodeBlock;
+window.openVisualDebugger = openVisualDebugger;
+window.generateTests = generateTests;
+window.explainCodeBlock = explainCodeBlock;
+window.discoverSchema = discoverSchema;
+window.generateStoryFromData = generateStoryFromData;
+window.displayStory = displayStory;
+
+// Stub implementations for missing feature functions
+async function generateStoryFromData(data) {
+    // If backend supports storytelling, call endpoint; else return placeholder
+    return "Story generation not implemented yet.";
+}
+function displayStory(story) {
+    const bubble = document.createElement('div');
+    bubble.className = 'chat-bubble nexus-bubble';
+    bubble.innerHTML = `<div class="bubble-content">${DOMPurify.sanitize(marked.parse(story))}</div>`;
+    viewport.appendChild(bubble);
+    scrollToBottom();
+}
+async function touchFix(code, error) {
+    const resp = await apiFetch(`${API_BASE_URL}/api/touch_fix`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, error_message: error })
+    });
+    const data = await resp.json();
+    if (data.success) {
+        const bubble = createNexusBubble(`**Fixed Code**\n\n\`\`\`html\n${data.fixed_code}\n\`\`\``);
+        viewport.appendChild(bubble);
+        scrollToBottom();
+    } else {
+        showToast('Touch fix failed: ' + (data.message || 'Unknown'), 'error');
+    }
+}
+async function refactorCode(code) {
+    const resp = await apiFetch(`${API_BASE_URL}/api/refactor`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code })
+    });
+    const data = await resp.json();
+    if (data.success) {
+        const bubble = createNexusBubble(`**Refactored Code**\n\n\`\`\`html\n${data.refactored_code}\n\`\`\``);
+        viewport.appendChild(bubble);
+        scrollToBottom();
+    } else {
+        showToast('Refactor failed', 'error');
+    }
+}
+async function deployCodeBlock(code) {
+    const resp = await apiFetch(`${API_BASE_URL}/api/deploy`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ htmlContent: code })
+    });
+    const data = await resp.json();
+    if (data.success) {
+        showToast(`Deployed: <a href="${data.liveUrl}" target="_blank">${data.liveUrl}</a>`, 'success');
+    } else {
+        showToast('Deploy failed', 'error');
+    }
+}
+function openVisualDebugger() {
+    showToast('Visual Debugger: Please use the "Debug" button on any code bubble.', 'info');
+}
+async function generateTests(code) {
+    const resp = await apiFetch(`${API_BASE_URL}/api/generate-tests`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code })
+    });
+    const data = await resp.json();
+    if (data.success) {
+        const bubble = createNexusBubble(`**Generated Tests**\n\n\`\`\`javascript\n${data.tests}\n\`\`\``);
+        viewport.appendChild(bubble);
+        scrollToBottom();
+    } else {
+        showToast('Test generation failed', 'error');
+    }
+}
+async function explainCodeBlock(code) {
+    const resp = await apiFetch(`${API_BASE_URL}/api/explain-code`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code })
+    });
+    const data = await resp.json();
+    if (data.success) {
+        const bubble = createNexusBubble(`**Explanation**\n\n${data.explanation}`);
+        viewport.appendChild(bubble);
+        scrollToBottom();
+    } else {
+        showToast('Explain failed', 'error');
+    }
+}
+async function discoverSchema(files) {
+    // Placeholder; actual implementation would use backend endpoint if available
+    return null;
+}
 async function executeCommand(isRetry = false) {
     window.summarizeCurrentChat = summarizeCurrentChat;
 window.brainstorm = brainstorm;
@@ -4019,17 +4174,19 @@ async function loadKnowledgeList() {
         ).join('');
     }
 }
+const renderer = new marked.Renderer();
 renderer.code = function(code, language) {
-    const runBtn = (language === 'python' || language === 'javascript') 
+    const runBtn = (language === 'python' || language === 'javascript' || language === 'html') 
         ? `<button class="run-code-btn" onclick="executeCodeBlock(this, '${language}')">▶ Run</button>` 
         : '';
-    return `<pre>${runBtn}<button class="copy-code-btn" onclick="navigator.clipboard.writeText(this.nextElementSibling.innerText);">Copy Code</button><code>${code.replace(/</g,'&lt;')}</code></pre>`;
+    return `<pre>${runBtn}<button class="copy-code-btn" onclick="navigator.clipboard.writeText(this.nextElementSibling.innerText); this.innerText='Copied!'; setTimeout(()=>this.innerText='Copy Code', 2000)">Copy Code</button><code>${code.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>`;
 };
+marked.setOptions({ renderer, breaks: true });
 
 // Global function to execute
 async function executeCodeBlock(btn, language) {
     const pre = btn.closest('pre');
-    const code = pre ? pre.querySelector('code') : btn.parentElement.querySelector('code');
+    const code = pre ? pre.querySelector('code') : null;
     if (!code) return;
     const codeText = code.innerText;
     btn.innerText = 'Running…';
@@ -4045,20 +4202,17 @@ async function executeCodeBlock(btn, language) {
         btn.disabled = false;
         const outputBubble = document.createElement('div');
         outputBubble.className = 'chat-bubble nexus-bubble';
-        const outputPre = document.createElement('pre');
-        outputPre.style.whiteSpace = 'pre-wrap';
-        outputPre.style.wordWrap = 'break-word';
-        outputPre.textContent = data.output || data.error || 'No output';
-        const contentDiv = document.createElement('div');
-        contentDiv.className = 'bubble-content';
-        contentDiv.innerHTML = `<strong>▶️ Output</strong>`;
-        contentDiv.appendChild(outputPre);
-        outputBubble.appendChild(document.createElement('div')).className = 'ai-avatar-bubble';
-        // append avatar and content
         const avatar = document.createElement('div');
         avatar.className = 'ai-avatar-bubble';
         avatar.innerHTML = AXELR_AVATAR_SVG;
-        outputBubble.prepend(avatar);
+        outputBubble.appendChild(avatar);
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'bubble-content';
+        const outputPre = document.createElement('pre');
+        outputPre.style.whiteSpace = 'pre-wrap';
+        outputPre.textContent = data.output || data.error || 'No output';
+        contentDiv.innerHTML = `<strong>▶️ Output</strong>`;
+        contentDiv.appendChild(outputPre);
         outputBubble.appendChild(contentDiv);
         viewport.appendChild(outputBubble);
         scrollToBottom();
@@ -4111,69 +4265,56 @@ if ('serviceWorker' in navigator) {
 // ============================================================
 // PUTER OPT-IN & DYNAMIC LOADING
 // ============================================================
-window.puterOptInShown = false;
+// ============================================================
+// PUTER OPT-IN & DYNAMIC LOADING (FIXED)
+// ============================================================
 let puterSDKLoaded = false;
+let puterAuthAttempted = false;
 
-function showPuterOptIn() {
-    if (window.puterOptInShown) return;
-    const modal = getEl('puter-optin-modal');
-    if (modal) {
-        modal.classList.add('active');
-        window.puterOptInShown = true;
-    }
-}
-
-function skipPuter() {
-    const modal = getEl('puter-optin-modal');
-    if (modal) modal.classList.remove('active');
-    const toggle = getEl('puter-toggle');
-    if (toggle) toggle.checked = false;
-}
-
-function enablePuter() {
-    const modal = getEl('puter-optin-modal');
-    if (modal) modal.classList.remove('active');
-    togglePuter(true).then(() => {
-        loadPuterSDK();
-    });
-}
 async function togglePuter(enabled) {
-    try {
-        if (enabled) {
-            // Attempt to load Puter SDK and sign in
-            await loadPuterSDK();
-            // If SDK loaded, sign in
-            if (typeof puter !== 'undefined') {
-                await puter.auth.signIn(); // Triggers OAuth popup
-                // After sign-in, enable in backend
-                const resp = await apiFetch(`${API_BASE_URL}/api/user/puter-toggle`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ enabled: true })
-                });
-                if (resp.ok) {
-                    showToast('Puter AI enabled successfully!', 'success');
-                    document.getElementById('puter-desc').innerText = 'Puter enabled';
+    const toggle = document.getElementById('puter-toggle');
+    const desc = document.getElementById('puter-desc');
+    
+    if (enabled) {
+        try {
+            if (typeof puter === 'undefined') {
+                await loadPuterSDK();
+            }
+            if (typeof puter !== 'undefined' && puter.auth) {
+                const result = await puter.auth.signIn();
+                if (result && result.user) {
+                    const resp = await apiFetch(`${API_BASE_URL}/api/user/puter-toggle`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ enabled: true })
+                    });
+                    if (resp.ok) {
+                        showToast('✅ Puter AI enabled successfully!', 'success');
+                        desc.innerText = 'Puter enabled';
+                        localStorage.setItem('puter_enabled', 'true');
+                    }
+                } else {
+                    throw new Error('Authentication cancelled or failed');
                 }
-            } else {
-                throw new Error('Puter SDK not loaded');
             }
-        } else {
-            // Disable
-            const resp = await apiFetch(`${API_BASE_URL}/api/user/puter-toggle`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ enabled: false })
-            });
-            if (resp.ok) {
-                showToast('Puter AI disabled.', 'info');
-                document.getElementById('puter-desc').innerText = 'Puter disabled';
-            }
+        } catch (e) {
+            console.error('Puter toggle error:', e);
+            showToast('⚠️ Puter authentication failed: ' + e.message, 'error');
+            toggle.checked = false;
+            desc.innerText = 'Puter disabled';
+            localStorage.setItem('puter_enabled', 'false');
         }
-    } catch (e) {
-        console.error('Puter toggle error:', e);
-        showToast('Failed to toggle Puter: ' + e.message, 'error');
-        document.getElementById('puter-toggle').checked = !enabled;
+    } else {
+        const resp = await apiFetch(`${API_BASE_URL}/api/user/puter-toggle`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ enabled: false })
+        });
+        if (resp.ok) {
+            showToast('Puter AI disabled.', 'info');
+            desc.innerText = 'Puter disabled';
+            localStorage.setItem('puter_enabled', 'false');
+        }
     }
 }
 
@@ -4185,63 +4326,30 @@ function loadPuterSDK() {
         }
         const script = document.createElement('script');
         script.src = 'https://js.puter.com/v2/';
-        script.onload = resolve;
-        script.onerror = reject;
-        document.head.appendChild(script);
-    });
-}
-function initializePuterInstance() {
-    if (typeof puter !== 'undefined' && puterSDKLoaded) {
-        const toggle = getEl('puter-toggle');
-        if (toggle && toggle.checked) {
-            puter.print(`Puter AI enabled for Axelr.`);
-        }
-    }
-}
-// After MODEL_CONFIG is loaded, call this on workspace change
-function renderModelDropdown(workspace) {
-  const container = document.getElementById('model-dropdown-card');
-  if (!container) return;
-  const config = MODEL_CONFIG[workspace] || MODEL_CONFIG.general;
-  const selectedId = localStorage.getItem('axelr_selected_model') || config.models[0]?.id || 'flash';
-
-  container.innerHTML = config.models.map(m => `
-    <div class="model-option ${m.id === selectedId ? 'active' : ''} ${m.tier === 'pro' ? 'pro' : m.tier === 'business' ? 'designer' : ''}" 
-         data-model-id="${m.id}" onclick="selectModel(event, '${m.id}')">
-      <div class="model-title">${m.label} <span style="background:rgba(0,242,254,0.1);color:var(--accent-glow);padding:2px 8px;border-radius:4px;font-size:9px;">${m.badge}</span></div>
-      <div class="model-desc">${m.desc}</div>
-    </div>
-  `).join('');
-
-  // Update the header labels
-  const selected = config.models.find(m => m.id === selectedId);
-  if (selected) {
-    document.getElementById('model-text-display').innerText = selected.label;
-    document.getElementById('model-badge-display').innerText = selected.badge;
-  }
-}
-async function loadPuterSDK() {
-    return new Promise((resolve, reject) => {
-        if (typeof puter !== 'undefined') {
-            puterSDKLoaded = true;
-            // Optionally authenticate if not already
-            // puter.auth.signIn(); // if required
-            resolve();
-            return;
-        }
-        const script = document.createElement('script');
-        script.src = 'https://js.puter.com/v2/';
         script.onload = () => {
-            puterSDKLoaded = true;
-            // If the SDK requires explicit auth, trigger it.
-            if (typeof puter !== 'undefined' && puter.auth) {
-                puter.auth.signIn().catch(() => {});
-            }
-            resolve();
+            setTimeout(resolve, 500);
         };
         script.onerror = reject;
         document.head.appendChild(script);
     });
+}
+
+// On page load, restore state
+document.addEventListener('DOMContentLoaded', function() {
+    const puterEnabled = localStorage.getItem('puter_enabled') === 'true';
+    const toggle = document.getElementById('puter-toggle');
+    const desc = document.getElementById('puter-desc');
+    if (toggle) toggle.checked = puterEnabled;
+    if (desc) desc.innerText = puterEnabled ? 'Puter enabled' : 'Puter disabled';
+});
+// Ensure marked and DOMPurify are available
+if (typeof marked === 'undefined') {
+    window.marked = { parse: (text) => text };
+    console.warn('marked not loaded, using plain text fallback');
+}
+if (typeof DOMPurify === 'undefined') {
+    window.DOMPurify = { sanitize: (text) => text };
+    console.warn('DOMPurify not loaded, using raw text fallback');
 }
 // ============================================================
 // FINAL INIT
