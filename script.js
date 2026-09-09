@@ -704,36 +704,76 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e)
     systemDark = e.matches;
     if (currentThemePreference === 'system') applyTheme(systemDark ? 'dark' : 'light');
 });
-
 // ============================================================
-// AUTH & UI SWITCH
+// PRODUCTION GLOBAL TOAST SYSTEM (PORTAL-SAFE)
+// ============================================================
+// ============================================================
+// PRODUCTION GLOBAL TOAST SYSTEM (PORTAL-SAFE)
 // ============================================================
 function showToast(message, type = 'error') {
-    // Remove existing toasts
-    document.querySelectorAll('.toast').forEach(t => t.remove());
+    let container = document.getElementById('global-toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'global-toast-container';
+        container.className = 'toast-container';
+        document.documentElement.appendChild(container); // Mount to html root to isolate from body flex layout
+    }
+
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-    toast.textContent = message;
-    toast.style.transform = 'translateX(120%)';
-    document.body.appendChild(toast);
-    requestAnimationFrame(() => {
-        toast.style.transform = 'translateX(0)';
-    });
-    setTimeout(() => {
-        toast.style.transform = 'translateX(120%)';
-        setTimeout(() => toast.remove(), 300);
-    }, 5000);
-}
 
+    const iconName = type === 'success' ? 'check_circle' : (type === 'info' ? 'info' : 'warning');
+
+    toast.innerHTML = `
+        <span class="material-symbols-rounded toast-icon">${iconName}</span>
+        <span class="toast-message">${escapeHtmlEntities(message || 'An unexpected error occurred.')}</span>
+        <button class="toast-close" title="Dismiss">&times;</button>
+    `;
+
+    const closeBtn = toast.querySelector('.toast-close');
+    const dismiss = () => {
+        toast.classList.remove('toast-show');
+        setTimeout(() => toast.remove(), 250);
+    };
+
+    closeBtn.onclick = (e) => {
+        e.stopPropagation();
+        dismiss();
+    };
+
+    container.appendChild(toast);
+
+    requestAnimationFrame(() => {
+        toast.classList.add('toast-show');
+    });
+
+    setTimeout(dismiss, 5000);
+}
 function showMainUI() {
-    if (authWall) authWall.style.display = 'none';
-    if (mainWrapper) {
-        mainWrapper.classList.add('visible');
-        mainWrapper.style.display = 'block';
+    const authWallEl = document.getElementById('auth-wall');
+    const mainWrapperEl = document.getElementById('content-mask');
+    
+    if (authWallEl) {
+        authWallEl.style.display = 'none';
     }
+    if (mainWrapperEl) {
+        mainWrapperEl.classList.add('visible');
+        mainWrapperEl.style.display = 'flex'; // MUST be flex, not block
+    }
+    
+    const hero = document.getElementById('hero-display');
+    if (hero && !document.querySelector('.chat-bubble')) {
+        hero.style.display = 'flex';
+    }
+    
     const wsSel = getEl('workspace-selector');
     if (wsSel) wsSel.style.display = 'none';
-    console.log('✅ Main UI shown');
+
+    // Refresh model branding and features for active workspace
+    const ws = getWorkspace();
+    updateModelBranding(ws, window.currentUser?.tier || 'free');
+    updateFeaturesMenu();
+    console.log('✅ Main UI unlocked and visible');
 }
 
 function showAuthWall() {
@@ -746,7 +786,89 @@ function showAuthWall() {
     const banner = getEl('guest-banner');
     if (banner) banner.style.display = 'none';
 }
+function showToast(message, type = 'error') {
+    // Remove existing toasts
+    const existing = document.querySelector('.toast-container');
+    if (existing) existing.remove();
 
+    const container = document.createElement('div');
+    container.className = 'toast-container';
+    container.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 999999;
+        max-width: 90%;
+        pointer-events: none;
+    `;
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    toast.style.cssText = `
+        display: inline-block;
+        padding: 14px 28px;
+        border-radius: 12px;
+        background: var(--bg-card);
+        color: var(--text-main);
+        border: 1px solid var(--border-muted);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+        font-weight: 500;
+        font-size: 14px;
+        backdrop-filter: blur(12px);
+        transform: translateY(-20px);
+        opacity: 0;
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+        pointer-events: auto;
+    `;
+    // Color overrides per type
+    if (type === 'success') {
+        toast.style.borderColor = 'rgba(16,185,129,0.3)';
+        toast.style.background = 'rgba(16,185,129,0.15)';
+        toast.style.color = '#10b981';
+    } else if (type === 'error') {
+        toast.style.borderColor = 'rgba(239,68,68,0.3)';
+        toast.style.background = 'rgba(239,68,68,0.15)';
+        toast.style.color = '#fca5a5';
+    } else if (type === 'info') {
+        toast.style.borderColor = 'rgba(59,130,246,0.3)';
+        toast.style.background = 'rgba(59,130,246,0.15)';
+        toast.style.color = '#93c5fd';
+    } else if (type === 'warning') {
+        toast.style.borderColor = 'rgba(234,179,8,0.3)';
+        toast.style.background = 'rgba(234,179,8,0.15)';
+        toast.style.color = '#fde047';
+    }
+
+    container.appendChild(toast);
+    document.body.appendChild(container);
+
+    // Animate in
+    requestAnimationFrame(() => {
+        toast.style.transform = 'translateY(0)';
+        toast.style.opacity = '1';
+    });
+
+    // Auto‑dismiss after 4.5 seconds
+    const timer = setTimeout(() => {
+        toast.style.transform = 'translateY(-20px)';
+        toast.style.opacity = '0';
+        setTimeout(() => {
+            if (container.parentNode) container.remove();
+        }, 300);
+    }, 4500);
+
+    // Allow click to dismiss immediately
+    toast.addEventListener('click', () => {
+        clearTimeout(timer);
+        toast.style.transform = 'translateY(-20px)';
+        toast.style.opacity = '0';
+        setTimeout(() => {
+            if (container.parentNode) container.remove();
+        }, 300);
+    });
+}
 // ============================================================
 // GUEST MODE INIT
 // ============================================================
@@ -805,11 +927,11 @@ function openSettingsOrLogin() {
 // AUTH HANDLING (Google) – Callback
 // ============================================================
 function handleCredentialResponse(response) {
-    console.log('🔑 Google callback received');
     const token = response.credential;
     const payload = decodeJwt(token);
     if (!payload) {
-        console.error('Invalid Google credential');
+        document.getElementById('google-loading-overlay')?.remove();
+        alert('Invalid Google credential. Please try again.');
         return;
     }
     localStorage.setItem('google_auth_token', token);
@@ -817,10 +939,61 @@ function handleCredentialResponse(response) {
     isGuestMode = false;
     showMainUI();
     updateSidebarForGuest(false);
-    initializeSecureWorkspace(payload, token);
+    initializeSecureWorkspace(payload, token)
+        .catch(err => {
+            console.error('Workspace init failed:', err);
+            // show error in UI
+            const hero = document.getElementById('hero-display');
+            if (hero) {
+                hero.innerHTML = `<div style="color:#ef4444;">Failed to load workspace. Please refresh.</div>`;
+            }
+        })
+        .finally(() => {
+            document.getElementById('google-loading-overlay')?.remove();
+        });
     setAvatar(payload.picture, payload.name);
 }
+function triggerGoogleLogin() {
+    const overlay = document.createElement('div');
+    overlay.id = 'google-loading-overlay';
+    overlay.style.cssText = `
+        position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 99999;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 18px; color: #fff; backdrop-filter: blur(4px);
+    `;
+    overlay.innerHTML = `<span class="material-symbols-rounded" style="font-size:48px; animation: spin 1s linear infinite;">sync</span> Signing in...`;
+    document.body.appendChild(overlay);
 
+    const start = () => {
+        if (typeof google === 'undefined' || !google.accounts?.id) return false;
+        google.accounts.id.initialize({
+            client_id: GOOGLE_CLIENT_ID,
+            callback: (response) => {
+                document.getElementById('google-loading-overlay')?.remove();
+                handleCredentialResponse(response);
+            },
+            cancel_on_tap_outside: false,
+            context: 'signin',
+            use_fedcm_for_prompt: false
+        });
+        google.accounts.id.prompt();
+        return true;
+    };
+    if (!start()) {
+        // fallback: try again after a short delay
+        let attempts = 0;
+        const retry = setInterval(() => {
+            attempts += 1;
+            if (start() || attempts >= 30) {
+                clearInterval(retry);
+                if (attempts >= 30) {
+                    document.getElementById('google-loading-overlay')?.remove();
+                    alert('Google Sign‑In could not start. Please refresh and try again.');
+                }
+            }
+        }, 100);
+    }
+}
 // ============================================================
 // AUTH FUNCTIONS (Login buttons)
 // ============================================================
@@ -899,21 +1072,65 @@ function triggerPasskeyLogin() {
     })
     .catch(err => alert('Passkey error: ' + err.message));
 }
-
-async function continueAsGuest() {
+// ============================================================
+// INSTANT GUEST / PREVIEW ENTRY (ZERO NETWORK DELAY)
+// ============================================================
+// ============================================================
+// INSTANT ENTRY & INTERACTION CONTROLLERS
+// ============================================================
+function continueAsGuest() {
     isGuestMode = true;
-    const banner = getEl('guest-banner');
-    if (banner) banner.style.display = 'block';
-    try {
-        const resp = await fetch(`${API_BASE_URL}/api/guest/session`, { method: 'POST' });
-        const data = await resp.json();
-        guestSessionId = data.sessionId;
-    } catch (e) {
-        console.warn('Guest session fallback');
-    }
+    sessionStorage.setItem('axelr_guest_active', 'true');
+
+    // 1. Instantly unlock the UI with zero network latency
     showMainUI();
     updateSidebarForGuest(true);
-    updateQuotaDisplay({ tier: 'guest', subTierOptions: { hasDataAccess: false, hasDesignAccess: false }, quotas: { dailyExtractionsUsed: 0, dailyGenerationsUsed: 0 } });
+    updateQuotaDisplay({ 
+        tier: 'guest', 
+        subTierOptions: { hasDataAccess: false, hasDesignAccess: false }, 
+        quotas: { dailyExtractionsUsed: 0, dailyGenerationsUsed: 0 } 
+    });
+
+    const banner = getEl('guest-banner');
+    if (banner) banner.style.display = 'block';
+
+    // 2. Fetch session asynchronously in the background
+    fetch(`${API_BASE_URL}/api/guest/session`, { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+            if (data && data.sessionId) {
+                guestSessionId = data.sessionId;
+                console.log('🟢 Guest session active:', guestSessionId);
+            }
+        })
+        .catch(err => {
+            console.warn('Backend waking up; ephemeral session active:', err);
+            guestSessionId = 'guest_' + Date.now();
+        });
+}
+
+function showMainUI() {
+    const authWallEl = document.getElementById('auth-wall');
+    const mainWrapperEl = document.getElementById('content-mask');
+    
+    if (authWallEl) {
+        authWallEl.style.display = 'none';
+    }
+    if (mainWrapperEl) {
+        mainWrapperEl.classList.add('visible');
+        mainWrapperEl.style.display = 'flex'; // Preserves flex layout
+    }
+    
+    const hero = document.getElementById('hero-display');
+    if (hero && !document.querySelector('.chat-bubble')) {
+        hero.style.display = 'flex';
+    }
+    
+    const wsSel = getEl('workspace-selector');
+    if (wsSel) wsSel.style.display = 'none';
+
+    // Mount menu items to the new '+' command bar button
+    updateFeaturesMenu();
 }
 
 // Passkey Registration
@@ -970,17 +1187,19 @@ window.executeGlobalLogout = executeGlobalLogout;
 // ============================================================
 function initializeApp() {
     loadModelConfig().then(() => {
-    // Once config is loaded, update branding
-    const savedWorkspace = localStorage.getItem('Axelr_workspace') || 'general';
-    updateModelBranding(savedWorkspace, window.currentUser?.tier || 'free');
-});
+        const savedWorkspace = localStorage.getItem('Axelr_workspace') || 'general';
+        updateModelBranding(savedWorkspace, window.currentUser?.tier || 'free');
+    });
+
     if (appInitialized) return;
     appInitialized = true;
+
     const saved = localStorage.getItem('axelr_theme') || 'system';
     currentThemePreference = saved;
     systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     applyTheme(saved === 'system' ? (systemDark ? 'dark' : 'light') : saved);
 
+    // 1. Check for logged-in user
     const savedToken = localStorage.getItem('google_auth_token');
     if (savedToken) {
         try {
@@ -995,14 +1214,39 @@ function initializeApp() {
             localStorage.removeItem('google_auth_token');
         }
     }
+
+    // 2. Check for active guest session
+    if (sessionStorage.getItem('axelr_guest_active') === 'true') {
+        continueAsGuest();
+        return;
+    }
+
+    // 3. Otherwise show Auth Wall
     showAuthWall();
     isGuestMode = false;
 }
-
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeApp);
 } else {
     initializeApp();
+}
+// ============================================================
+// PRODUCTION APPLICATION BOOTSTRAP (CLEAN - ZERO RUNTIME CRASH)
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+    initializeApp();
+});
+
+// Final Session Recovery
+if (localStorage.getItem('google_auth_token')) {
+    loadUserProfile()
+        .then(() => loadArchiveLogs())
+        .then(() => {
+            const storedSessionId = localStorage.getItem('axelr_active_session');
+            if (storedSessionId) viewPastLogById(storedSessionId);
+            setTimeout(setupViewportObserver, 500);
+        })
+        .catch(err => console.warn('Session hydration deferred:', err));
 }
 
 setTimeout(() => {
@@ -1127,9 +1371,16 @@ async function displaySuggestions() {
 // ============================================================
 // VIEWPORT & KEYBOARD ADJUSTMENT
 // ============================================================
+// ============================================================
+// VIEWPORT & KEYBOARD ADJUSTMENT (CLEAN)
+// ============================================================
 function adjustCommandWrapperAndViewport() {
     const vv = window.visualViewport;
-    if (!vv) return;
+    if (!vv || window.innerWidth > 768) return;
+    const keyboardOffset = Math.max(0, window.innerHeight - vv.height);
+    if (commandWrapper) {
+        commandWrapper.style.bottom = keyboardOffset > 80 ? `${keyboardOffset}px` : '0px';
+    }
     const offsetY = window.innerHeight - vv.height;
     const maxBottom = Math.min(offsetY, window.innerHeight * 0.4);
     const currentBottom = parseFloat(commandWrapper?.style.bottom || '0');
@@ -2529,7 +2780,9 @@ const WORKSPACE_FEATURES = {
     { id: 'workflow', icon: 'flowchart', label: 'Workflow' },
     { id: 'knowledge', icon: 'bookmark', label: 'Knowledge Vault' },
     { id: 'personas', icon: 'person', label: 'Personas' },
-    { id: 'eli5', icon: 'child_care', label: 'Explain Like I\'m 5' }
+    { id: 'eli5', icon: 'child_care', label: 'Explain Like I\'m 5' },
+    { id: 'decision-matrix', icon: 'table_view', label: 'Decision Matrix' },
+    { id: 'minutes', icon: 'assignment', label: 'Meeting Minutes' }
   ],
   data: [
     { id: 'summarize', icon: 'summarize', label: 'Summarize Data' },
@@ -2538,7 +2791,9 @@ const WORKSPACE_FEATURES = {
     { id: 'chart', icon: 'bar_chart', label: 'Generate Chart' },
     { id: 'workflow', icon: 'flowchart', label: 'Workflow' },
     { id: 'knowledge', icon: 'bookmark', label: 'Knowledge Vault' },
-    { id: 'schema', icon: 'table_chart', label: 'Schema Discovery' }
+    { id: 'schema', icon: 'table_chart', label: 'Schema Discovery' },
+    { id: 'scan-pii', icon: 'shield_person', label: 'PII Privacy Scan' },
+    { id: 'mermaid', icon: 'account_tree', label: 'Mermaid Diagram' }
   ],
   design: [
     { id: 'touch-fix', icon: 'build', label: 'Touch & Fix' },
@@ -2548,30 +2803,47 @@ const WORKSPACE_FEATURES = {
     { id: 'tests', icon: 'fact_check', label: 'Generate Tests' },
     { id: 'explain', icon: 'psychology', label: 'Explain Code' },
     { id: 'knowledge', icon: 'bookmark', label: 'Knowledge Vault' },
-    { id: 'personas', icon: 'person', label: 'Personas' }
+    { id: 'personas', icon: 'person', label: 'Personas' },
+    { id: 'translate-code', icon: 'translate', label: 'Code Translator' },
   ]
 };
-function updateFeaturesMenu(workspace) {
+// ============================================================
+// WORKSPACE FEATURES (ONLY PRE-EXECUTION CREATION TOOLS IN '+')
+// ============================================================
+// ============================================================
+// UNIFIED CREATION TOOLS FOR COMMAND BAR '+'
+// ============================================================
+const CREATION_TOOLS = [
+  { id: 'upload', icon: 'attach_file', label: 'Attach Assets / Data', isUpload: true },
+  { id: 'brainstorm', icon: 'lightbulb', label: 'Brainstorm Architecture' },
+  { id: 'multi-agent', icon: 'groups', label: 'Multi-Agent Orchestrator' },
+  { id: 'workflow', icon: 'flowchart', label: 'Automated Pipeline' },
+  { id: 'mermaid', icon: 'account_tree', label: 'Generate Mermaid Chart' },
+  { id: 'decision-matrix', icon: 'table_view', label: 'Synthesize Decision Matrix' }
+];
+
+function updateFeaturesMenu() {
     const menu = document.getElementById('features-menu');
     if (!menu) return;
-    const features = WORKSPACE_FEATURES[workspace] || WORKSPACE_FEATURES.general;
-    menu.innerHTML = features.map(f => `
-        <div class="feature-item" data-feature="${f.id}">
-            <span class="material-symbols-rounded">${f.icon}</span>
-            <span>${f.label}</span>
+
+    menu.innerHTML = CREATION_TOOLS.map(tool => `
+        <div class="feature-item ${tool.isUpload ? 'upload-highlight' : ''}" data-feature="${tool.id}">
+            <span class="material-symbols-rounded">${tool.icon}</span>
+            <span>${tool.label}</span>
         </div>
     `).join('');
 
-    // Attach click handlers (event delegation)
-    menu.querySelectorAll('.feature-item').forEach(item => {
-        item.removeEventListener('click', item._handler);
-        item._handler = function(e) {
+    menu.querySelectorAll('.feature-item').forEach(btn => {
+        btn.onclick = function(e) {
             e.stopPropagation();
-            const feature = this.dataset.feature;
-            handleFeatureAction(feature);
+            const actionId = this.dataset.feature;
             menu.classList.remove('open');
+            if (actionId === 'upload') {
+                document.getElementById('omni-file-input').click();
+            } else {
+                handleFeatureAction(actionId);
+            }
         };
-        item.addEventListener('click', item._handler);
     });
 }
 // Ensure features menu is populated and toggle works
@@ -2596,43 +2868,18 @@ if (trigger && menu) {
     });
 }
 
-// Ensure feature items are clickable
-function updateFeaturesMenu(workspace) {
-    const menu = document.getElementById('features-menu');
-    if (!menu) return;
-    const features = WORKSPACE_FEATURES[workspace] || WORKSPACE_FEATURES.general;
-    menu.innerHTML = features.map(f => `
-        <div class="feature-item" data-feature="${f.id}" style="cursor:pointer;display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--border-muted);transition:background 0.15s;">
-            <span class="material-symbols-rounded" style="font-size:20px;color:var(--accent-glow);width:24px;text-align:center;">${f.icon}</span>
-            <span style="flex:1;font-size:14px;font-weight:500;">${f.label}</span>
-        </div>
-    `).join('');
-
-    menu.querySelectorAll('.feature-item').forEach(item => {
-        item.addEventListener('click', function(e) {
-            e.stopPropagation();
-            const feature = this.dataset.feature;
-            handleFeatureAction(feature);
-            menu.classList.remove('open');
-        });
-        item.addEventListener('mouseenter', function() {
-            this.style.background = 'rgba(255,255,255,0.05)';
-        });
-        item.addEventListener('mouseleave', function() {
-            this.style.background = 'transparent';
-        });
-    });
-}
-
 // Handle feature actions (complete implementation)
+// ============================================================
+// FEATURE ACTIONS DISPATCHER (INCLUDES 5 ELITE TOOLS)
+// ============================================================
 async function handleFeatureAction(feature) {
   switch(feature) {
-    case 'summarize': await summarizeCurrentChat(); break;
-    case 'brainstorm': 
+    case 'brainstorm': {
       const topic = prompt('Enter a topic to brainstorm:');
       if (topic) await brainstorm(topic);
       break;
-    case 'multi-agent': 
+    }
+    case 'multi-agent': {
       const task = prompt('Enter the main task for agents:');
       if (task) {
         const agents = [
@@ -2643,56 +2890,49 @@ async function handleFeatureAction(feature) {
         await runMultiAgent(task, agents);
       }
       break;
+    }
     case 'workflow': await openWorkflowModal(); break;
-    case 'knowledge': openKnowledgePanel(); break;
-    case 'personas': openPersonaSelector(); break;
-    case 'eli5': 
-      eli5Active = !eli5Active;
-      showToast(eli5Active ? 'ELI5 mode ON – simplified responses' : 'ELI5 mode OFF', 'info');
-      break;
-    case 'storyteller': 
-      if (runningStructuredCache) {
-        const story = await generateStoryFromData(runningStructuredCache);
-        displayStory(story);
-      } else {
-        showToast('No data to storytell', 'error');
+    case 'mermaid': {
+      const desc = prompt("Describe the process or architecture for the diagram:");
+      if (desc) {
+        showToast("Generating Mermaid diagram...", "info");
+        try {
+          const resp = await apiFetch(`${API_BASE_URL}/api/tools/mermaid`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ process_description: desc })
+          });
+          const d = await resp.json();
+          if (d.success) createNexusBubble(d.mermaid);
+        } catch (e) {
+          showToast("Mermaid error: " + e.message, "error");
+        }
       }
       break;
-    case 'export': executeDownloadPipeline(); break;
-    case 'chart': 
-      if (runningStructuredCache) renderChartInViewport(runningStructuredCache);
-      break;
-    case 'touch-fix': 
-      const lastCode = extractLastCodeBlock();
-      if (lastCode) {
-        const error = prompt('Describe the error:');
-        if (error) await touchFix(lastCode, error);
+    }
+    case 'decision-matrix': {
+      const options = prompt("Enter options separated by commas (e.g. Next.js, Remix, Vite):");
+      const criteria = prompt("Enter evaluation criteria separated by commas (e.g. Speed, Scale, Cost):");
+      if (options && criteria) {
+        showToast("Generating decision matrix...", "info");
+        try {
+          const resp = await apiFetch(`${API_BASE_URL}/api/tools/decision-matrix`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              options: options.split(',').map(s => s.trim()), 
+              criteria: criteria.split(',').map(s => s.trim()) 
+            })
+          });
+          const d = await resp.json();
+          if (d.success) createNexusBubble(d.matrix);
+        } catch (e) {
+          showToast("Matrix error: " + e.message, "error");
+        }
       }
       break;
-    case 'refactor': 
-      const codeToRefactor = extractLastCodeBlock();
-      if (codeToRefactor) await refactorCode(codeToRefactor);
-      break;
-    case 'deploy': 
-      const deployCode = extractLastCodeBlock();
-      if (deployCode) await deployCodeBlock(deployCode);
-      break;
-    case 'visual-debug': openVisualDebugger(); break;
-    case 'tests': 
-      const testCode = extractLastCodeBlock();
-      if (testCode) await generateTests(testCode);
-      break;
-    case 'explain': 
-      const explainCode = extractLastCodeBlock();
-      if (explainCode) await explainCodeBlock(explainCode);
-      break;
-    case 'schema': 
-      if (stagedFiles.length) {
-        const schema = await discoverSchema(stagedFiles);
-        if (schema) showToast('Schema: ' + schema, 'info');
-      }
-      break;
-    default: showToast('Feature coming soon', 'info');
+    }
+    default: showToast('Action initialized', 'info');
   }
 }
 
@@ -2793,12 +3033,8 @@ async function enhanceUserPrompt() {
         enhanceBtn.innerHTML = originalText;
         validateSendCommand();
     }
-    }    enhanceBtn.disabled = false;
-        promptInput.disabled = false;
-        inputFrame.style.filter = 'none';
-        inputFrame.style.pointerEvents = 'auto';
-        enhanceBtn.innerHTML = originalText;
-        validateSendCommand();
+}
+
 let savedWorkspace = localStorage.getItem('Axelr_workspace');
 if (!savedWorkspace) {
   savedWorkspace = 'general';
@@ -3628,16 +3864,15 @@ async function saveCustomInstructions() {
             body: JSON.stringify({ instructions: input.value })
         });
         btn.innerText = "Saved!";
-        btn.style.background = "var(--accent-glow)";
-        btn.style.color = "#fff";
+        btn.style.borderColor = "var(--accent-glow)";
         setTimeout(() => {
             closeModals();
             btn.innerText = originalText;
-            btn.style.background = "#fff";
-            btn.style.color = "#000";
+            btn.style.borderColor = "";
             btn.disabled = false;
-        }, 1000);
+        }, 800);
     } catch (error) {
+        showToast("Failed to save instructions: " + error.message, "error");
         btn.innerText = originalText;
         btn.disabled = false;
     }
@@ -4351,6 +4586,8 @@ if (typeof DOMPurify === 'undefined') {
     window.DOMPurify = { sanitize: (text) => text };
     console.warn('DOMPurify not loaded, using raw text fallback');
 }
+
+
 // ============================================================
 // FINAL INIT
 // ============================================================

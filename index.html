@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content" />
     <title>AXELR AI – Intelligence Execution Platform</title>
 
     <!-- SEO Meta Tags -->
@@ -34,7 +34,6 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
-
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="favicon.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="favicon.png" />
@@ -86,6 +85,9 @@
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.3/purify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/14.0.0/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
 
     <!-- Styles -->
     <link rel="stylesheet" href="style.css" />
@@ -105,7 +107,7 @@
                     <path d="M50 15 L80 32.5 L50 50 L80 67.5 L50 85" stroke="var(--accent-glow)" stroke-width="6" stroke-linejoin="bevel" fill="none"/>
                     <path d="M20 32.5 L50 50 L20 67.5" stroke="#ffffff" stroke-width="3" stroke-linejoin="bevel" opacity="0.5"/>
                 </svg>
-                    <span style="font-weight:900;letter-spacing:4px;font-family:'JetBrains Mono',monospace;color:var(--logo-text-color);background:linear-gradient(135deg, #00f2fe, #8b5cf6, #f43f5e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-shadow:0 0 30px rgba(0,242,254,0.3);">AXELR</span>
+                    <span style="font-weight:900;letter-spacing:4px;font-family:'JetBrains Mono',monospace;color:var(--logo-text-color);background:linear-gradient(135deg, #00f2fe, #8b5cf6, #f43f5e);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-shadow:0 0 30px rgba(0,242,254,0.3);">AXELR</span>
                 </div>
                 <p class="auth-tagline">The Intelligence Execution Engine</p>
                 <p class="auth-sub">Where unstructured data meets structured intelligence.</p>
@@ -364,6 +366,10 @@
                         </label>
                     </div>
                 </div>
+                <div class="sidebar-sub-box" onclick="showWorkspaceSelector()">
+                    <div class="sub-box-title">Switch Workspace <span class="material-symbols-rounded" style="font-size:18px;color:var(--accent-glow);">swap_horiz</span></div>
+                    <div class="sub-box-desc">Change between Data &amp; Design intelligence.</div>
+                </div>
             </div>
         </div>
     </div>
@@ -615,10 +621,6 @@
 
             <!-- Sidebar Footer -->
             <div class="sidebar-footer">
-                <div class="sidebar-sub-box" onclick="showWorkspaceSelector()">
-                    <div class="sub-box-title">Switch Workspace <span class="material-symbols-rounded" style="font-size:18px;color:var(--accent-glow);">swap_horiz</span></div>
-                    <div class="sub-box-desc">Change between Data &amp; Design intelligence.</div>
-                </div>
                 <!-- Settings / Login toggle based on guest mode -->
                 <div class="sidebar-sub-box" id="sidebar-settings-or-login" onclick="openSettingsOrLogin()">
                     <div class="sub-box-title" id="settings-or-login-title">Settings <span class="material-symbols-rounded" style="font-size:18px;color:var(--text-muted);">settings</span></div>
@@ -674,7 +676,7 @@
 
         <!-- Viewport -->
         <div id="viewport">
-            <div class="hero-text" id="hero-display">
+              <div class="hero-text" id="hero-display">
                 <div class="auth-logo hero-logo-anim" style="margin-bottom:20px;color:var(--accent-glow);">
                     <svg viewBox="0 0 100 100" width="48" height="48" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M50 15 L20 32.5 L20 67.5 L50 85" stroke="var(--logo-stroke-primary)" stroke-width="6" stroke-linejoin="bevel" fill="var(--logo-fill-primary)" />
@@ -691,37 +693,27 @@
     <div id="file-staging-container"></div>
     <div class="input-frame" id="data-drop-zone">
         <div class="input-row">
-            <!-- Attach Button -->
-            <button class="action-btn attach-btn" onclick="document.getElementById('omni-file-input').click()" title="Attach Assets">
-                <span class="material-symbols-rounded">attach_file</span>
-            </button>
+            <!-- Unified '+' Action Menu (File Upload + Generative Creation Tools) -->
+            <div class="features-dropdown-wrapper">
+                <button class="action-btn plus-menu-btn" id="features-trigger" title="Add files or tools">
+                    <span class="material-symbols-rounded">add</span>
+                </button>
+                <div class="features-menu" id="features-menu">
+                    <!-- Populated dynamically: Upload, Brainstorm, Multi-Agent, Workflow, Mermaid, Decision Matrix -->
+                </div>
+            </div>
 
-            <!-- Text Input -->
+            <!-- Central Elastic Input -->
             <textarea id="prompt-input" rows="1" placeholder="Ask me anything – I'm here to help..."></textarea>
 
-            <!-- Action Buttons -->
+            <!-- Right Controls -->
             <div class="input-actions">
-                <!-- Three‑dots Dropdown -->
-                <div class="features-dropdown-wrapper">
-                    <button class="action-btn features-trigger" id="features-trigger" title="Workspace Features">
-                        <span class="material-symbols-rounded">more_horiz</span>
-                    </button>
-                    <div class="features-menu" id="features-menu">
-                        <!-- Dynamically populated by JS -->
-                    </div>
-                </div>
-
-                <!-- Enhance Prompt -->
                 <button class="action-btn enhance-btn" id="enhance-trigger" title="Auto-Enhance Prompt" onclick="enhanceUserPrompt()">
                     <span class="material-symbols-rounded">auto_awesome</span>
                 </button>
-
-                <!-- Mic -->
-                <button class="action-btn mic-btn" id="mic-trigger" title="Voice Command">
+                <button class="action-btn mic-btn" id="mic-trigger" title="Voice Input">
                     <span class="material-symbols-rounded">mic</span>
                 </button>
-
-                <!-- Send / Stop -->
                 <button class="action-btn send-btn" id="send-trigger" onclick="executeCommand()" disabled>
                     <span class="material-symbols-rounded">send</span>
                 </button>
@@ -729,12 +721,9 @@
         </div>
     </div>
     <input type="file" id="omni-file-input" multiple style="display:none;" />
-    <div style="color:var(--text-muted);font-size:11px;margin-top:8px;text-align:center;">Axelr can make mistakes. Verify critical matrix outputs.</div>
+    <div class="command-disclaimer">Axelr can make mistakes. Verify critical outputs.</div>
 </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/14.0.0/marked.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
