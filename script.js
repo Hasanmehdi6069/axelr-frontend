@@ -219,6 +219,262 @@ window.addEventListener('unhandledrejection', (event) => {
     showToast('An unexpected error occurred. Please refresh.', 'error');
     event.preventDefault();
 });
+/* ============================================================
+   TIER + SUB-TIER CONTENT ENGINE
+   ============================================================ */
+let currentBillingCycle = 'monthly';
+const selectedSubtiers = { pro: 'full', business: 'full' };
+
+/* -------- Pricing catalog (monthly USD) -------- */
+const PRICING_CATALOG = {
+    pro: {
+        full:   { monthly: 15, annualMo: 12, annualTotal: 144, quota: '50 Actions/Day' },
+        data:   { monthly: 9,  annualMo: 7,  annualTotal: 84,  quota: '45 Actions/Day' },
+        design: { monthly: 10, annualMo: 8,  annualTotal: 96,  quota: '40 Actions/Day' }
+    },
+    business: {
+        full:   { monthly: 35, annualMo: 28, annualTotal: 336, quota: '150 Actions/Day' },
+        data:   { monthly: 22, annualMo: 18, annualTotal: 216, quota: '130 Actions/Day' },
+        design: { monthly: 24, annualMo: 19, annualTotal: 228, quota: '120 Actions/Day' }
+    }
+};
+
+/* -------- Feature & model content per tier/sub-tier -------- */
+const TIER_CONTENT = {
+    free: {
+        label: 'Explorer',
+        limits: ['7 Actions/Day', '5 RPM · 10k TPM', '2 Providers · 2 Models'],
+        models: {
+            header: 'ACTIVE ENGINES (2 PROVIDERS · 2 MODELS)',
+            rows: [
+                { ws: 'data',    name: 'Axelr Flash 3.5 Data Matrix', via: 'Groq' },
+                { ws: 'design',  name: 'Axelr Flash 3.5 Architect',   via: 'Groq' },
+                { ws: 'general', name: 'Axelr Flash 3.5 Core',        via: 'OpenRouter' }
+            ]
+        },
+        features: {
+            full: [
+                { on: true,  text: 'All 3 Workspaces (Data · Design · General)' },
+                { on: true,  text: 'Basic CSV & PDF Extractions' },
+                { on: true,  text: 'Single File Upload (5 MB max)' },
+                { on: true,  text: '3 Prompt Enhancements / month' },
+                { on: false, text: 'Touch & Fix Code Diffs' },
+                { on: false, text: 'Persistent Knowledge Memory' }
+            ]
+        }
+    },
+
+    pro: {
+        label: 'Pro Architect',
+        limits: {
+            full:   ['50 Actions/Day', '20 RPM · 60k TPM', '4 Providers · 4 Models'],
+            data:   ['45 Actions/Day (Data)', '20 RPM · 60k TPM', '4 Providers · 4 Models'],
+            design: ['40 Actions/Day (Design)', '20 RPM · 60k TPM', '4 Providers · 4 Models']
+        },
+        models: {
+            header: 'DUAL ENGINES (4 PROVIDERS · 4 MODELS)',
+            rows: [
+                { ws: 'data',    name: 'Axelr Flash 3.5 + Hyper 4.2',  via: 'Groq + OpenRouter' },
+                { ws: 'design',  name: 'Axelr Flash 3.5 + Studio 4.5', via: 'Groq + OpenRouter' },
+                { ws: 'general', name: 'Axelr Flash 3.5 + Cortex Pro', via: 'Groq + OpenRouter' }
+            ]
+        },
+        features: {
+            full: [
+                { on: true,  text: 'High-volume Flash + Priority Hyper engine' },
+                { on: true,  text: 'Touch & Fix surgical code diffs' },
+                { on: true,  text: 'One-click live Netlify deployment' },
+                { on: true,  text: 'Persistent Knowledge Vault (100 items)' },
+                { on: true,  text: '7 Enhancements/month · 20 MB multi-file' }
+            ],
+            data: [
+                { on: true,  text: 'Data Workspace only — higher Data quota (25/day)' },
+                { on: true,  text: 'Advanced schema discovery + CSV/Excel pipelines' },
+                { on: true,  text: 'PII scanning & structured extraction' },
+                { on: true,  text: 'Persistent Knowledge Vault (100 items)' },
+                { on: true,  text: 'Priority Groq + OpenRouter routing' },
+                { on: false, text: 'Design / UI generation (0 quota)' },
+                { on: false, text: 'Touch & Fix code diffs' },
+                { on: false, text: 'Live Netlify deployment' }
+            ],
+            design: [
+                { on: true,  text: 'Design Workspace only — higher UI quota (20/day)' },
+                { on: true,  text: 'Visual Debugger (mockup → code)' },
+                { on: true,  text: 'Touch & Fix surgical code diffs' },
+                { on: true,  text: 'One-click live Netlify deployment' },
+                { on: true,  text: 'Generate Tests & Explain Code' },
+                { on: false, text: 'Data extraction pipelines (0 quota)' },
+                { on: false, text: 'PII scanning' },
+                { on: false, text: 'Persistent Knowledge Vault' }
+            ]
+        }
+    },
+
+    business: {
+        label: 'Business Collective',
+        limits: {
+            full:   ['150 Actions/Day', '45 RPM · 180k TPM', '40+ Providers · All Models'],
+            data:   ['130 Actions/Day (Data Ops)', '45 RPM · 180k TPM', '40+ Providers · All Models'],
+            design: ['120 Actions/Day (Studio)', '45 RPM · 180k TPM', '40+ Providers · All Models']
+        },
+        models: {
+            header: 'CLUSTER ENGINES (40+ PROVIDERS · ALL MODELS)',
+            rows: [
+                { ws: 'data',    name: 'Axelr Omni 5.0 + DeepV3 + LPU Cluster', via: 'All 40+ Providers' },
+                { ws: 'design',  name: 'Axelr DesignOps + Claude + Q-Coder',    via: 'All 40+ Providers' },
+                { ws: 'general', name: 'Axelr Master Core + Dynamic Failover',  via: 'All 40+ Providers' }
+            ]
+        },
+        features: {
+            full: [
+                { on: true, text: 'Autonomous Multi-Agent Orchestrator' },
+                { on: true, text: 'Automated multi-step pipelines' },
+                { on: true, text: 'Visual Debugger + live mockup auditor' },
+                { on: true, text: '25 Enhancements/month · 50 MB file limit' },
+                { on: true, text: 'Latency-aware failover across 40+ providers' },
+                { on: true, text: 'Priority routing + extended context' }
+            ],
+            data: [
+                { on: true,  text: 'Data Ops Heavy — highest Data quota (70/day)' },
+                { on: true,  text: 'Automated multi-step data pipelines' },
+                { on: true,  text: 'PII scanning + schema discovery' },
+                { on: true,  text: 'Autonomous Multi-Agent Orchestrator' },
+                { on: true,  text: 'Latency-aware failover cluster' },
+                { on: false, text: 'Design / UI generation (0 quota)' },
+                { on: false, text: 'Touch & Fix code diffs' }
+            ],
+            design: [
+                { on: true,  text: 'Design Studio — highest UI quota (60/day)' },
+                { on: true,  text: 'Visual Debugger + mockup auditor' },
+                { on: true,  text: 'Touch & Fix surgical code diffs' },
+                { on: true,  text: 'One-click Netlify deployment' },
+                { on: true,  text: 'Code translator + Mermaid diagrams' },
+                { on: true,  text: 'Latency-aware failover cluster' },
+                { on: false, text: 'Data extraction pipelines (0 quota)' }
+            ]
+        }
+    }
+};
+
+/* Fix renderFeatureList to be defensive */
+function renderFeatureList(tier, subTier) {
+    const cfg = TIER_CONTENT[tier];
+    if (!cfg) return;
+    const features = cfg.features || {};
+    let list = features[subTier] || features.full || [];
+    if (!Array.isArray(list) || list.length === 0) return;
+
+    const el = document.getElementById(`${tier}-feature-list`);
+    if (!el) return;
+    el.innerHTML = list.map(f => `
+        <li class="${f.on ? '' : 'disabled'}">
+            <span class="material-symbols-rounded ${f.on ? 'check' : 'cross'}">${f.on ? 'check' : 'close'}</span>
+            ${f.text}
+        </li>
+    `).join('');
+}
+
+function renderModelSection(tier) {
+    const cfg = TIER_CONTENT[tier];
+    if (!cfg) return;
+    const el = document.getElementById(`${tier}-models-section`);
+    if (!el) return;
+    el.innerHTML = `
+        <div class="model-section-title">${cfg.models.header}</div>
+        ${cfg.models.rows.map(r => `
+            <div class="workspace-model-row">
+                <span class="ws-tag ${r.ws}">${r.ws.toUpperCase()}</span>
+                <span class="provider-pill">${r.name}
+                    <small class="infra-pill">via ${r.via}</small>
+                </span>
+            </div>
+        `).join('')}
+    `;
+}
+
+function renderLimitChips(tier, subTier) {
+    const cfg = TIER_CONTENT[tier];
+    if (!cfg) return;
+    let chips = cfg.limits;
+    if (typeof chips === 'object' && !Array.isArray(chips)) {
+        chips = chips[subTier] || chips.full;
+    }
+    const box = document.querySelector(`.tier-card-modern.tier-${tier} .tier-limits-box`);
+    if (!box) return;
+    box.innerHTML = chips.map((c, i) =>
+        `<span class="limit-chip ${i === 0 ? 'highlight' : ''}">${c}</span>`
+    ).join('');
+}
+
+/* -------- Master refresh -------- */
+function refreshTierCardPrices() {
+    const isAnnual = currentBillingCycle === 'annual';
+
+    // Pro
+    const proSub = selectedSubtiers.pro;
+    const proCfg = PRICING_CATALOG.pro[proSub];
+    const proPrice = document.getElementById('pro-price-output');
+    const proTerm  = document.getElementById('pro-term-output');
+    const proLimit = document.getElementById('pro-limit-chip');
+    if (proPrice) proPrice.innerText = isAnnual ? proCfg.annualMo : proCfg.monthly;
+    if (proTerm)  proTerm.innerText = isAnnual ? `/mo ($${proCfg.annualTotal}/yr)` : '/mo';
+    if (proLimit) proLimit.innerText = proCfg.quota;
+
+    ['full','data','design'].forEach(t => {
+        const el = document.getElementById(`pro-sub-${t}-price`);
+        if (el) {
+            const c = PRICING_CATALOG.pro[t];
+            el.innerText = isAnnual ? `$${c.annualMo}/mo` : `$${c.monthly}/mo`;
+        }
+    });
+
+    // Business
+    const bizSub = selectedSubtiers.business;
+    const bizCfg = PRICING_CATALOG.business[bizSub];
+    const bizPrice = document.getElementById('business-price-output');
+    const bizTerm  = document.getElementById('business-term-output');
+    const bizLimit = document.getElementById('business-limit-chip');
+    if (bizPrice) bizPrice.innerText = isAnnual ? bizCfg.annualMo : bizCfg.monthly;
+    if (bizTerm)  bizTerm.innerText = isAnnual ? `/mo ($${bizCfg.annualTotal}/yr)` : '/mo';
+    if (bizLimit) bizLimit.innerText = bizCfg.quota;
+
+    ['full','data','design'].forEach(t => {
+        const el = document.getElementById(`biz-sub-${t}-price`);
+        if (el) {
+            const c = PRICING_CATALOG.business[t];
+            el.innerText = isAnnual ? `$${c.annualMo}/mo` : `$${c.monthly}/mo`;
+        }
+    });
+
+    // Re-render dynamic content
+    renderFeatureList('free');
+    renderFeatureList('pro', proSub);
+    renderFeatureList('business', bizSub);
+    renderModelSection('free');
+    renderModelSection('pro');
+    renderModelSection('business');
+    renderLimitChips('pro', proSub);
+    renderLimitChips('business', bizSub);
+}
+
+function setPricingPeriod(period) {
+    currentBillingCycle = period;
+    const m = document.getElementById('btn-period-monthly');
+    const a = document.getElementById('btn-period-annual');
+    if (m) m.classList.toggle('active', period === 'monthly');
+    if (a) a.classList.toggle('active', period === 'annual');
+    refreshTierCardPrices();
+}
+
+function updateTierSelection(tier, subtier) {
+    selectedSubtiers[tier] = subtier;
+    refreshTierCardPrices();
+}
+
+/* Call once on load so cards render with default content */
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(refreshTierCardPrices, 200);
+});
 // ============================================================
 // WORKSPACE THEME
 // ============================================================
@@ -291,17 +547,6 @@ document.getElementById('multi-agent-btn')?.addEventListener('click', function()
     ];
     runMultiAgent(task, agents);
 });
-let currentPeriod = 'monthly';
-function setPricingPeriod(period) {
-    currentPeriod = period;
-    document.querySelectorAll('.period-btn').forEach(b => b.classList.toggle('active', b.dataset.period === period));
-    // Update prices in the upgrade cards
-    document.querySelectorAll('.price-output').forEach(el => {
-        const monthly = parseFloat(el.dataset.monthly);
-        const annual = monthly * 10; // 20% off = 10 months for price of 12
-        el.innerHTML = period === 'monthly' ? `$${monthly}<span>/mo</span>` : `$${annual}<span>/yr</span>`;
-    });
-}
 // Multi-Agent
 function createNexusBubble(markdown) {
     const bubble = document.createElement('div');
@@ -1783,12 +2028,12 @@ function switchSidebarTab(tab) {
     if (tabBtn) tabBtn.classList.add('active');
     loadArchiveLogs();
 }
-
 function openSettingsModal() {
     closeModals();
     const modal = getEl('settings-modal');
     if (modal) modal.classList.add('active');
     updateSettingsQuota();
+    renderInlineWorkspaceCards();       // ← populate immediately
     document.querySelectorAll('.theme-option').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.theme === currentThemePreference);
     });
@@ -1872,13 +2117,36 @@ if (searchBox) {
 // WORKSPACE FUNCTIONS
 // ============================================================
 function showWorkspaceSelector() {
+    // If the settings modal is open, dismiss it first so the workspace
+    // selector isn't trapped behind it in the stacking order.
+    const settingsModal = getEl('settings-modal');
+    if (settingsModal) settingsModal.classList.remove('active');
+
+    // Also hide the account / model dropdowns so nothing competes for focus
+    if (accountDropdownCard) accountDropdownCard.style.display = 'none';
+    if (modelDropdownCard)   modelDropdownCard.style.display = 'none';
+
     const ws = getEl('workspace-selector');
-    if (ws) ws.style.display = 'flex';
+    if (!ws) return;
+
+    // Force a stacking-context reset and bring it to the top
+    ws.style.display  = 'flex';
+    ws.style.zIndex   = '100000';   // higher than any modal
+    ws.style.position = 'fixed';
+    ws.classList.add('active');
+
+    // Nudge the browser so any entry animation (opacity / scale) plays
+    // immediately instead of waiting for the next repaint.
+    void ws.offsetWidth;
 }
 function selectWorkspace(type) {
     localStorage.setItem('Axelr_workspace', type);
     const ws = getEl('workspace-selector');
-    if (ws) ws.style.display = 'none';
+    if (ws) {
+        ws.classList.remove('active');
+        ws.style.display = 'none';
+        ws.style.zIndex  = '';
+    }
     activateWorkspace(type);
 }
 function activateWorkspace(type, isBoot = false) {
@@ -2805,28 +3073,51 @@ const WORKSPACE_FEATURES = {
     { id: 'knowledge', icon: 'bookmark', label: 'Knowledge Vault' },
     { id: 'personas', icon: 'person', label: 'Personas' },
     { id: 'translate-code', icon: 'translate', label: 'Code Translator' },
+    { id: 'mermaid', icon: 'account_tree', label: 'Generate Mermaid Diagram' }
   ]
 };
 // ============================================================
-// WORKSPACE FEATURES (ONLY PRE-EXECUTION CREATION TOOLS IN '+')
-// ============================================================
-// ============================================================
 // UNIFIED CREATION TOOLS FOR COMMAND BAR '+'
 // ============================================================
-const CREATION_TOOLS = [
-  { id: 'upload', icon: 'attach_file', label: 'Attach Assets / Data', isUpload: true },
-  { id: 'brainstorm', icon: 'lightbulb', label: 'Brainstorm Architecture' },
-  { id: 'multi-agent', icon: 'groups', label: 'Multi-Agent Orchestrator' },
-  { id: 'workflow', icon: 'flowchart', label: 'Automated Pipeline' },
-  { id: 'mermaid', icon: 'account_tree', label: 'Generate Mermaid Chart' },
-  { id: 'decision-matrix', icon: 'table_view', label: 'Synthesize Decision Matrix' }
-];
+// Workspace-specific creation tools for the '+' menu
+/* Rank helper — lower index = lower tier */
+const TIER_RANK = { free: 0, guest: 0, pro: 1, business: 2, enterprise: 3 };
 
-function updateFeaturesMenu() {
+const WORKSPACE_CREATION_MENUS = {
+    data: [
+        { id: 'upload',           icon: 'attach_file',   label: 'Attach Data (CSV, Excel, PDF)', isUpload: true, minTier: 'free' },
+        { id: 'scan-pii',         icon: 'shield_person', label: 'Scan Document for PII',                        minTier: 'pro' },
+        { id: 'decision-matrix',  icon: 'table_view',    label: 'Synthesize Decision Matrix',                   minTier: 'pro' },
+        { id: 'workflow',         icon: 'flowchart',     label: 'Automated Data Pipeline',                      minTier: 'business' }
+    ],
+    design: [
+        { id: 'upload',           icon: 'attach_file',   label: 'Attach Mockup / Image',        isUpload: true, minTier: 'free' },
+        { id: 'translate-code',   icon: 'translate',     label: 'Translate Code Component',                     minTier: 'pro' },
+        { id: 'brainstorm',       icon: 'lightbulb',     label: 'Brainstorm UI Architecture',                   minTier: 'pro' },
+        { id: 'mermaid',          icon: 'account_tree',  label: 'Generate Mermaid Diagram',                     minTier: 'business' }
+    ],
+    general: [
+        { id: 'upload',           icon: 'attach_file',   label: 'Attach Assets / Data',         isUpload: true, minTier: 'free' },
+        { id: 'brainstorm',       icon: 'lightbulb',     label: 'Brainstorm Ideas',                             minTier: 'free' },
+        { id: 'multi-agent',      icon: 'groups',        label: 'Multi-Agent Orchestrator',                     minTier: 'pro' },
+        { id: 'mermaid',          icon: 'account_tree',  label: 'Generate Mermaid Chart',                       minTier: 'pro' },
+        { id: 'decision-matrix',  icon: 'table_view',    label: 'Synthesize Decision Matrix',                   minTier: 'pro' },
+        { id: 'minutes',          icon: 'assignment',    label: 'Extract Meeting Minutes',                      minTier: 'pro' },
+        { id: 'workflow',         icon: 'flowchart',     label: 'Automated Pipeline',                           minTier: 'business' }
+    ]
+};
+function updateFeaturesMenu(workspace) {
+    const ws = workspace || getWorkspace();
     const menu = document.getElementById('features-menu');
     if (!menu) return;
 
-    menu.innerHTML = CREATION_TOOLS.map(tool => `
+    const userTier = window.currentUser?.tier || (isGuestMode ? 'guest' : 'free');
+    const userRank = TIER_RANK[userTier] ?? 0;
+
+    const tools = (WORKSPACE_CREATION_MENUS[ws] || WORKSPACE_CREATION_MENUS.general)
+        .filter(t => (TIER_RANK[t.minTier] ?? 0) <= userRank);
+
+    menu.innerHTML = tools.map(tool => `
         <div class="feature-item ${tool.isUpload ? 'upload-highlight' : ''}" data-feature="${tool.id}">
             <span class="material-symbols-rounded">${tool.icon}</span>
             <span>${tool.label}</span>
@@ -2838,11 +3129,8 @@ function updateFeaturesMenu() {
             e.stopPropagation();
             const actionId = this.dataset.feature;
             menu.classList.remove('open');
-            if (actionId === 'upload') {
-                document.getElementById('omni-file-input').click();
-            } else {
-                handleFeatureAction(actionId);
-            }
+            if (actionId === 'upload') document.getElementById('omni-file-input').click();
+            else handleFeatureAction(actionId);
         };
     });
 }
@@ -2873,69 +3161,141 @@ if (trigger && menu) {
 // FEATURE ACTIONS DISPATCHER (INCLUDES 5 ELITE TOOLS)
 // ============================================================
 async function handleFeatureAction(feature) {
-  switch(feature) {
-    case 'brainstorm': {
-      const topic = prompt('Enter a topic to brainstorm:');
-      if (topic) await brainstorm(topic);
-      break;
-    }
-    case 'multi-agent': {
-      const task = prompt('Enter the main task for agents:');
-      if (task) {
-        const agents = [
-          { name: 'Researcher', role: 'research' },
-          { name: 'Coder', role: 'code' },
-          { name: 'Reviewer', role: 'review' }
-        ];
-        await runMultiAgent(task, agents);
-      }
-      break;
-    }
-    case 'workflow': await openWorkflowModal(); break;
-    case 'mermaid': {
-      const desc = prompt("Describe the process or architecture for the diagram:");
-      if (desc) {
-        showToast("Generating Mermaid diagram...", "info");
-        try {
-          const resp = await apiFetch(`${API_BASE_URL}/api/tools/mermaid`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ process_description: desc })
-          });
-          const d = await resp.json();
-          if (d.success) createNexusBubble(d.mermaid);
-        } catch (e) {
-          showToast("Mermaid error: " + e.message, "error");
+    switch(feature) {
+        case 'scan-pii': {
+            const text = prompt('Paste the text or data to audit for sensitive PII:');
+            if (!text) return;
+            showToast('Scanning for sensitive PII...', 'info');
+            try {
+                const resp = await apiFetch(`${API_BASE_URL}/api/tools/scan-pii`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ document_text: text })
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    const bubble = createNexusBubble(`### 🛡️ PII Privacy Scan Report\n\n${data.scan_report}`);
+                    viewport.appendChild(bubble);
+                    scrollToBottom();
+                }
+            } catch(e) {
+                showToast('Scan error: ' + e.message, 'error');
+            }
+            break;
         }
-      }
-      break;
-    }
-    case 'decision-matrix': {
-      const options = prompt("Enter options separated by commas (e.g. Next.js, Remix, Vite):");
-      const criteria = prompt("Enter evaluation criteria separated by commas (e.g. Speed, Scale, Cost):");
-      if (options && criteria) {
-        showToast("Generating decision matrix...", "info");
-        try {
-          const resp = await apiFetch(`${API_BASE_URL}/api/tools/decision-matrix`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              options: options.split(',').map(s => s.trim()), 
-              criteria: criteria.split(',').map(s => s.trim()) 
-            })
-          });
-          const d = await resp.json();
-          if (d.success) createNexusBubble(d.matrix);
-        } catch (e) {
-          showToast("Matrix error: " + e.message, "error");
+        case 'translate-code': {
+            const code = extractLastCodeBlock() || prompt('Paste code to translate:');
+            if (!code) return;
+            const targetLang = prompt('Target language/framework (e.g. React, Vue, Python, TypeScript):', 'TypeScript');
+            if (!targetLang) return;
+            showToast('Translating code...', 'info');
+            try {
+                const resp = await apiFetch(`${API_BASE_URL}/api/tools/translate-code`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code, source_lang: 'auto', target_lang: targetLang })
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    const bubble = createNexusBubble(`### 🔄 Translated Code (${escapeHtmlEntities(targetLang)})\n\n${data.translated_code}`);
+                    viewport.appendChild(bubble);
+                    scrollToBottom();
+                }
+            } catch(e) {
+                showToast('Translation error: ' + e.message, 'error');
+            }
+            break;
         }
-      }
-      break;
+        case 'minutes': {
+            const transcript = prompt('Paste meeting transcript:');
+            if (!transcript) return;
+            showToast('Extracting meeting minutes...', 'info');
+            try {
+                const resp = await apiFetch(`${API_BASE_URL}/api/tools/meeting-minutes`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ transcript })
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    const bubble = createNexusBubble(`### 📋 Meeting Minutes\n\n${data.minutes}`);
+                    viewport.appendChild(bubble);
+                    scrollToBottom();
+                }
+            } catch(e) {
+                showToast('Minutes error: ' + e.message, 'error');
+            }
+            break;
+        }
+        case 'brainstorm': {
+            const topic = prompt('Enter a topic to brainstorm:');
+            if (topic) await brainstorm(topic);
+            break;
+        }
+        case 'multi-agent': {
+            const task = prompt('Enter task for the agent collective:');
+            if (task) {
+                const agents = [
+                    { name: 'Researcher', role: 'research' },
+                    { name: 'Coder', role: 'code' },
+                    { name: 'Reviewer', role: 'review' }
+                ];
+                await runMultiAgent(task, agents);
+            }
+            break;
+        }
+        case 'workflow': await openWorkflowModal(); break;
+        case 'mermaid': {
+            const desc = prompt('Describe the architecture or process flow:');
+            if (!desc) return;
+            showToast('Synthesizing Mermaid diagram...', 'info');
+            try {
+                const resp = await apiFetch(`${API_BASE_URL}/api/tools/mermaid`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ process_description: desc })
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    const bubble = createNexusBubble(data.mermaid);
+                    viewport.appendChild(bubble);
+                    scrollToBottom();
+                }
+            } catch(e) {
+                showToast('Mermaid error: ' + e.message, 'error');
+            }
+            break;
+        }
+        case 'decision-matrix': {
+            const options = prompt('Enter options (comma-separated):', 'PostgreSQL, MongoDB, DynamoDB');
+            const criteria = prompt('Enter evaluation criteria (comma-separated):', 'Latency, Cost, Scaling, Schema Flexibility');
+            if (options && criteria) {
+                showToast('Synthesizing decision matrix...', 'info');
+                try {
+                    const resp = await apiFetch(`${API_BASE_URL}/api/tools/decision-matrix`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            options: options.split(',').map(s => s.trim()),
+                            criteria: criteria.split(',').map(s => s.trim())
+                        })
+                    });
+                    const data = await resp.json();
+                    if (data.success) {
+                        const bubble = createNexusBubble(data.matrix);
+                        viewport.appendChild(bubble);
+                        scrollToBottom();
+                    }
+                } catch(e) {
+                    showToast('Matrix error: ' + e.message, 'error');
+                }
+            }
+            break;
+        }
+        default:
+            showToast('Feature initialized', 'info');
     }
-    default: showToast('Action initialized', 'info');
-  }
 }
-
 // Helper to extract last code block
 function extractLastCodeBlock() {
   const codeBlocks = viewport.querySelectorAll('pre code');
@@ -3785,67 +4145,38 @@ async function openAdminModal() {
 // CHECKOUT PIPELINE
 // ============================================================
 async function dispatchCheckoutPipeline(targetBaseTier) {
-    const selectedRadio = document.querySelector(`input[name="${targetBaseTier}-sub-selector"]:checked`);
-    if (!selectedRadio) {
-        alert("Please select a plan option.");
-        return;
-    }
-    const selectedSubConfig = selectedRadio.value;
-    const checkoutBtn = document.querySelector(`.${targetBaseTier}-premium .upgrade-btn`);
+    // Read from the shared selectedSubtiers state (source of truth)
+    const subTier = selectedSubtiers[targetBaseTier] || 'full';
+    const checkoutBtn = document.querySelector(`.tier-${targetBaseTier} .tier-cta-btn`);
     if (!checkoutBtn) return;
     const originalText = checkoutBtn.innerText;
-    checkoutBtn.innerText = "Connecting...";
-    checkoutBtn.style.opacity = "0.7";
+    checkoutBtn.innerText = 'Connecting to Stripe...';
     checkoutBtn.disabled = true;
 
-    showStripeLoading(() => {
-        const modal = getEl('subscription-modal');
-        if (modal) modal.classList.add('active');
-    });
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    showStripeLoading();
     try {
         const response = await apiFetch(`${API_BASE_URL}/api/billing/checkout`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ tier: targetBaseTier, subTier: selectedSubConfig }),
-            signal: controller.signal
+            body: JSON.stringify({
+                tier: targetBaseTier,
+                subTier: subTier,
+                period: currentBillingCycle    // ⚡ from the working toggle
+            })
         });
-        clearTimeout(timeoutId);
-        if (!response.ok) {
-            let errorMsg = `HTTP ${response.status}`;
-            try {
-                const errData = await response.json();
-                errorMsg = errData.message || errorMsg;
-            } catch (_) {}
-            throw new Error(errorMsg);
-        }
         const data = await response.json();
-        if (data.url) {
+        if (response.ok && data.url) {
             window.location.href = data.url;
-        } else {
-            throw new Error(data.message || "No checkout URL returned.");
+            return;
         }
+        throw new Error(data.detail || data.message || 'Checkout failed');
     } catch (e) {
-        console.error("Checkout error:", e);
         hideStripeLoading();
-        let userMsg = "Checkout Failed";
-        if (e.name === 'AbortError') {
-            userMsg = "Request timed out. Please try again.";
-        } else if (e.message) {
-            userMsg = e.message;
-        }
-        alert(`⚠️ ${userMsg}`);
-        checkoutBtn.innerText = "Retry";
+        showToast(`Checkout: ${e.message}`, 'error');
+        checkoutBtn.innerText = originalText;
         checkoutBtn.disabled = false;
-        checkoutBtn.style.opacity = "1";
-        checkoutBtn.onclick = () => dispatchCheckoutPipeline(targetBaseTier);
-    } finally {
-        clearTimeout(timeoutId);
     }
 }
-
 // ============================================================
 // OTHER FUNCTIONS
 // ============================================================
@@ -4587,7 +4918,36 @@ if (typeof DOMPurify === 'undefined') {
     console.warn('DOMPurify not loaded, using raw text fallback');
 }
 
+function renderInlineWorkspaceCards() {
+    const host = getEl('workspace-cards-inline');   // add this <div> in your settings HTML
+    if (!host) return;
 
+    const current = getWorkspace();
+    const workspaces = [
+        { id: 'data',    icon: 'database',       title: 'Data',    desc: 'Extract, analyse & transform' },
+        { id: 'design',  icon: 'palette',        title: 'Design',  desc: 'UI/UX generation & deployment' },
+        { id: 'general', icon: 'auto_awesome',   title: 'General', desc: 'Everyday AI assistance' },
+    ];
+
+    host.innerHTML = workspaces.map(w => `
+        <div class="ws-card ${w.id === current ? 'active' : ''}"
+             onclick="pickInlineWorkspace('${w.id}')">
+            <span class="material-symbols-rounded">${w.icon}</span>
+            <div>
+                <div class="ws-card-title">${w.title}</div>
+                <div class="ws-card-desc">${w.desc}</div>
+            </div>
+            ${w.id === current ? '<span class="material-symbols-rounded ws-check">check_circle</span>' : ''}
+        </div>
+    `).join('');
+}
+
+function pickInlineWorkspace(type) {
+    localStorage.setItem('Axelr_workspace', type);
+    renderInlineWorkspaceCards();       // re-paint instantly, in place
+    activateWorkspace(type, true);
+    showToast(`Switched to ${type} workspace`, 'success');
+}
 // ============================================================
 // FINAL INIT
 // ============================================================

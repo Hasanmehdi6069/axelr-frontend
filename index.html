@@ -426,90 +426,260 @@
             <button class="modal-submit-btn" onclick="submitTelemetryReport()">Dispatch Log</button>
         </div>
     </div>
-
-    <!-- Upgrade Modal -->
-    <div class="modal-overlay" id="upgrade-modal">
-        <div class="modal-card" style="max-width:900px;">
-            <div class="modal-header">
-                <div class="modal-title">Upgrade Workspace</div>
-                <button class="close-modal-btn" onclick="closeModals()">
-                    <span class="material-symbols-rounded">close</span>
-                </button>
+    <!-- ============================================================
+     UPGRADE MODAL - ELITE CHATGPT-RIVAL TIER MATRIX
+     ============================================================ -->
+<div class="modal-overlay" id="upgrade-modal">
+    <div class="modal-card tier-modal-card">
+        <div class="modal-header">
+            <div class="modal-title">
+                <span class="material-symbols-rounded" style="color:var(--accent-glow);">workspace_premium</span>
+                <span>Select Workspace Tier &amp; Intelligence Engines</span>
             </div>
-            <div class="pricing-period-toggle" style="display:flex; gap:10px; justify-content:center; margin-bottom:15px;">
-    <button class="period-btn active" data-period="monthly" onclick="setPricingPeriod('monthly')">Monthly</button>
-    <button class="period-btn" data-period="annual" onclick="setPricingPeriod('annual')">Annual <span style="background:#f43f5e;color:#fff;padding:2px 6px;border-radius:4px;font-size:10px;">Save 20%</span></button>
-</div>
-            <div class="axelr-pricing-container">
-                <div>
-                    <div class="tier-card pro-premium">
-                        <div class="tier-badge-pos">RECOMMENDED</div>
-                        <h3>Pro</h3>
-                        <p class="sub-desc">Perfect for solo developers and freelancers who need reliable daily usage limits.</p>
-                        <div class="price-output" id="pro-base-price-output">$15<span>/mo</span></div>
-                        <div class="options-group">
-                            <label>
-                                <input type="radio" name="pro-sub-selector" value="full" checked onclick="syncTierMatrixEngine('pro','full',15)" />
-                                <div class="opt-content">
-                                    <div class="opt-row"><span class="opt-name">Full Stack Bundle</span><span class="opt-price">$15</span></div>
-                                    <div class="opt-desc">20 Data Extractions / 15 UI Generations / 7 Enhancements per day.</div>
-                                </div>
-                            </label>
-                            <label>
-                                <input type="radio" name="pro-sub-selector" value="data" onclick="syncTierMatrixEngine('pro','data',8)" />
-                                <div class="opt-content">
-                                    <div class="opt-row"><span class="opt-name">Data Extraction Only</span><span class="opt-price" style="color:#AAA;">$8</span></div>
-                                    <div class="opt-desc">19 Data Extractions / 0 UI Generations / 5 Enhancements per day.</div>
-                                </div>
-                            </label>
-                            <label>
-                                <input type="radio" name="pro-sub-selector" value="design" onclick="syncTierMatrixEngine('pro','design',9)" />
-                                <div class="opt-content">
-                                    <div class="opt-row"><span class="opt-name">UI Generation Only</span><span class="opt-price" style="color:#AAA;">$9</span></div>
-                                    <div class="opt-desc">0 Data Extractions / 13 UI Generations / 5 Enhancements per day.</div>
-                                </div>
-                            </label>
-                        </div>
-                        <button class="upgrade-btn" onclick="dispatchCheckoutPipeline('pro')">Upgrade to Pro</button>
+            <button class="close-modal-btn" onclick="closeModals()">
+                <span class="material-symbols-rounded">close</span>
+            </button>
+        </div>
+
+        <!-- Billing Period Toggle (Monthly vs Annual with 20% savings) -->
+        <div class="tier-billing-toggle">
+            <button class="billing-period-btn active" id="btn-period-monthly" onclick="setPricingPeriod('monthly')">Monthly Billing</button>
+            <button class="billing-period-btn" id="btn-period-annual" onclick="setPricingPeriod('annual')">
+                Annual Billing <span class="discount-pill">Save ~20%</span>
+            </button>
+        </div>
+
+        <!-- 4-Column Responsive Grid -->
+        <div class="tier-grid">
+            <!-- 1. FREE TIER (EXPLORER) -->
+            <div class="tier-card-modern tier-free">
+                <div class="tier-badge-status">CURRENT ALLOCATION</div>
+                <div class="tier-header">
+                    <h3 class="tier-name">Explorer</h3>
+                    <p class="tier-summary">Baseline intelligence across all 3 workspaces with strict daily quotas.</p>
+                </div>
+                <div class="tier-price-box">
+                    <span class="tier-currency">$</span>
+                    <span class="tier-amount">0</span>
+                    <span class="tier-term">/mo</span>
+                </div>
+                <div class="tier-limits-box">
+                    <span class="limit-chip">7 Actions/Day Total</span>
+                    <span class="limit-chip">5 RPM · 10k TPM</span>
+                </div>
+
+                <!-- Pure Axelr Flash Models Only (No external provider leak) -->
+                <div class="tier-models-section" id="free-models-section">
+                    <div class="model-section-title">ACTIVE ENGINES (1 MODEL / WS)</div>
+                    <div class="workspace-model-row">
+                        <span class="ws-tag data">DATA</span>
+                        <span class="provider-pill">Axelr Flash 3.5 Data Matrix</span>
                     </div>
-                    <div class="tier-card business-premium">
-                        <div class="tier-badge-pos">HEAVY HITTERS</div>
-                        <h3>Business</h3>
-                        <p class="sub-desc">Built for agencies and power users who need maximum daily outputs.</p>
-                        <div class="price-output" id="business-base-price-output">$29<span>/mo</span></div>
-                        <div class="options-group">
-                            <label>
-                                <input type="radio" name="business-sub-selector" value="full" checked onclick="syncTierMatrixEngine('business','full',29)" />
-                                <div class="opt-content">
-                                    <div class="opt-row"><span class="opt-name">Full Stack Bundle</span><span class="opt-price">$29</span></div>
-                                    <div class="opt-desc">30 Data Extractions / 25 UI Generations / 15 Enhancements per day.</div>
-                                </div>
-                            </label>
-                            <label>
-                                <input type="radio" name="business-sub-selector" value="data" onclick="syncTierMatrixEngine('business','data',16)" />
-                                <div class="opt-content">
-                                    <div class="opt-row"><span class="opt-name">Data Ops</span><span class="opt-price" style="color:#AAA;">$16</span></div>
-                                    <div class="opt-desc">28 Data Extractions / 0 UI Generations / 10 Enhancements per day.</div>
-                                </div>
-                            </label>
-                            <label>
-                                <input type="radio" name="business-sub-selector" value="design" onclick="syncTierMatrixEngine('business','design',16)" />
-                                <div class="opt-content">
-                                    <div class="opt-row"><span class="opt-name">Designer</span><span class="opt-price" style="color:#AAA;">$16</span></div>
-                                    <div class="opt-desc">0 Data Extractions / 20 UI Generations / 10 Enhancements per day.</div>
-                                </div>
-                            </label>
-                        </div>
-                        <button class="upgrade-btn" onclick="dispatchCheckoutPipeline('business')">Upgrade to Business</button>
+                    <div class="workspace-model-row">
+                        <span class="ws-tag design">DESIGN</span>
+                        <span class="provider-pill">Axelr Flash 3.5 Architect</span>
+                    </div>
+                    <div class="workspace-model-row">
+                        <span class="ws-tag general">GENERAL</span>
+                        <span class="provider-pill">Axelr Flash 3.5 Core</span>
                     </div>
                 </div>
-                <div style="display:flex; justify-content:center; width:100%; margin-top:10px;">
-                    <span style="font-size:12px; color:var(--text-muted);">Cancel anytime. Secure processing via Stripe.</span>
+
+                <ul class="tier-feature-list" id="free-feature-list">
+                    <li><span class="material-symbols-rounded check">check</span> Access to all 3 Workspaces</li>
+                    <li><span class="material-symbols-rounded check">check</span> Basic CSV &amp; PDF Extractions</li>
+                    <li><span class="material-symbols-rounded check">check</span> Single File Uploads (Max 5MB)</li>
+                    <li><span class="material-symbols-rounded check">check</span> 3 Prompt Enhancements/mo</li>
+                    <li class="disabled"><span class="material-symbols-rounded cross">close</span> Touch &amp; Fix Code Diffs</li>
+                    <li class="disabled"><span class="material-symbols-rounded cross">close</span> Persistent Knowledge Memory</li>
+                </ul>
+
+                <button class="tier-cta-btn current" disabled>Current Tier</button>
+            </div>
+
+            <!-- 2. PRO TIER (With Modular Sub-Tier Selector) -->
+            <div class="tier-card-modern tier-pro popular">
+                <div class="tier-badge-status highlight">RECOMMENDED</div>
+                <div class="tier-header">
+                    <h3 class="tier-name">Pro Architect</h3>
+                    <p class="tier-summary">Extended throughput with dual-engine routing and surgical patching.</p>
                 </div>
+                <div class="tier-price-box">
+                    <span class="tier-currency">$</span>
+                    <span class="tier-amount" id="pro-price-output">15</span>
+                    <span class="tier-term" id="pro-term-output">/mo</span>
+                </div>
+                <div class="tier-limits-box">
+                    <span class="limit-chip highlight" id="pro-limit-chip">50 Actions/Day</span>
+                    <span class="limit-chip">20 RPM · 60k TPM</span>
+                </div>
+
+                <!-- Sub-Tier Modular Options -->
+                <div class="subtier-selector-group">
+                    <label class="subtier-option">
+                        <input type="radio" name="pro-subtier" value="full" checked onchange="updateTierSelection('pro', 'full')">
+                        <div class="subtier-content">
+                            <div class="subtier-row"><span class="subtier-label">Full Stack</span><span class="subtier-price" id="pro-sub-full-price">$15/mo</span></div>
+                            <span class="subtier-desc">15 Data + 15 Design + 20 Core/day</span>
+                        </div>
+                    </label>
+                    <label class="subtier-option">
+                        <input type="radio" name="pro-subtier" value="data" onchange="updateTierSelection('pro', 'data')">
+                        <div class="subtier-content">
+                            <div class="subtier-row"><span class="subtier-label">Data Specialist</span><span class="subtier-price" id="pro-sub-data-price">$9/mo</span></div>
+                            <span class="subtier-desc">25 Data + 20 Core (0 Design)/day</span>
+                        </div>
+                    </label>
+                    <label class="subtier-option">
+                        <input type="radio" name="pro-subtier" value="design" onchange="updateTierSelection('pro', 'design')">
+                        <div class="subtier-content">
+                            <div class="subtier-row"><span class="subtier-label">Design Specialist</span><span class="subtier-price" id="pro-sub-design-price">$10/mo</span></div>
+                            <span class="subtier-desc">20 UI + 20 Core (0 Data)/day</span>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- Dual Models per Workspace with LPU Routing Badges -->
+                <div class="tier-models-section" id="pro-models-section">
+                    <div class="model-section-title">DUAL ENGINES (2 MODELS / WS)</div>
+                    <div class="workspace-model-row">
+                        <span class="ws-tag data">DATA</span>
+                        <span class="provider-pill">Axelr Flash 3.5 + Hyper 4.2 <small class="infra-pill">LPU Router</small></span>
+                    </div>
+                    <div class="workspace-model-row">
+                        <span class="ws-tag design">DESIGN</span>
+                        <span class="provider-pill">Axelr Flash 3.5 + Studio 4.5 <small class="infra-pill">Neural Coder</small></span>
+                    </div>
+                    <div class="workspace-model-row">
+                        <span class="ws-tag general">GENERAL</span>
+                        <span class="provider-pill">Axelr Flash 3.5 + Cortex Pro <small class="infra-pill">Dual-Route</small></span>
+                    </div>
+                </div>
+
+                <ul class="tier-feature-list" id="pro-feature-list">
+                    <li><span class="material-symbols-rounded check">check</span> High-Volume Flash + Priority Hyper Engine</li>
+                    <li><span class="material-symbols-rounded check">check</span> Touch &amp; Fix Surgical Code Diffs</li>
+                    <li><span class="material-symbols-rounded check">check</span> One-Click Live Netlify Deployments</li>
+                    <li><span class="material-symbols-rounded check">check</span> Persistent Knowledge Vault (100 items)</li>
+                    <li><span class="material-symbols-rounded check">check</span> 7 Enhancements/mo · 20MB Multi-File</li>
+                </ul>
+
+                <button class="tier-cta-btn pro-btn" onclick="dispatchCheckoutPipeline('pro')">Upgrade to Pro</button>
+            </div>
+
+            <!-- 3. BUSINESS TIER (With Modular Sub-Tier Selector) -->
+            <div class="tier-card-modern tier-business">
+                <div class="tier-badge-status">MAX THROUGHPUT</div>
+                <div class="tier-header">
+                    <h3 class="tier-name">Business</h3>
+                    <p class="tier-summary">Autonomous multi-agent pipelines and failover intelligence routing.</p>
+                </div>
+                <div class="tier-price-box">
+                    <span class="tier-currency">$</span>
+                    <span class="tier-amount" id="business-price-output">35</span>
+                    <span class="tier-term" id="business-term-output">/mo</span>
+                </div>
+                <div class="tier-limits-box">
+                    <span class="limit-chip" id="business-limit-chip">150 Actions/Day</span>
+                    <span class="limit-chip">45 RPM · 180k TPM</span>
+                </div>
+
+                <!-- Sub-Tier Modular Options -->
+                <div class="subtier-selector-group">
+                    <label class="subtier-option">
+                        <input type="radio" name="business-subtier" value="full" checked onchange="updateTierSelection('business', 'full')">
+                        <div class="subtier-content">
+                            <div class="subtier-row"><span class="subtier-label">Full Collective</span><span class="subtier-price" id="biz-sub-full-price">$35/mo</span></div>
+                            <span class="subtier-desc">50 Data + 40 Design + 60 Core/day</span>
+                        </div>
+                    </label>
+                    <label class="subtier-option">
+                        <input type="radio" name="business-subtier" value="data" onchange="updateTierSelection('business', 'data')">
+                        <div class="subtier-content">
+                            <div class="subtier-row"><span class="subtier-label">Data Ops Heavy</span><span class="subtier-price" id="biz-sub-data-price">$22/mo</span></div>
+                            <span class="subtier-desc">70 Data + 60 Core (0 Design)/day</span>
+                        </div>
+                    </label>
+                    <label class="subtier-option">
+                        <input type="radio" name="business-subtier" value="design" onchange="updateTierSelection('business', 'design')">
+                        <div class="subtier-content">
+                            <div class="subtier-row"><span class="subtier-label">Design Studio</span><span class="subtier-price" id="biz-sub-design-price">$24/mo</span></div>
+                            <span class="subtier-desc">60 UI + 60 Core (0 Data)/day</span>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- Triple Models per Workspace with Autonomous Infrastructure Badges -->
+                <div class="tier-models-section" id="business-models-section">
+                    <div class="model-section-title">CLUSTER ENGINES (3 MODELS / WS)</div>
+                    <div class="workspace-model-row">
+                        <span class="ws-tag data">DATA</span>
+                        <span class="provider-pill">Axelr Omni 5.0 + DeepV3 + LPU Cluster</span>
+                    </div>
+                    <div class="workspace-model-row">
+                        <span class="ws-tag design">DESIGN</span>
+                        <span class="provider-pill">Axelr DesignOps + Claude + Q-Coder</span>
+                    </div>
+                    <div class="workspace-model-row">
+                        <span class="ws-tag general">GENERAL</span>
+                        <span class="provider-pill">Axelr Master Core + Dynamic Failover</span>
+                    </div>
+                </div>
+
+                <ul class="tier-feature-list" id="business-feature-list">
+                    <li><span class="material-symbols-rounded check">check</span> Autonomous Multi-Agent Orchestrator</li>
+                    <li><span class="material-symbols-rounded check">check</span> Automated Multi-Step Pipelines</li>
+                    <li><span class="material-symbols-rounded check">check</span> Visual Debugger (Mockup Auditor)</li>
+                    <li><span class="material-symbols-rounded check">check</span> 25 Enhancements/mo · 50MB File Limit</li>
+                    <li><span class="material-symbols-rounded check">check</span> Dynamic Latency-Aware Failover Cluster</li>
+                </ul>
+
+                <button class="tier-cta-btn business-btn" onclick="dispatchCheckoutPipeline('business')">Upgrade to Business</button>
+            </div>
+
+            <!-- 4. ENTERPRISE TIER -->
+            <div class="tier-card-modern tier-enterprise">
+                <div class="tier-badge-status">CUSTOM</div>
+                <div class="tier-header">
+                    <h3 class="tier-name">Enterprise</h3>
+                    <p class="tier-summary">Dedicated instances, isolated routes, and custom security compliance.</p>
+                </div>
+                <div class="tier-price-box">
+                    <span class="tier-amount" style="font-size:30px;">Custom</span>
+                </div>
+                <div class="tier-limits-box">
+                    <span class="limit-chip">Unlimited SLA</span>
+                    <span class="limit-chip">Zero Throttling</span>
+                </div>
+
+                <div class="tier-models-section">
+                    <div class="model-section-title">PRIVATE CLOUD INFRA</div>
+                    <div class="workspace-model-row">
+                        <span class="ws-tag general">DEDICATED</span>
+                        <span class="provider-pill">Isolated VPC Cluster Routing</span>
+                    </div>
+                    <div class="workspace-model-row">
+                        <span class="ws-tag data">PRIVATE</span>
+                        <span class="provider-pill">Zero Data Retention (SOC2)</span>
+                    </div>
+                </div>
+
+                <ul class="tier-feature-list">
+                    <li><span class="material-symbols-rounded check">check</span> Custom Rate Limits &amp; Quotas</li>
+                    <li><span class="material-symbols-rounded check">check</span> Dedicated Serverless Database</li>
+                    <li><span class="material-symbols-rounded check">check</span> Outbound Webhooks &amp; REST API Access</li>
+                    <li><span class="material-symbols-rounded check">check</span> Dedicated Architect Support</li>
+                </ul>
+
+                <button class="tier-cta-btn enterprise-btn" onclick="window.location.href='mailto:support@axelr.in?subject=Enterprise%20Plan%20Inquiry'">Contact Architect</button>
             </div>
         </div>
-    </div>
 
+        <div class="tier-modal-footer">
+            <span>🔒 Secure checkout powered by Stripe. Modify or cancel anytime from workspace settings.</span>
+        </div>
+    </div>
+</div>
     <!-- Profile Modal -->
     <div class="modal-overlay" id="profile-modal">
         <div class="modal-card">
