@@ -249,12 +249,12 @@ const TIER_CONTENT = {
             rows: [
                 { ws: 'data',    name: 'Axelr Flash 3.5 Data Matrix', via: 'Groq' },
                 { ws: 'design',  name: 'Axelr Flash 3.5 Architect',   via: 'Groq' },
-                { ws: 'general', name: 'Axelr Flash 3.5 Core',        via: 'OpenRouter' }
+                { ws: 'core', name: 'Axelr Flash 3.5 Core',        via: 'OpenRouter' }
             ]
         },
         features: {
             full: [
-                { on: true,  text: 'All 3 Workspaces (Data · Design · General)' },
+                { on: true,  text: 'All 3 Workspaces (Data · Design · Core)' },
                 { on: true,  text: 'Basic CSV & PDF Extractions' },
                 { on: true,  text: 'Single File Upload (5 MB max)' },
                 { on: true,  text: '3 Prompt Enhancements / month' },
@@ -276,7 +276,7 @@ const TIER_CONTENT = {
             rows: [
                 { ws: 'data',    name: 'Axelr Flash 3.5 + Hyper 4.2',  via: 'Groq + OpenRouter' },
                 { ws: 'design',  name: 'Axelr Flash 3.5 + Studio 4.5', via: 'Groq + OpenRouter' },
-                { ws: 'general', name: 'Axelr Flash 3.5 + Cortex Pro', via: 'Groq + OpenRouter' }
+                { ws: 'core', name: 'Axelr Flash 3.5 + Cortex Pro', via: 'Groq + OpenRouter' }
             ]
         },
         features: {
@@ -322,7 +322,7 @@ const TIER_CONTENT = {
             rows: [
                 { ws: 'data',    name: 'Axelr Omni 5.0 + DeepV3 + LPU Cluster', via: 'All 40+ Providers' },
                 { ws: 'design',  name: 'Axelr DesignOps + Claude + Q-Coder',    via: 'All 40+ Providers' },
-                { ws: 'general', name: 'Axelr Master Core + Dynamic Failover',  via: 'All 40+ Providers' }
+                { ws: 'core', name: 'Axelr Master Core + Dynamic Failover',  via: 'All 40+ Providers' }
             ]
         },
         features: {
@@ -479,11 +479,11 @@ document.addEventListener('DOMContentLoaded', () => {
 // WORKSPACE THEME
 // ============================================================
 function updateWorkspaceTheme(workspace) {
-    document.body.classList.remove('workspace-data', 'workspace-design', 'workspace-general');
+    document.body.classList.remove('workspace-data', 'workspace-design', 'workspace-core');
     if (workspace === 'design') {
         document.body.classList.add('workspace-design');
-    } else if (workspace === 'general') {
-        document.body.classList.add('workspace-general');
+    } else if (workspace === 'core') {
+        document.body.classList.add('workspace-core');
     } else {
         document.body.classList.add('workspace-data');
     }
@@ -497,7 +497,7 @@ function updateWorkspaceTheme(workspace) {
         if (heroTitle) heroTitle.innerText = 'What are we designing today?';
         if (heroSub) heroSub.innerText = 'AI-powered UI/UX generation & live deployment.';
         if (promptInput) promptInput.placeholder = isMobile ? "Upload a mockup..." : "Upload a mockup or request a UI component...";
-    } else if (workspace === 'general') {
+    } else if (workspace === 'core') {
     if (logo) logo.innerText = 'AXELR';
     if (heroTitle) heroTitle.innerText = 'What can I help you with?';
     if (heroSub) heroSub.innerText = 'Intelligence execution for any task – from code to creativity.';
@@ -685,7 +685,7 @@ async function executeCodeBlock(btn, language) {
 // MODEL BRANDING & DROPDOWN – Per Workspace
 // ============================================================
 // Fetch model config from backend
-let MODEL_CONFIG = { general: { models: [] }, data: { models: [] }, design: { models: [] } };
+let MODEL_CONFIG = { core: { models: [] }, data: { models: [] }, design: { models: [] } };
 
 async function loadModelConfig() {
     try {
@@ -693,7 +693,7 @@ async function loadModelConfig() {
         if (resp.ok) {
             MODEL_CONFIG = await resp.json();
             // Ensure all workspaces exist
-            ['general', 'data', 'design'].forEach(w => {
+            ['core', 'data', 'design'].forEach(w => {
                 if (!MODEL_CONFIG[w]) MODEL_CONFIG[w] = { models: [] };
             });
         }
@@ -701,7 +701,7 @@ async function loadModelConfig() {
         console.warn('Using fallback model config');
         // Fallback config (production ready)
         MODEL_CONFIG = {
-            general: {
+            core: {
                 models: [
                     { id: 'flash', label: 'AXELR‑FLASH', badge: 'FREE', desc: 'Instant answers for everyday questions', tier: 'free' },
                     { id: 'pro', label: 'AXELR‑HYPER', badge: 'HYPER', desc: 'Deep reasoning & code generation', tier: 'pro' },
@@ -729,7 +729,7 @@ async function loadModelConfig() {
 function renderModelDropdown(workspace) {
     const container = document.getElementById('model-dropdown-card');
     if (!container) return;
-    const config = MODEL_CONFIG[workspace] || MODEL_CONFIG.general;
+    const config = MODEL_CONFIG[workspace] || MODEL_CONFIG.core;
     const selectedId = localStorage.getItem('axelr_selected_model') || config.models[0]?.id || 'flash';
 
     container.innerHTML = config.models.map((m) => {
@@ -754,7 +754,7 @@ function renderModelDropdown(workspace) {
 }
 
 function updateModelBranding(workspace, tier) {
-    const config = MODEL_CONFIG[workspace] || MODEL_CONFIG.general;
+    const config = MODEL_CONFIG[workspace] || MODEL_CONFIG.core;
     // Determine best matching model based on tier
     let defaultModel = config.models.find(m => m.tier === tier) || config.models[0];
     if (!defaultModel) defaultModel = config.models[0];
@@ -770,7 +770,7 @@ function updateModelBranding(workspace, tier) {
 function selectModel(e, modelId) {
     if (e) e.stopPropagation();
     const workspace = getWorkspace();
-    const config = MODEL_CONFIG[workspace] || MODEL_CONFIG.general;
+    const config = MODEL_CONFIG[workspace] || MODEL_CONFIG.core;
     const model = config.models.find(m => m.id === modelId);
     if (model) {
         document.getElementById('model-text-display').innerText = model.label;
@@ -961,37 +961,28 @@ function showToast(message, type = 'error') {
         container = document.createElement('div');
         container.id = 'global-toast-container';
         container.className = 'toast-container';
-        document.documentElement.appendChild(container); // Mount to html root to isolate from body flex layout
+        document.documentElement.appendChild(container);
     }
 
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-
-    const iconName = type === 'success' ? 'check_circle' : (type === 'info' ? 'info' : 'warning');
+    const iconName = type === 'success' ? 'check_circle'
+                    : (type === 'info' ? 'info' : 'warning');
 
     toast.innerHTML = `
         <span class="material-symbols-rounded toast-icon">${iconName}</span>
         <span class="toast-message">${escapeHtmlEntities(message || 'An unexpected error occurred.')}</span>
         <button class="toast-close" title="Dismiss">&times;</button>
     `;
-
     const closeBtn = toast.querySelector('.toast-close');
     const dismiss = () => {
         toast.classList.remove('toast-show');
         setTimeout(() => toast.remove(), 250);
     };
-
-    closeBtn.onclick = (e) => {
-        e.stopPropagation();
-        dismiss();
-    };
+    closeBtn.onclick = (e) => { e.stopPropagation(); dismiss(); };
 
     container.appendChild(toast);
-
-    requestAnimationFrame(() => {
-        toast.classList.add('toast-show');
-    });
-
+    requestAnimationFrame(() => toast.classList.add('toast-show'));
     setTimeout(dismiss, 5000);
 }
 function showMainUI() {
@@ -1432,7 +1423,7 @@ window.executeGlobalLogout = executeGlobalLogout;
 // ============================================================
 function initializeApp() {
     loadModelConfig().then(() => {
-        const savedWorkspace = localStorage.getItem('Axelr_workspace') || 'general';
+        const savedWorkspace = localStorage.getItem('Axelr_workspace') || 'core';
         updateModelBranding(savedWorkspace, window.currentUser?.tier || 'free');
     });
 
@@ -2009,10 +2000,6 @@ function toggleModelDropdown(e) {
     document.querySelectorAll('.actions-dropdown-list').forEach(d => d.classList.remove('active'));
 }
 
-function selectModel(e, type) {
-    e.stopPropagation();
-    if (modelDropdownCard) modelDropdownCard.style.display = 'none';
-}
 
 function toggleHistoryOptions(e, id) {
     e.stopPropagation();
@@ -2151,7 +2138,7 @@ function selectWorkspace(type) {
 }
 function activateWorkspace(type, isBoot = false) {
     if (mainWrapper) mainWrapper.classList.add('visible');
-    document.body.classList.remove('workspace-data', 'workspace-design', 'workspace-general');
+    document.body.classList.remove('workspace-data', 'workspace-design', 'workspace-core');
     document.body.classList.add(`workspace-${type}`);
     const isMobile = window.innerWidth <= 768;
     const logo = getEl('sidebar-logo-text');
@@ -2162,7 +2149,7 @@ function activateWorkspace(type, isBoot = false) {
         if (heroTitle) heroTitle.innerText = 'What are we designing today?';
         if (heroSub) heroSub.innerText = 'AI-powered UI/UX generation & live deployment.';
         if (promptInput) promptInput.placeholder = isMobile ? "Upload a mockup..." : "Upload a mockup or request a UI component...";
-    } else if (type === 'general') {
+    } else if (type === 'core') {
         if (logo) logo.innerText = 'AXELR';
         if (heroTitle) heroTitle.innerText = 'What can I help you with?';
         if (heroSub) heroSub.innerText = 'Intelligence execution for any task.';
@@ -2371,7 +2358,39 @@ async function loadUserProfile() {
         }
     } catch (e) { console.warn('Profile load failed', e); }
 }
+function showPuterOptIn() {
+    if (window.puterOptInShown) return;
+    window.puterOptInShown = true;
 
+    const optIn = document.createElement('div');
+    optIn.className = 'modal-overlay active';
+    optIn.id = 'puter-optin-modal';
+    optIn.innerHTML = `
+        <div class="modal-card" style="max-width:420px;">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span class="material-symbols-rounded">bolt</span> Enable Puter AI
+                </div>
+                <button class="close-modal-btn" onclick="document.getElementById('puter-optin-modal').remove()">✕</button>
+            </div>
+            <p style="color:var(--text-muted);font-size:14px;line-height:1.6;margin:8px 0 18px;">
+                Unlock an extra free AI provider with one click. Puter runs on your own
+                browser session and never shares your prompts with Axelr.
+            </p>
+            <div style="display:flex;gap:10px;justify-content:flex-end;">
+                <button class="action-icon-btn" onclick="document.getElementById('puter-optin-modal').remove()">
+                    Not now
+                </button>
+                <button class="action-icon-btn" style="background:var(--accent-glow);color:#000;font-weight:600;"
+                        onclick="togglePuter(true); document.getElementById('puter-optin-modal').remove();">
+                    Enable Puter
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(optIn);
+}
+window.showPuterOptIn = showPuterOptIn;
 // ============================================================
 // HISTORY
 // ============================================================
@@ -3041,7 +3060,7 @@ function handleActionClick(actionType, rawText, btnRef) {
 // WORKSPACE FEATURES MAPPING (Complete)
 // ============================================================
 const WORKSPACE_FEATURES = {
-  general: [
+  core: [
     { id: 'summarize', icon: 'summarize', label: 'Summarize Chat' },
     { id: 'brainstorm', icon: 'lightbulb', label: 'Brainstorm' },
     { id: 'multi-agent', icon: 'groups', label: 'Multi-Agent' },
@@ -3096,7 +3115,7 @@ const WORKSPACE_CREATION_MENUS = {
         { id: 'brainstorm',       icon: 'lightbulb',     label: 'Brainstorm UI Architecture',                   minTier: 'pro' },
         { id: 'mermaid',          icon: 'account_tree',  label: 'Generate Mermaid Diagram',                     minTier: 'business' }
     ],
-    general: [
+    core: [
         { id: 'upload',           icon: 'attach_file',   label: 'Attach Assets / Data',         isUpload: true, minTier: 'free' },
         { id: 'brainstorm',       icon: 'lightbulb',     label: 'Brainstorm Ideas',                             minTier: 'free' },
         { id: 'multi-agent',      icon: 'groups',        label: 'Multi-Agent Orchestrator',                     minTier: 'pro' },
@@ -3114,7 +3133,7 @@ function updateFeaturesMenu(workspace) {
     const userTier = window.currentUser?.tier || (isGuestMode ? 'guest' : 'free');
     const userRank = TIER_RANK[userTier] ?? 0;
 
-    const tools = (WORKSPACE_CREATION_MENUS[ws] || WORKSPACE_CREATION_MENUS.general)
+    const tools = (WORKSPACE_CREATION_MENUS[ws] || WORKSPACE_CREATION_MENUS.core)
         .filter(t => (TIER_RANK[t.minTier] ?? 0) <= userRank);
 
     menu.innerHTML = tools.map(tool => `
@@ -3397,7 +3416,7 @@ async function enhanceUserPrompt() {
 
 let savedWorkspace = localStorage.getItem('Axelr_workspace');
 if (!savedWorkspace) {
-  savedWorkspace = 'general';
+  savedWorkspace = 'core';
   localStorage.setItem('Axelr_workspace', savedWorkspace);
 }
 updateWorkspaceTheme(savedWorkspace);
@@ -4083,10 +4102,18 @@ function openSubscriptionModal() {
                     <p style="color:var(--text-muted);font-size:14px;">Unlock unlimited extractions, UI generations, and priority support.</p>
                 </div>
             `;
-        } else {
+                    } else {
             content.innerHTML = `
-                <div style="display:flex;flex-direction:column;gap:5px;">
-                    <div class="profile-stat-row"><span class="profile-stat-label">Current Plan</span><span class="profile-stat-value" style="color:var(--text-main);">${planName}</span></div>
+                <div style="display:flex;flex-direction:column;gap:12px;">
+                    <div class="profile-stat-row">
+                        <span class="profile-stat-label">Current Plan</span>
+                        <span class="profile-stat-value" style="color:var(--text-main);">${planName}</span>
+                    </div>
+                    <button onclick="openBillingPortal()"
+                        style="margin-top:8px;padding:10px 16px;border:none;border-radius:8px;
+                               background:var(--accent-glow);color:#000;font-weight:600;cursor:pointer;">
+                        Manage Billing &amp; Invoices
+                    </button>
                 </div>
             `;
         }
@@ -4094,7 +4121,64 @@ function openSubscriptionModal() {
     modal.classList.add('active');
     updateSubscriptionModal();
 }
+// ============================================================
+// BILLING PORTAL (for existing subscribers)
+// ============================================================
+async function openBillingPortal() {
+    if (isGuestMode || !localStorage.getItem('google_auth_token')) {
+        showAuthWall();
+        return;
+    }
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/billing/portal`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ returnUrl: window.location.href }),
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (resp.ok && data.url) {
+            window.location.href = data.url;
+        } else {
+            showToast(data.detail || 'Unable to open billing portal.', 'error');
+        }
+    } catch (e) {
+        showToast('Network error opening billing portal.', 'error');
+    }
+}
+window.openBillingPortal = openBillingPortal;
 
+// ============================================================
+// HANDLE STRIPE RETURN (?billing=success|cancelled)
+// ============================================================
+(function handleBillingReturn() {
+    const params = new URLSearchParams(window.location.search);
+    const billing = params.get('billing');
+    if (!billing) return;
+
+    // Clean URL so refresh doesn't re-trigger
+    const cleanUrl = window.location.origin + window.location.pathname;
+    window.history.replaceState({}, document.title, cleanUrl);
+
+    if (billing === 'success') {
+        showToast('🎉 Subscription activated! Refreshing your account…', 'success');
+        // Poll for tier upgrade in the background
+        let attempts = 0;
+        const poll = setInterval(async () => {
+            attempts += 1;
+            try { await loadUserProfile(); } catch (_) {}
+            if (window.currentUser?.tier && window.currentUser.tier !== 'free') {
+                clearInterval(poll);
+                showToast(`Welcome to ${window.currentUser.tier.toUpperCase()}!`, 'success');
+            } else if (attempts >= 10) {
+                clearInterval(poll);
+            }
+        }, 1500);
+    } else if (billing === 'cancelled') {
+        showToast('Checkout cancelled — no charge was made.', 'info');
+    } else if (billing === 'portal_return') {
+        loadUserProfile().catch(() => {});
+    }
+})();
 // ============================================================
 // ADMIN MODAL
 // ============================================================
@@ -4132,6 +4216,21 @@ async function openAdminModal() {
                 <div class="profile-stat-row"><span class="profile-stat-label">Total Storage Used</span><span class="profile-stat-value">${data.metrics?.totalBytesMB || 0} MB</span></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Last Updated</span><span class="profile-stat-value" style="font-size:12px;">${new Date(data.timestamp).toLocaleString()}</span></div>
             `;
+            
+            // Inside openSubscriptionModal() — for paid tiers
+content.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:12px;">
+        <div class="profile-stat-row">
+            <span class="profile-stat-label">Current Plan</span>
+            <span class="profile-stat-value" style="color:var(--text-main);">${planName}</span>
+        </div>
+        <button onclick="openBillingPortal()"
+            style="margin-top:8px;padding:10px 16px;border:none;border-radius:8px;
+                   background:var(--accent-glow);color:#000;font-weight:600;cursor:pointer;">
+            Manage Billing & Invoices
+        </button>
+    </div>
+`;
         } else {
             container.innerHTML = `<div style="color:#ef4444;text-align:center;">Unauthorized or service unavailable.</div>`;
         }
@@ -4142,18 +4241,42 @@ async function openAdminModal() {
 }
 
 // ============================================================
-// CHECKOUT PIPELINE
+// CHECKOUT PIPELINE — ELITE PRODUCTION v24.3
 // ============================================================
 async function dispatchCheckoutPipeline(targetBaseTier) {
-    // Read from the shared selectedSubtiers state (source of truth)
-    const subTier = selectedSubtiers[targetBaseTier] || 'full';
-    const checkoutBtn = document.querySelector(`.tier-${targetBaseTier} .tier-cta-btn`);
-    if (!checkoutBtn) return;
-    const originalText = checkoutBtn.innerText;
-    checkoutBtn.innerText = 'Connecting to Stripe...';
-    checkoutBtn.disabled = true;
+    // --- Guards -------------------------------------------------
+    if (isGuestMode || !localStorage.getItem('google_auth_token')) {
+        showToast('Please sign in to upgrade your plan.', 'info');
+        showAuthWall();
+        return;
+    }
+    if (!['pro', 'business'].includes(targetBaseTier)) {
+        showToast('Invalid tier selected.', 'error');
+        return;
+    }
 
-    showStripeLoading();
+    // --- Source of truth ----------------------------------------
+    const subTier = selectedSubtiers[targetBaseTier] || 'full';
+    const period  = currentBillingCycle || 'monthly';
+
+    const checkoutBtn = document.querySelector(`.tier-${targetBaseTier} .tier-cta-btn`);
+    const originalText = checkoutBtn ? checkoutBtn.innerText : '';
+    if (checkoutBtn) {
+        checkoutBtn.innerText = 'Connecting to Stripe…';
+        checkoutBtn.disabled = true;
+    }
+
+    let cancelled = false;
+    showStripeLoading(() => { cancelled = true; });
+
+    const restore = () => {
+        hideStripeLoading();
+        if (checkoutBtn) {
+            checkoutBtn.innerText = originalText;
+            checkoutBtn.disabled = false;
+        }
+    };
+
     try {
         const response = await apiFetch(`${API_BASE_URL}/api/billing/checkout`, {
             method: 'POST',
@@ -4161,20 +4284,39 @@ async function dispatchCheckoutPipeline(targetBaseTier) {
             body: JSON.stringify({
                 tier: targetBaseTier,
                 subTier: subTier,
-                period: currentBillingCycle    // ⚡ from the working toggle
-            })
+                period: period,
+            }),
         });
-        const data = await response.json();
+
+        let data = {};
+        try { data = await response.json(); } catch (_) {}
+
+        if (cancelled) { restore(); return; }
+
         if (response.ok && data.url) {
-            window.location.href = data.url;
+            // Small UX delay so the user sees "Redirecting…"
+            setTimeout(() => { window.location.href = data.url; }, 250);
             return;
         }
-        throw new Error(data.detail || data.message || 'Checkout failed');
+
+        // Map known error codes to friendly messages
+        let msg = data.detail || data.message || 'Checkout failed. Please try again.';
+        if (response.status === 409) {
+            msg = 'You are already on this plan. Open the billing portal to change it.';
+        } else if (response.status === 503) {
+            msg = 'Billing is temporarily unavailable. Please try again shortly.';
+        } else if (response.status === 401) {
+            msg = 'Your session expired. Please sign in again.';
+            executeGlobalLogout();
+            return;
+        }
+        showToast(msg, 'error');
+        restore();
     } catch (e) {
-        hideStripeLoading();
-        showToast(`Checkout: ${e.message}`, 'error');
-        checkoutBtn.innerText = originalText;
-        checkoutBtn.disabled = false;
+        if (cancelled) return;
+        console.error('Checkout error:', e);
+        showToast('Network error — could not reach Stripe. Please retry.', 'error');
+        restore();
     }
 }
 // ============================================================
@@ -4445,7 +4587,7 @@ window.addEventListener('resize', () => {
     isResizeHandling = true;
     clearTimeout(resizeHandlerTimeout);
     resizeHandlerTimeout = setTimeout(() => {
-        if (document.body.classList.contains('workspace-data') || document.body.classList.contains('workspace-design') || document.body.classList.contains('workspace-general')) {
+        if (document.body.classList.contains('workspace-data') || document.body.classList.contains('workspace-design') || document.body.classList.contains('workspace-core')) {
             adjustViewportPadding();
             renderFileChips();
         }
@@ -4926,7 +5068,7 @@ function renderInlineWorkspaceCards() {
     const workspaces = [
         { id: 'data',    icon: 'database',       title: 'Data',    desc: 'Extract, analyse & transform' },
         { id: 'design',  icon: 'palette',        title: 'Design',  desc: 'UI/UX generation & deployment' },
-        { id: 'general', icon: 'auto_awesome',   title: 'General', desc: 'Everyday AI assistance' },
+        { id: 'Core', icon: 'auto_awesome',   title: 'Core', desc: 'Everyday AI assistance' },
     ];
 
     host.innerHTML = workspaces.map(w => `
