@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline – Axelr AI</title>
+    <style>
+        body {
+            background: #050507;
+            color: #e5e7eb;
+            font-family: 'Inter', -apple-system, sans-serif;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            text-align: center;
+            padding: 24px;
+        }
+        .container { max-width: 440px; }
+        .icon {
+            font-size: 72px;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 30px rgba(0, 242, 254, 0.3));
+        }
+        h1 {
+            font-size: 22px;
+            font-weight: 700;
+            margin: 0 0 12px 0;
+            letter-spacing: -0.3px;
+        }
+        p { color: #94a3b8; font-size: 14px; line-height: 1.6; margin: 0 0 24px 0; }
+        button {
+            background: #00f2fe;
+            color: #000;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.15s;
+        }
+        button:active { transform: scale(0.97); }
+        .status {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #64748b;
+            font-family: 'JetBrains Mono', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">📡</div>
+        <h1>You're offline</h1>
+        <p>
+            Axelr can't reach the network right now. Any requests you made
+            while offline have been queued and will retry automatically.
+        </p>
+        <button onclick="location.reload()">Retry now</button>
+        <div class="status" id="status">checking…</div>
+    </div>
+    <script>
+        function updateStatus() {
+            document.getElementById('status').textContent =
+                navigator.onLine ? '● back online' : '○ still offline';
+        }
+        window.addEventListener('online',  updateStatus);
+        window.addEventListener('offline', updateStatus);
+        updateStatus();
+    </script>
+</body>
+</html>

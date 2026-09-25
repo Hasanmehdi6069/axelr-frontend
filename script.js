@@ -11,6 +11,31 @@ const API_BASE_URL = window.location.hostname === "localhost" || window.location
 
 const GOOGLE_CLIENT_ID = "474929925590-kfpurq4aou35pkscf6gbr963vf4hfa7g.apps.googleusercontent.com";
 
+// Inlined model config (previously fetched from /api/model-config)
+const AXELR_MODEL_CONFIG = {
+    "data": {
+        "models": [
+            {"id": "flash", "label": "AXELR‑FLASH", "badge": "DATA", "desc": "Lightning‑fast extractions & analysis", "tier": "free"},
+            {"id": "pro", "label": "AXELR‑PRO DATA", "badge": "PRO", "desc": "Advanced extraction with higher limits", "tier": "pro"},
+            {"id": "business", "label": "AXELR‑ENTERPRISE", "badge": "ENTERPRISE", "desc": "Massive throughput & custom pipelines", "tier": "business"}
+        ]
+    },
+    "design": {
+        "models": [
+            {"id": "flash", "label": "AXELR‑ARCHITECT", "badge": "BUILDER", "desc": "Instant UI/UX components", "tier": "free"},
+            {"id": "pro", "label": "AXELR‑STUDIO", "badge": "PRO", "desc": "Complex interactions & design systems", "tier": "pro"},
+            {"id": "business", "label": "AXELR‑DESIGN OPS", "badge": "DESIGN OPS", "desc": "Team‑scale design & deployment", "tier": "business"}
+        ]
+    },
+    "core": {
+        "models": [
+            {"id": "flash", "label": "AXELR‑FLASH", "badge": "FREE", "desc": "Instant answers for everyday questions", "tier": "free"},
+            {"id": "pro", "label": "AXELR‑HYPER", "badge": "HYPER", "desc": "Deep reasoning & code generation", "tier": "pro"},
+            {"id": "business", "label": "AXELR‑OMNI", "badge": "OMNI", "desc": "Unlimited context & multi‑agent orchestration", "tier": "business"}
+        ]
+    }
+};
+
 const AXELR_AVATAR_SVG =
     `<svg viewBox="0 0 100 100" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M50 15 L20 32.5 L20 67.5 L50 85" stroke="#ffffff" stroke-width="6" stroke-linejoin="bevel" fill="rgba(255,255,255,0.05)"/><path d="M50 15 L80 32.5 L50 50 L80 67.5 L50 85" stroke="currentColor" stroke-width="6" stroke-linejoin="bevel" fill="none"/><path d="M20 32.5 L50 50 L20 67.5" stroke="#ffffff" stroke-width="3" stroke-linejoin="bevel" opacity="0.5"/></svg>`;
 
@@ -219,6 +244,31 @@ window.addEventListener('unhandledrejection', (event) => {
     showToast('An unexpected error occurred. Please refresh.', 'error');
     event.preventDefault();
 });
+// ============================================================
+// STREAMING RENDER STATE + THROTTLE UTILITY
+// ============================================================
+let streamingBuffer = '';
+let throttledRender = null;
+
+function throttle(fn, wait = 100) {
+    let last = 0;
+    let timer = null;
+    return function throttled(...args) {
+        const now = Date.now();
+        const remaining = wait - (now - last);
+        if (remaining <= 0) {
+            if (timer) { clearTimeout(timer); timer = null; }
+            last = now;
+            fn.apply(this, args);
+        } else if (!timer) {
+            timer = setTimeout(() => {
+                last = Date.now();
+                timer = null;
+                fn.apply(this, args);
+            }, remaining);
+        }
+    };
+}
 /* ============================================================
    TIER + SUB-TIER CONTENT ENGINE
    ============================================================ */
@@ -537,15 +587,10 @@ async function brainstorm(topic) {
         scrollToBottom();
     }
 }
-document.getElementById('multi-agent-btn')?.addEventListener('click', function() {
+document.getElementById('multi-agent-btn')?.addEventListener('click', async function() {
     const task = prompt('Enter the task for the agents:');
     if (!task) return;
-    const agents = [
-        { name: 'Researcher', role: 'research' },
-        { name: 'Coder', role: 'code' },
-        { name: 'Reviewer', role: 'review' }
-    ];
-    runMultiAgent(task, agents);
+    await runMultiAgentStreaming(task);
 });
 // Multi-Agent
 function createNexusBubble(markdown) {
@@ -561,43 +606,46 @@ function createNexusBubble(markdown) {
     return bubble;
 }
 
-async function runMultiAgent(task, agents) {
-    const btn = document.getElementById('multi-agent-btn');
-    if (btn) { btn.disabled = true; btn.innerHTML = 'Spawning...'; }
+// Knowledge Vault
+
+async function saveKnowledge(key, value, tags = []) {
     try {
-        const resp = await apiFetch(`${API_BASE_URL}/api/agents/chat`, {
+        await apiFetch(`${API_BASE_URL}/api/knowledge`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ task, agents, workspace: getWorkspace() })
+            body: JSON.stringify({ key, value, tags })
         });
+        showToast('Knowledge saved', 'success');
+    } catch (e) {
+        showToast('Save failed: ' + e.message);
+    }
+}
+// ELITE PRODUCTION KNOWLEDGE LIST LOADING SYSTEM (COMBINED BEST FEATURES)
+async function loadKnowledgeList() {
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/knowledge`);
+        if (!resp.ok) throw new Error('Failed to fetch knowledge list');
         const data = await resp.json();
-        if (data.success) {
-            const bubble = createNexusBubble(data.combined);
-            viewport.appendChild(bubble);
-            scrollToBottom();
-        } else {
-            showToast('Agent error: ' + (data.message || 'Unknown'), 'error');
+        const container = document.getElementById('knowledge-list');
+        
+        if (container && data.knowledge) {
+            container.innerHTML = data.knowledge.map(k => `
+                <div class="knowledge-item" style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border-muted);">
+                    <span><strong>${escapeHtmlEntities(k.key)}</strong>: ${escapeHtmlEntities(k.value)}</span>
+                    <button onclick="deleteKnowledge('${k._id}')" style="background:none;border:none;color:#ef4444;cursor:pointer;" title="Delete knowledge">✕</button>
+                </div>
+            `).join('');
         }
     } catch (e) {
-        showToast('Error: ' + e.message, 'error');
-    } finally {
-        if (btn) { btn.disabled = false; btn.innerHTML = '🧠 Agents'; }
+        showToast('Failed to load knowledge list: ' + e.message, 'error');
     }
 }
 
-// Knowledge Vault
-async function saveKnowledge(key, value, tags = []) {
-    await apiFetch(`${API_BASE_URL}/api/knowledge`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key, value, tags })
-    });
-    showToast('Knowledge saved', 'success');
-}
-async function loadKnowledgeList() { /* ... */ }
 async function deleteKnowledge(id) { /* ... */ }
 
 // Workflow
+
+
 async function runWorkflow(steps) {
     const response = await fetch(`${API_BASE_URL}/api/workflow/run`, {
         method: 'POST',
@@ -617,46 +665,71 @@ async function runWorkflow(steps) {
             if (event.startsWith('data: ')) {
                 try {
                     const json = JSON.parse(event.slice(6));
-                    if (json.status === 'completed' && json.output) {
-                        const bubble = createNexusBubble(`**${json.step}**\n\n${json.output}`);
-                        viewport.appendChild(bubble);
+                    if (json.step && json.status === 'completed') {
+                        const stepBubble = document.createElement('div');
+                        stepBubble.className = 'chat-bubble nexus-bubble';
+                        stepBubble.innerHTML = `<div class="bubble-content"><strong>${json.step}</strong><br>${DOMPurify.sanitize(marked.parse(json.output))}</div>`;
+                        viewport.appendChild(stepBubble);
                         scrollToBottom();
                     } else if (json.status === 'done') {
-                        const bubble = createNexusBubble(`**✅ Workflow Complete**\n\n${json.final}`);
-                        viewport.appendChild(bubble);
+                        const finalBubble = document.createElement('div');
+                        finalBubble.className = 'chat-bubble nexus-bubble';
+                        finalBubble.innerHTML = `<div class="bubble-content"><strong>✅ Workflow Complete</strong><br>${DOMPurify.sanitize(marked.parse(json.final))}</div>`;
+                        viewport.appendChild(finalBubble);
                         scrollToBottom();
                     }
-                } catch (e) { /* ignore */ }
+                } catch (e) { /* ignore malformed JSON */ }
             }
         }
         buffer = events[events.length - 1];
     }
 }
-
-// Persona
+// ELITE PRODUCTION PERSONA APPLICATION SYSTEM (COMBINED BEST FEATURES)
 async function applyPersona(personaId) {
-    const resp = await apiFetch(`${API_BASE_URL}/api/personas/${personaId}`);
-    const data = await resp.json();
-    if (data.system_prompt) {
-        await apiFetch(`${API_BASE_URL}/api/user/instructions`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ instructions: data.system_prompt })
-        });
-        showToast('Persona applied!', 'success');
-        await loadUserProfile();
-        closeModals();
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/personas/${personaId}`);
+        if (!resp.ok) throw new Error('Persona not found');
+        const persona = await resp.json();
+        
+        if (persona.system_prompt) {
+            await apiFetch(`${API_BASE_URL}/api/user/instructions`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ instructions: persona.system_prompt })
+            });
+            showToast(`Persona "${persona.name}" applied successfully!`, 'success');
+            await loadUserProfile(); // Refresh profile to reflect changes
+            closeModals();
+        } else {
+            showToast('Persona has no system prompt to apply.', 'warning');
+        }
+    } catch (e) {
+        showToast('Failed to apply persona: ' + e.message, 'error');
     }
 }
 
 // Code Execution
-async function executeCodeBlock(btn, language) {
-    const pre = btn.closest('pre');
-    const code = pre ? pre.querySelector('code') : null;
-    if (!code) return;
-    const codeText = code.innerText;
-    btn.innerText = 'Running…';
-    btn.disabled = true;
+// ELITE PRODUCTION CODE EXECUTION SYSTEM (COMBINED BEST FEATURES)
+async function executeCodeBlock(btnOrCode, language) {
+    let codeText;
+    let btn = null;
+    
+    // Support both signatures: (btn, language) and (code, language) for backward compatibility
+    if (typeof btnOrCode === 'string') {
+        codeText = btnOrCode;
+    } else if (btnOrCode instanceof HTMLElement) {
+        btn = btnOrCode;
+        const pre = btn.closest('pre');
+        const codeEl = pre ? pre.querySelector('code') : null;
+        if (!codeEl) return;
+        codeText = codeEl.innerText;
+        // Update button state
+        btn.innerText = 'Running…';
+        btn.disabled = true;
+    } else {
+        return; // Invalid input
+    }
+
     try {
         const resp = await apiFetch(`${API_BASE_URL}/api/execute-code`, {
             method: 'POST',
@@ -665,14 +738,32 @@ async function executeCodeBlock(btn, language) {
         });
         const data = await resp.json();
         const output = data.output || data.error || 'No output';
-        const bubble = createNexusBubble(`**▶️ Output**\n\n\`\`\`\n${output}\n\`\`\``);
-        viewport.appendChild(bubble);
+        
+        // Create properly formatted output bubble with avatar
+        const outputBubble = document.createElement('div');
+        outputBubble.className = 'chat-bubble nexus-bubble';
+        const avatar = document.createElement('div');
+        avatar.className = 'ai-avatar-bubble';
+        avatar.innerHTML = AXELR_AVATAR_SVG;
+        outputBubble.appendChild(avatar);
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'bubble-content';
+        const outputPre = document.createElement('pre');
+        outputPre.style.whiteSpace = 'pre-wrap';
+        outputPre.textContent = output;
+        contentDiv.innerHTML = `<strong>▶️ Output</strong>`;
+        contentDiv.appendChild(outputPre);
+        outputBubble.appendChild(contentDiv);
+        viewport.appendChild(outputBubble);
         scrollToBottom();
     } catch (e) {
-        showToast('Execution error: ' + e.message, 'error');
+        showToast('Execution failed: ' + e.message, 'error');
     } finally {
-        btn.innerText = '▶ Run';
-        btn.disabled = false;
+        // Reset button state if it exists
+        if (btn) {
+            btn.innerText = '▶ Run';
+            btn.disabled = false;
+        }
     }
 }
 // ============================================================
@@ -811,8 +902,9 @@ function updateViewportAfterRender() {
 // UTILITY FUNCTIONS
 // ============================================================
 function escapeHtmlEntities(str) {
+    if (str === null || str === undefined) return '';
     const div = document.createElement('div');
-    div.appendChild(document.createTextNode(str));
+    div.appendChild(document.createTextNode(String(str)));
     return div.innerHTML;
 }
 
@@ -953,7 +1045,7 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e)
 // PRODUCTION GLOBAL TOAST SYSTEM (PORTAL-SAFE)
 // ============================================================
 // ============================================================
-// PRODUCTION GLOBAL TOAST SYSTEM (PORTAL-SAFE)
+// ELITE PRODUCTION GLOBAL TOAST SYSTEM (PORTAL-SAFE, COMBINED BEST FEATURES)
 // ============================================================
 function showToast(message, type = 'error') {
     let container = document.getElementById('global-toast-container');
@@ -961,28 +1053,90 @@ function showToast(message, type = 'error') {
         container = document.createElement('div');
         container.id = 'global-toast-container';
         container.className = 'toast-container';
+        container.style.cssText = `
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 999999;
+            max-width: 90%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        `;
         document.documentElement.appendChild(container);
     }
 
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
     const iconName = type === 'success' ? 'check_circle'
-                    : (type === 'info' ? 'info' : 'warning');
+                    : type === 'info' ? 'info'
+                    : type === 'warning' ? 'warning'
+                    : 'error';
+
+    // Apply type-specific styling
+    if (type === 'success') {
+        toast.style.borderColor = 'rgba(16,185,129,0.3)';
+        toast.style.background = 'rgba(16,185,129,0.15)';
+        toast.style.color = '#10b981';
+    } else if (type === 'error') {
+        toast.style.borderColor = 'rgba(239,68,68,0.3)';
+        toast.style.background = 'rgba(239,68,68,0.15)';
+        toast.style.color = '#fca5a5';
+    } else if (type === 'info') {
+        toast.style.borderColor = 'rgba(59,130,246,0.3)';
+        toast.style.background = 'rgba(59,130,246,0.15)';
+        toast.style.color = '#93c5fd';
+    } else if (type === 'warning') {
+        toast.style.borderColor = 'rgba(234,179,8,0.3)';
+        toast.style.background = 'rgba(234,179,8,0.15)';
+        toast.style.color = '#fde047';
+    }
 
     toast.innerHTML = `
         <span class="material-symbols-rounded toast-icon">${iconName}</span>
         <span class="toast-message">${escapeHtmlEntities(message || 'An unexpected error occurred.')}</span>
         <button class="toast-close" title="Dismiss">&times;</button>
     `;
+    
+    // Apply base toast styling
+    toast.style.cssText += `
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 14px 28px;
+        border-radius: 12px;
+        border: 1px solid;
+        box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+        font-weight: 500;
+        font-size: 14px;
+        backdrop-filter: blur(12px);
+        transform: translateY(-20px);
+        opacity: 0;
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+        pointer-events: auto;
+    `;
+
     const closeBtn = toast.querySelector('.toast-close');
     const dismiss = () => {
-        toast.classList.remove('toast-show');
-        setTimeout(() => toast.remove(), 250);
+        toast.style.transform = 'translateY(-20px)';
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
     };
+    
     closeBtn.onclick = (e) => { e.stopPropagation(); dismiss(); };
+    toast.addEventListener('click', dismiss); // Allow click anywhere to dismiss
 
     container.appendChild(toast);
-    requestAnimationFrame(() => toast.classList.add('toast-show'));
+    
+    // Animate in
+    requestAnimationFrame(() => {
+        toast.style.transform = 'translateY(0)';
+        toast.style.opacity = '1';
+    });
+
+    // Auto-dismiss after 5 seconds
     setTimeout(dismiss, 5000);
 }
 function showMainUI() {
@@ -1022,89 +1176,8 @@ function showAuthWall() {
     const banner = getEl('guest-banner');
     if (banner) banner.style.display = 'none';
 }
-function showToast(message, type = 'error') {
-    // Remove existing toasts
-    const existing = document.querySelector('.toast-container');
-    if (existing) existing.remove();
 
-    const container = document.createElement('div');
-    container.className = 'toast-container';
-    container.style.cssText = `
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 999999;
-        max-width: 90%;
-        pointer-events: none;
-    `;
 
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.textContent = message;
-    toast.style.cssText = `
-        display: inline-block;
-        padding: 14px 28px;
-        border-radius: 12px;
-        background: var(--bg-card);
-        color: var(--text-main);
-        border: 1px solid var(--border-muted);
-        box-shadow: 0 12px 40px rgba(0,0,0,0.5);
-        font-weight: 500;
-        font-size: 14px;
-        backdrop-filter: blur(12px);
-        transform: translateY(-20px);
-        opacity: 0;
-        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
-        pointer-events: auto;
-    `;
-    // Color overrides per type
-    if (type === 'success') {
-        toast.style.borderColor = 'rgba(16,185,129,0.3)';
-        toast.style.background = 'rgba(16,185,129,0.15)';
-        toast.style.color = '#10b981';
-    } else if (type === 'error') {
-        toast.style.borderColor = 'rgba(239,68,68,0.3)';
-        toast.style.background = 'rgba(239,68,68,0.15)';
-        toast.style.color = '#fca5a5';
-    } else if (type === 'info') {
-        toast.style.borderColor = 'rgba(59,130,246,0.3)';
-        toast.style.background = 'rgba(59,130,246,0.15)';
-        toast.style.color = '#93c5fd';
-    } else if (type === 'warning') {
-        toast.style.borderColor = 'rgba(234,179,8,0.3)';
-        toast.style.background = 'rgba(234,179,8,0.15)';
-        toast.style.color = '#fde047';
-    }
-
-    container.appendChild(toast);
-    document.body.appendChild(container);
-
-    // Animate in
-    requestAnimationFrame(() => {
-        toast.style.transform = 'translateY(0)';
-        toast.style.opacity = '1';
-    });
-
-    // Auto‑dismiss after 4.5 seconds
-    const timer = setTimeout(() => {
-        toast.style.transform = 'translateY(-20px)';
-        toast.style.opacity = '0';
-        setTimeout(() => {
-            if (container.parentNode) container.remove();
-        }, 300);
-    }, 4500);
-
-    // Allow click to dismiss immediately
-    toast.addEventListener('click', () => {
-        clearTimeout(timer);
-        toast.style.transform = 'translateY(-20px)';
-        toast.style.opacity = '0';
-        setTimeout(() => {
-            if (container.parentNode) container.remove();
-        }, 300);
-    });
-}
 // ============================================================
 // GUEST MODE INIT
 // ============================================================
@@ -1233,26 +1306,7 @@ function triggerGoogleLogin() {
 // ============================================================
 // AUTH FUNCTIONS (Login buttons)
 // ============================================================
-function triggerGoogleLogin() {
-    const start = () => {
-        if (typeof google === 'undefined' || !google.accounts?.id) return false;
-        google.accounts.id.initialize({
-            client_id: GOOGLE_CLIENT_ID,
-            callback: handleCredentialResponse,
-            cancel_on_tap_outside: false,
-            context: 'signin',
-            use_fedcm_for_prompt: false
-        });
-        google.accounts.id.prompt();
-        return true;
-    };
-    if (start()) return;
-    let attempts = 0;
-    const retry = setInterval(() => {
-        attempts += 1;
-        if (start() || attempts >= 30) clearInterval(retry);
-    }, 100);
-}
+
 
 function triggerGitHubLogin() {
     window.location.href = `${API_BASE_URL}/api/auth/github`;
@@ -1345,29 +1399,7 @@ function continueAsGuest() {
         });
 }
 
-function showMainUI() {
-    const authWallEl = document.getElementById('auth-wall');
-    const mainWrapperEl = document.getElementById('content-mask');
-    
-    if (authWallEl) {
-        authWallEl.style.display = 'none';
-    }
-    if (mainWrapperEl) {
-        mainWrapperEl.classList.add('visible');
-        mainWrapperEl.style.display = 'flex'; // Preserves flex layout
-    }
-    
-    const hero = document.getElementById('hero-display');
-    if (hero && !document.querySelector('.chat-bubble')) {
-        hero.style.display = 'flex';
-    }
-    
-    const wsSel = getEl('workspace-selector');
-    if (wsSel) wsSel.style.display = 'none';
 
-    // Mount menu items to the new '+' command bar button
-    updateFeaturesMenu();
-}
 
 // Passkey Registration
 async function registerPasskey() {
@@ -1461,18 +1493,14 @@ function initializeApp() {
     showAuthWall();
     isGuestMode = false;
 }
+// ============================================================
+// PRODUCTION APPLICATION BOOTSTRAP (SINGLE ENTRY POINT)
+// ============================================================
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeApp);
+    document.addEventListener('DOMContentLoaded', initializeApp, { once: true });
 } else {
     initializeApp();
 }
-// ============================================================
-// PRODUCTION APPLICATION BOOTSTRAP (CLEAN - ZERO RUNTIME CRASH)
-// ============================================================
-document.addEventListener('DOMContentLoaded', () => {
-    initializeApp();
-});
-
 // Final Session Recovery
 if (localStorage.getItem('google_auth_token')) {
     loadUserProfile()
@@ -1791,18 +1819,7 @@ async function saveKnowledgeFromUI() {
     loadKnowledgeList();
 }
 
-async function loadKnowledgeList() {
-    const data = await (await apiFetch(`${API_BASE_URL}/api/knowledge`)).json();
-    const container = document.getElementById('knowledge-list');
-    if (container) {
-        container.innerHTML = data.knowledge.map(k => `
-            <div class="knowledge-item" style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border-muted);">
-                <span><strong>${escapeHtmlEntities(k.key)}</strong>: ${escapeHtmlEntities(k.value)}</span>
-                <button onclick="deleteKnowledge('${k._id}')" style="background:none;border:none;color:#ef4444;cursor:pointer;">✕</button>
-            </div>
-        `).join('');
-    }
-}
+
 
 async function searchKnowledge(query) {
     if (!query.trim()) { loadKnowledgeList(); return; }
@@ -1875,21 +1892,7 @@ async function createPersona() {
     loadPersonaList();
 }
 
-async function applyPersona(personaId) {
-    const resp = await apiFetch(`${API_BASE_URL}/api/personas/${personaId}`);
-    const data = await resp.json();
-    if (data.system_prompt) {
-        await apiFetch(`${API_BASE_URL}/api/user/instructions`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ instructions: data.system_prompt })
-        });
-        showToast('Persona applied as custom instructions.', 'success');
-        closeModals();
-        // Reload profile to reflect
-        await loadUserProfile();
-    }
-}
+
 
 if (fileInput) {
     fileInput.addEventListener('change', (e) => {
@@ -3250,17 +3253,9 @@ async function handleFeatureAction(feature) {
             const topic = prompt('Enter a topic to brainstorm:');
             if (topic) await brainstorm(topic);
             break;
-        }
-        case 'multi-agent': {
+        }        case 'multi-agent': {
             const task = prompt('Enter task for the agent collective:');
-            if (task) {
-                const agents = [
-                    { name: 'Researcher', role: 'research' },
-                    { name: 'Coder', role: 'code' },
-                    { name: 'Reviewer', role: 'review' }
-                ];
-                await runMultiAgent(task, agents);
-            }
+            if (task) await runMultiAgentStreaming(task);
             break;
         }
         case 'workflow': await openWorkflowModal(); break;
@@ -3366,60 +3361,212 @@ function hideStripeLoading() {
         window._stripeCancelCallback = null;
     }
 }
-
 // ============================================================
-// ENHANCE PROMPT
+// ENHANCE PROMPT v26.0 — DIFF-AND-APPROVE UX
 // ============================================================
 async function enhanceUserPrompt() {
     if (!promptInput) return;
     const text = promptInput.value.trim();
     if (!text) return;
+
     const enhanceBtn = getEl('enhance-trigger');
     const inputFrame = document.querySelector('.input-frame');
     if (!enhanceBtn || !inputFrame) return;
 
-    const originalText = enhanceBtn.innerHTML;
+    const originalBtnHtml = enhanceBtn.innerHTML;
     enhanceBtn.classList.add('loading');
     enhanceBtn.disabled = true;
     promptInput.disabled = true;
     inputFrame.style.filter = 'blur(4px) brightness(0.8)';
     inputFrame.style.pointerEvents = 'none';
-    enhanceBtn.innerHTML = '<span style="font-size:12px;font-weight:bold;letter-spacing:1px;color:var(--accent-glow);"><span class="material-symbols-rounded" style="font-size:16px;">auto_awesome</span> PROCESSING...</span>';
+    enhanceBtn.innerHTML =
+        '<span style="font-size:12px;font-weight:bold;letter-spacing:1px;color:var(--accent-glow);">'
+        + '<span class="material-symbols-rounded" style="font-size:16px;">auto_awesome</span> '
+        + 'ANALYSING…</span>';
 
     try {
-        const response = await apiFetch(`${API_BASE_URL}/api/enhance-prompt`, {
+        const resp = await apiFetch(`${API_BASE_URL}/api/enhance-prompt`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ promptText: text })
+            body: JSON.stringify({ promptText: text }),
         });
-        if (!response.ok) throw new Error("API rejection");
-        const result = await response.json();
-        if (result.success && result.enhanced) {
-            promptInput.value = result.enhanced;
-            promptInput.style.height = 'auto';
-            promptInput.style.height = promptInput.scrollHeight + 'px';
-            validateSendCommand();
-            localStorage.setItem(getDraftKey(), promptInput.value);
+        if (!resp.ok) {
+            if (resp.status === 403) {
+                showToast('Daily enhancement limit reached. Upgrade for more.', 'warning');
+            } else {
+                throw new Error(`HTTP ${resp.status}`);
+            }
+            return;
         }
+        const result = await resp.json();
+if (!result.changed && result.note) {
+    const msg = result.note === 'no_change'            ? 'Prompt already optimal.' :
+                result.note === 'provider_unavailable' ? 'Enhancer temporarily unavailable.' :
+                result.note === 'injection_blocked'    ? 'Input rejected for safety.' :
+                                                          'No changes applied.';
+    showToast(msg, 'info');
+    return;
+}
+        if (!result.success) {
+            showToast('Enhancer unavailable — try again shortly.', 'error');
+            return;
+        }
+        if (!result.changed) {
+            showToast('Prompt already optimal.', 'info');
+            return;
+        }
+        openEnhanceReviewModal(result);
     } catch (e) {
-        alert("⚠️ Prompt Enhancer timeout. Payload too large or network dropped.");
+        showToast('Prompt enhancer unavailable — try again shortly.', 'error');
     } finally {
         enhanceBtn.classList.remove('loading');
         enhanceBtn.disabled = false;
         promptInput.disabled = false;
         inputFrame.style.filter = 'none';
         inputFrame.style.pointerEvents = 'auto';
-        enhanceBtn.innerHTML = originalText;
+        enhanceBtn.innerHTML = originalBtnHtml;
         validateSendCommand();
     }
 }
 
-let savedWorkspace = localStorage.getItem('Axelr_workspace');
-if (!savedWorkspace) {
-  savedWorkspace = 'core';
-  localStorage.setItem('Axelr_workspace', savedWorkspace);
-}
-updateWorkspaceTheme(savedWorkspace);
+function openEnhanceReviewModal(result) {
+    closeModals();
+
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay active';
+    modal.id = 'enhance-review-modal';
+
+    const modeLabel = (result.mode || 'core').toUpperCase();
+    const s = result.scores || {};
+    const delta = s.delta ?? 0;
+    const deltaColor = delta > 0 ? '#10b981' : (delta < 0 ? '#ef4444' : '#94a3b8');
+    const deltaSign  = delta > 0 ? '+' : '';
+
+    const bullets = (result.rationale || [])
+        .map(r => `<li style="margin:4px 0;color:var(--text-muted);font-size:13px;">${escapeHtmlEntities(r)}</li>`)
+        .join('');
+
+    // ---- inline diff from segments ----
+    const segments = (result.diff && result.diff.segments) || [];
+    let diffHtml;
+    if (segments.length === 0) {
+        diffHtml = escapeHtmlEntities(result.enhanced);
+    } else {
+        diffHtml = segments.map(seg => {
+            const txt = escapeHtmlEntities(seg.text);
+            if (seg.op === 'equal')  return `<span>${txt}</span>`;
+            if (seg.op === 'add')    return `<ins class="diff-add">${txt}</ins>`;
+            if (seg.op === 'remove') return `<del class="diff-remove">${txt}</del>`;
+            return txt;
+        }).join('');
+    }
+
+    const scoreBar = (label, val) => `
+        <div style="display:flex;align-items:center;gap:8px;margin:5px 0;">
+            <span style="width:80px;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">${label}</span>
+            <div style="flex:1;height:6px;background:var(--border-muted);border-radius:3px;overflow:hidden;">
+                <div style="width:${Math.min(100, Math.max(0, val))}%;height:100%;background:var(--accent-glow);transition:width .4s ease;"></div>
+            </div>
+            <span style="width:30px;text-align:right;font-size:11px;color:var(--text-main);font-weight:600;">${val}</span>
+        </div>`;
+
+    modal.innerHTML = `
+        <div class="modal-card" style="max-width:900px;width:95%;max-height:90vh;overflow-y:auto;">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span class="material-symbols-rounded">auto_awesome</span>
+                    Enhanced Prompt
+                    <span style="margin-left:8px;padding:2px 8px;border-radius:4px;background:rgba(0,242,254,0.1);color:var(--accent-glow);font-size:11px;font-weight:700;">${modeLabel}</span>
+                    ${result.provider ? `<span style="margin-left:6px;font-size:11px;color:var(--text-muted);font-weight:500;">via ${escapeHtmlEntities(result.provider)}</span>` : ''}
+                    <span style="margin-left:10px;font-size:13px;font-weight:700;color:${deltaColor};">${deltaSign}${delta} pts</span>
+                </div>
+                <button class="close-modal-btn" onclick="closeModals()">✕</button>
+            </div>
+
+            <div style="padding:14px 0;">
+                <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--accent-glow);margin-bottom:6px;">
+                    ENHANCED · inline diff
+                </div>
+                <div style="padding:14px;background:rgba(0,242,254,0.04);border:1px solid rgba(0,242,254,0.15);border-radius:10px;font-size:13.5px;color:var(--text-main);line-height:1.7;white-space:pre-wrap;max-height:280px;overflow-y:auto;">${diffHtml}</div>
+                <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">
+                    <span style="background:rgba(16,185,129,0.18);color:#6ee7b7;padding:1px 6px;border-radius:3px;">added</span>
+                    <span style="background:rgba(239,68,68,0.18);color:#fca5a5;padding:1px 6px;border-radius:3px;margin-left:6px;text-decoration:line-through;">removed</span>
+                </div>
+            </div>
+
+            <details style="margin-bottom:12px;">
+                <summary style="cursor:pointer;font-size:12px;color:var(--text-muted);padding:6px 0;">View original</summary>
+                <div style="padding:12px;background:var(--bg-input);border:1px solid var(--border-muted);border-radius:8px;font-size:13px;color:var(--text-muted);line-height:1.6;white-space:pre-wrap;max-height:200px;overflow-y:auto;margin-top:6px;">${escapeHtmlEntities(result.original)}</div>
+            </details>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:10px 0 14px;border-top:1px solid var(--border-muted);">
+                <div>
+                    <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--text-muted);margin-bottom:8px;">QUALITY SCORES</div>
+                    ${scoreBar('Overall',     s.enhanced?.overall     ?? 0)}
+                    ${scoreBar('Clarity',     s.enhanced?.clarity     ?? 0)}
+                    ${scoreBar('Specificity', s.enhanced?.specificity ?? 0)}
+                    ${scoreBar('Density',     s.enhanced?.density     ?? 0)}
+                    ${scoreBar('Structure',   s.enhanced?.structure   ?? 0)}
+                </div>
+                <div>
+                    <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--text-muted);margin-bottom:8px;">WHAT CHANGED</div>
+                    <ul style="margin:0;padding-left:18px;">${bullets}</ul>
+                </div>
+            </div>
+
+            <div style="display:flex;gap:10px;justify-content:flex-end;padding-top:14px;border-top:1px solid var(--border-muted);">
+                <button id="enhance-reject-btn" class="action-icon-btn" style="padding:10px 20px;">Keep Original</button>
+                <button id="enhance-accept-btn" class="action-icon-btn"
+                        style="padding:10px 20px;background:var(--accent-glow);color:#000;font-weight:600;border:none;">
+                    <span class="material-symbols-rounded" style="font-size:16px;vertical-align:middle;">check</span>
+                    Use Enhanced
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+    const _sendEnhanceFeedback = (accepted) => {
+        if (!result.cache_key) return;
+        // Fire-and-forget. Errors are swallowed on purpose.
+        try {
+            apiFetch(`${API_BASE_URL}/api/enhance-prompt/feedback`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    cache_key: result.cache_key,
+                    accepted: accepted,
+                    mode: result.mode,
+                    provider: result.provider,
+                }),
+            }).catch(() => {});
+        } catch (_) { /* never block UX on telemetry */ }
+    };
+
+    modal.querySelector('#enhance-accept-btn').onclick = () => {
+        if (promptInput) {
+            promptInput.value = result.enhanced;
+            promptInput.style.height = 'auto';
+            promptInput.style.height = promptInput.scrollHeight + 'px';
+            validateSendCommand();
+            localStorage.setItem(getDraftKey(), promptInput.value);
+        }
+        _sendEnhanceFeedback(true);
+        closeModals();
+        showToast('Enhanced prompt applied.', 'success');
+    };
+
+        modal.querySelector('#enhance-reject-btn').onclick = () => {
+        _sendEnhanceFeedback(false);
+        closeModals();
+        showToast('Kept original prompt.', 'info');
+    };
+}   // <-- ✅ CLOSES openEnhanceReviewModal()
+
+// Expose globally AFTER the function is fully declared
+window.enhanceUserPrompt = enhanceUserPrompt;
+window.openEnhanceReviewModal = openEnhanceReviewModal;
+
 // ============================================================
 // SECURITY LAYER
 // ============================================================
@@ -3470,7 +3617,6 @@ function showSecurityAlert(level) {
 // ============================================================
 window.summarizeCurrentChat = summarizeCurrentChat;
 window.brainstorm = brainstorm;
-window.runMultiAgent = runMultiAgent;
 window.openWorkflowModal = openWorkflowModal;
 window.openKnowledgePanel = openKnowledgePanel;
 window.openPersonaSelector = openPersonaSelector;
@@ -3582,17 +3728,6 @@ async function discoverSchema(files) {
     return null;
 }
 async function executeCommand(isRetry = false) {
-    window.summarizeCurrentChat = summarizeCurrentChat;
-window.brainstorm = brainstorm;
-window.runMultiAgent = runMultiAgent;
-window.openWorkflowModal = openWorkflowModal;
-window.openKnowledgePanel = openKnowledgePanel;
-window.openPersonaSelector = openPersonaSelector;
-window.saveKnowledgeFromUI = saveKnowledgeFromUI;
-window.loadKnowledgeList = loadKnowledgeList;
-window.deleteKnowledge = deleteKnowledge;
-window.applyPersona = applyPersona;
-window.executeCodeBlock = executeCodeBlock;
     if (!activeSessionId && heroDisplay) heroDisplay.style.display = 'none';
     if (isProcessing) return;
     isProcessing = true;
@@ -3776,6 +3911,11 @@ window.executeCodeBlock = executeCodeBlock;
         let structuredData = null;
         let filename = 'Export.csv';
 
+        // ✅ Reset streaming render state for this new turn
+        streamingBuffer = '';
+        throttledRender = null;
+// Global user shape — safe defaults so gated UI never throws before profile loads
+window.currentUser = window.currentUser || { tier: 'free', subTierOptions: { hasDataAccess: false, hasDesignAccess: false } };
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
@@ -3796,12 +3936,17 @@ window.executeCodeBlock = executeCodeBlock;
                             // For better UX, we'll just append the raw text and let it be rendered at the end? But we want progressive display.
                             // We'll create a temporary span for each text chunk.
                             if (!streamingBubble) {
-                                streamingBubble = nexusBubble;
-                                streamingContentDiv = contentDiv;
-                            }
-                            // Append text as plain text (will be processed after stream ends)
-                            contentDiv.innerHTML += textPart;
-                            scrollToBottom();
+    streamingBubble = nexusBubble;
+    streamingContentDiv = contentDiv;
+}
+streamingBuffer += textPart;
+if (!throttledRender) {
+    throttledRender = throttle(() => {
+        contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(streamingBuffer));
+    }, 100);
+}
+throttledRender();
+scrollToBottom();
                         } else if (json.watermark) {
                             // Append watermark
                             contentDiv.innerHTML += json.watermark;
@@ -4204,7 +4349,7 @@ async function openAdminModal() {
                     </div>
                 `;
             }
-            container.innerHTML = `
+                        container.innerHTML = `
                 <div style="margin-bottom:10px;font-weight:600;color:var(--text-main);">AI Provider Usage</div>
                 ${providerRows}
                 <div style="border-top:1px solid var(--border-muted);margin:10px 0;"></div>
@@ -4216,21 +4361,6 @@ async function openAdminModal() {
                 <div class="profile-stat-row"><span class="profile-stat-label">Total Storage Used</span><span class="profile-stat-value">${data.metrics?.totalBytesMB || 0} MB</span></div>
                 <div class="profile-stat-row"><span class="profile-stat-label">Last Updated</span><span class="profile-stat-value" style="font-size:12px;">${new Date(data.timestamp).toLocaleString()}</span></div>
             `;
-            
-            // Inside openSubscriptionModal() — for paid tiers
-content.innerHTML = `
-    <div style="display:flex;flex-direction:column;gap:12px;">
-        <div class="profile-stat-row">
-            <span class="profile-stat-label">Current Plan</span>
-            <span class="profile-stat-value" style="color:var(--text-main);">${planName}</span>
-        </div>
-        <button onclick="openBillingPortal()"
-            style="margin-top:8px;padding:10px 16px;border:none;border-radius:8px;
-                   background:var(--accent-glow);color:#000;font-weight:600;cursor:pointer;">
-            Manage Billing & Invoices
-        </button>
-    </div>
-`;
         } else {
             container.innerHTML = `<div style="color:#ef4444;text-align:center;">Unauthorized or service unavailable.</div>`;
         }
@@ -4594,53 +4724,189 @@ window.addEventListener('resize', () => {
         isResizeHandling = false;
     }, 150);
 });
-// Multi-Agent Chat
-async function runMultiAgent(task, agents) {
+// ============================================================
+// MULTI-AGENT PLAN-TRACE (SSE)
+// ============================================================
+async function runMultiAgentStreaming(task) {
     const btn = document.getElementById('multi-agent-btn');
-    if (btn) { btn.disabled = true; btn.innerHTML = 'Spawning agents...'; }
-    try {
-        const resp = await apiFetch(`${API_BASE_URL}/api/agents/chat`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ task, agents, workspace: getWorkspace() })
-        });
-        const data = await resp.json();
-        if (data.success) {
-            const bubble = document.createElement('div');
-            bubble.className = 'chat-bubble nexus-bubble';
-            const avatarDiv = document.createElement('div');
-            avatarDiv.className = 'ai-avatar-bubble';
-            avatarDiv.innerHTML = AXELR_AVATAR_SVG;
-            bubble.appendChild(avatarDiv);
-            const contentDiv = document.createElement('div');
-            contentDiv.className = 'bubble-content';
-            contentDiv.style.flex = '1';
-            contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(data.combined));
-            bubble.appendChild(contentDiv);
-            viewport.appendChild(bubble);
-            scrollToBottom();
-        } else {
-            showToast('Multi-agent failed: ' + (data.message || 'Unknown error'), 'error');
+    if (btn) { btn.disabled = true; btn.innerText = 'Spawning…'; }
+
+    // Build a dedicated trace container inside the viewport
+    const trace = document.createElement('div');
+    trace.className = 'chat-bubble nexus-bubble agent-trace-bubble';
+    trace.innerHTML = `
+        <div class="ai-avatar-bubble">${AXELR_AVATAR_SVG}</div>
+        <div class="bubble-content" style="flex:1;">
+            <div class="agent-trace-header">
+                <span class="material-symbols-rounded" style="font-size:16px;">hub</span>
+                <strong>Agent Orchestration</strong>
+                <span class="agent-phase-pill" id="phase-pill-${Date.now()}">IDLE</span>
+            </div>
+            <div class="agent-trace-body">
+                <div class="agent-phase" data-phase="planning" style="display:none;">
+                    <div class="agent-phase-label">1 · PLAN</div>
+                    <div class="agent-plan-list"></div>
+                </div>
+                <div class="agent-phase" data-phase="executing" style="display:none;">
+                    <div class="agent-phase-label">2 · EXECUTE</div>
+                    <div class="agent-exec-list"></div>
+                </div>
+                <div class="agent-phase" data-phase="critique" style="display:none;">
+                    <div class="agent-phase-label">3 · CRITIQUE</div>
+                    <div class="agent-critique-body"></div>
+                </div>
+                <div class="agent-phase" data-phase="synthesis" style="display:none;">
+                    <div class="agent-phase-label">4 · SYNTHESIS</div>
+                    <div class="agent-final-body"></div>
+                </div>
+            </div>
+        </div>
+    `;
+    viewport.appendChild(trace);
+    scrollToBottom();
+
+    const phasePill   = trace.querySelector('.agent-phase-pill');
+    const planList    = trace.querySelector('.agent-plan-list');
+    const execList    = trace.querySelector('.agent-exec-list');
+    const critiqueB   = trace.querySelector('.agent-critique-body');
+    const finalB      = trace.querySelector('.agent-final-body');
+    const subtaskRows = {}; // id -> DOM node in execList
+
+    const showPhase = (name) => {
+        const el = trace.querySelector(`.agent-phase[data-phase="${name}"]`);
+        if (el) el.style.display = 'block';
+        phasePill.innerText = name.toUpperCase();
+    };
+
+    const token = await ensureValidToken();
+    const resp = await fetch(`${API_BASE_URL}/api/agents/stream`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ task, workspace: getWorkspace() }),
+    });
+
+    if (!resp.ok || !resp.body) {
+        trace.querySelector('.bubble-content').innerHTML +=
+            `<div style="color:#ef4444;">Streaming failed (${resp.status}).</div>`;
+        if (btn) { btn.disabled = false; btn.innerText = '🧠 Agents'; }
+        return;
+    }
+
+    const reader  = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer    = '';
+
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const chunks = buffer.split('\n\n');
+        for (let i = 0; i < chunks.length - 1; i++) {
+            const chunk = chunks[i];
+            if (!chunk.startsWith('data: ')) continue;
+            let evt;
+            try { evt = JSON.parse(chunk.slice(6)); } catch { continue; }
+
+            switch (evt.type) {
+                case 'phase':
+                    showPhase(evt.name);
+                    break;
+
+                case 'plan':
+                    showPhase('planning');
+                    planList.innerHTML = evt.subtasks.map(s => `
+                        <div class="agent-plan-item">
+                            <span class="ws-tag ${s.role}">${s.role.toUpperCase()}</span>
+                            <span class="agent-plan-instruction">${escapeHtmlEntities(s.instruction)}</span>
+                        </div>
+                    `).join('');
+                    break;
+
+                case 'subtask_start':
+                    showPhase('executing');
+                    if (!subtaskRows[evt.id]) {
+                        const row = document.createElement('div');
+                        row.className = 'agent-exec-item';
+                        row.innerHTML = `
+                            <div class="agent-exec-head">
+                                <span class="ws-tag ${evt.role}">${evt.role.toUpperCase()}</span>
+                                <span class="agent-exec-id">${evt.id}</span>
+                                <span class="agent-exec-status running">●</span>
+                            </div>
+                            <div class="agent-exec-instruction">${escapeHtmlEntities(evt.instruction)}</div>
+                            <div class="agent-exec-output"></div>
+                        `;
+                        execList.appendChild(row);
+                        subtaskRows[evt.id] = row;
+                    }
+                    scrollToBottom();
+                    break;
+
+                case 'subtask_done': {
+                    const row = subtaskRows[evt.id];
+                    if (row) {
+                        row.querySelector('.agent-exec-status').className =
+                            'agent-exec-status ' + (evt.error ? 'error' : 'done');
+                        row.querySelector('.agent-exec-status').innerText =
+                            evt.error ? '✕' : `✓ ${Math.round(evt.latency_ms)}ms`;
+                        const out = row.querySelector('.agent-exec-output');
+                        out.innerHTML = `<pre>${escapeHtmlEntities((evt.output || '').slice(0, 1200))}</pre>`;
+                    }
+                    scrollToBottom();
+                    break;
+                }
+
+                case 'critique':
+                    showPhase('critique');
+                    {
+                        const verdict = evt.overall || 'pass';
+                        const cls = verdict === 'pass' ? 'ok' : 'warn';
+                        const items = (evt.per_subtask || []).map(x => `
+                            <div class="agent-critique-item ${x.verdict}">
+                                <strong>${x.id}</strong> · ${x.verdict}
+                                ${x.issues && x.issues.length
+                                    ? `<ul>${x.issues.map(i => `<li>${escapeHtmlEntities(i)}</li>`).join('')}</ul>`
+                                    : ''}
+                            </div>
+                        `).join('');
+                        const cross = (evt.cross_cutting_issues || []).length
+                            ? `<div class="agent-critique-cross"><strong>Cross-cutting</strong><ul>${
+                                evt.cross_cutting_issues.map(i => `<li>${escapeHtmlEntities(i)}</li>`).join('')
+                              }</ul></div>`
+                            : '';
+                        critiqueB.innerHTML =
+                            `<div class="agent-critique-verdict ${cls}">${verdict.toUpperCase()}</div>${items}${cross}`;
+                    }
+                    scrollToBottom();
+                    break;
+
+                case 'final':
+                    showPhase('synthesis');
+                    finalB.innerHTML = DOMPurify.sanitize(marked.parse(evt.text || ''));
+                    scrollToBottom();
+                    break;
+
+                case 'done':
+                    phasePill.innerText = `DONE · ${Math.round(evt.total_latency_ms)}ms`;
+                    phasePill.classList.add('done');
+                    break;
+
+                case 'error':
+                    showPhase('error');
+                    finalB.innerHTML = `<div style="color:#ef4444;">${escapeHtmlEntities(evt.message)}</div>`;
+                    break;
+            }
         }
-    } catch (e) {
-        showToast('Error: ' + e.message, 'error');
-    } finally {
-        if (btn) { btn.disabled = false; btn.innerHTML = '🧠 Agents'; }
+        buffer = chunks[chunks.length - 1];
     }
+
+    if (btn) { btn.disabled = false; btn.innerText = '🧠 Agents'; }
 }
+window.runMultiAgentStreaming = runMultiAgentStreaming;
 // Knowledge Vault functions
-async function saveKnowledge(key, value, tags = []) {
-    try {
-        await apiFetch(`${API_BASE_URL}/api/knowledge`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ key, value, tags })
-        });
-        showToast('Knowledge saved', 'success');
-    } catch (e) {
-        showToast('Save failed: ' + e.message);
-    }
-}
 async function loadKnowledge() {
     const resp = await apiFetch(`${API_BASE_URL}/api/knowledge`);
     const data = await resp.json();
@@ -4655,51 +4921,9 @@ async function loadKnowledge() {
 // Auto-inject knowledge into prompts (modified executeCommand)
 // In executeCommand, before sending, fetch relevant knowledge and add to context.
 // We'll add a function to get knowledge for context.
-async function getRelevantKnowledge(query) {
-    const resp = await apiFetch(`${API_BASE_URL}/api/knowledge/search?q=${encodeURIComponent(query)}`);
-    const data = await resp.json();
-    return data.results.map(k => `${k.key}: ${k.value}`).join('\n');
-}
+
 // Modify executeCommand to include knowledge:
 // After building formData, add a field 'context' with knowledge.
-async function runWorkflow(steps) {
-    const response = await fetch(`${API_BASE_URL}/api/workflow/run`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${await ensureValidToken()}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ steps, workspace: getWorkspace() })
-    });
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
-    while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const events = buffer.split('\n\n');
-        for (let i = 0; i < events.length - 1; i++) {
-            const event = events[i];
-            if (event.startsWith('data: ')) {
-                try {
-                    const json = JSON.parse(event.slice(6));
-                    if (json.step && json.status === 'completed') {
-                        const stepBubble = document.createElement('div');
-                        stepBubble.className = 'chat-bubble nexus-bubble';
-                        stepBubble.innerHTML = `<div class="bubble-content"><strong>${json.step}</strong><br>${DOMPurify.sanitize(marked.parse(json.output))}</div>`;
-                        viewport.appendChild(stepBubble);
-                        scrollToBottom();
-                    } else if (json.status === 'done') {
-                        const finalBubble = document.createElement('div');
-                        finalBubble.className = 'chat-bubble nexus-bubble';
-                        finalBubble.innerHTML = `<div class="bubble-content"><strong>✅ Workflow Complete</strong><br>${DOMPurify.sanitize(marked.parse(json.final))}</div>`;
-                        viewport.appendChild(finalBubble);
-                        scrollToBottom();
-                    }
-                } catch (e) { /* ignore malformed JSON */ }
-            }
-        }
-        buffer = events[events.length - 1];
-    }
-}
 async function summarizeCurrentChat() {
     if (!activeSessionId) return alert('No active chat to summarize.');
     try {
@@ -4718,25 +4942,7 @@ async function summarizeCurrentChat() {
         showToast('Error: ' + e.message, 'error');
     }
 }
-// Add a button in the chat header
-async function executeCodeBlock(code, language) {
-    const resp = await apiFetch(`${API_BASE_URL}/api/execute-code`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ language, code })
-    });
-    const data = await resp.json();
-    if (data.success) {
-        // Display output in a new bubble
-        const bubble = document.createElement('div');
-        bubble.className = 'chat-bubble nexus-bubble';
-        bubble.innerHTML = `<div class="bubble-content"><strong>▶️ Output</strong><pre>${escapeHtmlEntities(data.output)}</pre></div>`;
-        viewport.appendChild(bubble);
-        scrollToBottom();
-    } else {
-        alert('Execution error: ' + data.error);
-    }
-}
+
 // Add a "Run" button next to code blocks (modify marked renderer)
 async function loadPersonas() {
     const resp = await apiFetch(`${API_BASE_URL}/api/personas`);
@@ -4749,27 +4955,7 @@ async function loadPersonas() {
         ).join('');
     }
 }
-async function applyPersona(personaId) {
-    try {
-        const resp = await apiFetch(`${API_BASE_URL}/api/personas/${personaId}`);
-        if (!resp.ok) throw new Error('Persona not found');
-        const persona = await resp.json();
-        if (persona.system_prompt) {
-            await apiFetch(`${API_BASE_URL}/api/user/instructions`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ instructions: persona.system_prompt })
-            });
-            showToast('Persona "' + persona.name + '" applied!', 'success');
-            await loadUserProfile(); // refresh to reflect
-            closeModals();
-        } else {
-            showToast('Persona has no system prompt.', 'error');
-        }
-    } catch (e) {
-        showToast('Error: ' + e.message, 'error');
-    }
-}
+
 let eventSource = null;
 function joinCollaborativeSession(sessionId) {
     if (window._eventSource) { window._eventSource.close(); }
@@ -4869,67 +5055,38 @@ function enableInlineEdit(bubbleContent, originalText, sessionId, msgId) {
         else location.reload();
     };
 }
-// Add endpoint /api/refine-response in backend
-async function loadKnowledgeList() {
-    const data = await (await apiFetch(`${API_BASE_URL}/api/knowledge`)).json();
-    const container = document.getElementById('knowledge-list');
-    if (container) {
-        container.innerHTML = data.knowledge.map(k => 
-            `<div class="knowledge-item" title="${escapeHtmlEntities(k.value)}">
-                <strong>${escapeHtmlEntities(k.key)}</strong>
-                <button onclick="deleteKnowledge('${k._id}')">✕</button>
-            </div>`
-        ).join('');
-    }
-}
-const renderer = new marked.Renderer();
-renderer.code = function(code, language) {
-    const runBtn = (language === 'python' || language === 'javascript' || language === 'html') 
-        ? `<button class="run-code-btn" onclick="executeCodeBlock(this, '${language}')">▶ Run</button>` 
-        : '';
-    return `<pre>${runBtn}<button class="copy-code-btn" onclick="navigator.clipboard.writeText(this.nextElementSibling.innerText); this.innerText='Copied!'; setTimeout(()=>this.innerText='Copy Code', 2000)">Copy Code</button><code>${code.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>`;
-};
-marked.setOptions({ renderer, breaks: true });
+(function installMarkedRenderer() {
+    if (typeof marked === 'undefined' || !marked.Renderer) return;
 
-// Global function to execute
-async function executeCodeBlock(btn, language) {
-    const pre = btn.closest('pre');
-    const code = pre ? pre.querySelector('code') : null;
-    if (!code) return;
-    const codeText = code.innerText;
-    btn.innerText = 'Running…';
-    btn.disabled = true;
+    const renderer = new marked.Renderer();
+    renderer.code = function (codeOrObj, languageMaybe) {
+        // Support both marked v4 (string, lang) and v5+ ({ text, lang, escaped })
+        let code, language;
+        if (codeOrObj && typeof codeOrObj === 'object') {
+            code = codeOrObj.text || '';
+            language = codeOrObj.lang || '';
+        } else {
+            code = codeOrObj || '';
+            language = languageMaybe || '';
+        }
+        code = String(code);
+
+        const isRunnable = language === 'python' || language === 'javascript' || language === 'html';
+        const runBtn = isRunnable
+            ? `<button class="run-code-btn" onclick="executeCodeBlock(this, '${language}')">▶ Run</button>`
+            : '';
+
+        const escaped = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return `<pre>${runBtn}<button class="copy-code-btn" onclick="navigator.clipboard.writeText(this.nextElementSibling.innerText); this.innerText='Copied!'; setTimeout(()=>this.innerText='Copy Code', 2000)">Copy Code</button><code>${escaped}</code></pre>`;
+    };
+
     try {
-        const resp = await apiFetch(`${API_BASE_URL}/api/execute-code`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ language, code: codeText })
-        });
-        const data = await resp.json();
-        btn.innerText = '▶ Run';
-        btn.disabled = false;
-        const outputBubble = document.createElement('div');
-        outputBubble.className = 'chat-bubble nexus-bubble';
-        const avatar = document.createElement('div');
-        avatar.className = 'ai-avatar-bubble';
-        avatar.innerHTML = AXELR_AVATAR_SVG;
-        outputBubble.appendChild(avatar);
-        const contentDiv = document.createElement('div');
-        contentDiv.className = 'bubble-content';
-        const outputPre = document.createElement('pre');
-        outputPre.style.whiteSpace = 'pre-wrap';
-        outputPre.textContent = data.output || data.error || 'No output';
-        contentDiv.innerHTML = `<strong>▶️ Output</strong>`;
-        contentDiv.appendChild(outputPre);
-        outputBubble.appendChild(contentDiv);
-        viewport.appendChild(outputBubble);
-        scrollToBottom();
-    } catch (e) {
-        showToast('Execution failed: ' + e.message, 'error');
-        btn.innerText = '▶ Run';
-        btn.disabled = false;
+        marked.setOptions({ renderer, breaks: true });
+    } catch (_) {
+        marked.use({ renderer });
     }
-}
+})();
+
 // In the model dropdown card, add a section for personas
 async function loadPersonaDropdown() {
     const data = await (await apiFetch(`${API_BASE_URL}/api/personas`)).json();
@@ -4955,24 +5112,50 @@ if (storedVersion && storedVersion !== APP_VERSION) {
 } else if (!storedVersion) {
     localStorage.setItem('axelr_app_version', APP_VERSION);
 }
-
 // ============================================================
-// SERVICE WORKER CLEANUP
+// SERVICE WORKER — Offline Engine
 // ============================================================
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations()
-        .then(registrations => {
-            for (let reg of registrations) {
-                reg.unregister();
-                console.log('🧹 Unregistered service worker:', reg.scope);
+    navigator.serviceWorker.register('/sw.js', { scope: '/' })
+        .then((reg) => {
+            console.log('✅ SW registered:', reg.scope);
+
+            // Listen for offline queue events
+            const ch = new BroadcastChannel('axelr-offline-channel');
+            ch.onmessage = (e) => {
+                const { type } = e.data || {};
+                if (type === 'queued') {
+                    showToast('Request queued — will retry when online.', 'info');
+                }
+                if (type === 'queue-drained') {
+                    showToast(`${e.data.count} queued request(s) delivered.`, 'success');
+                }
+                if (type === 'offline') {
+                    const b = document.getElementById('offline-banner');
+                    if (b) b.style.display = 'block';
+                }
+                if (type === 'online') {
+                    const b = document.getElementById('offline-banner');
+                    if (b) b.style.display = 'none';
+                }
+            };
+
+            // Register periodic sync for queued requests (Chrome-only)
+            if ('sync' in reg) {
+                window.addEventListener('online', () => {
+                    reg.sync.register('axelr-queue-sync').catch(() => {});
+                });
+            } else {
+                // Firefox/Safari fallback: drain manually on reconnect
+                window.addEventListener('online', () => {
+                    if (navigator.serviceWorker.controller) {
+                        navigator.serviceWorker.controller.postMessage({ type: 'drain-queue' });
+                    }
+                });
             }
         })
-        .catch(err => console.warn('SW cleanup error:', err));
+        .catch((err) => console.warn('SW registration failed:', err));
 }
-
-// ============================================================
-// PUTER OPT-IN & DYNAMIC LOADING
-// ============================================================
 // ============================================================
 // PUTER OPT-IN & DYNAMIC LOADING (FIXED)
 // ============================================================
@@ -5065,12 +5248,11 @@ function renderInlineWorkspaceCards() {
     if (!host) return;
 
     const current = getWorkspace();
-    const workspaces = [
-        { id: 'data',    icon: 'database',       title: 'Data',    desc: 'Extract, analyse & transform' },
-        { id: 'design',  icon: 'palette',        title: 'Design',  desc: 'UI/UX generation & deployment' },
-        { id: 'Core', icon: 'auto_awesome',   title: 'Core', desc: 'Everyday AI assistance' },
+        const workspaces = [
+        { id: 'data',   icon: 'database',     title: 'Data',   desc: 'Extract, analyse & transform' },
+        { id: 'design', icon: 'palette',      title: 'Design', desc: 'UI/UX generation & deployment' },
+        { id: 'core',   icon: 'auto_awesome', title: 'Core',   desc: 'Everyday AI assistance' },
     ];
-
     host.innerHTML = workspaces.map(w => `
         <div class="ws-card ${w.id === current ? 'active' : ''}"
              onclick="pickInlineWorkspace('${w.id}')">
