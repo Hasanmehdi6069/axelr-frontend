@@ -1,0 +1,346 @@
+/* ============================================================
+   CSS LAYER ORGANIZATION (Elite Cascade Control)
+   
+   The @layer declaration below establishes the entire cascade
+   contract for Axelr. Every other stylesheet wraps its content
+   in the corresponding @layer block.
+   
+   Cascade priority (low → high):
+     tokens → base → shell → workspace → chat → command
+     → modals → auth → light → responsive
+   
+   Load order no longer matters. Script order no longer matters.
+   Only layer order matters. This is the whole point.
+   ============================================================ */
+@layer tokens, base, shell, workspace, chat, command, modals, auth, light, responsive, elite;
+
+@layer tokens {
+
+/* ============================================================
+   GLOBAL RESETS
+   ============================================================ */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+.glass {
+    background: var(--bg-card);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--border-muted);
+    box-shadow: var(--shadow-cosmic);
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden;
+}
+
+/* ============================================================
+   ROOT DESIGN TOKENS — CONSOLIDATED
+   ============================================================ */
+:root {
+    color-scheme: dark;
+    /* Spacing Scale (strict 4px baseline) */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-7: 32px;
+    --space-8: 48px;
+    --space-9: 64px;
+    --space-10: 80px;
+
+    /* Z-Index Dictionary — single source of truth for stacking context */
+    --z-toast: 10001;
+    --z-floating: 10000;
+    --z-auth-wall: 1000;
+    --z-modal: 900;
+    --z-sidebar: 800;
+    --z-command-bar: 700;
+    --z-dropdown: 600;
+    --z-tooltip: 500;
+    --z-sidebar-trigger: 200;
+    --z-header: 150;
+    --z-backdrop: 150;
+    --z-sidebar-footer: 10;
+
+    /* Base Environment Grid */
+    --bg-deep: #030307;
+    --bg-sidebar: #05050b;
+    --bg-primary: #030303;
+    --bg-elevated: #0a0a0a;
+    --bg-card: #090911;
+    --bg-input: #0c0c16;
+    --bg-glass: rgba(20, 20, 20, 0.85);
+
+    /* Text */
+    --text-main: #f4f8ff;
+    --text-muted: #a1b5cc;
+    --text-tertiary: #6b7280;
+    --text-dim: #7a8fa6; /* ELITE: lifted from #62778f for WCAG AA on bg-deep */
+    --text-on-accent: #000000;
+
+    /* Accent palette */
+    --accent-primary: #06f0ff;
+    --accent-primary-glow: rgba(6, 240, 255, 0.35);
+    --accent-pro: #8b5cf6;
+    --accent-pro-glow: rgba(139, 92, 246, 0.35);
+    --accent-designer: #f43f5e;
+    --accent-success: #10b981;
+    --accent-glow: #00f2fe;
+    --accent-secondary: #0ea5e9;
+
+    /* Semantic color tokens */
+    --color-danger: #ef4444;
+    --color-danger-soft: rgba(239, 68, 68, 0.15);
+    --color-danger-ring: rgba(239, 68, 68, 0.35);
+    --color-success: #10b981;
+    --color-success-soft: rgba(16, 185, 129, 0.15);
+    --color-success-ring: rgba(16, 185, 129, 0.35);
+    --color-warning: #eab308;
+    --color-warning-soft: rgba(234, 179, 8, 0.15);
+    --color-warning-ring: rgba(234, 179, 8, 0.35);
+    --color-info: #3b82f6;
+    --color-info-soft: rgba(59, 130, 246, 0.15);
+    --color-info-ring: rgba(59, 130, 246, 0.35);
+
+    /* Border infrastructure */
+    --border-glass: rgba(255, 255, 255, 0.06);
+    --border-primary: rgba(255, 255, 255, 0.1);
+    --border-muted: rgba(255, 255, 255, 0.06);
+    --border-hover: rgba(255, 255, 255, 0.12);
+    --border-active: rgba(255, 255, 255, 0.20);
+
+    /* Component radius scale */
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 20px;
+    --radius-2xl: 24px;
+    --radius-full: 999px;
+
+    /* Layout */
+    --sidebar-width: 320px;
+
+    /* Shadows & glow */
+    --shadow-color: rgba(0,0,0,0.7);
+    --shadow-soft: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+    --shadow-elevated: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+    --shadow-glow: 0 0 30px var(--accent-primary-glow);
+    --shadow-cosmic: 0 25px 70px -10px rgba(6, 240, 255, 0.05),
+                     0 25px 70px -10px rgba(0, 0, 0, 0.85);
+    --glow-dispersion: blur(40px);
+
+    /* Typography */
+    --font-base: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+    --text-xs: 12px;
+    --text-sm: 14px;
+    --text-base: 16px;
+    --text-lg: 18px;
+    --text-xl: 24px;
+    --text-2xl: 32px;
+    --text-3xl: 40px;
+    --line-height-tight: 1.25;
+    --line-height-base: 1.5;
+    --line-height-relaxed: 1.75;
+
+    /* Glassmorphism + transitions */
+    --glass-blur: blur(28px) saturate(180%);
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Motion curves */
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    /* Focus ring tokens */
+    --focus-ring: 2px;
+    --focus-ring-offset: 2px;
+    --focus-ring-color: var(--accent-glow);
+
+    /* Logo */
+    --logo-stroke-primary: #ffffff;
+    --logo-fill-primary: rgba(255,255,255,0.05);
+    --logo-stroke-secondary: #ffffff;
+    --logo-text-color: #ffffff;
+
+    /* Ambient surface glow */
+    --theme-surface-glow: radial-gradient(circle at 50% 0%, rgba(0, 242, 254, 0.05), transparent 70%);
+
+    /* Workspace palette */
+    --workspace-general: #38bdf8;
+    --workspace-data: #10f5a0;
+    --workspace-design: #fb7185;
+}
+
+/* ============================================================
+   BODY — CONSOLIDATED
+   ============================================================ */
+body {
+    background-color: var(--bg-deep);
+    color: var(--text-main);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    height: 100vh;
+    display: flex;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.3s, color 0.3s;
+    background-image:
+        radial-gradient(ellipse at 20% 50%, rgba(0, 242, 254, 0.03) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 50%, rgba(139, 92, 246, 0.03) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 0%, rgba(16, 185, 129, 0.02) 0%, transparent 30%);
+    position: relative;
+}
+
+/* ELITE: Respect data-saver — strip non-essential paint layers. */
+@media (prefers-reduced-data: reduce) {
+    body { background-image: none; }
+    body::before { display: none; }
+}
+
+/* ============================================================
+   LIGHT THEME TOKENS
+   ============================================================ */
+body.light-theme {
+    color-scheme: light;
+    --bg-deep: #f8fafc;
+    --bg-sidebar: #f1f5f9;
+    --bg-card: #ffffff;
+    --bg-input: #ffffff;
+    --text-main: #0f172a;
+    --text-muted: #475569;
+    --text-dim: #94a3b8;
+    --text-on-accent: #000;
+    --border-muted: rgba(15, 23, 42, 0.06);
+    --border-hover: rgba(15, 23, 42, 0.12);
+    --border-active: rgba(15, 23, 42, 0.20);
+    --shadow-color: rgba(0,0,0,0.1);
+    --shadow-cosmic: 0 20px 40px -15px rgba(15, 23, 42, 0.12);
+    --theme-surface-glow: radial-gradient(circle at 50% 0%, rgba(14, 165, 233, 0.03), transparent 70%);
+    --logo-stroke-primary: #000000;
+    --logo-fill-primary: rgba(0,0,0,0.05);
+    --logo-stroke-secondary: #000000;
+}
+
+/* System theme fallback - prevents black flash on light OS before JS loads */
+@media (prefers-color-scheme: light) {
+    :root {
+        color-scheme: light;
+        --bg-deep: #f8fafc;
+        --bg-sidebar: #f1f5f9;
+        --bg-card: #ffffff;
+        --bg-input: #ffffff;
+        --text-main: #0f172a;
+        --text-muted: #475569;
+        --text-dim: #94a3b8;
+        --text-on-accent: #000;
+        --border-muted: rgba(15, 23, 42, 0.06);
+        --border-hover: rgba(15, 23, 42, 0.12);
+        --border-active: rgba(15, 23, 42, 0.20);
+        --shadow-color: rgba(0,0,0,0.1);
+        --shadow-cosmic: 0 20px 40px -15px rgba(15, 23, 42, 0.12);
+        --theme-surface-glow: radial-gradient(circle at 50% 0%, rgba(14, 165, 233, 0.03), transparent 70%);
+        --logo-stroke-primary: #000000;
+        --logo-fill-primary: rgba(0,0,0,0.05);
+        --logo-stroke-secondary: #000000;
+    }
+}
+
+} /* end @layer tokens */
+/* ============================================================
+   ELITE LAYER — brand gradients, elevational shadows, motion physics
+   Declared last in the cascade. Wins by order, not by force.
+   ============================================================ */
+@layer elite {
+
+/* Animatable custom properties — enables rotating gradient borders.
+   Chrome 85+, Safari 16.4+, Firefox 128+. Silently ignored elsewhere. */
+@property --gradient-angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+}
+@property --shimmer-x {
+    syntax: '<percentage>';
+    initial-value: -100%;
+    inherits: false;
+}
+
+:root {
+    /* Brand gradients */
+    --gradient-brand: linear-gradient(135deg, #00f2fe 0%, #8b5cf6 50%, #f43f5e 100%);
+    --gradient-cyan-violet: linear-gradient(135deg, #00f2fe, #8b5cf6);
+    --gradient-violet-crimson: linear-gradient(135deg, #8b5cf6, #f43f5e);
+    --gradient-surface-sheen: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0) 60%);
+    --gradient-surface-floor: linear-gradient(0deg, rgba(0,0,0,0.30) 0%, transparent 70%);
+
+    /* Elevated surface shadows — the Linear/Vercel tier.
+       Each level has inner highlight + outer depth + optional ring. */
+    --shadow-surface-1: 0 1px 2px rgba(0,0,0,0.40),
+                        0 0 0 1px rgba(255,255,255,0.04) inset;
+    --shadow-surface-2: 0 4px 12px -2px rgba(0,0,0,0.50),
+                        0 0 0 1px rgba(255,255,255,0.06) inset;
+    --shadow-surface-3: 0 12px 32px -8px rgba(0,0,0,0.60),
+                        0 0 0 1px rgba(255,255,255,0.08) inset;
+    --shadow-surface-4: 0 24px 60px -12px rgba(0,0,0,0.70),
+                        0 0 0 1px rgba(255,255,255,0.10) inset;
+    --shadow-floating:  0 32px 80px -20px rgba(0,0,0,0.85),
+                        0 0 0 1px rgba(255,255,255,0.08) inset;
+
+    /* Accent glows — three tiers, escalating intensity */
+    --glow-ambient: 0 0 40px -10px color-mix(in srgb, var(--accent-glow) 25%, transparent);
+    --glow-active:  0 0 0 1px color-mix(in srgb, var(--accent-glow) 30%, transparent),
+                    0 0 30px -5px color-mix(in srgb, var(--accent-glow) 40%, transparent);
+    --glow-bloom:   0 0 0 1px color-mix(in srgb, var(--accent-glow) 20%, transparent),
+                    0 12px 40px -12px color-mix(in srgb, var(--accent-glow) 35%, transparent),
+                    0 0 80px -20px color-mix(in srgb, var(--accent-glow) 30%, transparent);
+
+    /* Semantic state glows */
+    --glow-danger:  0 0 0 1px rgba(239,68,68,0.30), 0 0 30px -5px rgba(239,68,68,0.45);
+    --glow-success: 0 0 0 1px rgba(16,185,129,0.30), 0 0 30px -5px rgba(16,185,129,0.45);
+
+    /* Motion physics — five curves, each with a purpose */
+    --ease-elastic:    cubic-bezier(0.68, -0.55, 0.265, 1.55);  /* playful overshoot */
+    --ease-overshoot:  cubic-bezier(0.34, 1.56, 0.64, 1);        /* spring settle */
+    --ease-smooth:     cubic-bezier(0.32, 0.72, 0, 1);           /* iOS-style ease */
+    --ease-instant:    cubic-bezier(0.4, 0, 0.6, 1);             /* press feedback */
+    --duration-instant: 80ms;
+    --duration-quick:   160ms;
+    --duration-swift:   240ms;
+    --duration-flow:    400ms;
+    --duration-glacial: 800ms;
+
+    /* Fluid typography — scales between 320px and 1440px without breakpoints */
+    --text-fluid-xs:   clamp(11px,  0.7vw + 9px,  13px);
+    --text-fluid-sm:   clamp(12.5px, 0.8vw + 10px, 15px);
+    --text-fluid-base: clamp(14px,  0.9vw + 11px, 17px);
+    --text-fluid-lg:   clamp(16px,  1.1vw + 12px, 20px);
+    --text-fluid-xl:   clamp(20px,  1.6vw + 14px, 28px);
+    --text-fluid-2xl:  clamp(26px,  2.4vw + 18px, 38px);
+    --text-fluid-3xl:  clamp(32px,  3.6vw + 22px, 52px);
+
+    /* Brand noise — adds materiality to glass surfaces (~600 bytes inline) */
+    --noise-overlay: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+}
+
+/* Brand text selection — the accent bleeds into the OS selection model */
+::selection {
+    background: color-mix(in srgb, var(--accent-glow) 40%, transparent);
+    color: var(--text-main);
+    text-shadow: none;
+}
+::-moz-selection {
+    background: color-mix(in srgb, var(--accent-glow) 40%, transparent);
+    color: var(--text-main);
+}
+
+} /* end @layer elite */
