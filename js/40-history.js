@@ -321,6 +321,16 @@
                     }
                 }
                 if (window.Axelr.injectActionButtons) window.Axelr.injectActionButtons(contentDiv, rawResponse, false, showRegenerate, msg.createdAt || log.createdAt, log._id, false, true);
+                // Attach the silent 30-s regenerate button on the very last
+                // model message of an active log (helpers do the age check).
+                const isLastModelMsg =
+                    idx === log.messages.length - 1 &&
+                    log.status === 'active' &&
+                    (msg.canRegenerate === true || msg.canRegenerate === undefined);
+                if (isLastModelMsg) {
+                    const bar = contentDiv.querySelector('.bubble-action-bar');
+                    if (bar) attachRegenerateButton(bar, log._id, msg.createdAt || log.createdAt);
+                }
                 if (msg.variants && msg.variants.length > 1) {
                     const currentIdx = msg.activeVariant || 0;
                     const variantBar = document.createElement('div');
@@ -418,16 +428,81 @@
             viewPastLogById(logId);
         } catch (e) { console.error("Switch failed", e); }
     }
+    // ── Regenerate button (shared with 50-command.js) ────────────────────
+    // Attaches a silent 30-s regenerate button to an action bar. Returns
+    // the button, or null if the message is already older than 30 s.
+    //
+    // Caller must pass its own `execute` function, since this module does
+    // NOT import executeCommand (would create a circular dependency at
+    // bundle-eval time). 50-command.js owns the real one; we lazily look
+    // it up via window.Axelr.executeCommand at click time.
+    function attachRegenerateButton(actionBar, sessionId, createdAt) {
+        const now = Date.now();
+        const msgTime = new Date(createdAt).getTime();
+        if (!Number.isFinite(msgTime)) return null;
+        const remaining = 30000 - (now - msgTime);
+        if (remaining <= 0) return null;
 
+        const regenBtn = document.createElement('button');
+        regenBtn.className = 'action-icon-btn regen-active';
+        regenBtn.title = 'Regenerate response';
+        regenBtn.innerHTML = `${ICONS.regenerate} Regenerate`;
+
+        const removeTimer = setTimeout(() => {
+            if (regenBtn.parentNode) regenBtn.remove();
+            if (st.regenerateTimer === removeTimer) st.regenerateTimer = null;
+        }, remaining);
+        st.regenerateTimer = removeTimer;
+
+        regenBtn.onclick = async function (e) {
+            e.stopPropagation();
+
+            if (st.activeSessionId !== sessionId) {
+                if (regenBtn.parentNode) regenBtn.remove();
+                return;
+            }
+            if (st.regenerateTimer) {
+                clearTimeout(st.regenerateTimer);
+                st.regenerateTimer = null;
+            }
+
+            // Suppress the next response's own regenerate button.
+            st.suppressRegenerateForNextResponse = true;
+
+            // Remove the AI bubble this button is attached to.
+            const bubble = regenBtn.closest('.chat-bubble');
+            if (bubble && bubble.parentNode) bubble.remove();
+
+            // Restore the prompt and re-run.
+            const promptInput = window.Axelr.promptInput;
+            if (st.lastUserCommand && promptInput) {
+                promptInput.value = st.lastUserCommand;
+                promptInput.style.height = 'auto';
+                promptInput.style.height = promptInput.scrollHeight + 'px';
+            }
+
+            const run = window.Axelr.executeCommand;
+            if (typeof run === 'function') {
+                await run(true);
+            } else {
+                console.warn('[Axelr] executeCommand not yet loaded — cannot regenerate.');
+            }
+        };
+
+        actionBar.appendChild(regenBtn);
+        return regenBtn;
+    }
     // ── Publish ──────────────────────────────────────────────────────────
     Object.assign(window.Axelr, {
         loadArchiveLogs, exportChat, renameChat, pinChat, shareChat,
         changeChatStatus, deleteLogPermanently, deleteAllChats, deleteAccount,
         viewPastLogById, renderChart, renderChartInViewport, switchVariant,
+        attachRegenerateButton,
     });
     Object.entries({
         loadArchiveLogs, exportChat, renameChat, pinChat, shareChat,
         changeChatStatus, deleteLogPermanently, deleteAllChats, deleteAccount,
         viewPastLogById, renderChart, renderChartInViewport, switchVariant,
+        attachRegenerateButton,
     }).forEach(([k, v]) => { window[k] = v; });
 })();

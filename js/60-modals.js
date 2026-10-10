@@ -344,6 +344,53 @@
         if (window.Axelr.loadPersonaList) window.Axelr.loadPersonaList();
     }
 
+    // ── Puter toggle implementation ──────────────────────────────────────
+    async function togglePuter(enabled) {
+        const puterToggle = getEl('puter-toggle');
+        const originalChecked = puterToggle ? puterToggle.checked : !enabled;
+        const enabledBool = Boolean(enabled);
+        
+        // Optimistically update UI
+        if (puterToggle) {
+            puterToggle.checked = enabledBool;
+        }
+        
+        try {
+            // Send API request
+            const resp = await apiFetch(`${API_BASE_URL}/api/user/puter`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ enabled: enabledBool })
+            });
+            
+            if (!resp.ok) {
+                throw new Error('Failed to update Puter settings');
+            }
+            
+            // Update description
+            const desc = getEl('puter-desc');
+            if (desc) {
+                desc.innerText = enabledBool ? 'Puter enabled' : 'Puter disabled';
+            }
+            
+            // Load Puter SDK if enabling and not already loaded
+            if (enabledBool && !document.querySelector('script[src="https://js.puter.com/v2/"]')) {
+                const script = document.createElement('script');
+                script.src = 'https://js.puter.com/v2/';
+                script.async = true;
+                document.body.appendChild(script);
+            }
+            
+            showToast(enabledBool ? 'Puter enabled' : 'Puter disabled', 'success');
+        } catch (e) {
+            // Revert on failure
+            if (puterToggle) {
+                puterToggle.checked = originalChecked;
+            }
+            showToast('Failed to update Puter settings: ' + e.message, 'error');
+        }
+    }
+
     // ── Puter opt-in modal ───────────────────────────────────────────────
     function showPuterOptIn() {
         if (window.puterOptInShown) return;
@@ -375,7 +422,38 @@
         `;
         document.body.appendChild(optIn);
     }
+    // ── Puter opt-in modal handlers ──────────────────────────────────────
+    function skipPuter() {
+        closeModals();
+        // Remember the skip so we don't nag on every page load
+        try { localStorage.setItem('axelr_puter_skipped', Date.now().toString()); }
+        catch (_) {}
+    }
 
+    async function enablePuter() {
+        const btn = document.querySelector('#puter-optin-modal .modal-submit-btn[onclick*="enablePuter"]')
+                 || document.querySelector('#puter-optin-modal button:last-child');
+        if (btn) { btn.disabled = true; btn.textContent = 'Enabling…'; }
+        try {
+            await togglePuter(true);
+        } finally {
+            closeModals();
+            if (btn) { btn.disabled = false; btn.textContent = 'Enable Puter'; }
+        }
+    }
+
+    // Show the opt-in prompt once, 6 s after first shell paint
+    function maybePromptPuterOptIn() {
+        try {
+            const skippedAt = Number(localStorage.getItem('axelr_puter_skipped') || 0);
+            const SIX_DAYS = 6 * 24 * 60 * 60 * 1000;
+            if (skippedAt && Date.now() - skippedAt < SIX_DAYS) return;
+            if (window.currentUser?.puter_enabled) return;
+            if (window.puterOptInShown) return;
+            window.puterOptInShown = true;
+            setTimeout(showPuterOptIn, 6000);
+        } catch (_) {}
+    }
     // ── Publish ──────────────────────────────────────────────────────────
     Object.assign(window.Axelr, {
         closeModals, openUpgradeModal, openProfileModal, openInstructionsModal,
@@ -384,8 +462,10 @@
         openPrivacyModal, openHelpCenter, addAnotherAccount, syncTierMatrixEngine,
         openWorkflowModal, addWorkflowStep, runWorkflowFromModal,
         openKnowledgePanel, saveKnowledgeFromUI, searchKnowledge,
-        openPersonaSelector, showPuterOptIn,
+        openPersonaSelector, togglePuter,
     });
+    // Expose globally on window as well
+    Object.assign(window, { togglePuter });
     Object.entries({
         closeModals, openUpgradeModal, openProfileModal, openInstructionsModal,
         openFeedbackModal, openSettingsModal, openAdminModal,
@@ -393,6 +473,6 @@
         openPrivacyModal, openHelpCenter, addAnotherAccount,
         openWorkflowModal, addWorkflowStep, runWorkflowFromModal,
         openKnowledgePanel, saveKnowledgeFromUI, searchKnowledge,
-        openPersonaSelector, showPuterOptIn,
+        openPersonaSelector,
     }).forEach(([k, v]) => { window[k] = v; });
 })();

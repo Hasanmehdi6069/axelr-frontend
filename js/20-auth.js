@@ -9,7 +9,10 @@
     const st = window.Axelr.state;
 
     // ── Token state ──────────────────────────────────────────────────────
-    let googleAuthUserToken = localStorage.getItem('google_auth_token') || null;
+    const AXELR_AUTH_TOKEN = 'google_auth_token'; // Match the token key used across the app
+    const AXELR_AUTH_USER = 'axelr_user';
+    let currentAuthToken = localStorage.getItem(AXELR_AUTH_TOKEN) || null;
+    let googleAuthUserToken = null;
     let tokenRefreshPromise = null;
 
     function decodeJwt(token) {
@@ -54,7 +57,7 @@
     async function ensureValidToken() {
         let token = googleAuthUserToken;
         if (!token) {
-            token = localStorage.getItem('google_auth_token');
+            token = localStorage.getItem(AXELR_AUTH_TOKEN);
             if (token) googleAuthUserToken = token;
         }
         if (!token) throw new Error('No token available');
@@ -65,11 +68,11 @@
             try {
                 const newToken = await refreshGoogleToken();
                 googleAuthUserToken = newToken;
-                localStorage.setItem('google_auth_token', newToken);
+                localStorage.setItem(AXELR_AUTH_TOKEN, newToken);
                 return newToken;
             } catch (e) {
                 console.warn('Token refresh failed:', e);
-                localStorage.removeItem('google_auth_token');
+                localStorage.removeItem(AXELR_AUTH_TOKEN);
                 googleAuthUserToken = null;
                 throw new Error('Session expired. Please sign in again.');
             }
@@ -95,7 +98,7 @@
                     try {
                         const newToken = await refreshGoogleToken();
                         googleAuthUserToken = newToken;
-                        localStorage.setItem('google_auth_token', newToken);
+                        localStorage.setItem(AXELR_AUTH_TOKEN, newToken);
                         options.headers['Authorization'] = `Bearer ${newToken}`;
                         const retryResponse = await fetch(url, options);
                         if (retryResponse.status === 401) {
@@ -114,8 +117,11 @@
                     executeGlobalLogout();
                     throw error;
                 }
-                if (error instanceof TypeError && error.message.includes('network')) {
-                    await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+                // Retry on network errors or 5xx server errors
+                const isNetworkError = error instanceof TypeError && (error.message.includes('network') || error.message.includes('fetch'));
+                const isServerError = lastError && lastError.status >= 500;
+                if (isNetworkError || isServerError) {
+                    await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1))); // Exponential backoff
                     continue;
                 }
                 throw error;
@@ -210,7 +216,7 @@
             alert('Invalid Google credential. Please try again.');
             return;
         }
-        localStorage.setItem('google_auth_token', token);
+        localStorage.setItem(AXELR_AUTH_TOKEN, token);
         googleAuthUserToken = token;
         st.isGuestMode = false;
         showMainUI();
@@ -228,73 +234,219 @@
             });
         setAvatar(payload.picture, payload.name);
     }
+function triggerGoogleLogin() {
+    const overlay = document.createElement('div');
+    overlay.id = 'google-loading-overlay';
+    overlay.style.cssText = `
+        position: fixed; inset: 0; background: rgba(0,0,0,0.72); z-index: 99999;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        font-size: 16px; color: #fff; backdrop-filter: blur(6px);
+        font-family: 'Inter', sans-serif;
+    `;
+    overlay.innerHTML = `
+        <span class="material-symbols-rounded" style="font-size:48px; animation: spin 1s linear infinite; color: #00f2fe;">sync</span>
+        <div style="margin-top: 14px; font-weight: 600;">Signing in with Google…</div>
+        <div style="margin-top: 6px; font-size: 13px; color: #a1b5cc;">Complete the Google prompt</div>
+        <button class="g-cancel-btn" id="g-cancel-btn" style="margin-top: 22px;">Cancel</button>
+    `;
+    document.body.appendChild(overlay);
 
-    function triggerGoogleLogin() {
-        const overlay = document.createElement('div');
-        overlay.id = 'google-loading-overlay';
-        overlay.style.cssText = `
-            position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 99999;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 18px; color: #fff; backdrop-filter: blur(4px);
-        `;
-        overlay.innerHTML = `<span class="material-symbols-rounded" style="font-size:48px; animation: spin 1s linear infinite;">sync</span> Signing in...`;
-        document.body.appendChild(overlay);
+    const cleanup = () => {
+        const el = document.getElementById('google-loading-overlay');
+        if (el) el.remove();
+    };
 
-        const start = () => {
-            if (typeof google === 'undefined' || !google.accounts?.id) return false;
+    document.getElementById('g-cancel-btn').addEventListener('click', cleanup);
+
+    // Also dismiss if user presses Escape
+    const onKey = (e) => {
+        if (e.key === 'Escape') { cleanup(); document.removeEventListener('keydown', onKey); }
+    };
+    document.addEventListener('keydown', onKey);
+
+    const start = () => {
+        if (typeof google === 'undefined' || !google.accounts?.id) return false;
+        try {
             google.accounts.id.initialize({
                 client_id: GOOGLE_CLIENT_ID,
                 callback: (response) => {
-                    document.getElementById('google-loading-overlay')?.remove();
+                    cleanup();
                     handleCredentialResponse(response);
                 },
                 cancel_on_tap_outside: false,
                 context: 'signin',
                 use_fedcm_for_prompt: false
             });
-            google.accounts.id.prompt();
-            return true;
-        };
-        if (!start()) {
-            let attempts = 0;
-            const retry = setInterval(() => {
-                attempts += 1;
-                if (start() || attempts >= 30) {
-                    clearInterval(retry);
-                    if (attempts >= 30) {
-                        document.getElementById('google-loading-overlay')?.remove();
-                        alert('Google Sign‑In could not start. Please refresh and try again.');
-                    }
+            google.accounts.id.prompt((notification) => {
+                // If Google returns "not displayed" / "skipped", remove overlay so
+                // the user can retry. This is the root cause of the stuck spinner.
+                if (
+                    notification &&
+                    (notification.isNotDisplayed?.() || notification.isSkippedMoment?.())
+                ) {
+                    cleanup();
+                    showToast('Google sign-in unavailable. Please try again or use another method.', 'info');
                 }
-            }, 100);
+                if (notification && notification.isDismissedMoment?.()) {
+                    cleanup();
+                }
+            });
+            return true;
+        } catch (err) {
+            console.warn('Google init failed:', err);
+            return false;
         }
-    }
+    };
 
-    // ── GitHub / Email / Passkey ─────────────────────────────────────────
+    if (!start()) {
+        let attempts = 0;
+        const retry = setInterval(() => {
+            attempts += 1;
+            if (start() || attempts >= 30) {
+                clearInterval(retry);
+                if (attempts >= 30) {
+                    cleanup();
+                    showToast('Google Sign-In could not start. Please refresh and try again.', 'error');
+                }
+            }
+        }, 100);
+    }
+}
+
+
+    // ── Enhanced GitHub Login (matching Google's production quality) ─────────────────────────────────────────
     function triggerGitHubLogin() {
-        window.location.href = `${API_BASE_URL}/api/auth/github`;
+        // Add loading state to the GitHub button to match Google's smooth experience
+        const githubBtn = document.querySelector('.auth-provider-btn.github');
+        if (githubBtn) {
+            const originalText = githubBtn.innerHTML;
+            githubBtn.disabled = true;
+            githubBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" class="spinning"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.15 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.62.24 2.85.12 3.15.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg> Connecting...`;
+            githubBtn.style.opacity = '0.7';
+            githubBtn.style.cursor = 'wait';
+            
+            // Redirect after short delay to allow UI to update
+            setTimeout(() => {
+                window.location.href = `${API_BASE_URL}/api/auth/github`;
+            }, 100);
+        } else {
+            // Fallback if button element not found
+            window.location.href = `${API_BASE_URL}/api/auth/github`;
+        }
     }
 
     function showEmailLogin() {
         const email = prompt('Enter your email:');
         if (!email) return;
-        const password = prompt('Enter your password:');
-        if (!password) return;
         fetch(`${API_BASE_URL}/api/auth/email`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
+            body: JSON.stringify({ email })
         })
         .then(res => res.json())
         .then(data => {
             if (data.token) {
-                localStorage.setItem('google_auth_token', data.token);
+                localStorage.setItem(AXELR_AUTH_TOKEN, data.token);
                 location.reload();
             } else {
                 alert(data.message || 'Login failed');
             }
         })
         .catch(err => alert('Network error: ' + err.message));
+    }
+
+    // WebAuthn base64url conversion utilities (required for ArrayBuffer ↔ string translation)
+    function base64urlToUint8Array(base64url) {
+        // Convert base64url string to Uint8Array as required by WebAuthn API
+        const padding = '='.repeat((4 - (base64url.length % 4)) % 4);
+        const base64 = (base64url + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const binary = window.atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+            bytes[i] = binary.charCodeAt(i);
+        }
+        return bytes;
+    }
+
+    function uint8ArrayToBase64url(uint8array) {
+        // Convert Uint8Array back to base64url string for server transmission
+        const binary = String.fromCharCode(...uint8array);
+        const base64 = window.btoa(binary);
+        return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    }
+
+    function convertWebAuthnOptionsForBrowser(options) {
+        // Recursively convert all base64url fields in WebAuthn options to Uint8Arrays
+        if (!options) return options;
+        
+        if (typeof options === 'object') {
+            // Convert top-level challenge
+            if (options.challenge && typeof options.challenge === 'string') {
+                options.challenge = base64urlToUint8Array(options.challenge);
+            }
+            // Convert user.id for registration
+            if (options.user?.id && typeof options.user.id === 'string') {
+                options.user.id = base64urlToUint8Array(options.user.id);
+            }
+            // Convert all credential IDs in excludeCredentials (registration)
+            if (options.excludeCredentials && Array.isArray(options.excludeCredentials)) {
+                options.excludeCredentials = options.excludeCredentials.map(cred => {
+                    if (cred.id && typeof cred.id === 'string') {
+                        cred.id = base64urlToUint8Array(cred.id);
+                    }
+                    return cred;
+                });
+            }
+            // Convert all credential IDs in allowCredentials (login)
+            if (options.allowCredentials && Array.isArray(options.allowCredentials)) {
+                options.allowCredentials = options.allowCredentials.map(cred => {
+                    if (cred.id && typeof cred.id === 'string') {
+                        cred.id = base64urlToUint8Array(cred.id);
+                    }
+                    return cred;
+                });
+            }
+        }
+        return options;
+    }
+
+    function serializeCredentialForServer(credential) {
+        // Convert AuthenticatorAttestationResponse/AuthenticatorAssertionResponse buffers back to base64url
+        const serialized = {
+            id: credential.id,
+            type: credential.type,
+            rawId: uint8ArrayToBase64url(new Uint8Array(credential.rawId)),
+            response: {}
+        };
+
+        // Handle both registration (attestation) and login (assertion) responses
+        if (credential.response.attestationObject) {
+            serialized.response.attestationObject = uint8ArrayToBase64url(
+                new Uint8Array(credential.response.attestationObject)
+            );
+        }
+        if (credential.response.clientDataJSON) {
+            serialized.response.clientDataJSON = uint8ArrayToBase64url(
+                new Uint8Array(credential.response.clientDataJSON)
+            );
+        }
+        if (credential.response.authenticatorData) {
+            serialized.response.authenticatorData = uint8ArrayToBase64url(
+                new Uint8Array(credential.response.authenticatorData)
+            );
+        }
+        if (credential.response.signature) {
+            serialized.response.signature = uint8ArrayToBase64url(
+                new Uint8Array(credential.response.signature)
+            );
+        }
+        if (credential.response.userHandle) {
+            serialized.response.userHandle = uint8ArrayToBase64url(
+                new Uint8Array(credential.response.userHandle)
+            );
+        }
+
+        return serialized;
     }
 
     function triggerPasskeyLogin() {
@@ -306,24 +458,33 @@
             body: JSON.stringify({ email })
         })
         .then(res => res.json())
-        .then(options => navigator.credentials.get({ publicKey: options }))
+        .then(options => {
+            // Convert all base64url strings to Uint8Arrays before passing to WebAuthn API
+            const publicKey = convertWebAuthnOptionsForBrowser(options);
+            return navigator.credentials.get({ publicKey });
+        })
         .then(credential => {
+            // Convert credential buffers back to base64url for server transmission
+            const serializedCredential = serializeCredentialForServer(credential);
             return fetch(`${API_BASE_URL}/api/auth/webauthn/login/finish`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, credential })
+                body: JSON.stringify({ email, credential: serializedCredential })
             });
         })
         .then(res => res.json())
         .then(data => {
             if (data.token) {
-                localStorage.setItem('google_auth_token', data.token);
+                localStorage.setItem(AXELR_AUTH_TOKEN, data.token);
                 location.reload();
             } else {
                 alert(data.message || 'Passkey authentication failed');
             }
         })
-        .catch(err => alert('Passkey error: ' + err.message));
+        .catch(err => {
+            console.error('Passkey login error:', err);
+            alert('Passkey error: ' + err.message);
+        });
     }
 
     async function registerPasskey() {
@@ -336,11 +497,15 @@
                 body: JSON.stringify({ email })
             });
             const options = await beginResp.json();
-            const credential = await navigator.credentials.create({ publicKey: options });
+            // Convert all base64url strings to Uint8Arrays before passing to WebAuthn API
+            const publicKey = convertWebAuthnOptionsForBrowser(options);
+            const credential = await navigator.credentials.create({ publicKey });
+            // Convert credential buffers back to base64url for server transmission
+            const serializedCredential = serializeCredentialForServer(credential);
             const finishResp = await fetch(`${API_BASE_URL}/api/auth/webauthn/register/finish`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, credential })
+                body: JSON.stringify({ email, credential: serializedCredential })
             });
             const result = await finishResp.json();
             if (result.success) {
@@ -349,6 +514,7 @@
                 alert('Registration failed: ' + (result.message || 'Unknown error'));
             }
         } catch (err) {
+            console.error('Passkey registration error:', err);
             alert('Passkey error: ' + err.message);
         }
     }
@@ -358,14 +524,14 @@
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('token');
         if (token) {
-            localStorage.setItem('google_auth_token', token);
+            localStorage.setItem(AXELR_AUTH_TOKEN, token);
             window.location.href = window.location.origin + window.location.pathname;
         }
     })();
 
     // ── Guest mode ───────────────────────────────────────────────────────
     async function initGuestMode() {
-        if (localStorage.getItem('google_auth_token')) {
+        if (localStorage.getItem(AXELR_AUTH_TOKEN)) {
             st.isGuestMode = false;
             return;
         }
@@ -450,7 +616,8 @@
 
     // ── Logout ───────────────────────────────────────────────────────────
     function executeGlobalLogout() {
-        localStorage.removeItem('google_auth_token');
+        localStorage.removeItem(AXELR_AUTH_TOKEN);
+        localStorage.removeItem(AXELR_AUTH_USER);
         googleAuthUserToken = null;
         st.isGuestMode = false;
         showAuthWall();
@@ -499,10 +666,12 @@
                     const desc = getEl('puter-desc');
                     if (desc) desc.innerText = data.puter_enabled ? 'Puter enabled' : 'Puter disabled';
                 }
-                if (!data.puter_enabled && !window.puterOptInShown) {
-                    setTimeout(() => window.Axelr.showPuterOptIn && window.Axelr.showPuterOptIn(), 1500);
-                } else if (data.puter_enabled && window.Axelr.loadPuterSDK) {
-                    window.Axelr.loadPuterSDK();
+                // Load Puter SDK if already enabled
+                if (data.puter_enabled && !document.querySelector('script[src="https://js.puter.com/v2/"]')) {
+                    const script = document.createElement('script');
+                    script.src = 'https://js.puter.com/v2/';
+                    script.async = true;
+                    document.body.appendChild(script);
                 }
 
                 if (window.Axelr.updateSettingsQuota) window.Axelr.updateSettingsQuota();

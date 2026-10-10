@@ -70,24 +70,98 @@
         }
         localStorage.setItem('Axelr_workspace', workspace);
         const isMobile = window.innerWidth <= 768;
+        // Guest/Explorer Mode: Prepopulate read-only showcase chats if unauthenticated
+        if (!window.currentUser) {
+            prepopulateExplorerShowcase();
+            // Persist pulsing CTA for unlock
+            createUnlockCTA();
+        }
         const logo = getEl('sidebar-logo-text');
         const heroTitle = getEl('hero-title-text');
         const heroSub = getEl('hero-sub-text');
         if (workspace === 'design') {
             if (logo) logo.innerText = 'AXELR DESIGN';
-            if (heroTitle) heroTitle.innerText = 'What are we designing today?';
-            if (heroSub) heroSub.innerText = 'AI-powered UI/UX generation & live deployment.';
+            if (heroTitle) heroTitle.innerText = window.currentUser ? 'What are we designing today?' : 'Try Our UI Generation Showcase';
+            if (heroSub) heroSub.innerText = window.currentUser ? 'AI-powered UI/UX generation & live deployment.' : 'Unlock full capabilities to build live, production-ready UIs.';
             if (promptInput) promptInput.placeholder = isMobile ? "Upload a mockup..." : "Upload a mockup or request a UI component...";
+            if (!window.currentUser) promptInput.disabled = true;
         } else if (workspace === 'core') {
             if (logo) logo.innerText = 'AXELR';
-            if (heroTitle) heroTitle.innerText = 'What can I help you with?';
-            if (heroSub) heroSub.innerText = 'Intelligence execution for any task – from code to creativity.';
+            if (heroTitle) heroTitle.innerText = window.currentUser ? 'What can I help you with?' : 'Explore Our Interactive Demo';
+            if (heroSub) heroSub.innerText = window.currentUser ? 'Intelligence execution for any task – from code to creativity.' : 'Unlock full access to 40+ AI providers and advanced features.';
             if (promptInput) promptInput.placeholder = isMobile ? "Ask anything..." : "Ask me anything – I\'m here to help...";
+            if (!window.currentUser) promptInput.disabled = true;
         } else {
             if (logo) logo.innerText = 'AXELR DATA';
-            if (heroTitle) heroTitle.innerText = 'What are we building today?';
-            if (heroSub) heroSub.innerText = 'AI-powered architecture and data execution.';
+            if (heroTitle) heroTitle.innerText = window.currentUser ? 'What are we building today?' : 'View Our Data Extraction Demo';
+            if (heroSub) heroSub.innerText = window.currentUser ? 'AI-powered architecture and data execution.' : 'Unlock full capabilities to process receipts, invoices, and CSVs.';
             if (promptInput) promptInput.placeholder = isMobile ? "Upload a receipt..." : "Upload a receipt, invoice, or CSV for extraction...";
+            if (!window.currentUser) promptInput.disabled = true;
+        }
+        // Explorer Mode: Prepopulate read-only showcase chats
+        function prepopulateExplorerShowcase() {
+            if (historyListContainer && !window.explorerShowcasePopulated) {
+                const showcaseChats = [
+                    {id: 'data-extraction', title: 'Data Extraction Demo', readOnly: true},
+                    {id: 'ui-generation', title: 'UI Generation Showcase', readOnly: true},
+                    {id: 'touch-fix', title: 'Touch-Fix Coding Demo', readOnly: true}
+                ];
+                showcaseChats.forEach(chat => {
+                    const chatEl = document.createElement('div');
+                    chatEl.className = 'history-item';
+                    chatEl.innerHTML = `<span>${chat.title}</span><span class="read-only-badge">Demo</span>`;
+                    chatEl.style.opacity = '0.9';
+                    historyListContainer.appendChild(chatEl);
+                });
+                window.explorerShowcasePopulated = true;
+            }
+        }
+        // Persistent pulsing unlock CTA
+        function createUnlockCTA() {
+            if (!getEl('unlock-cta')) {
+                const cta = document.createElement('button');
+                cta.id = 'unlock-cta';
+                cta.textContent = 'Unlock Full Capabilities';
+                cta.style.cssText = `
+                    position: fixed;
+                    bottom: 100px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    padding: var(--space-3) var(--space-5);
+                    background: var(--accent-primary);
+                    color: var(--text-on-accent);
+                    border: none;
+                    border-radius: 9999px;
+                    font-weight: 600;
+                    z-index: var(--z-command-bar);
+                    animation: pulse 2s infinite;
+                    cursor: pointer;
+                    transition: transform var(--transition-base);
+                `;
+                cta.addEventListener('click', () => document.getElementById('auth-wall').style.display = 'flex');
+                cta.addEventListener('mouseenter', () => cta.style.transform = 'translateX(-50%) scale(1.05)');
+                cta.addEventListener('mouseleave', () => cta.style.transform = 'translateX(-50%) scale(1)');
+                document.body.appendChild(cta);
+                // Add pulse keyframe to CSS
+                if (!document.querySelector('#pulse-keyframe')) {
+                    const style = document.createElement('style');
+                    style.id = 'pulse-keyframe';
+                    style.textContent = `
+                        @keyframes pulse {
+                            0%, 100% { box-shadow: 0 0 0 0 rgba(0, 242, 254, 0.7); }
+                            50% { box-shadow: 0 0 0 10px rgba(0, 242, 254, 0); }
+                        }
+                        .read-only-badge {
+                            font-size: var(--text-xs);
+                            background: rgba(0,242,254,0.2);
+                            padding: var(--space-1) var(--space-2);
+                            border-radius: 4px;
+                            color: var(--accent-primary);
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
+            }
         }
         updateModelBranding(workspace, window.currentUser?.tier || 'free');
         if (window.Axelr.updateFeaturesMenu) window.Axelr.updateFeaturesMenu(workspace);
@@ -386,6 +460,7 @@
     }
 
     function selectWorkspace(type) {
+    sessionStorage.setItem('axelr_ws_switched', '1');
         localStorage.setItem('Axelr_workspace', type);
         const ws = getEl('workspace-selector');
         if (ws) {
@@ -395,37 +470,72 @@
         }
         activateWorkspace(type);
     }
+function activateWorkspace(name, isBoot = false) {
+    const validWorkspaces = ['core', 'data', 'design'];
 
-    function activateWorkspace(type, isBoot = false) {
-        if (mainWrapper) mainWrapper.classList.add('visible');
-        document.body.classList.remove('workspace-data', 'workspace-design', 'workspace-core');
-        document.body.classList.add(`workspace-${type}`);
-        const isMobile = window.innerWidth <= 768;
-        const logo = getEl('sidebar-logo-text');
-        const heroTitle = getEl('hero-title-text');
-        const heroSub = getEl('hero-sub-text');
-        if (type === 'design') {
-            if (logo) logo.innerText = 'AXELR DESIGN';
-            if (heroTitle) heroTitle.innerText = 'What are we designing today?';
-            if (heroSub) heroSub.innerText = 'AI-powered UI/UX generation & live deployment.';
-            if (promptInput) promptInput.placeholder = isMobile ? "Upload a mockup..." : "Upload a mockup or request a UI component...";
-        } else if (type === 'core') {
-            if (logo) logo.innerText = 'AXELR';
-            if (heroTitle) heroTitle.innerText = 'What can I help you with?';
-            if (heroSub) heroSub.innerText = 'Intelligence execution for any task.';
-            if (promptInput) promptInput.placeholder = isMobile ? "Ask anything..." : "Ask me anything – I\'m here to help...";
+    // Boot: force Core unless the user explicitly locked a different one.
+    if (isBoot) {
+        const isLocked = localStorage.getItem('axelr_ws_locked') === 'true';
+        if (isLocked) {
+            const stored = localStorage.getItem('Axelr_workspace');
+            name = validWorkspaces.includes(stored) ? stored : 'core';
         } else {
-            if (logo) logo.innerText = 'AXELR DATA';
-            if (heroTitle) heroTitle.innerText = 'What are we building today?';
-            if (heroSub) heroSub.innerText = 'AI-powered architecture and data execution.';
-            if (promptInput) promptInput.placeholder = isMobile ? "Upload a receipt..." : "Upload a receipt, invoice, or CSV for extraction...";
+            name = 'core';
         }
-        resetToNewChat(isBoot);
-        if (!isBoot && !st.isGuestMode && localStorage.getItem('google_auth_token') && window.Axelr.loadArchiveLogs) window.Axelr.loadArchiveLogs();
-        if (window.Axelr.displaySuggestions) window.Axelr.displaySuggestions();
-        if (window.Axelr.updateFeaturesMenu) window.Axelr.updateFeaturesMenu(type);
-        if (window.currentUser) updateQuotaDisplay(window.currentUser);
-        updateModelBranding(type, window.currentUser?.tier || 'free');
+    }
+
+    if (!validWorkspaces.includes(name)) name = 'core';
+
+    // Mid-session lock guard
+    const isLocked = localStorage.getItem('axelr_ws_locked') === 'true';
+    if (isLocked && !isBoot) {
+        showToast('Workspace is locked. Unlock in Profile Settings to switch.', 'warning');
+        return;
+    }
+
+    updateWorkspaceTheme(name);
+    localStorage.setItem('Axelr_workspace', name);
+    sessionStorage.setItem('axelr_ws_interacted', 'true');
+
+    updateModelBranding(name, window.currentUser?.tier || 'free');
+    if (window.Axelr.updateFeaturesMenu) window.Axelr.updateFeaturesMenu(name);
+
+    closeModals();
+    if (sidebarNode) sidebarNode.classList.remove('open');
+
+    if (!isBoot) {
+        const label = name.charAt(0).toUpperCase() + name.slice(1);
+        showToast(`Switched to ${label} workspace`, 'success');
+    }
+
+    resetToNewChat(isBoot);
+    if (!isBoot && !st.isGuestMode && localStorage.getItem('google_auth_token') && window.Axelr.loadArchiveLogs) {
+        window.Axelr.loadArchiveLogs();
+    }
+    if (window.Axelr.displaySuggestions) window.Axelr.displaySuggestions();
+    if (window.currentUser) updateQuotaDisplay(window.currentUser);
+}
+
+    // Workspace lock functionality
+    function toggleWorkspaceLock(locked) {
+        localStorage.setItem('axelr_ws_locked', locked.toString());
+        const lockDesc = getEl('lock-desc');
+        if (lockDesc) {
+            lockDesc.textContent = locked ? 'Workspace is locked, cannot switch automatically or manually' : 'Prevent automatic workspace switching';
+        }
+        showToast(`Workspace ${locked ? 'locked' : 'unlocked'}`, locked ? 'info' : 'success');
+    }
+
+    // Initialize workspace lock checkbox state on page load
+    function initWorkspaceLock() {
+        const toggle = getEl('workspace-lock-toggle');
+        if (toggle) {
+            toggle.checked = localStorage.getItem('axelr_ws_locked') === 'true';
+            const lockDesc = getEl('lock-desc');
+            if (lockDesc && toggle.checked) {
+                lockDesc.textContent = 'Workspace is locked, cannot switch automatically or manually';
+            }
+        }
     }
 
     function resetToNewChat(isBoot = false) {
@@ -508,24 +618,49 @@
     }
 
     function setupViewportObserver() {
+        // Clean up any existing observers
         if (st.viewportObserver) {
             st.viewportObserver.disconnect();
             st.viewportObserver = null;
         }
         if (!viewport) return;
-        st.viewportObserver = new MutationObserver(() => {
-            if (!st.isUserScrolling && st.observerActive) {
-                const lastMessage = viewport.querySelector('.chat-bubble:last-child');
-                if (lastMessage) {
-                    const rect = lastMessage.getBoundingClientRect();
-                    const viewportRect = viewport.getBoundingClientRect();
-                    if (rect.bottom > viewportRect.bottom - 50) {
-                        window.Axelr.scrollToBottom(true);
-                    }
-                }
+        
+        // Create invisible intersection observer anchor at the bottom of the viewport
+        let scrollAnchor = document.getElementById('viewport-scroll-anchor');
+        if (!scrollAnchor) {
+            scrollAnchor = document.createElement('div');
+            scrollAnchor.id = 'viewport-scroll-anchor';
+            scrollAnchor.style.height = '1px';
+            scrollAnchor.style.width = '100%';
+            scrollAnchor.style.position = 'relative';
+            scrollAnchor.style.bottom = '0';
+            viewport.appendChild(scrollAnchor);
+        }
+        
+        // Use IntersectionObserver instead of MutationObserver to eliminate layout thrashing
+        // Browser asynchronously notifies us when anchor exits viewport - zero synchronous layout costs
+        st.viewportObserver = new IntersectionObserver((entries) => {
+            const entry = entries[0];
+            if (entry.isIntersecting && !st.isUserScrolling && st.observerActive) {
+                // Anchor is in view - we're already at the bottom, no action needed
+            } else if (!entry.isIntersecting && !st.isUserScrolling && st.observerActive) {
+                // Anchor has exited viewport - user has scrolled up, disable auto-scroll
+                // Or if we're actively streaming, maintain auto-scroll
+                window.Axelr.scrollToBottom(true);
             }
+        }, {
+            root: viewport,
+            threshold: 1.0 // Only trigger when anchor is fully out of view
         });
-        st.viewportObserver.observe(viewport, { childList: true, subtree: true, characterData: true, attributes: true });
+        
+        st.viewportObserver.observe(scrollAnchor);
+        
+        // Add function to reposition anchor when new messages are added
+        window.Axelr.repositionScrollAnchor = () => {
+            if (scrollAnchor && viewport.lastChild !== scrollAnchor) {
+                viewport.appendChild(scrollAnchor);
+            }
+        };
     }
 
     if (viewport) {
@@ -594,9 +729,91 @@
     }
 
     // ── Publish ──────────────────────────────────────────────────────────
+    // ── Explorer Mode (Guest Mode Demo Gateway) ─────────────────────────
+    function prepopulateExplorerShowcase() {
+        const historyListContainer = getEl('history-list-container');
+        if (historyListContainer && !window.explorerShowcasePopulated) {
+            const showcaseChats = [
+                {id: 'data-extraction', title: 'Data Extraction Demo', readOnly: true},
+                {id: 'ui-generation', title: 'UI Generation Showcase', readOnly: true},
+                {id: 'touch-fix', title: 'Touch-Fix Coding Demo', readOnly: true}
+            ];
+            showcaseChats.forEach(chat => {
+                const chatEl = document.createElement('div');
+                chatEl.className = 'history-item';
+                chatEl.innerHTML = `<span>${chat.title}</span><span class="read-only-badge">Demo</span>`;
+                chatEl.style.opacity = '0.9';
+                historyListContainer.appendChild(chatEl);
+            });
+            window.explorerShowcasePopulated = true;
+        }
+    }
+
+    function createUnlockCTA() {
+        if (!window.unlockCTACreated) {
+            // Inject pulse animation CSS
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes unlockPulse {
+                    0%,100% { box-shadow: 0 0 0 0 rgba(0, 242, 254, 0.7); transform: scale(1); }
+                    50% { box-shadow: 0 0 0 12px rgba(0, 242, 254, 0); transform: scale(1.02); }
+                }
+                .unlock-cta {
+                    position: fixed;
+                    bottom: var(--space-8);
+                    left: 50%;
+                    transform: translateX(-50%);
+                    padding: var(--space-4) var(--space-6);
+                    background: var(--accent-primary);
+                    color: var(--text-on-accent);
+                    border: none;
+                    border-radius: 12px;
+                    font-family: var(--font-base);
+                    font-weight: 600;
+                    cursor: pointer;
+                    z-index: var(--z-modal);
+                    animation: unlockPulse 2s infinite;
+                    transition: transform var(--transition-base);
+                }
+                .unlock-cta:hover {
+                    transform: translateX(-50%) scale(1.05);
+                }
+                .read-only-badge {
+                    margin-left: auto;
+                    padding: 2px 8px;
+                    background: rgba(0,242,254,0.1);
+                    color: var(--accent-primary);
+                    border-radius: 999px;
+                    font-size: var(--text-xs);
+                    font-weight: 600;
+                }
+                /* Disable prompt input for unauthenticated users */
+                body.guest-mode #prompt-input {
+                    pointer-events: none;
+                    opacity: 0.6;
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // Create CTA button
+            const cta = document.createElement('button');
+            cta.className = 'unlock-cta';
+            cta.textContent = 'Unlock Full Capabilities';
+            cta.onclick = () => {
+                document.getElementById('auth-wall').style.display = 'flex';
+            };
+            document.body.appendChild(cta);
+            window.unlockCTACreated = true;
+        }
+    }
+
+    // Initialize workspace lock checkbox state
+    initWorkspaceLock();
     Object.assign(window.Axelr, {
+        MODEL_CONFIG: MODEL_CONFIG, 
         applyTheme, setTheme, toggleTheme,
         updateWorkspaceTheme, activateWorkspace, resetToNewChat,
+        toggleWorkspaceLock, initWorkspaceLock,
         showWorkspaceSelector, selectWorkspace,
         loadModelConfig, renderModelDropdown, updateModelBranding, selectModel,
         getDailyLimit, updateQuotaDisplay, updateSettingsQuota,
@@ -606,12 +823,14 @@
         adjustCommandWrapperAndViewport, debouncedAdjust,
         setupViewportObserver, adjustViewportPadding,
         renderInlineWorkspaceCards, pickInlineWorkspace,
+        prepopulateExplorerShowcase, createUnlockCTA,
         MODEL_CONFIG: MODEL_CONFIG,  // reassigned at load
         getCurrentThemePreference: () => currentThemePreference,
     });
     Object.entries({
         applyTheme, setTheme, toggleTheme,
         updateWorkspaceTheme, activateWorkspace, resetToNewChat,
+        toggleWorkspaceLock, initWorkspaceLock,
         showWorkspaceSelector, selectWorkspace,
         loadModelConfig, renderModelDropdown, updateModelBranding, selectModel,
         getDailyLimit, updateQuotaDisplay, updateSettingsQuota,
@@ -620,5 +839,6 @@
         openSearchOverlay, closeSearchOverlay, filterSearchOverlay,
         adjustCommandWrapperAndViewport, adjustViewportPadding,
         renderInlineWorkspaceCards, pickInlineWorkspace,
+        prepopulateExplorerShowcase, createUnlockCTA,
     }).forEach(([k, v]) => { window[k] = v; });
 })();

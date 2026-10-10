@@ -1,5 +1,6 @@
 // js/50-command.js
 // AXELR AI — Input, files, voice, executeCommand SSE, action buttons, deploy.
+// v4.4 — thinking animation restored as a first-class function.
 (function () {
     "use strict";
     const {
@@ -11,7 +12,131 @@
     } = window.Axelr;
     const st = window.Axelr.state;
 
-    // ── File chips ───────────────────────────────────────────────────────
+    const apiFetch = window.Axelr.apiFetch || ((...a) => fetch(...a));
+
+    // ═══════════════════════════════════════════════════════════════════
+    // 0 · THINKING ANIMATION (restored from the orphaned v4.2 block)
+    //     Lives as a real function so the caller can capture its cleanup.
+    //     Renders into #thinking-indicator (or creates one), independent of
+    //     the inline reasoning chain rendered inside the AI bubble.
+    // ═══════════════════════════════════════════════════════════════════
+    const THINKING_STEPS = [
+        { icon: "psychology",    text: "Thinking",              delay: 1000 },
+        { icon: "manage_search", text: "Analyzing context",     delay: 1200 },
+        { icon: "sync_alt",      text: "Reconciling signals",   delay: 1400 },
+        { icon: "verified",      text: "Finalizing response",   delay: 1500 }
+    ];
+
+    function startThinkingAnimation() {
+        // Ensure keyframes are installed once.
+        if (!document.getElementById("elite-thinking-styles")) {
+            const s = document.createElement("style");
+            s.id = "elite-thinking-styles";
+            s.textContent = `
+                @keyframes elxPulse {0%,100%{opacity:1}50%{opacity:.7}}
+                @keyframes elxDotPulse {0%,60%,100%{opacity:.3}30%{opacity:1}}
+                .thinking-step {display:flex;align-items:center;gap:12px;animation:elxPulse 1.5s infinite}
+                .thinking-step .loading-dots span {display:inline-block;animation:elxDotPulse 1.4s infinite}
+                .thinking-step .loading-dots span:nth-child(2){animation-delay:.2s}
+                .thinking-step .loading-dots span:nth-child(3){animation-delay:.4s}
+            `;
+            document.head.appendChild(s);
+        }
+
+        // Locate or create the container.
+        let container = getEl("thinking-indicator");
+        if (!container) {
+            container = document.createElement("div");
+            container.id = "thinking-indicator";
+            container.setAttribute("role", "status");
+            container.setAttribute("aria-live", "polite");
+            container.style.cssText = "display:flex;flex-direction:column;gap:8px;padding:10px 14px;margin:6px 0;border:1px dashed rgba(0,242,254,0.2);border-radius:8px;background:rgba(0,242,254,0.02);font-size:13px;";
+            if (viewport) viewport.appendChild(container);
+            else document.body.appendChild(container);
+        }
+        container.style.display = "flex";
+        container.style.opacity = "1";
+        container.innerHTML = "";
+
+        let currentStep = 0;
+        let stepTimer = null;
+        let longWaitTimer = null;
+
+        function showStep(step) {
+            const previous = container.querySelectorAll(".thinking-step.active");
+            previous.forEach(el => el.remove());
+            const el = document.createElement("div");
+            el.className = "thinking-step active";
+            el.innerHTML =
+                `<span class="material-symbols-rounded" style="color:var(--accent-glow);font-size:20px;">${step.icon}</span>` +
+                `<span style="color:var(--text-primary);font-weight:500;">${step.text}</span>` +
+                `<span class="loading-dots" style="margin-left:4px;">` +
+                    `<span>.</span><span>.</span><span>.</span>` +
+                `</span>`;
+            container.appendChild(el);
+            if (typeof scrollToBottom === "function") scrollToBottom();
+        }
+
+        function advance() {
+            if (currentStep < THINKING_STEPS.length) {
+                showStep(THINKING_STEPS[currentStep]);
+                const delay = THINKING_STEPS[currentStep].delay;
+                currentStep++;
+                stepTimer = setTimeout(advance, delay);
+            } else {
+                // Waiting state — all steps exhausted, socket still quiet.
+                const previous = container.querySelectorAll(".thinking-step.active");
+                previous.forEach(el => el.remove());
+                const el = document.createElement("div");
+                el.className = "thinking-step waiting";
+                el.innerHTML =
+                    `<span class="material-symbols-rounded" style="color:#f59e0b;font-size:20px;">hourglass_top</span>` +
+                    `<span style="color:var(--text-primary);">Finalizing response</span>` +
+                    `<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>`;
+                container.appendChild(el);
+            }
+        }
+
+        advance();
+
+        // Long-wait failover card at 5 s.
+        longWaitTimer = setTimeout(() => {
+            if (!container || container.style.display === "none") return;
+            const previous = container.querySelectorAll(".thinking-step.active, .thinking-step.waiting");
+            previous.forEach(el => el.remove());
+            const el = document.createElement("div");
+            el.className = "thinking-step failover";
+            el.innerHTML =
+                `<span class="material-symbols-rounded" style="color:#8b5cf6;font-size:20px;">swap_horiz</span>` +
+                `<span style="color:var(--text-primary);">Switching to dedicated AI agent</span>` +
+                `<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>`;
+            container.appendChild(el);
+        }, 5000);
+
+        // Cleanup returned to caller — captured in cleanupThinkingAnimation.
+        return function cleanup() {
+            if (stepTimer) clearTimeout(stepTimer);
+            if (longWaitTimer) clearTimeout(longWaitTimer);
+            if (!container) return;
+            container.style.transition = "opacity 0.4s ease";
+            container.style.opacity = "0";
+            setTimeout(() => {
+                if (container && container.parentNode) container.parentNode.removeChild(container);
+            }, 400);
+        };
+    }
+// Force-override. The local version returns a cleanup closure; the
+// 00-core.js version does not. This module must win the registration
+// so hideThinkingIndicator can tear the animation down correctly.
+window.Axelr.startThinkingAnimation = startThinkingAnimation;
+window.Axelr.stopThinkingAnimation  = function () {
+    const ti = getEl('thinking-indicator');
+    if (ti) { ti.style.display = 'none'; ti.innerHTML = ''; }
+};
+
+    // ═══════════════════════════════════════════════════════════════════
+    // 1 · FILE CHIPS
+    // ═══════════════════════════════════════════════════════════════════
     function renderFileChips() {
         const container = getEl('file-staging-container');
         if (!container) return;
@@ -40,39 +165,53 @@
         fileInput.addEventListener('change', (e) => {
             let maxBytes = 5 * 1024 * 1024;
             let maxFilesAllowed = 2;
-            if (document.body.classList.contains('pro-tier')) {
-                maxBytes = 20 * 1024 * 1024;
-                maxFilesAllowed = 5;
-            } else if (document.body.classList.contains('designer-tier')) {
-                maxBytes = 50 * 1024 * 1024;
-                maxFilesAllowed = 5;
-            }
+            if (document.body.classList.contains('pro-tier')) { maxBytes = 20 * 1024 * 1024; maxFilesAllowed = 5; }
+            else if (document.body.classList.contains('designer-tier')) { maxBytes = 50 * 1024 * 1024; maxFilesAllowed = 5; }
+
             const incomingFiles = Array.from(e.target.files);
+            const currentWs = getWorkspace();
+            if (currentWs === 'core' && incomingFiles.length > 0) {
+                const primary = incomingFiles[0];
+                const type = primary.type || '';
+                const name = (primary.name || '').toLowerCase();
+                const isImage = type.startsWith('image/') || /\.(png|jpe?g|gif|webp|svg|bmp)$/i.test(name);
+                const isDoc = type === 'application/pdf' || type === 'text/csv' || type.includes('spreadsheet') || type.includes('excel') || /\.(csv|xlsx?|pdf|tsv|json)$/i.test(name);
+                let targetWs = null;
+                if (isImage) targetWs = 'design';
+                else if (isDoc) targetWs = 'data';
+                if (targetWs && targetWs !== currentWs) {
+                    sessionStorage.setItem('axelr_ws_switched', '1');
+                    if (window.Axelr.activateWorkspace) window.Axelr.activateWorkspace(targetWs);
+                    if (window.Axelr.showToast) {
+                        const labels = { data: 'Data', design: 'Design' };
+                        window.Axelr.showToast(`Detected ${labels[targetWs]} input — switched to ${labels[targetWs]} workspace`, 'info');
+                    }
+                }
+            }
+
             if ((st.stagedFiles.length + incomingFiles.length) > maxFilesAllowed) {
                 alert(`⚠️ Tier Limit Reached: You can only attach up to ${maxFilesAllowed} files.`);
                 fileInput.value = '';
                 return;
             }
+
             const validFiles = incomingFiles.filter(file => {
-                if (file.size === 0) {
-                    alert(`⚠️ The file "${file.name}" is empty (0 bytes).`);
-                    return false;
-                }
-                if (file.type && !file.type.startsWith('image/') && file.type !== 'text/plain' && file.type !==
-                    'text/csv' && file.type !== 'application/pdf' && !file.type.includes('spreadsheet') && !file
-                    .type.includes('document')) {
-                    alert(`⚠️ File type "${file.type}" is not supported. Please upload images, PDFs, CSVs, or spreadsheets.`);
+                if (file.size === 0) { alert(`⚠️ The file "${file.name}" is empty (0 bytes).`); return false; }
+                if (file.type && !file.type.startsWith('image/') && file.type !== 'text/plain' && file.type !== 'text/csv' && file.type !== 'application/pdf' && !file.type.includes('spreadsheet') && !file.type.includes('document')) {
+                    alert(`⚠️ File type "${file.type}" is not supported.`);
                     return false;
                 }
                 return true;
             });
-            let incomingSize = validFiles.reduce((acc, file) => acc + file.size, 0);
-            let currentStagedSize = st.stagedFiles.reduce((acc, file) => acc + file.size, 0);
+
+            const incomingSize = validFiles.reduce((a, f) => a + f.size, 0);
+            const currentStagedSize = st.stagedFiles.reduce((a, f) => a + f.size, 0);
             if ((incomingSize + currentStagedSize) > maxBytes) {
-                alert(`⚠️ Payload Exceeds Tier Capacity. Maximum allowed: ${maxBytes / (1024*1024)}MB.`);
+                alert(`⚠️ Payload Exceeds Tier Capacity. Maximum: ${maxBytes / (1024 * 1024)}MB.`);
                 fileInput.value = '';
                 return;
             }
+
             st.stagedFiles = [...st.stagedFiles, ...validFiles];
             renderFileChips();
             fileInput.value = '';
@@ -80,15 +219,14 @@
         });
     }
 
-    // ── Validation ───────────────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════
+    // 2 · VALIDATION / INPUT
+    // ═══════════════════════════════════════════════════════════════════
     function validateSendCommand() {
         const hasInput = (promptInput?.value?.trim()?.length || 0) > 0 || st.stagedFiles.length > 0;
         if (sendBtn) sendBtn.disabled = !hasInput;
         const inputFrame = document.querySelector('.input-frame');
-        if (inputFrame) {
-            if (hasInput) inputFrame.classList.add('has-text');
-            else inputFrame.classList.remove('has-text');
-        }
+        if (inputFrame) inputFrame.classList.toggle('has-text', hasInput);
     }
 
     if (promptInput) {
@@ -111,7 +249,9 @@
         validateSendCommand();
     });
 
-    // ── Voice ────────────────────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════
+    // 3 · VOICE
+    // ═══════════════════════════════════════════════════════════════════
     const micBtn = getEl('mic-trigger');
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition && micBtn) {
@@ -142,8 +282,7 @@
             else if (event.error === 'no-speech') alert("⚠️ No audio detected. Check your microphone settings.");
         };
         recognition.onresult = (event) => {
-            let interim = "";
-            let final = "";
+            let interim = "", final = "";
             for (let i = event.resultIndex; i < event.results.length; ++i) {
                 if (event.results[i].isFinal) final += event.results[i][0].transcript;
                 else interim += event.results[i][0].transcript;
@@ -160,22 +299,9 @@
         micBtn.style.display = 'none';
     }
 
-    // ── Knowledge injection ──────────────────────────────────────────────
-    async function getRelevantKnowledge(query) {
-        if (!query || query.length < 3) return '';
-        try {
-            const resp = await apiFetch(`${API_BASE_URL}/api/knowledge/search?q=${encodeURIComponent(query)}`);
-            const data = await resp.json();
-            if (data.results && data.results.length > 0) {
-                return '📚 Relevant knowledge:\n' + data.results.map(k => `${k.key}: ${k.value}`).join('\n');
-            }
-        } catch (e) {
-            console.warn('Knowledge search failed:', e);
-        }
-        return '';
-    }
-
-    // ── Security filter ──────────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════
+    // 4 · SECURITY FILTER
+    // ═══════════════════════════════════════════════════════════════════
     function detectManipulationAttempt(command) {
         const patterns = [
             /forget all (instructions|prior|previous)/i,
@@ -187,9 +313,7 @@
             /stop following your instructions/i,
             /reset your instructions/i
         ];
-        for (let p of patterns) {
-            if (p.test(command)) return true;
-        }
+        for (let p of patterns) if (p.test(command)) return true;
         return false;
     }
 
@@ -215,15 +339,41 @@
         scrollToBottom();
     }
 
-    // ── Main command dispatcher ──────────────────────────────────────────
-    async function executeCommand(isRetry = false) {
+    // ═══════════════════════════════════════════════════════════════════
+    // 5 · EXECUTE COMMAND — the one and only dispatcher
+    // ═══════════════════════════════════════════════════════════════════
+    async function executeCommand(isRetry = false, regenerateSessionId = null) {
         if (!st.activeSessionId && heroDisplay) heroDisplay.style.display = 'none';
         if (st.isProcessing) return;
         st.isProcessing = true;
 
+        // ── Reasoning-chain + thinking-animation handles (single block) ──
+        let reasoningHandle = null;
+        let cleanupThinkingAnimation = null;
+
+        function hideThinkingIndicator(label) {
+            if (reasoningHandle) {
+                reasoningHandle.complete(label || 'done');
+                reasoningHandle = null;
+            }
+            if (cleanupThinkingAnimation) {
+                try { cleanupThinkingAnimation(); } catch (_) {}
+                cleanupThinkingAnimation = null;
+            }
+            const ti = getEl('thinking-indicator');
+            if (ti) ti.style.display = 'none';
+        }
+
+        // Kick off the thinking animation; capture its cleanup.
+        if (window.Axelr.startThinkingAnimation) {
+            const maybeCleanup = window.Axelr.startThinkingAnimation();
+            if (typeof maybeCleanup === 'function') cleanupThinkingAnimation = maybeCleanup;
+        }
+
         if (st.manipulationLockUntil && Date.now() < st.manipulationLockUntil) {
             const remaining = Math.ceil((st.manipulationLockUntil - Date.now()) / 1000);
             alert(`⛔ System temporarily locked due to security violations. Please wait ${remaining} seconds.`);
+            hideThinkingIndicator();
             st.isProcessing = false;
             return;
         }
@@ -234,14 +384,57 @@
             localStorage.removeItem('axelr_active_session');
         }
 
-        if (!promptInput) { st.isProcessing = false; return; }
-        const command = promptInput.value.trim();
-        st.lastUserCommand = command;
-        if (!command && st.stagedFiles.length === 0 && !isRetry) {
+        if (!promptInput) {
+            hideThinkingIndicator();
             st.isProcessing = false;
             return;
         }
 
+        const command = promptInput.value.trim();
+        st.lastUserCommand = command;
+        if (!command && st.stagedFiles.length === 0 && !isRetry) {
+            hideThinkingIndicator();
+            st.isProcessing = false;
+            return;
+        }
+
+        const originalBtnHtml = sendBtn ? sendBtn.innerHTML : '';
+
+        // Abort-controller handshake (this doubles as the "stop" button).
+        if (st.globalAbortController) {
+            st.globalAbortController.abort();
+            st.globalAbortController = null;
+            if (sendBtn) {
+                sendBtn.classList.remove('btn-stop-active');
+                sendBtn.innerHTML = originalBtnHtml;
+            }
+            hideThinkingIndicator();
+            st.isProcessing = false;
+            return;
+        }
+
+        // ── ELITE AUTO-WORKSPACE ROUTING ────────────────────────────────
+        const currentWs = getWorkspace();
+        if (currentWs === 'core' && window.Axelr.detectWorkspaceFull) {
+            try {
+                const detectResult = await window.Axelr.detectWorkspaceFull(
+                    command,
+                    st.stagedFiles.length ? st.stagedFiles : null,
+                    false
+                );
+                if (detectResult && detectResult.workspace && detectResult.workspace !== 'core'
+                    && detectResult.confidence >= (window.Axelr.SWITCH_THRESHOLD || 0.65)) {
+                    sessionStorage.setItem('axelr_ws_switched', '1');
+                    if (window.Axelr.activateWorkspace) window.Axelr.activateWorkspace(detectResult.workspace);
+                    const label = detectResult.workspace.charAt(0).toUpperCase() + detectResult.workspace.slice(1);
+                    showToast(`Routed to ${label} workspace`, 'info');
+                }
+            } catch (err) {
+                console.warn('[Axelr] Workspace detector error:', err);
+            }
+        }
+
+        // ── SECURITY ────────────────────────────────────────────────────
         if (detectManipulationAttempt(command)) {
             st.manipulationCount++;
             sessionStorage.setItem('axelr_manipulation_count', st.manipulationCount);
@@ -260,23 +453,12 @@
             promptInput.style.height = 'auto';
             validateSendCommand();
             localStorage.removeItem(getDraftKey());
+            hideThinkingIndicator();
             st.isProcessing = false;
             return;
         }
 
-        let finalCommand = command;
-        const originalBtnHtml = sendBtn ? sendBtn.innerHTML : '';
-
-        if (st.globalAbortController) {
-            st.globalAbortController.abort();
-            st.globalAbortController = null;
-            if (sendBtn) {
-                sendBtn.classList.remove('btn-stop-active');
-                sendBtn.innerHTML = originalBtnHtml;
-            }
-            st.isProcessing = false;
-            return;
-        }
+        const finalCommand = command;
 
         if (!isRetry) {
             promptInput.value = '';
@@ -285,26 +467,24 @@
         }
         if (sendBtn) sendBtn.disabled = true;
 
+        // ── User bubble ─────────────────────────────────────────────────
         const userBubble = document.createElement('div');
         userBubble.className = 'chat-bubble user-bubble';
         let filesHtml = '';
         if (st.stagedFiles.length > 0) {
-            filesHtml = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">' + st.stagedFiles.map(f =>
-                `<div class="file-chip"><span class="material-symbols-rounded" style="font-size:14px;">description</span> ${escapeHtmlEntities(f.name)}</div>`
-            ).join('') + '</div>';
+            filesHtml = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">' +
+                st.stagedFiles.map(f =>
+                    `<div class="file-chip"><span class="material-symbols-rounded" style="font-size:14px;">description</span> ${escapeHtmlEntities(f.name)}</div>`
+                ).join('') + '</div>';
         }
         userBubble.innerHTML = `${filesHtml}${DOMPurify.sanitize(marked.parse(command || " "))}`;
         if (viewport) viewport.appendChild(userBubble);
 
-        if (isRetry) {
-            if (viewport) {
-                const allBubbles = viewport.querySelectorAll('.chat-bubble');
-                if (allBubbles.length >= 2) {
-                    const lastBubble = allBubbles[allBubbles.length - 1];
-                    if (lastBubble.classList.contains('nexus-bubble')) {
-                        lastBubble.remove();
-                    }
-                }
+        if (isRetry && viewport) {
+            const allBubbles = viewport.querySelectorAll('.chat-bubble');
+            if (allBubbles.length >= 2) {
+                const lastBubble = allBubbles[allBubbles.length - 1];
+                if (lastBubble.classList.contains('nexus-bubble')) lastBubble.remove();
             }
             st.hasRegenerated = true;
             if (st.regenerateTimer) {
@@ -314,9 +494,9 @@
         }
 
         const stagedFilesSnapshot = [...st.stagedFiles];
-        st.stagedFiles = [];
-        renderFileChips();
+        let stagedFilesCleared = false;
 
+        // ── Nexus bubble with reasoning chain ───────────────────────────
         const nexusBubble = document.createElement('div');
         nexusBubble.className = 'chat-bubble nexus-bubble';
         const avatarDiv = document.createElement('div');
@@ -329,23 +509,17 @@
         contentDiv.style.flex = '1';
         nexusBubble.appendChild(contentDiv);
         if (viewport) viewport.appendChild(nexusBubble);
+
+        if (window.Axelr.AxelrReasoning) {
+            reasoningHandle = window.Axelr.AxelrReasoning.begin(contentDiv, command, getWorkspace());
+        }
         scrollToBottom();
 
         const isGuest = st.isGuestMode && !localStorage.getItem('google_auth_token');
-        let contextKnowledge = '';
-        if (!isGuest && finalCommand.length > 3) {
-            try {
-                contextKnowledge = await getRelevantKnowledge(finalCommand);
-            } catch (_) {
-                contextKnowledge = '';
-            }
-        }
-
         const formData = new FormData();
         formData.append('command', finalCommand);
         formData.append('workspace', getWorkspace());
         formData.append('isRetry', isRetry ? 'true' : 'false');
-        if (contextKnowledge) formData.append('context', contextKnowledge);
         if (isGuest) {
             formData.append('isGuest', 'true');
             if (st.guestSessionId) formData.append('sessionId', st.guestSessionId);
@@ -366,80 +540,148 @@
 
         try {
             const endpoint = isGuest ? '/api/guest/extract' : '/api/extract_stream';
-            const token = await ensureValidToken();
+            const reqHeaders = {};
+            if (!isGuest) {
+                const token = await ensureValidToken();
+                reqHeaders['Authorization'] = `Bearer ${token}`;
+            }
             const response = await fetch(`${API_BASE_URL}${endpoint}`, {
                 method: 'POST',
                 body: formData,
-                headers: { 'Authorization': `Bearer ${token}` },
+                headers: reqHeaders,
                 signal: st.globalAbortController.signal,
             });
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                let errorMsg = errorData.message || 'Pipeline failed.';
+                const errorMsg = errorData.message || 'Pipeline failed.';
+                if (!stagedFilesCleared) {
+                    st.stagedFiles = [...stagedFilesSnapshot];
+                    renderFileChips();
+                }
                 if (errorData.code === 'LIMIT_REACHED' || errorData.code === 'GUEST_LIMIT_REACHED') {
                     contentDiv.innerHTML = `⚠️ <strong>Daily Quota Exceeded.</strong><br><button onclick="openUpgradeModal()" style="background:var(--accent-glow-pro);color:#000;padding:8px 12px;border:none;border-radius:6px;cursor:pointer;font-weight:600;margin-top:10px;">Upgrade Workspace</button>`;
                 } else {
                     contentDiv.innerHTML = `💥 Error: ${errorMsg}`;
                 }
                 scrollToBottom();
+                hideThinkingIndicator();
                 st.isProcessing = false;
                 return;
             }
 
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
-            let buffer = '';
+
+            // ── Guest branch (plain JSON) ────────────────────────────────
+            if (isGuest) {
+                let buf = '';
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    buf += decoder.decode(value, { stream: true });
+                }
+                let data = {};
+                try { data = JSON.parse(buf); } catch (_) {}
+                const textPart = data.text || data.response || '';
+                if (textPart) {
+                    contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(textPart));
+                    if (reasoningHandle) {
+                        reasoningHandle.complete('streaming');
+                        reasoningHandle = null;
+                    }
+                    if (data.sessionId) st.guestSessionId = data.sessionId;
+                    if (st.stagedFiles.length && !stagedFilesCleared) {
+                        st.stagedFiles = [];
+                        renderFileChips();
+                        stagedFilesCleared = true;
+                    }
+                } else if (data.error) {
+                    contentDiv.innerHTML = `⚠️ ${data.error}`;
+                }
+                scrollToBottom();
+                return;
+            }
+
+            // ── SSE stream branch ────────────────────────────────────────
+            let streamBuffer = '';
+            let renderedText = '';
             let fullResponse = '';
+            let renderScheduled = false;
             let sessionIdFromStream = null;
             let structuredData = null;
             let filename = 'Export.csv';
 
-            st.streamingBuffer = '';
-            st.throttledRender = null;
+            const flushRender = () => {
+                renderScheduled = false;
+                contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(renderedText));
+                scrollToBottom();
+            };
+            const scheduleRender = () => {
+                if (renderScheduled) return;
+                renderScheduled = true;
+                requestAnimationFrame(flushRender);
+            };
 
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
-                buffer += decoder.decode(value, { stream: true });
-                const events = buffer.split('\n\n');
-                for (let i = 0; i < events.length - 1; i++) {
-                    const event = events[i];
-                    if (event.startsWith('data: ')) {
-                        try {
-                            const json = JSON.parse(event.slice(6));
-                            if (json.text) {
-                                const textPart = json.text;
-                                fullResponse += textPart;
-                                if (!st.streamingBubble) {
-                                    st.streamingBubble = nexusBubble;
-                                    st.streamingContentDiv = contentDiv;
-                                }
-                                st.streamingBuffer += textPart;
-                                if (!st.throttledRender) {
-                                    st.throttledRender = throttle(() => {
-                                        contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(st.streamingBuffer));
-                                    }, 100);
-                                }
-                                st.throttledRender();
-                                scrollToBottom();
-                            } else if (json.watermark) {
-                                contentDiv.innerHTML += json.watermark;
-                            } else if (json.sessionId) {
-                                sessionIdFromStream = json.sessionId;
-                            } else if (json.structuredData) {
-                                structuredData = json.structuredData;
-                            } else if (json.filename) {
-                                filename = json.filename;
-                            } else if (json.error) {
-                                contentDiv.innerHTML = `⚠️ ${json.error}`;
+                streamBuffer += decoder.decode(value, { stream: true });
+
+                const delimiter = '\n\n';
+                let delimiterIndex;
+                while ((delimiterIndex = streamBuffer.indexOf(delimiter)) !== -1) {
+                    const event = streamBuffer.substring(0, delimiterIndex).trim();
+                    streamBuffer = streamBuffer.substring(delimiterIndex + delimiter.length);
+                    if (!event.startsWith('data: ')) continue;
+
+                    try {
+                        const json = JSON.parse(event.slice(6));
+                        const textPart = json.text || json.delta || json.content || '';
+                        if (textPart) {
+                            if (reasoningHandle) {
+                                reasoningHandle.complete('streaming');
+                                reasoningHandle = null;
                             }
-                        } catch (e) {
-                            // Ignore malformed JSON
+                            if (!stagedFilesCleared) {
+                                st.stagedFiles = [];
+                                renderFileChips();
+                                stagedFilesCleared = true;
+                            }
+                            renderedText += textPart;
+                            fullResponse += textPart;
+                            scheduleRender();
+                        } else if (json.watermark) {
+                            contentDiv.innerHTML += json.watermark;
+                        } else if (json.sessionId) {
+                            sessionIdFromStream = json.sessionId;
+                        } else if (json.structuredData) {
+                            structuredData = json.structuredData;
+                        } else if (json.filename) {
+                            filename = json.filename;
+                        } else if (json.error) {
+                            contentDiv.innerHTML = `⚠️ ${json.error}`;
                         }
+                    } catch (e) {
+                        streamBuffer = event + delimiter + streamBuffer;
+                        break;
                     }
                 }
-                buffer = events[events.length - 1];
+            }
+
+            // Final residual packet flush.
+            if (streamBuffer.trim().startsWith('data: ')) {
+                try {
+                    const json = JSON.parse(streamBuffer.trim().slice(6));
+                    const textPart = json.text || json.delta || json.content || '';
+                    if (textPart) { renderedText += textPart; fullResponse += textPart; }
+                    if (json.sessionId) sessionIdFromStream = json.sessionId;
+                    if (json.structuredData) structuredData = json.structuredData;
+                    if (json.filename) filename = json.filename;
+                    if (json.error) contentDiv.innerHTML = `⚠️ ${json.error}`;
+                } catch (e) {
+                    console.warn('Failed to parse final SSE buffer:', e);
+                }
             }
 
             if (contentDiv) {
@@ -447,6 +689,7 @@
                 const rawCode = extractHtmlCode(fullResponse);
                 if (rawCode) {
                     const iframe = document.createElement('iframe');
+                    iframe.sandbox = "allow-scripts allow-same-origin";
                     iframe.style.width = '100%';
                     iframe.style.height = '400px';
                     iframe.style.border = '1px solid var(--border-muted)';
@@ -456,7 +699,11 @@
                     contentDiv.appendChild(iframe);
                     const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
                     iframeDoc.open();
-                    iframeDoc.write(rawCode);
+                    const sanitizedCode = DOMPurify.sanitize(rawCode, {
+                        ADD_TAGS: ['script', 'style'],
+                        ADD_ATTR: ['src', 'href', 'onload']
+                    });
+                    iframeDoc.write(sanitizedCode);
                     iframeDoc.close();
                     injectDeployButton(contentDiv, rawCode);
                 }
@@ -485,6 +732,10 @@
             if (mainBackBtn) mainBackBtn.style.display = 'flex';
 
         } catch (error) {
+            if (!stagedFilesCleared) {
+                st.stagedFiles = stagedFilesSnapshot;
+                renderFileChips();
+            }
             if (error.name === 'AbortError') {
                 contentDiv.innerHTML += `<br><br><em style="color:var(--text-muted);">[Generation halted by user]</em>`;
             } else {
@@ -505,14 +756,17 @@
             }
             validateSendCommand();
             updateViewportAfterRender();
-            await window.Axelr.loadUserProfile();
+            try { await window.Axelr.loadUserProfile(); } catch (_) {}
+            hideThinkingIndicator();
             st.isProcessing = false;
             st.streamingBubble = null;
             st.streamingContentDiv = null;
         }
     }
 
-    // ── Action buttons ───────────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════
+    // 6 · ACTION BUTTONS
+    // ═══════════════════════════════════════════════════════════════════
     function injectActionButtons(bubbleNode, rawText, isUserPrompt = false, showRegenerate = false, createdAt = null,
         sessionId = null, isLastUserMsg = false, isHistoryView = false) {
         const actionBar = document.createElement('div');
@@ -558,7 +812,7 @@
             likeBtn.className = 'action-icon-btn';
             likeBtn.title = "Helpful Response";
             likeBtn.innerHTML = ICONS.thumbsUp;
-            likeBtn.onclick = function(e) {
+            likeBtn.onclick = function (e) {
                 e.stopPropagation();
                 this.style.color = 'var(--accent-glow)';
                 this.style.transform = 'scale(1.2)';
@@ -571,7 +825,7 @@
             dislikeBtn.className = 'action-icon-btn';
             dislikeBtn.title = "Not Helpful";
             dislikeBtn.innerHTML = ICONS.thumbsDown;
-            dislikeBtn.onclick = function(e) {
+            dislikeBtn.onclick = function (e) {
                 e.stopPropagation();
                 this.style.color = '#ef4444';
                 this.style.transform = 'scale(1.2)';
@@ -584,42 +838,38 @@
                 const now = Date.now();
                 const msgTime = new Date(createdAt).getTime();
                 const elapsed = now - msgTime;
-                if (elapsed < 30000) {
+                const remaining = 30000 - elapsed;
+                if (remaining > 0) {
                     const regenBtn = document.createElement('button');
                     regenBtn.className = 'action-icon-btn regen-active';
-                    regenBtn.title = "Regenerate response (available for 30s)";
-                    regenBtn.innerHTML = ICONS.regenerate + `<span class="regen-countdown">${Math.ceil((30000 - elapsed)/1000)}s</span>`;
-                    let intervalId, timeoutId;
-                    const cleanup = () => {
-                        if (intervalId) clearInterval(intervalId);
-                        if (timeoutId) clearTimeout(timeoutId);
+                    regenBtn.title = "Regenerate response";
+                    regenBtn.innerHTML = `${ICONS.regenerate} Regenerate`;
+
+                    const removeTimer = setTimeout(() => {
                         if (regenBtn.parentNode) regenBtn.remove();
-                    };
-                    let remaining = Math.ceil((30000 - elapsed) / 1000);
-                    intervalId = setInterval(() => {
-                        remaining--;
-                        const countSpan = regenBtn.querySelector('.regen-countdown');
-                        if (countSpan) countSpan.textContent = remaining + 's';
-                        if (remaining <= 0) cleanup();
-                    }, 1000);
-                    timeoutId = setTimeout(cleanup, 30000 - elapsed);
-                    regenBtn.onclick = async function(e) {
+                        if (st.regenerateTimer === removeTimer) st.regenerateTimer = null;
+                    }, remaining);
+                    st.regenerateTimer = removeTimer;
+
+                    regenBtn.onclick = async function (e) {
+                        e.stopPropagation();
                         if (st.activeSessionId !== sessionId) {
-                            cleanup();
+                            if (regenBtn.parentNode) regenBtn.remove();
                             return;
                         }
-                        cleanup();
+                        if (st.regenerateTimer) {
+                            clearTimeout(st.regenerateTimer);
+                            st.regenerateTimer = null;
+                        }
                         st.suppressRegenerateForNextResponse = true;
+                        const bubble = regenBtn.closest('.chat-bubble');
+                        if (bubble && bubble.parentNode) bubble.remove();
                         if (st.lastUserCommand && promptInput) {
                             promptInput.value = st.lastUserCommand;
                             promptInput.style.height = 'auto';
                             promptInput.style.height = promptInput.scrollHeight + 'px';
-                            if (st.regenerateTimer) {
-                                clearTimeout(st.regenerateTimer);
-                                st.regenerateTimer = null;
-                            }
-                            await executeCommand(true);
                         }
+                        await executeCommand(true);
                     };
                     actionBar.appendChild(regenBtn);
                 }
@@ -627,10 +877,11 @@
 
             if (!isUserPrompt && rawText && extractHtmlCode(rawText)) {
                 const code = extractHtmlCode(rawText);
+
                 const refactorBtn = document.createElement('button');
                 refactorBtn.className = 'action-icon-btn';
                 refactorBtn.title = "Refactor Code";
-                refactorBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/><path d="M21 7L17 3"/></svg> Refactor`;
+                refactorBtn.innerHTML = `<span class="material-symbols-rounded" style="font-size:16px;">auto_fix_high</span> Refactor`;
                 refactorBtn.onclick = async () => {
                     const originalHtml = refactorBtn.innerHTML;
                     refactorBtn.innerHTML = 'Refactoring...';
@@ -643,11 +894,10 @@
                         });
                         if (resp.ok) {
                             const data = await resp.json();
-                            const refactored = data.refactored_code;
-                            const iframe = bubbleNode.closest('.bubble-content').querySelector('iframe');
+                            const iframe = bubbleNode.closest('.bubble-content')?.querySelector('iframe');
                             if (iframe) {
                                 const doc = iframe.contentDocument || iframe.contentWindow.document;
-                                doc.open(); doc.write(refactored); doc.close();
+                                doc.open(); doc.write(data.refactored_code); doc.close();
                             }
                             refactorBtn.innerHTML = '✅ Refactored';
                             setTimeout(() => { refactorBtn.innerHTML = originalHtml; refactorBtn.disabled = false; }, 2000);
@@ -683,15 +933,15 @@
                             const explanation = data.explanation || 'No explanation provided.';
                             const bubble = document.createElement('div');
                             bubble.className = 'chat-bubble nexus-bubble';
-                            const avatarDiv = document.createElement('div');
-                            avatarDiv.className = 'ai-avatar-bubble';
-                            avatarDiv.innerHTML = AXELR_AVATAR_SVG;
-                            bubble.appendChild(avatarDiv);
-                            const contentDiv = document.createElement('div');
-                            contentDiv.className = 'bubble-content';
-                            contentDiv.style.flex = '1';
-                            contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(explanation));
-                            bubble.appendChild(contentDiv);
+                            const a = document.createElement('div');
+                            a.className = 'ai-avatar-bubble';
+                            a.innerHTML = AXELR_AVATAR_SVG;
+                            bubble.appendChild(a);
+                            const cd = document.createElement('div');
+                            cd.className = 'bubble-content';
+                            cd.style.flex = '1';
+                            cd.innerHTML = DOMPurify.sanitize(marked.parse(explanation));
+                            bubble.appendChild(cd);
                             if (viewport) viewport.appendChild(bubble);
                             scrollToBottom();
                             explainBtn.innerHTML = '✅ Explained';
@@ -724,15 +974,15 @@
                             const tests = data.tests || 'No tests generated.';
                             const bubble = document.createElement('div');
                             bubble.className = 'chat-bubble nexus-bubble';
-                            const avatarDiv = document.createElement('div');
-                            avatarDiv.className = 'ai-avatar-bubble';
-                            avatarDiv.innerHTML = AXELR_AVATAR_SVG;
-                            bubble.appendChild(avatarDiv);
-                            const contentDiv = document.createElement('div');
-                            contentDiv.className = 'bubble-content';
-                            contentDiv.style.flex = '1';
-                            contentDiv.innerHTML = DOMPurify.sanitize(marked.parse('```javascript\n' + tests + '\n```'));
-                            bubble.appendChild(contentDiv);
+                            const a = document.createElement('div');
+                            a.className = 'ai-avatar-bubble';
+                            a.innerHTML = AXELR_AVATAR_SVG;
+                            bubble.appendChild(a);
+                            const cd = document.createElement('div');
+                            cd.className = 'bubble-content';
+                            cd.style.flex = '1';
+                            cd.innerHTML = DOMPurify.sanitize(marked.parse('```javascript\n' + tests + '\n```'));
+                            bubble.appendChild(cd);
                             if (viewport) viewport.appendChild(bubble);
                             scrollToBottom();
                             testsBtn.innerHTML = '✅ Tests Ready';
@@ -765,7 +1015,9 @@
         }
     }
 
-    // ── Payload download / deploy ────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════
+    // 7 · PAYLOAD DOWNLOAD / DEPLOY
+    // ═══════════════════════════════════════════════════════════════════
     function appendPayloadDownload(bubbleNode) {
         if (st.runningStructuredCache && st.runningStructuredCache.length > 0) {
             const btn = document.createElement('button');
@@ -779,8 +1031,12 @@
     function executeDownloadPipeline() {
         if (!st.runningStructuredCache) return;
         const keys = Object.keys(st.runningStructuredCache[0]);
-        const csv = [keys.join(','), ...st.runningStructuredCache.map(row => keys.map(k =>
-            `"${String(row[k] ?? '').replace(/"/g, '""')}"`).join(',')).join('\n')].join('\n');
+        const csv = [
+            keys.join(','),
+            ...st.runningStructuredCache.map(row => keys.map(k =>
+                `"${String(row[k] ?? '').replace(/"/g, '""')}"`
+            ).join(',')).join('\n')
+        ].join('\n');
         const blob = new Blob([csv], { type: 'text/csv' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -807,7 +1063,7 @@
         deployContainer.appendChild(errorDetails);
         bubbleNode.appendChild(deployContainer);
 
-        debugBtn.onclick = async function() {
+        debugBtn.onclick = async function () {
             const errorMsg = prompt("Paste the error message from the console or browser:");
             if (!errorMsg) return;
             debugBtn.innerText = 'Fixing...';
@@ -843,6 +1099,7 @@
         let retryCount = 0;
         const maxRetries = 5;
         let isDeploying = false;
+
         async function attemptDeploy() {
             if (isDeploying) return;
             isDeploying = true;
@@ -885,7 +1142,7 @@
                     deployBtn.style.background = '#ef4444';
                     deployBtn.disabled = false;
                     debugBtn.style.display = 'inline-block';
-                    errorDetails.textContent = `Error: ${err.message || 'Unknown error'}\nNetwork: ${navigator.onLine ? 'Online' : 'Offline'}`;
+                    errorDetails.textContent = `Error: ${err.message || 'Unknown'}\nNetwork: ${navigator.onLine ? 'Online' : 'Offline'}`;
                     errorDetails.classList.add('show');
                     debugBtn.onclick = () => { errorDetails.classList.toggle('show'); };
                     const retryBtn = document.createElement('button');
@@ -911,7 +1168,9 @@
         deployBtn.onclick = attemptDeploy;
     }
 
-    // ── Inline edit / refine ─────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════
+    // 8 · INLINE EDIT / SUMMARIZE
+    // ═══════════════════════════════════════════════════════════════════
     function enableInlineEdit(bubbleContent, originalText, sessionId, msgId) {
         const existing = bubbleContent.querySelector('.inline-edit-area');
         if (existing) return;
@@ -940,7 +1199,7 @@
         contentDiv.appendChild(actions);
         const submitBtn = actions.querySelector('button:first-child');
         const cancelBtn = actions.querySelector('button:last-child');
-        submitBtn.onclick = async function() {
+        submitBtn.onclick = async function () {
             const newText = textarea.value.trim();
             if (!newText) return;
             this.disabled = true;
@@ -972,14 +1231,13 @@
                 this.innerText = 'Submit Refinement';
             }
         };
-        cancelBtn.onclick = function() {
+        cancelBtn.onclick = function () {
             contentDiv.innerHTML = currentHTML;
             if (sessionId) window.Axelr.viewPastLogById(sessionId);
             else location.reload();
         };
     }
 
-    // ── Summarize current chat ───────────────────────────────────────────
     async function summarizeCurrentChat() {
         if (!st.activeSessionId) return alert('No active chat to summarize.');
         try {
@@ -999,7 +1257,9 @@
         }
     }
 
-    // ── Marked renderer install ──────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════
+    // 9 · MARKED RENDERER
+    // ═══════════════════════════════════════════════════════════════════
     (function installMarkedRenderer() {
         if (typeof marked === 'undefined' || !marked.Renderer) return;
         const renderer = new marked.Renderer();
@@ -1029,19 +1289,21 @@
         }
     })();
 
-    // ── Publish ──────────────────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════
+    // 10 · PUBLISH
+    // ═══════════════════════════════════════════════════════════════════
     Object.assign(window.Axelr, {
         renderFileChips, removeStagedFile, validateSendCommand,
-        getRelevantKnowledge, detectManipulationAttempt, showSecurityAlert,
-        executeCommand, injectActionButtons, handleActionClick,
-        appendPayloadDownload, executeDownloadPipeline, injectDeployButton,
-        enableInlineEdit, summarizeCurrentChat,
+        detectManipulationAttempt, showSecurityAlert, executeCommand,
+        injectActionButtons, handleActionClick, appendPayloadDownload,
+        executeDownloadPipeline, injectDeployButton, enableInlineEdit,
+        summarizeCurrentChat, startThinkingAnimation,
     });
     Object.entries({
         renderFileChips, removeStagedFile, validateSendCommand,
         detectManipulationAttempt, showSecurityAlert, executeCommand,
         injectActionButtons, handleActionClick, appendPayloadDownload,
         executeDownloadPipeline, injectDeployButton, enableInlineEdit,
-        summarizeCurrentChat,
+        summarizeCurrentChat, startThinkingAnimation,
     }).forEach(([k, v]) => { window[k] = v; });
 })();

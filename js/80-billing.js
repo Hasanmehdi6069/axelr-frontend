@@ -1,5 +1,5 @@
 // js/80-billing.js
-// AXELR AI — Pricing tiers, checkout, portal, subscription modal, Stripe return handling.
+// AXELR AI — Pricing tiers, checkout redirection, subscription modal.
 (function () {
     "use strict";
     const { API_BASE_URL, apiFetch, showToast, getEl, getWorkspace } = window.Axelr;
@@ -246,38 +246,8 @@
         refreshTierCardPrices();
     }
 
-    // ── Stripe loading overlay ───────────────────────────────────────────
-    function showStripeLoading(onCancel) {
-        const overlay = document.createElement('div');
-        overlay.id = 'stripe-loading';
-        overlay.style.cssText = `
-            position: fixed; inset: 0; background: rgba(0,0,0,0.7);
-            display: flex; align-items: center; justify-content: center;
-            z-index: 99999; backdrop-filter: blur(4px);
-        `;
-        overlay.innerHTML = `
-            <div style="background: var(--bg-card); padding: 30px 40px; border-radius: 16px; text-align: center; border: 1px solid var(--border-muted); position: relative; max-width: 90%;">
-                <button onclick="hideStripeLoading(); if (typeof onCancel === 'function') onCancel();" style="position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 24px; color: var(--text-muted); cursor: pointer;">&times;</button>
-                <span class="material-symbols-rounded" style="font-size: 48px; color: var(--accent-glow); animation: spin 1s linear infinite;">sync</span>
-                <div style="margin-top: 15px; color: var(--text-main); font-weight: 600;">Redirecting to Stripe...</div>
-                <div style="font-size: 13px; color: var(--text-muted);">Please wait</div>
-                <button onclick="hideStripeLoading(); if (typeof onCancel === 'function') onCancel();" style="margin-top: 20px; padding: 8px 20px; border: 1px solid var(--border-muted); border-radius: 8px; background: transparent; color: var(--text-main); cursor: pointer;">Cancel</button>
-            </div>
-        `;
-        document.body.appendChild(overlay);
-        window._stripeCancelCallback = onCancel || null;
-    }
-
-    function hideStripeLoading() {
-        const el = getEl('stripe-loading');
-        if (el) el.remove();
-        if (typeof window._stripeCancelCallback === 'function') {
-            window._stripeCancelCallback();
-            window._stripeCancelCallback = null;
-        }
-    }
-
-    // ── Checkout pipeline ────────────────────────────────────────────────
+    // ── Checkout pipeline (Redirects to manual UPI checkout) ─────────────
+        // ── Checkout pipeline (Redirects to manual UPI checkout) ─────────────
     async function dispatchCheckoutPipeline(targetBaseTier) {
         if (st.isGuestMode || !localStorage.getItem('google_auth_token')) {
             showToast('Please sign in to upgrade your plan.', 'info');
@@ -289,85 +259,16 @@
             return;
         }
 
-        const subTier = selectedSubtiers[targetBaseTier] || 'full';
-        const period  = currentBillingCycle || 'monthly';
+        // Forward the full selection state so the checkout page can
+        // pre-select plan + subtier + billing cycle without a flash.
+        const subtier = selectedSubtiers[targetBaseTier] || 'full';
+        const cycle   = currentBillingCycle || 'monthly';
+        const checkoutUrl =
+            `checkout.html?plan=${encodeURIComponent(targetBaseTier)}` +
+            `&subtier=${encodeURIComponent(subtier)}` +
+            `&cycle=${encodeURIComponent(cycle)}`;
 
-        const checkoutBtn = document.querySelector(`.tier-${targetBaseTier} .tier-cta-btn`);
-        const originalText = checkoutBtn ? checkoutBtn.innerText : '';
-        if (checkoutBtn) {
-            checkoutBtn.innerText = 'Connecting to Stripe…';
-            checkoutBtn.disabled = true;
-        }
-
-        let cancelled = false;
-        showStripeLoading(() => { cancelled = true; });
-
-        const restore = () => {
-            hideStripeLoading();
-            if (checkoutBtn) {
-                checkoutBtn.innerText = originalText;
-                checkoutBtn.disabled = false;
-            }
-        };
-
-        try {
-            const response = await apiFetch(`${API_BASE_URL}/api/billing/checkout`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ tier: targetBaseTier, subTier, period }),
-            });
-
-            let data = {};
-            try { data = await response.json(); } catch (_) {}
-
-            if (cancelled) { restore(); return; }
-
-            if (response.ok && data.url) {
-                setTimeout(() => { window.location.href = data.url; }, 250);
-                return;
-            }
-
-            let msg = data.detail || data.message || 'Checkout failed. Please try again.';
-            if (response.status === 409) {
-                msg = 'You are already on this plan. Open the billing portal to change it.';
-            } else if (response.status === 503) {
-                msg = 'Billing is temporarily unavailable. Please try again shortly.';
-            } else if (response.status === 401) {
-                msg = 'Your session expired. Please sign in again.';
-                window.Axelr.executeGlobalLogout();
-                return;
-            }
-            showToast(msg, 'error');
-            restore();
-        } catch (e) {
-            if (cancelled) return;
-            console.error('Checkout error:', e);
-            showToast('Network error — could not reach Stripe. Please retry.', 'error');
-            restore();
-        }
-    }
-
-    // ── Billing portal ───────────────────────────────────────────────────
-    async function openBillingPortal() {
-        if (st.isGuestMode || !localStorage.getItem('google_auth_token')) {
-            window.Axelr.showAuthWall();
-            return;
-        }
-        try {
-            const resp = await apiFetch(`${API_BASE_URL}/api/billing/portal`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ returnUrl: window.location.href }),
-            });
-            const data = await resp.json().catch(() => ({}));
-            if (resp.ok && data.url) {
-                window.location.href = data.url;
-            } else {
-                showToast(data.detail || 'Unable to open billing portal.', 'error');
-            }
-        } catch (e) {
-            showToast('Network error opening billing portal.', 'error');
-        }
+        window.location.href = checkoutUrl;
     }
 
     // ── Subscription modal ───────────────────────────────────────────────
@@ -401,10 +302,10 @@
                             <span class="profile-stat-label">Current Plan</span>
                             <span class="profile-stat-value" style="color:var(--text-main);">${planName}</span>
                         </div>
-                        <button onclick="openBillingPortal()"
+                        <button onclick="window.location.href='/checkout.html'"
                             style="margin-top:8px;padding:10px 16px;border:none;border-radius:8px;
                                    background:var(--accent-glow);color:#000;font-weight:600;cursor:pointer;">
-                            Manage Billing &amp; Invoices
+                            Upgrade or Manage Plan
                         </button>
                     </div>
                 `;
@@ -427,38 +328,9 @@
             if (freeMsg) freeMsg.style.display = 'none';
             if (paidMsg) paidMsg.style.display = 'block';
             if (paidName) paidName.innerText = planName.replace(' ALLOCATION', '');
-            if (detailsSpan) detailsSpan.innerText = 'Active subscription. Manage your plan via Stripe.';
+            if (detailsSpan) detailsSpan.innerText = 'Active subscription. Manage your plan via the checkout page.';
         }
     }
-
-    // ── Billing return handler ───────────────────────────────────────────
-    (function handleBillingReturn() {
-        const params = new URLSearchParams(window.location.search);
-        const billing = params.get('billing');
-        if (!billing) return;
-
-        const cleanUrl = window.location.origin + window.location.pathname;
-        window.history.replaceState({}, document.title, cleanUrl);
-
-        if (billing === 'success') {
-            showToast('🎉 Subscription activated! Refreshing your account…', 'success');
-            let attempts = 0;
-            const poll = setInterval(async () => {
-                attempts += 1;
-                try { await window.Axelr.loadUserProfile(); } catch (_) {}
-                if (window.currentUser?.tier && window.currentUser.tier !== 'free') {
-                    clearInterval(poll);
-                    showToast(`Welcome to ${window.currentUser.tier.toUpperCase()}!`, 'success');
-                } else if (attempts >= 10) {
-                    clearInterval(poll);
-                }
-            }, 1500);
-        } else if (billing === 'cancelled') {
-            showToast('Checkout cancelled — no charge was made.', 'info');
-        } else if (billing === 'portal_return') {
-            window.Axelr.loadUserProfile().catch(() => {});
-        }
-    })();
 
     // ── Kick off initial card render ─────────────────────────────────────
     document.addEventListener('DOMContentLoaded', () => {
@@ -470,8 +342,7 @@
         PRICING_CATALOG, TIER_CONTENT,
         renderFeatureList, renderModelSection, renderLimitChips,
         refreshTierCardPrices, setPricingPeriod, updateTierSelection,
-        showStripeLoading, hideStripeLoading,
-        dispatchCheckoutPipeline, openBillingPortal,
+        dispatchCheckoutPipeline,
         openBillingFlow, openSubscriptionModal, updateSubscriptionModal,
         getCurrentBillingCycle: () => currentBillingCycle,
         getSelectedSubtiers: () => selectedSubtiers,
@@ -479,8 +350,7 @@
     Object.entries({
         renderFeatureList, renderModelSection, renderLimitChips,
         refreshTierCardPrices, setPricingPeriod, updateTierSelection,
-        showStripeLoading, hideStripeLoading,
-        dispatchCheckoutPipeline, openBillingPortal,
+        dispatchCheckoutPipeline,
         openBillingFlow, openSubscriptionModal, updateSubscriptionModal,
     }).forEach(([k, v]) => { window[k] = v; });
 })();

@@ -16,23 +16,23 @@
     const AXELR_MODEL_CONFIG = {
         "data": {
             "models": [
-                {"id": "flash", "label": "AXELR‑FLASH", "badge": "DATA", "desc": "Lightning‑fast extractions & analysis", "tier": "free"},
-                {"id": "pro", "label": "AXELR‑PRO DATA", "badge": "PRO", "desc": "Advanced extraction with higher limits", "tier": "pro"},
-                {"id": "business", "label": "AXELR‑ENTERPRISE", "badge": "ENTERPRISE", "desc": "Massive throughput & custom pipelines", "tier": "business"}
+                {"id": "flash", "label": "Axelr Flash Route", "badge": "DATA", "desc": "Fast ensemble — routes across 3-4 models for sub-second responses", "tier": "free"},
+                {"id": "pro", "label": "Axelr Hyper Route", "badge": "PRO", "desc": "Reasoning ensemble — routes across 6 models with critic pass", "tier": "pro"},
+                {"id": "business", "label": "Axelr Omni Route", "badge": "ENTERPRISE", "desc": "Multi-provider cluster with local fallback and reverse sweep", "tier": "business"}
             ]
         },
         "design": {
             "models": [
-                {"id": "flash", "label": "AXELR‑ARCHITECT", "badge": "BUILDER", "desc": "Instant UI/UX components", "tier": "free"},
-                {"id": "pro", "label": "AXELR‑STUDIO", "badge": "PRO", "desc": "Complex interactions & design systems", "tier": "pro"},
-                {"id": "business", "label": "AXELR‑DESIGN OPS", "badge": "DESIGN OPS", "desc": "Team‑scale design & deployment", "tier": "business"}
+                {"id": "flash", "label": "Axelr Flash Route", "badge": "BUILDER", "desc": "Fast ensemble — routes across 3-4 models for sub-second responses", "tier": "free"},
+                {"id": "pro", "label": "Axelr Hyper Route", "badge": "PRO", "desc": "Reasoning ensemble — routes across 6 models with critic pass", "tier": "pro"},
+                {"id": "business", "label": "Axelr Omni Route", "badge": "DESIGN OPS", "desc": "Multi-provider cluster with local fallback and reverse sweep", "tier": "business"}
             ]
         },
         "core": {
             "models": [
-                {"id": "flash", "label": "AXELR‑FLASH", "badge": "FREE", "desc": "Instant answers for everyday questions", "tier": "free"},
-                {"id": "pro", "label": "AXELR‑HYPER", "badge": "HYPER", "desc": "Deep reasoning & code generation", "tier": "pro"},
-                {"id": "business", "label": "AXELR‑OMNI", "badge": "OMNI", "desc": "Unlimited context & multi‑agent orchestration", "tier": "business"}
+                {"id": "flash", "label": "Axelr Flash Route", "badge": "FREE", "desc": "Fast ensemble — routes across 3-4 models for sub-second responses", "tier": "free"},
+                {"id": "pro", "label": "Axelr Hyper Route", "badge": "HYPER", "desc": "Reasoning ensemble — routes across 6 models with critic pass", "tier": "pro"},
+                {"id": "business", "label": "Axelr Omni Route", "badge": "OMNI", "desc": "Multi-provider cluster with local fallback and reverse sweep", "tier": "business"}
             ]
         }
     };
@@ -120,7 +120,22 @@
 
     window.addEventListener('unhandledrejection', (event) => {
         console.error('Unhandled rejection:', event.reason);
-        if (window.Axelr.showToast) window.Axelr.showToast('An unexpected error occurred. Please refresh.', 'error');
+        const reason = event.reason?.message || event.reason || 'Unknown error';
+
+        // Don't show generic refresh message for session expiration (already handled elsewhere)
+        if (reason.includes('Session expired')) {
+            event.preventDefault();
+            return;
+        }
+
+        // Show appropriate toast message
+        if (window.Axelr.showToast) {
+            if (reason.includes('network') || reason.includes('fetch')) {
+                window.Axelr.showToast('Network error. Please check your connection.', 'error');
+            } else {
+                window.Axelr.showToast('An unexpected error occurred. Please refresh.', 'error');
+            }
+        }
         event.preventDefault();
     });
 
@@ -161,7 +176,222 @@
     }
 
     function getWorkspace() {
-        return localStorage.getItem('Axelr_workspace') || 'data';
+        // Get stored workspace or default to 'core' if none exists
+        const storedWorkspace = localStorage.getItem('Axelr_workspace');
+        const validWorkspaces = ['core', 'data', 'design'];
+        if (storedWorkspace && validWorkspaces.includes(storedWorkspace)) {
+            return storedWorkspace;
+        }
+        // If no valid stored workspace, set and return default
+        localStorage.setItem('Axelr_workspace', 'core');
+        return 'core';
+    }
+
+    // ── Client-side workspace sniff (mirrors api/workspace_detector.py) ──
+    // Advisory only: seeds file-chip colour and pre-switch toasts.
+    // Authoritative routing happens server-side.
+    const DATA_EXT = new Set([
+        '.csv', '.tsv', '.xls', '.xlsx', '.xlsm', '.xlsb', '.ods',
+        '.json', '.jsonl', '.ndjson', '.xml', '.yaml', '.yml', '.toml',
+        '.parquet', '.avro', '.db', '.sqlite', '.sql',
+        '.pdf', '.doc', '.docx', '.txt', '.log', '.ipynb',
+    ]);
+    const DESIGN_EXT = new Set([
+        '.html', '.htm', '.md', '.markdown', '.css', '.scss', '.sass', '.less',
+        '.js', '.mjs', '.cjs', '.jsx', '.ts', '.tsx', '.vue', '.svelte',
+        '.py', '.rb', '.php', '.java', '.kt', '.go', '.rs', '.cs',
+        '.c', '.h', '.cpp', '.hpp', '.dart', '.lua', '.sh', '.bash',
+        '.svg', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp', '.ico',
+        '.woff', '.woff2', '.ttf', '.otf', '.gltf', '.glb', '.obj', '.fbx',
+    ]);
+
+    function detectWorkspaceFromFiles(files) {
+        if (!files || !files.length) return null;
+        let d = 0, g = 0;
+        for (const f of files) {
+            const name = (f.name || '').toLowerCase();
+            const dot = name.lastIndexOf('.');
+            if (dot < 0) continue;
+            const ext = name.slice(dot);
+            if (DATA_EXT.has(ext)) d++;
+            else if (DESIGN_EXT.has(ext)) g++;
+        }
+        if (d > 0 && g === 0) return 'data';
+        if (g > 0 && d === 0) return 'design';
+        return null;
+    }
+
+    // Backwards-compat alias so any legacy caller using the old name keeps working.
+    const detectWorkspaceFromPrompt = detectWorkspaceFromFiles;
+
+    function switchWorkspace(newWorkspace) {
+        localStorage.setItem('Axelr_workspace', newWorkspace);
+        applyWorkspaceTheme(newWorkspace);
+        if (window.Axelr.updateModelBranding) {
+            window.Axelr.updateModelBranding(newWorkspace, window.currentUser?.tier || 'free');
+        }
+    }
+
+    function applyWorkspaceTheme(workspace) {
+        document.body.classList.remove('workspace-core', 'workspace-data', 'workspace-design');
+        document.body.classList.add(`workspace-${workspace}`);
+    }
+
+    function initializeAppWorkspace() {
+        // Always start with the stored workspace on initial load.
+        const initialWorkspace = getWorkspace();
+        applyWorkspaceTheme(initialWorkspace);
+        if (window.Axelr.updateModelBranding) {
+            window.Axelr.updateModelBranding(initialWorkspace, window.currentUser?.tier || 'free');
+        }
+    }
+
+    // ── AI Thinking Steps Management ────────────────────────────────────
+    let thinkingInterval = null;
+    let longDelayTimeout = null;
+
+    const THINKING_STEPS = {
+        core: [
+            "Processing your request...",
+            "Recalling conversation history...",
+            "Generating response...",
+            "Finalizing output..."
+        ],
+        data: [
+            "Analyzing your data...",
+            "Extracting insights...",
+            "Processing documents...",
+            "Preparing visualizations...",
+            "Generating final report..."
+        ],
+        design: [
+            "Analyzing your design request...",
+            "Generating UI components...",
+            "Preparing code structure...",
+            "Optimizing for deployment...",
+            "Finalizing implementation..."
+        ]
+    };
+
+    function startThinkingAnimation() {
+        const thinkingIndicator = document.getElementById('thinking-indicator');
+        const thinkingText = document.getElementById('thinking-text');
+        if (!thinkingIndicator || !thinkingText) return;
+
+        const currentWorkspace = localStorage.getItem('Axelr_workspace') || 'core';
+        const steps = THINKING_STEPS[currentWorkspace] || THINKING_STEPS.core;
+        let currentStep = 0;
+        const progressFill = document.querySelector('.progress-fill');
+
+        thinkingIndicator.style.display = 'flex';
+        thinkingText.textContent = steps[currentStep];
+        // Initialize progress for first step
+        if (progressFill) {
+            progressFill.style.width = `${((currentStep + 1) / steps.length) * 100}%`;
+        }
+
+        // Cycle through thinking steps with integrated progress
+        thinkingInterval = setInterval(() => {
+            currentStep = (currentStep + 1) % steps.length;
+            thinkingText.textContent = steps[currentStep];
+            if (progressFill) {
+                progressFill.style.width = `${((currentStep + 1) / steps.length) * 100}%`;
+            }
+        }, 2000);
+
+        longDelayTimeout = setTimeout(() => {
+            if (thinkingIndicator.style.display === 'flex') {
+                thinkingText.textContent = "We're switching your request to our dedicated AI agent...";
+            }
+        }, 5000);
+    }
+
+    function stopThinkingAnimation() {
+        const thinkingIndicator = document.getElementById('thinking-indicator');
+        if (thinkingIndicator) {
+            thinkingIndicator.style.display = 'none';
+        }
+        if (thinkingInterval) {
+            clearInterval(thinkingInterval);
+            thinkingInterval = null;
+        }
+        if (longDelayTimeout) {
+            clearTimeout(longDelayTimeout);
+            longDelayTimeout = null;
+        }
+        const progressFill = document.querySelector('.progress-fill');
+        if (progressFill) {
+            progressFill.style.width = '0%';
+        }
+    }
+
+    // ── Unified Navigation ─────────────────────────────────────────────
+    function navigateToPage(page) {
+        // All navigation happens in the same tab
+        window.location.href = `/Axelr-Frontend/${page}.html`;
+    }
+
+    // ── Enhanced Model Branding with Tier Locking ──────────────────────
+    function updateModelBranding(workspace, userTier) {
+        const modelConfig = AXELR_MODEL_CONFIG[workspace] || AXELR_MODEL_CONFIG.core;
+        const modelDropdown = document.getElementById('model-dropdown-card');
+        if (!modelDropdown) return;
+
+        modelDropdown.innerHTML = '';
+
+        modelConfig.models.forEach((model, index) => {
+            const isLocked = model.tier !== 'free' && userTier !== model.tier && !(userTier === 'business' && model.tier === 'pro');
+            const modelOption = document.createElement('div');
+            modelOption.className = `model-option ${index === 0 ? 'active' : ''} ${isLocked ? 'locked-model' : ''}`;
+            modelOption.onclick = isLocked ? () => window.openUpgradeModal() : (event) => window.selectModel(event, model.id);
+
+            modelOption.innerHTML = `
+                <div class="model-title">${model.label} <span style="background:${getModelBadgeBackground(model.badge)};color:${getModelBadgeColor(model.badge)};padding:2px 6px;border-radius:4px;font-size:9px;">${model.badge}</span></div>
+                <div class="model-desc">${model.desc}</div>
+            `;
+
+            if (isLocked) {
+                modelOption.style.filter = 'blur(2px)';
+                modelOption.style.opacity = '0.7';
+                modelOption.style.cursor = 'pointer';
+            }
+
+            modelDropdown.appendChild(modelOption);
+        });
+
+        const firstModel = modelConfig.models[0];
+        document.getElementById('model-text-display').textContent = firstModel.label;
+        document.getElementById('model-badge-display').textContent = firstModel.badge;
+    }
+
+    function getModelBadgeBackground(badge) {
+        const backgrounds = {
+            'FREE': 'rgba(0,242,254,0.1)',
+            'FLASH': 'rgba(0,242,254,0.1)',
+            'PRO': 'rgba(139,92,246,0.1)',
+            'HYPER': 'rgba(139,92,246,0.1)',
+            'ENTERPRISE': 'rgba(244,63,94,0.1)',
+            'OMNI': 'rgba(244,63,94,0.1)',
+            'DATA': 'rgba(59,130,246,0.1)',
+            'BUILDER': 'rgba(244,63,94,0.1)',
+            'DESIGN OPS': 'rgba(244,63,94,0.1)'
+        };
+        return backgrounds[badge] || 'rgba(0,242,254,0.1)';
+    }
+
+    function getModelBadgeColor(badge) {
+        const colors = {
+            'FREE': 'var(--accent-glow)',
+            'FLASH': 'var(--accent-glow)',
+            'PRO': 'var(--accent-glow-pro)',
+            'HYPER': 'var(--accent-glow-pro)',
+            'ENTERPRISE': 'var(--accent-glow-designer)',
+            'OMNI': 'var(--accent-glow-designer)',
+            'DATA': 'var(--accent-glow)',
+            'BUILDER': 'var(--accent-glow-designer)',
+            'DESIGN OPS': 'var(--accent-glow-designer)'
+        };
+        return colors[badge] || 'var(--accent-glow)';
     }
 
     function getDraftKey() {
@@ -196,12 +426,24 @@
 
     function scrollToBottom(smooth = true) {
         if (!viewport || isUserScrolling) return;
-        const lastMessage = viewport.querySelector('.chat-bubble:last-child');
-        if (lastMessage) {
+        if (window.Axelr.repositionScrollAnchor) {
+            window.Axelr.repositionScrollAnchor();
+        }
+        const scrollAnchor = document.getElementById('viewport-scroll-anchor');
+        if (scrollAnchor) {
             try {
-                lastMessage.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'end' });
+                scrollAnchor.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'end' });
             } catch (_) {
                 viewport.scrollTop = viewport.scrollHeight;
+            }
+        } else {
+            const lastMessage = viewport.querySelector('.chat-bubble:last-child');
+            if (lastMessage) {
+                try {
+                    lastMessage.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'end' });
+                } catch (_) {
+                    viewport.scrollTop = viewport.scrollHeight;
+                }
             }
         }
     }
@@ -289,8 +531,12 @@
         sidebarTriggerArea, sidebarNode, sendBtn, commandWrapper,
         mainWrapper, authWall, heroDisplay, mainBackBtn,
         WORKSPACE_FEATURES, TIER_RANK, WORKSPACE_CREATION_MENUS,
+        detectWorkspaceFromPrompt, detectWorkspaceFromFiles,
+        switchWorkspace, applyWorkspaceTheme, initializeAppWorkspace,
+        startThinkingAnimation, stopThinkingAnimation, navigateToPage, updateModelBranding,
+        getModelBadgeBackground, getModelBadgeColor,
         escapeHtmlEntities, extractHtmlCode, getWorkspace, getDraftKey,
-        throttle, extractLastCodeBlock, scrollToBottom, updateViewportAfterRender,
+        throttle, extractLastCodeBlock, scrollToBottom, updateViewportAfterRender
     });
 
     // Cross-module mutable state accessors (getters + setters).
@@ -354,6 +600,10 @@
         set streamingBuffer(v) { streamingBuffer = v; },
         get throttledRender() { return throttledRender; },
         set throttledRender(v) { throttledRender = v; },
+        get thinkingInterval() { return thinkingInterval; },
+        set thinkingInterval(v) { thinkingInterval = v; },
+        get longDelayTimeout() { return longDelayTimeout; },
+        set longDelayTimeout(v) { longDelayTimeout = v; }
     };
 
     // Legacy global aliases (kept for backward-compat with the old single-file scope).
@@ -368,4 +618,21 @@
         escapeHtmlEntities, extractHtmlCode, getWorkspace, getDraftKey,
         throttle, extractLastCodeBlock, scrollToBottom, updateViewportAfterRender,
     }).forEach(([k, v]) => { window[k] = v; });
+
+    // ── Boot: restore the saved workspace once every UI module is loaded ─
+    // DOMContentLoaded fires after all `js/*.js` scripts (they are plain
+    // <script> tags, executed during parsing) have run, so
+    // window.Axelr.activateWorkspace (defined in 30-ui.js) is guaranteed to
+    // be available here.
+    document.addEventListener('DOMContentLoaded', () => {
+        if (window.Axelr.appInitialized) return;
+        window.Axelr.appInitialized = true;
+        const saved = localStorage.getItem('Axelr_workspace');
+        const ws = ['core', 'data', 'design'].includes(saved) ? saved : 'core';
+        if (typeof window.Axelr.activateWorkspace === 'function') {
+            window.Axelr.activateWorkspace(ws, true);
+        } else {
+            applyWorkspaceTheme(ws);
+        }
+    });
 })();
