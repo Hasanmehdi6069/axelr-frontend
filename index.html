@@ -83,17 +83,25 @@
 
     <!-- Scripts -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.3/purify.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/14.0.0/marked.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <!-- Styles -->
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="css/00-tokens.css">
+    <link rel="stylesheet" href="css/10-base.css">
+    <link rel="stylesheet" href="css/20-shell.css">
+    <link rel="stylesheet" href="css/25-workspace.css">
+    <link rel="stylesheet" href="css/30-chat.css">
+    <link rel="stylesheet" href="css/40-command.css">
+    <link rel="stylesheet" href="css/50-modals.css">
+    <link rel="stylesheet" href="css/60-auth.css">
+    <link rel="stylesheet" href="css/70-light.css">
+    <link rel="stylesheet" href="css/99-responsive.css">
+    <link rel="stylesheet" href="css/95-final-polish.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@docsearch/css@3" />
     </head>
-<body class="workspace-data dark-theme">
+<body class="workspace-core">
     <!-- Offline Banner -->
     <div id="offline-banner">⚠️ Network Disconnected. Axelr is in standby mode. Data preserved locally.</div>
 
@@ -107,8 +115,7 @@
                     <path d="M50 15 L80 32.5 L50 50 L80 67.5 L50 85" stroke="var(--accent-glow)" stroke-width="6" stroke-linejoin="bevel" fill="none"/>
                     <path d="M20 32.5 L50 50 L20 67.5" stroke="#ffffff" stroke-width="3" stroke-linejoin="bevel" opacity="0.5"/>
                 </svg>
-                    <span style="font-weight:900;letter-spacing:4px;font-family:'JetBrains Mono',monospace;color:var(--logo-text-color);background:linear-gradient(135deg, #00f2fe, #8b5cf6, #f43f5e);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-shadow:0 0 30px rgba(0,242,254,0.3);">AXELR</span>
-                </div>
+            <span style="font-weight:900;letter-spacing:4px;font-family:'JetBrains Mono',monospace;">AXELR</span></div>
                 <p class="auth-tagline">The Intelligence Execution Engine</p>
                 <p class="auth-sub">Where unstructured data meets structured intelligence.</p>
             </div>
@@ -158,11 +165,16 @@
             </div>
 
             <!-- Continue as Guest Button -->
+             <p class="auth-terms" style="margin-top:12px;">
+  <a href="#" onclick="continueAsGuest(); return false;" style="color:var(--text-muted); font-size:12px;">
+    or explore the live demo first →
+  </a>
+</p>
             <button class="auth-guest-btn" onclick="continueAsGuest()">Continue as Guest</button>
 
             <!-- Auth wall footer -->
 <p class="auth-terms">
-    By continuing, you agree to our <a href="https://axelr.in/terms.html" target="_blank">Terms</a> and <a href="https://axelr.in/privacy policy.html" target="_blank">Privacy Policy</a>.
+    By continuing, you agree to our <a href="#" onclick="navigateToPage('terms'); return false;">Terms</a> and <a href="#" onclick="navigateToPage('privacy'); return false;">Privacy Policy</a>.
 </p>
         </div>
     </div>
@@ -180,7 +192,7 @@
     <div id="workspace-selector">
         <h2>Select Workspace</h2>
         <div class="ws-grid">
-            <div class="workspace-card general" onclick="selectWorkspace('general')">
+            <div class="workspace-card general" onclick="selectWorkspace('core')"></div>
     <div class="ws-card-glow general-glow"></div>
     <div class="ws-card-icon">
         <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -301,14 +313,6 @@
                     </div>
                     <span class="material-symbols-rounded arrow">chevron_right</span>
                 </div>
-                <div class="settings-item" onclick="openKnowledgePanel()">
-                    <span class="material-symbols-rounded icon">bookmarks</span>
-                    <div class="content">
-                        <div class="title">Knowledge Vault</div>
-                        <div class="desc">Save reusable context and workspace knowledge</div>
-                    </div>
-                    <span class="material-symbols-rounded arrow">chevron_right</span>
-                </div>
                 <div class="settings-item" onclick="openFeedbackModal()">
                     <span class="material-symbols-rounded icon">help</span>
                     <div class="content">
@@ -317,6 +321,15 @@
                     </div>
                     <span class="material-symbols-rounded arrow">chevron_right</span>
                 </div>
+                <!-- Inside .settings-grid, right after the Help & Feedback item -->
+<div class="settings-item" onclick="location.href='/Axelr-Frontend/docs.html'">
+    <span class="material-symbols-rounded icon">menu_book</span>
+    <div class="content">
+        <div class="title">Documentation</div>
+        <div class="desc">Pipeline · Swarm · Webhook API</div>
+    </div>
+    <span class="material-symbols-rounded arrow">chevron_right</span>
+</div>
                 <div class="settings-item" style="flex-direction:column;align-items:stretch;gap:8px;cursor:default;">
                     <div style="display:flex;align-items:center;gap:12px;">
                         <span class="material-symbols-rounded icon">palette</span>
@@ -353,6 +366,10 @@
                     </div>
                     <span class="material-symbols-rounded arrow">chevron_right</span>
                 </div>
+                <div class="sidebar-sub-box" onclick="showWorkspaceSelector()">
+                    <div class="sub-box-title">Switch Workspace <span class="material-symbols-rounded" style="font-size:18px;color:var(--accent-glow);">swap_horiz</span></div>
+                    <div class="sub-box-desc">Change between Data &amp; Design intelligence.</div>
+                </div>
                 <div class="settings-item" style="flex-direction:column;align-items:stretch;gap:8px;cursor:default;">
                     <div style="display:flex;align-items:center;gap:12px;">
                         <span class="material-symbols-rounded icon">computer</span>
@@ -366,10 +383,7 @@
                         </label>
                     </div>
                 </div>
-                <div class="sidebar-sub-box" onclick="showWorkspaceSelector()">
-                    <div class="sub-box-title">Switch Workspace <span class="material-symbols-rounded" style="font-size:18px;color:var(--accent-glow);">swap_horiz</span></div>
-                    <div class="sub-box-desc">Change between Data &amp; Design intelligence.</div>
-                </div>
+                
             </div>
         </div>
     </div>
@@ -541,18 +555,18 @@
 
                 <!-- Dual Models per Workspace with LPU Routing Badges -->
                 <div class="tier-models-section" id="pro-models-section">
-                    <div class="model-section-title">DUAL ENGINES (2 MODELS / WS)</div>
+                    <div class="model-section-title">DUAL ENGINES (2 ROUTES / WS)</div>
                     <div class="workspace-model-row">
                         <span class="ws-tag data">DATA</span>
-                        <span class="provider-pill">Axelr Flash 3.5 + Hyper 4.2 <small class="infra-pill">LPU Router</small></span>
+                        <span class="provider-pill">Axelr Flash Route + Axelr Hyper Route <small class="infra-pill">LPU Router</small></span>
                     </div>
                     <div class="workspace-model-row">
                         <span class="ws-tag design">DESIGN</span>
-                        <span class="provider-pill">Axelr Flash 3.5 + Studio 4.5 <small class="infra-pill">Neural Coder</small></span>
+                        <span class="provider-pill">Axelr Flash Route + Axelr Hyper Route <small class="infra-pill">LPU Router</small></span>
                     </div>
                     <div class="workspace-model-row">
                         <span class="ws-tag general">CORE</span>
-                        <span class="provider-pill">Axelr Flash 3.5 + Cortex Pro <small class="infra-pill">Dual-Route</small></span>
+                        <span class="provider-pill">Axelr Flash Route + Axelr Hyper Route <small class="infra-pill">LPU Router</small></span>
                     </div>
                 </div>
 
@@ -611,18 +625,18 @@
 
                 <!-- Triple Models per Workspace with Autonomous Infrastructure Badges -->
                 <div class="tier-models-section" id="business-models-section">
-                    <div class="model-section-title">CLUSTER ENGINES (3 MODELS / WS)</div>
+                    <div class="model-section-title">CLUSTER ENGINES (3 ROUTES / WS)</div>
                     <div class="workspace-model-row">
                         <span class="ws-tag data">DATA</span>
-                        <span class="provider-pill">Axelr Omni 5.0 + DeepV3 + LPU Cluster</span>
+                        <span class="provider-pill">Axelr Omni Route + DeepV3 + local Twin <small class="infra-pill">Failover cluster</small></span>
                     </div>
                     <div class="workspace-model-row">
                         <span class="ws-tag design">DESIGN</span>
-                        <span class="provider-pill">Axelr DesignOps + Claude + Q-Coder</span>
+                        <span class="provider-pill">Axelr Omni Route + DeepV3 + local Twin <small class="infra-pill">Failover cluster</small></span>
                     </div>
                     <div class="workspace-model-row">
                         <span class="ws-tag general">CORE</span>
-                        <span class="provider-pill">Axelr Master Core + Dynamic Failover</span>
+                        <span class="provider-pill">Axelr Omni Route + DeepV3 + local Twin <small class="infra-pill">Failover cluster</small></span>
                     </div>
                 </div>
 
@@ -676,7 +690,7 @@
         </div>
 
         <div class="tier-modal-footer">
-            <span>🔒 Secure checkout powered by Stripe. Modify or cancel anytime from workspace settings.</span>
+            <span>🔒 Secure manual UPI verification. Access activates within 1 hour of verification.</span>
         </div>
     </div>
 </div>
@@ -713,6 +727,16 @@
                         <div class="desc">FAQs, support, and documentation</div>
                     </div>
                     <span class="material-symbols-rounded arrow">chevron_right</span>
+                </div>
+                <div class="settings-item" style="flex-direction:column;align-items:stretch;gap:8px;cursor:default;">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <span class="material-symbols-rounded icon">lock</span>
+                        <div class="content" style="flex:1;">
+                            <div class="title">Lock workspace</div>
+                            <div class="desc" id="lock-desc">Prevent automatic workspace switching</div>
+                        </div>
+                        <input type="checkbox" id="workspace-lock-toggle" onchange="toggleWorkspaceLock(this.checked)" style="width:auto;" />
+                    </div>
                 </div>
             </div>
         </div>
@@ -752,7 +776,7 @@
         <!-- Sidebar -->
         <div id="sidebar-container-node">
             <div class="sidebar-header">
-                <div class="brand-logo" onclick="showWorkspaceSelector()">
+                <div class="brand-logo">
                    <svg viewBox="0 0 100 100" width="30" height="30" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M50 15 L20 32.5 L20 67.5 L50 85" stroke="var(--logo-stroke-primary)" stroke-width="6" stroke-linejoin="bevel" fill="var(--logo-fill-primary)" />
                         <path d="M50 15 L80 32.5 L50 50 L80 67.5 L50 85" stroke="currentColor" stroke-width="6" stroke-linejoin="bevel" fill="none" />
@@ -800,23 +824,26 @@
         </div>
 
         <!-- Header -->
-        <div class="workspace-header">
+         <div class="workspace-header">
+    <div class="header-left-group">
+        <!-- Workspace switcher pill removed — auto-detection engine owns routing. -->
+    </div>
             <div class="model-hub">
                 <button id="model-selector" onclick="toggleModelDropdown(event)">
-                    <span id="model-text-display">Model 2.0</span> <span class="badge" id="model-badge-display">FLASH</span>
+                    <span id="model-text-display">Axelr Nova Flash</span> <span class="badge" id="model-badge-display">FLASH</span>
                 </button>
                 <div id="model-dropdown-card">
                     <div class="model-option active" onclick="selectModel(event,'flash')">
-                        <div class="model-title">Model 2.0 <span style="background:rgba(0,242,254,0.1);color:var(--accent-glow);padding:2px 6px;border-radius:4px;font-size:9px;">FLASH</span></div>
-                        <div class="model-desc">Great for everyday matrix tasks &amp; extractions.</div>
+                        <div class="model-title">Axelr Nova Flash <span style="background:rgba(0,242,254,0.1);color:var(--accent-glow);padding:2px 6px;border-radius:4px;font-size:9px;">FLASH</span></div>
+                        <div class="model-desc">Blazing-fast general-purpose AI for everyday tasks.</div>
                     </div>
-                    <div class="model-option pro" onclick="openUpgradeModal()">
-                        <div class="model-title">Model Hyper-Precise 3.1<span style="background:rgba(139,92,246,0.1);color:var(--accent-glow-pro);padding:2px 6px;border-radius:4px;font-size:9px;">PRO</span></div>
-                        <div class="model-desc">Our smartest model. Endless pipelines.</div>
+                    <div class="model-option pro locked-model" onclick="openUpgradeModal()">
+                        <div class="model-title">Axelr Nova Ultra <span style="background:rgba(139,92,246,0.1);color:var(--accent-glow-pro);padding:2px 6px;border-radius:4px;font-size:9px;">PRO</span></div>
+                        <div class="model-desc">Enterprise-grade reasoning for complex pipelines.</div>
                     </div>
-                    <div class="model-option designer" onclick="openUpgradeModal()" style="border-color:rgba(244,63,94,0.2);background:rgba(244,63,94,0.05);">
+                    <div class="model-option designer locked-model" onclick="openUpgradeModal()" style="border-color:rgba(244,63,94,0.2);background:rgba(244,63,94,0.05);">
                         <div class="model-title" style="color:var(--accent-glow-designer);">
-                            Axelr Architect 3.5
+                            Axelr Architect Pro
                             <span style="background:rgba(244,63,94,0.1);color:var(--accent-glow-designer);padding:2px 6px;border-radius:4px;font-size:9px;white-space:nowrap;">BUILDER</span>
                         </div>
                         <div class="model-desc">Advanced UI/UX generations &amp; Live Deployment.</div>
@@ -844,20 +871,36 @@
             </div>
         </div>
 
-        <!-- Viewport -->
-        <div id="viewport">
-              <div class="hero-text" id="hero-display">
-                <div class="auth-logo hero-logo-anim" style="margin-bottom:20px;color:var(--accent-glow);">
-                    <svg viewBox="0 0 100 100" width="48" height="48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M50 15 L20 32.5 L20 67.5 L50 85" stroke="var(--logo-stroke-primary)" stroke-width="6" stroke-linejoin="bevel" fill="var(--logo-fill-primary)" />
-                        <path d="M50 15 L80 32.5 L50 50 L80 67.5 L50 85" stroke="currentColor" stroke-width="6" stroke-linejoin="bevel" fill="none" />
-                        <path d="M20 32.5 L50 50 L20 67.5" stroke="var(--logo-stroke-secondary)" stroke-width="3" stroke-linejoin="bevel" opacity="0.5" />
-                    </svg>
-                </div>
-                <h1 id="hero-title-text" class="premium-headline">What are we building today?</h1>
-                <p id="hero-sub-text" class="premium-subtext">AI-powered architecture and data execution.</p>
-            </div>
+       <!-- Viewport -->
+<div id="viewport">
+    <div class="hero-text" id="hero-display">
+        <div class="auth-logo hero-logo-anim" style="margin-bottom:20px;color:var(--accent-glow);">
+            <svg viewBox="0 0 100 100" width="48" height="48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M50 15 L20 32.5 L20 67.5 L50 85" stroke="var(--logo-stroke-primary)" stroke-width="6" stroke-linejoin="bevel" fill="var(--logo-fill-primary)" />
+                <path d="M50 15 L80 32.5 L50 50 L80 67.5 L50 85" stroke="currentColor" stroke-width="6" stroke-linejoin="bevel" fill="none" />
+                <path d="M20 32.5 L50 50 L20 67.5" stroke="var(--logo-stroke-secondary)" stroke-width="3" stroke-linejoin="bevel" opacity="0.5" />
+            </svg>
         </div>
+        <h1 id="hero-title-text" class="premium-headline">What are we building today?</h1>
+        <p id="hero-sub-text" class="premium-subtext">AI-powered architecture and data execution.</p>
+    </div>
+    <div id="thinking-indicator" style="display: none;">
+        <div class="elite-thinking-container">
+            <div class="elite-thinking-header">
+                <svg class="elite-thinking-logo" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M50 15 L20 32.5 L20 67.5 L50 85" stroke="currentColor" stroke-width="6" stroke-linejoin="bevel" fill="none"/>
+                    <path d="M50 15 L80 32.5 L50 50 L80 67.5 L50 85" stroke="currentColor" stroke-width="6" stroke-linejoin="bevel" fill="none"/>
+                </svg>
+                <span class="elite-thinking-dots">
+                    <span></span><span></span><span></span>
+                </span>
+                <span id="thinking-text" class="elite-thinking-label">Thinking</span>
+            </div>
+            <div id="thinking-steps-list" class="thinking-steps-list"></div>
+        </div>
+    </div>
+    <div id="chat-container"></div>
+</div>
 
        <div class="command-wrapper" id="command-wrapper">
     <div id="file-staging-container"></div>
@@ -874,8 +917,7 @@
             </div>
 
             <!-- Central Elastic Input -->
-            <textarea id="prompt-input" rows="1" placeholder="Ask me anything – I'm here to help..."></textarea>
-
+             <textarea id="prompt-input" rows="1" placeholder="Describe what you want to build, extract, or deploy…"></textarea>
             <!-- Right Controls -->
             <div class="input-actions">
                 <button class="action-btn enhance-btn" id="enhance-trigger" title="Auto-Enhance Prompt" onclick="enhanceUserPrompt()">
@@ -896,16 +938,16 @@
 
     <!-- AXELR AI v24.3 — modular bundle (load order is load-bearing) -->
 <script src="js/00-core.js"></script>
+<script src="js/05-recovery.js"></script>   
 <script src="js/10-toast.js"></script>
 <script src="js/20-auth.js"></script>
+<script src="js/12-elite.js"></script> 
 <script src="js/30-ui.js"></script>
 <script src="js/40-history.js"></script>
 <script src="js/50-command.js"></script>
 <script src="js/60-modals.js"></script>
 <script src="js/70-features.js"></script>
 <script src="js/80-billing.js"></script>
-<script src="js/90-bootstrap.js"></script>
+<script src="js/35-thinking.js"></script>
 </body>
 </html>
-
-

@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Axelr — Secure Checkout</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,600,1,0" rel="stylesheet" />
+    <style>
+        :root {
+            --bg-main: #0B0F19;
+            --bg-card: #151E2E;
+            --bg-input: #0F172A;
+            --border-muted: #2D3748;
+            --border-accent: #38BDF8;
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+            --accent-glow: #38BDF8;
+            --accent-hover: #7DD3FC;
+            --accent-pro: #A78BFA;
+            --success: #10B981;
+            --danger: #EF4444;
+            --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: var(--bg-main);
+            background-image: radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.06) 0%, transparent 55%);
+            color: var(--text-main);
+            font-family: var(--font-family);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 32px 20px;
+        }
+        .container { width: 100%; max-width: 1040px; margin: 0 auto; }
+        .top-nav {
+            display: flex; justify-content: space-between; align-items: center;
+            width: 100%; max-width: 1040px; margin-bottom: 28px;
+        }
+        .back-link {
+            color: var(--text-muted); text-decoration: none; font-size: 14px;
+            font-weight: 500; display: flex; align-items: center; gap: 6px;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: var(--text-main); }
+        .trust-badge {
+            font-size: 12px; color: var(--text-muted);
+            display: flex; align-items: center; gap: 6px;
+            background: rgba(255,255,255,0.05); padding: 6px 12px;
+            border-radius: 99px; border: 1px solid var(--border-muted);
+        }
+        .header { text-align: center; margin-bottom: 32px; }
+        .header h1 { font-size: 32px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 8px; }
+        .header p { color: var(--text-muted); font-size: 16px; }
+
+        /* ── Cycle toggle ── */
+        .cycle-toggle {
+            display: flex; justify-content: center; gap: 6px;
+            background: var(--bg-card); border: 1px solid var(--border-muted);
+            padding: 6px; border-radius: 99px; width: fit-content;
+            margin: 0 auto 32px;
+        }
+        .cycle-btn {
+            background: transparent; border: none; color: var(--text-muted);
+            font-family: inherit; font-size: 14px; font-weight: 600;
+            padding: 10px 22px; border-radius: 99px; cursor: pointer;
+            transition: all 0.2s ease; display: flex; align-items: center; gap: 8px;
+        }
+        .cycle-btn:hover { color: var(--text-main); }
+        .cycle-btn.active {
+            background: var(--accent-glow); color: #0F172A;
+            box-shadow: 0 4px 20px -4px rgba(56,189,248,0.5);
+        }
+        .save-pill {
+            background: rgba(16,185,129,0.15); color: var(--success);
+            font-size: 10px; font-weight: 700; padding: 3px 8px;
+            border-radius: 99px; letter-spacing: 0.4px;
+        }
+        .cycle-btn.active .save-pill { background: rgba(15,23,42,0.2); color: #0F172A; }
+
+        /* ── Plan grid ── */
+        .plan-grid {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 20px; margin-bottom: 36px;
+        }
+        @media (max-width: 720px) { .plan-grid { grid-template-columns: 1fr; } }
+
+        .plan-card {
+            background: var(--bg-card);
+            border: 1.5px solid var(--border-muted);
+            border-radius: var(--radius-lg);
+            padding: 28px 24px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative; overflow: hidden;
+        }
+        .plan-card.active {
+            border-color: var(--border-accent);
+            box-shadow: 0 0 0 1px var(--border-accent), 0 20px 50px -20px rgba(56,189,248,0.35);
+        }
+        .plan-card.active.business {
+            border-color: var(--accent-pro);
+            box-shadow: 0 0 0 1px var(--accent-pro), 0 20px 50px -20px rgba(167,139,250,0.35);
+        }
+        .plan-card.active::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0;
+            height: 3px; background: linear-gradient(90deg, #38BDF8, #818CF8);
+        }
+        .plan-card.active.business::before {
+            background: linear-gradient(90deg, #A78BFA, #F472B6);
+        }
+        .plan-badge {
+            display: inline-block;
+            background: rgba(56,189,248,0.1); color: var(--accent-glow);
+            padding: 4px 12px; border-radius: 99px;
+            font-size: 11px; font-weight: 700; margin-bottom: 14px;
+            text-transform: uppercase; letter-spacing: 0.6px;
+        }
+        .plan-card.business .plan-badge { background: rgba(167,139,250,0.12); color: var(--accent-pro); }
+        .plan-name { font-size: 22px; font-weight: 700; margin-bottom: 14px; }
+        .plan-price {
+            font-size: 40px; font-weight: 800; color: var(--accent-glow);
+            line-height: 1; margin-bottom: 4px; display: flex;
+            align-items: baseline; gap: 4px;
+        }
+        .plan-card.business .plan-price { color: var(--accent-pro); }
+        .plan-price .term { font-size: 15px; font-weight: 500; color: var(--text-muted); }
+        .plan-price .strike {
+            font-size: 15px; color: var(--text-muted);
+            text-decoration: line-through; margin-left: 4px; opacity: 0.6;
+        }
+        .plan-inr {
+            font-size: 13px; color: var(--text-muted);
+            margin-bottom: 20px; font-weight: 500;
+        }
+
+        /* ── Subtier selector ── */
+        .subtier-selector { display: flex; flex-direction: column; gap: 8px; }
+        .subtier-option {
+            display: flex; align-items: flex-start; gap: 10px;
+            background: var(--bg-input); border: 1.5px solid var(--border-muted);
+            border-radius: var(--radius-md); padding: 12px 14px;
+            cursor: pointer; transition: all 0.18s ease;
+        }
+        .subtier-option:hover { border-color: #475569; }
+        .subtier-option.active {
+            border-color: var(--border-accent);
+            background: rgba(56,189,248,0.06);
+        }
+        .plan-card.business .subtier-option.active {
+            border-color: var(--accent-pro);
+            background: rgba(167,139,250,0.07);
+        }
+        .subtier-option input[type="radio"] {
+            appearance: none; width: 16px; height: 16px;
+            border: 2px solid var(--border-muted); border-radius: 50%;
+            margin-top: 3px; flex-shrink: 0;
+            position: relative; transition: border-color 0.18s;
+        }
+        .subtier-option input[type="radio"]:checked { border-color: var(--border-accent); }
+        .plan-card.business .subtier-option input[type="radio"]:checked { border-color: var(--accent-pro); }
+        .subtier-option input[type="radio"]:checked::after {
+            content: ''; position: absolute; inset: 3px;
+            background: var(--border-accent); border-radius: 50%;
+        }
+        .plan-card.business .subtier-option input[type="radio"]:checked::after { background: var(--accent-pro); }
+        .subtier-body { flex: 1; }
+        .subtier-top {
+            display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 3px;
+        }
+        .subtier-name { font-size: 14px; font-weight: 600; color: var(--text-main); }
+        .subtier-price-tag {
+            font-size: 13px; font-weight: 700; color: var(--accent-glow);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .plan-card.business .subtier-price-tag { color: var(--accent-pro); }
+        .subtier-desc { font-size: 12px; color: var(--text-muted); }
+
+        /* ── Payment section ── */
+        .payment-section {
+            background: var(--bg-card); border: 1px solid var(--border-muted);
+            border-radius: var(--radius-lg); padding: 36px;
+            display: flex; flex-direction: column; align-items: center;
+            margin-bottom: 32px;
+            box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+        .payment-section::before {
+            content: ''; position: absolute;
+            top: -1px; left: 20%; right: 20%; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-glow), transparent);
+            opacity: 0.6;
+        }
+        .payment-amount-badge {
+            background: rgba(16,185,129,0.12); color: var(--success);
+            padding: 6px 16px; border-radius: 99px;
+            font-size: 13px; font-weight: 700;
+            margin-bottom: 20px; letter-spacing: 0.3px;
+        }
+        .payment-title { font-size: 20px; font-weight: 700; margin-bottom: 20px; text-align: center; }
+        .qr-container {
+            background: #FFFFFF; padding: 14px; border-radius: var(--radius-md);
+            display: inline-block; margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+        .qr-container img { display: block; width: 210px; height: 210px; object-fit: contain; }
+        .upi-id-wrapper {
+            display: flex; align-items: center; gap: 12px;
+            background: var(--bg-input); padding: 12px 18px;
+            border-radius: var(--radius-md); border: 1px solid var(--border-muted);
+            margin-bottom: 20px; width: 100%; max-width: 420px;
+            justify-content: space-between;
+        }
+        .upi-id-text {
+            font-family: 'JetBrains Mono', monospace; font-size: 15px;
+            color: var(--text-main); letter-spacing: 0.5px;
+        }
+        .copy-btn {
+            background: transparent; border: none; color: var(--accent-glow);
+            cursor: pointer; font-size: 13px; font-weight: 600;
+            padding: 6px 10px; border-radius: var(--radius-sm);
+            transition: background 0.2s;
+        }
+        .copy-btn:hover { background: rgba(56,189,248,0.1); }
+        .mobile-upi-btn {
+            display: flex; align-items: center; justify-content: center;
+            gap: 10px; width: 100%; max-width: 420px;
+            padding: 15px 24px;
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            color: #FFFFFF; text-decoration: none;
+            border-radius: var(--radius-md);
+            font-weight: 700; font-size: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(16,185,129,0.3);
+        }
+        .mobile-upi-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16,185,129,0.45);
+            filter: brightness(1.08);
+        }
+        .mobile-upi-btn svg { width: 22px; height: 22px; fill: currentColor; }
+
+        /* ── Form ── */
+        .form-section {
+            background: var(--bg-card); border: 1px solid var(--border-muted);
+            border-radius: var(--radius-lg); padding: 36px;
+            max-width: 600px; margin: 0 auto 32px; width: 100%;
+        }
+        .form-title { font-size: 20px; font-weight: 700; margin-bottom: 6px; text-align: center; }
+        .form-subtitle { color: var(--text-muted); font-size: 14px; text-align: center; margin-bottom: 28px; }
+        .input-group { margin-bottom: 22px; }
+        .input-group label {
+            display: block; font-size: 13px; font-weight: 600;
+            color: var(--text-main); margin-bottom: 8px;
+        }
+        .input-group input {
+            width: 100%; padding: 14px 16px;
+            background: var(--bg-input); border: 1.5px solid var(--border-muted);
+            border-radius: var(--radius-md); color: var(--text-main);
+            font-size: 15px; font-family: inherit;
+            transition: all 0.2s ease; outline: none;
+        }
+        .input-group input::placeholder { color: #475569; }
+        .input-group input:focus {
+            border-color: var(--border-accent);
+            box-shadow: 0 0 0 3px rgba(56,189,248,0.15);
+        }
+        .input-group input.error {
+            border-color: var(--danger);
+            box-shadow: 0 0 0 3px rgba(239,68,68,0.15);
+        }
+        .input-group input:disabled {
+            opacity: 0.65; cursor: not-allowed;
+            background: #0B1220;
+        }
+        .input-hint { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+        .error-text { color: var(--danger); font-size: 12px; margin-top: 6px; display: none; }
+        .submit-btn {
+            width: 100%; padding: 16px;
+            background: var(--accent-glow); color: #0F172A;
+            border: none; border-radius: var(--radius-md);
+            font-size: 15px; font-weight: 700; font-family: inherit;
+            cursor: pointer; transition: all 0.2s ease;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .submit-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(56,189,248,0.3);
+        }
+        .submit-btn:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
+        .support-footer {
+            text-align: center; margin-top: 20px;
+            color: var(--text-muted); font-size: 13px;
+        }
+        .support-footer a {
+            color: var(--accent-glow); text-decoration: none; font-weight: 600;
+        }
+        .support-footer a:hover { text-decoration: underline; }
+
+        /* ── Modal ── */
+        .modal-overlay {
+            position: fixed; inset: 0;
+            background: rgba(11,15,25,0.88);
+            backdrop-filter: blur(10px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 1000; opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease; padding: 20px;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-content {
+            background: var(--bg-card); border: 1px solid var(--border-muted);
+            border-radius: var(--radius-lg); padding: 44px 32px;
+            max-width: 480px; width: 100%; text-align: center;
+            transform: scale(0.95) translateY(10px);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6);
+        }
+        .modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
+        .modal-icon {
+            width: 72px; height: 72px;
+            background: rgba(16,185,129,0.12); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 22px; color: var(--success);
+        }
+        .modal-icon svg { width: 36px; height: 36px; }
+        .modal-title { font-size: 24px; font-weight: 700; margin-bottom: 10px; }
+        .modal-message { color: var(--text-muted); font-size: 15px; line-height: 1.6; margin-bottom: 8px; }
+        .modal-utr {
+            font-family: 'JetBrains Mono', monospace; font-size: 13px;
+            color: var(--accent-glow); background: var(--bg-input);
+            padding: 8px 12px; border-radius: var(--radius-sm);
+            display: inline-block; margin-bottom: 24px;
+            border: 1px solid var(--border-muted);
+        }
+        .modal-actions { display: flex; gap: 10px; justify-content: center; }
+        .modal-btn {
+            padding: 12px 26px; border-radius: var(--radius-md);
+            font-size: 14px; font-weight: 600; font-family: inherit;
+            cursor: pointer; transition: all 0.2s;
+            text-decoration: none; display: inline-flex;
+            align-items: center; gap: 6px;
+        }
+        .modal-btn.primary {
+            background: var(--accent-glow); color: #0F172A; border: none;
+        }
+        .modal-btn.primary:hover { background: var(--accent-hover); }
+        .modal-btn.secondary {
+            background: var(--bg-input); color: var(--text-main);
+            border: 1px solid var(--border-muted);
+        }
+        .modal-btn.secondary:hover { background: var(--border-muted); }
+
+        /* ── Auth gate ── */
+        #auth-gate {
+            display: none; text-align: center;
+            max-width: 440px; margin: 60px auto; padding: 40px 30px;
+            background: var(--bg-card); border: 1px solid var(--border-muted);
+            border-radius: var(--radius-lg);
+        }
+        #auth-gate .material-symbols-rounded { font-size: 48px; color: var(--accent-glow); margin-bottom: 16px; }
+        #auth-gate h2 { font-size: 22px; font-weight: 700; margin-bottom: 10px; }
+        #auth-gate p { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; }
+        #auth-gate a {
+            display: inline-block; padding: 12px 28px;
+            background: var(--accent-glow); color: #0F172A;
+            text-decoration: none; border-radius: var(--radius-md);
+            font-weight: 700; font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-nav">
+        <a href="/Axelr-Frontend/index.html" class="back-link">
+            <span class="material-symbols-rounded" style="font-size:18px;">arrow_back</span> Back to Axelr
+        </a>
+        <div class="trust-badge">
+            <span class="material-symbols-rounded" style="font-size:14px;color:var(--success);">lock</span> 256-bit Secure
+        </div>
+    </div>
+
+    <!-- Auth Gate -->
+    <div id="auth-gate">
+        <span class="material-symbols-rounded">lock</span>
+        <h2>Sign in to continue</h2>
+        <p>You need to be signed in to purchase an Axelr plan.</p>
+        <a href="/Axelr-Frontend/index.html" id="auth-gate-cta">Return to App</a>
+    </div>
+
+    <div class="container" id="checkout-container" style="display:none;">
+        <div class="header">
+            <h1>Upgrade to Axelr</h1>
+            <p>Select your tier, specialization, and billing cycle</p>
+        </div>
+
+        <!-- Billing Cycle Toggle -->
+        <div class="cycle-toggle">
+            <button class="cycle-btn active" data-cycle="monthly" onclick="setCycle('monthly')">Monthly</button>
+            <button class="cycle-btn" data-cycle="annual" onclick="setCycle('annual')">
+                Annual <span class="save-pill">SAVE ~20%</span>
+            </button>
+        </div>
+
+        <!-- Plan Grid -->
+        <div class="plan-grid">
+            <!-- PRO -->
+            <div class="plan-card" id="plan-card-pro" data-plan="pro">
+                <div class="plan-badge">Pro</div>
+                <div class="plan-name">Pro Architect</div>
+                <div class="plan-price">
+                    $<span class="price-value" id="pro-price-value">15</span>
+                    <span class="term" id="pro-price-term">/mo</span>
+                </div>
+                <div class="plan-inr">Pay ₹<span id="pro-inr-value">1,260</span> today</div>
+
+                <div class="subtier-selector" data-plan="pro">
+                    <label class="subtier-option active" data-subtier="full">
+                        <input type="radio" name="pro-subtier" value="full" checked>
+                        <div class="subtier-body">
+                            <div class="subtier-top">
+                                <span class="subtier-name">Full Stack</span>
+                                <span class="subtier-price-tag" data-plan="pro" data-subtier="full">$15/mo</span>
+                            </div>
+                            <div class="subtier-desc">All 3 workspaces · 50 Actions/day</div>
+                        </div>
+                    </label>
+                    <label class="subtier-option" data-subtier="data">
+                        <input type="radio" name="pro-subtier" value="data">
+                        <div class="subtier-body">
+                            <div class="subtier-top">
+                                <span class="subtier-name">Data Specialist</span>
+                                <span class="subtier-price-tag" data-plan="pro" data-subtier="data">$9/mo</span>
+                            </div>
+                            <div class="subtier-desc">Data workspace only · 45 Actions/day</div>
+                        </div>
+                    </label>
+                    <label class="subtier-option" data-subtier="design">
+                        <input type="radio" name="pro-subtier" value="design">
+                        <div class="subtier-body">
+                            <div class="subtier-top">
+                                <span class="subtier-name">Design Specialist</span>
+                                <span class="subtier-price-tag" data-plan="pro" data-subtier="design">$10/mo</span>
+                            </div>
+                            <div class="subtier-desc">Design workspace only · 40 Actions/day</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- BUSINESS -->
+            <div class="plan-card business" id="plan-card-business" data-plan="business">
+                <div class="plan-badge">Business</div>
+                <div class="plan-name">Business Collective</div>
+                <div class="plan-price">
+                    $<span class="price-value" id="business-price-value">35</span>
+                    <span class="term" id="business-price-term">/mo</span>
+                </div>
+                <div class="plan-inr">Pay ₹<span id="business-inr-value">2,940</span> today</div>
+
+                <div class="subtier-selector" data-plan="business">
+                    <label class="subtier-option active" data-subtier="full">
+                        <input type="radio" name="business-subtier" value="full" checked>
+                        <div class="subtier-body">
+                            <div class="subtier-top">
+                                <span class="subtier-name">Full Collective</span>
+                                <span class="subtier-price-tag" data-plan="business" data-subtier="full">$35/mo</span>
+                            </div>
+                            <div class="subtier-desc">All 3 workspaces · 150 Actions/day</div>
+                        </div>
+                    </label>
+                    <label class="subtier-option" data-subtier="data">
+                        <input type="radio" name="business-subtier" value="data">
+                        <div class="subtier-body">
+                            <div class="subtier-top">
+                                <span class="subtier-name">Data Ops Heavy</span>
+                                <span class="subtier-price-tag" data-plan="business" data-subtier="data">$22/mo</span>
+                            </div>
+                            <div class="subtier-desc">Data workspace only · 130 Actions/day</div>
+                        </div>
+                    </label>
+                    <label class="subtier-option" data-subtier="design">
+                        <input type="radio" name="business-subtier" value="design">
+                        <div class="subtier-body">
+                            <div class="subtier-top">
+                                <span class="subtier-name">Design Studio</span>
+                                <span class="subtier-price-tag" data-plan="business" data-subtier="design">$24/mo</span>
+                            </div>
+                            <div class="subtier-desc">Design workspace only · 120 Actions/day</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment -->
+        <div class="payment-section">
+            <div class="payment-amount-badge" id="payment-amount-badge">Pay ₹1,260</div>
+            <div class="payment-title">Scan to Pay via Paytm / Any UPI App</div>
+            <div class="qr-container">
+                <img id="qr-image" src="" alt="UPI QR Code">
+            </div>
+            <div class="upi-id-wrapper">
+                <span class="upi-id-text" id="display-upi-id">hasan-825@ptyes</span>
+                <button class="copy-btn" onclick="copyUPI()">Copy UPI ID</button>
+            </div>
+            <a href="#" id="mobile-upi-link" class="mobile-upi-btn">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/></svg>
+                Pay via UPI App
+            </a>
+        </div>
+
+        <!-- Verification Form -->
+        <div class="form-section">
+            <div class="form-title">Verify Your Payment</div>
+            <div class="form-subtitle">Enter your transaction ID so we can activate your account.</div>
+
+            <form id="verification-form" novalidate>
+                <div class="input-group">
+                    <label for="email">Account Email</label>
+                    <input type="email" id="email" name="email" placeholder="you@example.com" required>
+                    <div class="input-hint" id="email-hint">This is pre-filled from your sign-in.</div>
+                    <div class="error-text" id="email-error">Please enter a valid email address.</div>
+                </div>
+
+                <div class="input-group">
+                    <label for="utr">12-Digit UPI Transaction ID / UTR</label>
+                    <input type="text" id="utr" name="utr" placeholder="e.g. 123456789012"
+                           maxlength="12" minlength="12" inputmode="numeric" pattern="\d{12}" required>
+                    <div class="input-hint">Found in your UPI app under "Transaction History".</div>
+                    <div class="error-text" id="utr-error">Transaction ID must be exactly 12 digits.</div>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submit-btn">
+                    <span class="material-symbols-rounded" style="font-size:20px;">check_circle</span>
+                    <span>Submit Verification</span>
+                </button>
+            </form>
+
+            <div class="support-footer">
+                Need help? <a href="mailto:axelrsupport@gmail.com">axelrsupport@gmail.com</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal-overlay" id="success-modal">
+        <div class="modal-content">
+            <div class="modal-icon">
+                <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+            <div class="modal-title">Payment Submitted!</div>
+            <div class="modal-message">
+                Our team will verify your transaction within <strong>1 hour</strong>. You'll receive access on your account automatically.
+            </div>
+            <div class="modal-utr" id="modal-utr-display">UTR: —</div>
+            <div class="modal-actions">
+                <a href="/Axelr-Frontend/index.html" class="modal-btn primary">
+                    <span class="material-symbols-rounded" style="font-size:16px;">home</span> Return to App
+                </a>
+                <button class="modal-btn secondary" onclick="closeModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ═══════════════════════════════════════════════════════════════
+           CONFIG — single source of truth, mirrors 80-billing.js
+           ═══════════════════════════════════════════════════════════════ */
+        const UPI_ID = 'hasan-825@ptyes';
+        const MERCHANT_NAME = 'Axelr';
+        const USD_TO_INR = 84;  // Fixed conversion rate
+
+        const PRICE_MATRIX = {
+            pro: {
+                full:   { monthly: 15, annualMo: 12, annualTotal: 144 },
+                data:   { monthly: 9,  annualMo: 7,  annualTotal: 84  },
+                design: { monthly: 10, annualMo: 8,  annualTotal: 96  }
+            },
+            business: {
+                full:   { monthly: 35, annualMo: 28, annualTotal: 336 },
+                data:   { monthly: 22, annualMo: 18, annualTotal: 216 },
+                design: { monthly: 24, annualMo: 19, annualTotal: 228 }
+            }
+        };
+
+        const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+            ? 'http://localhost:8000'
+            : 'https://axelr-backend.onrender.com';
+
+        /* ═══════════════════════════════════════════════════════════════
+           STATE
+           ═══════════════════════════════════════════════════════════════ */
+        const state = {
+            plan: 'pro',
+            subtiers: { pro: 'full', business: 'full' },
+            cycle: 'monthly',
+            authToken: '',
+            authEmail: ''
+        };
+
+        /* ═══════════════════════════════════════════════════════════════
+           HELPERS
+           ═══════════════════════════════════════════════════════════════ */
+        function decodeJWT(token) {
+            try {
+                const payload = token.split('.')[1];
+                return JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+            } catch { return null; }
+        }
+
+        function getAuthToken() {
+            return localStorage.getItem('google_auth_token')
+                || localStorage.getItem('auth_token')
+                || localStorage.getItem('axelr_auth_token')
+                || '';
+        }
+
+        function getAuthEmail() {
+            // Try common localStorage keys first
+            const directKeys = ['axelr_user_email', 'user_email', 'google_user_email', 'auth_email'];
+            for (const k of directKeys) {
+                const v = localStorage.getItem(k);
+                if (v && v.includes('@')) return v;
+            }
+            // Fall back to JWT payload
+            const token = getAuthToken();
+            if (!token) return '';
+            const payload = decodeJWT(token);
+            return payload?.email || payload?.user_email || '';
+        }
+
+        function money(n) { return n.toLocaleString('en-IN'); }
+
+        function computeINR(plan, subtier, cycle) {
+            const cfg = PRICE_MATRIX[plan][subtier];
+            const usd = cycle === 'annual' ? cfg.annualTotal : cfg.monthly;
+            return Math.round(usd * USD_TO_INR);
+        }
+
+        function computeUSD(plan, subtier, cycle) {
+            const cfg = PRICE_MATRIX[plan][subtier];
+            return cycle === 'annual' ? cfg.annualTotal : cfg.monthly;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           RENDERING
+           ═══════════════════════════════════════════════════════════════ */
+        function render() {
+            const { plan, subtiers, cycle } = state;
+            const isAnnual = cycle === 'annual';
+
+            // Plan cards
+            document.querySelectorAll('.plan-card').forEach(card => {
+                const p = card.dataset.plan;
+                card.classList.toggle('active', p === plan);
+            });
+
+            // Subtier radios
+            document.querySelectorAll('.subtier-option').forEach(opt => {
+                const p = opt.closest('.subtier-selector').dataset.plan;
+                const s = opt.dataset.subtier;
+                opt.classList.toggle('active', subtiers[p] === s);
+                const radio = opt.querySelector('input[type="radio"]');
+                if (radio) radio.checked = (subtiers[p] === s);
+            });
+
+            // Update per-plan prices and subtier price tags
+            ['pro', 'business'].forEach(p => {
+                const sub = subtiers[p];
+                const cfg = PRICE_MATRIX[p][sub];
+                const displayPrice = isAnnual ? cfg.annualMo : cfg.monthly;
+                const termEl = document.getElementById(`${p}-price-term`);
+
+                document.getElementById(`${p}-price-value`).textContent = displayPrice;
+                termEl.textContent = isAnnual
+                    ? `/mo ($${cfg.annualTotal}/yr)`
+                    : '/mo';
+
+                // Per-subtier price tags
+                ['full', 'data', 'design'].forEach(s => {
+                    const tag = document.querySelector(`.subtier-price-tag[data-plan="${p}"][data-subtier="${s}"]`);
+                    if (!tag) return;
+                    const c = PRICE_MATRIX[p][s];
+                    tag.textContent = isAnnual ? `$${c.annualMo}/mo` : `$${c.monthly}/mo`;
+                });
+
+                const inrToday = computeINR(p, sub, cycle);
+                document.getElementById(`${p}-inr-value`).textContent = money(inrToday);
+            });
+
+            // Payment amount for the *active* plan
+            const activeSub = subtiers[plan];
+            const activeINR = computeINR(plan, activeSub, cycle);
+            document.getElementById('payment-amount-badge').textContent = `Pay ₹${money(activeINR)}`;
+            document.getElementById('mobile-upi-link').innerHTML = `
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/></svg>
+                Pay ₹${money(activeINR)} via UPI App
+            `;
+
+            // Rebuild UPI link + QR
+            const upiLink = `upi://pay?pa=${UPI_ID}&pn=${MERCHANT_NAME}&am=${activeINR}&cu=INR&tn=Axelr%20${plan}%20${activeSub}`;
+            document.getElementById('mobile-upi-link').href = upiLink;
+            document.getElementById('qr-image').src =
+                `https://api.qrserver.com/v1/create-qr-code/?size=210x210&data=${encodeURIComponent(upiLink)}`;
+
+            // Cycle buttons
+            document.querySelectorAll('.cycle-btn').forEach(b => {
+                b.classList.toggle('active', b.dataset.cycle === cycle);
+            });
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           ACTIONS
+           ═══════════════════════════════════════════════════════════════ */
+        function setCycle(cycle) {
+            state.cycle = cycle;
+            render();
+        }
+
+        function selectPlan(plan) {
+            state.plan = plan;
+            render();
+        }
+
+        function selectSubtier(plan, subtier) {
+            state.subtiers[plan] = subtier;
+            state.plan = plan;  // clicking a subtier selects that plan
+            render();
+        }
+
+        function copyUPI() {
+            navigator.clipboard.writeText(UPI_ID).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                const orig = btn.innerText;
+                btn.innerText = 'Copied!';
+                btn.style.color = 'var(--success)';
+                setTimeout(() => {
+                    btn.innerText = orig;
+                    btn.style.color = 'var(--accent-glow)';
+                }, 2000);
+            }).catch(() => alert('Copy failed. UPI ID: ' + UPI_ID));
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           FORM SUBMISSION
+           ═══════════════════════════════════════════════════════════════ */
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            const emailInput = document.getElementById('email');
+            const utrInput = document.getElementById('utr');
+            const emailError = document.getElementById('email-error');
+            const utrError = document.getElementById('utr-error');
+            const submitBtn = document.getElementById('submit-btn');
+
+            emailInput.classList.remove('error');
+            utrInput.classList.remove('error');
+            emailError.style.display = 'none';
+            utrError.style.display = 'none';
+
+            let valid = true;
+            const email = emailInput.value.trim();
+            const utr = utrInput.value.trim();
+
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                emailInput.classList.add('error');
+                emailError.style.display = 'block';
+                valid = false;
+            }
+            if (!/^\d{12}$/.test(utr)) {
+                utrInput.classList.add('error');
+                utrError.style.display = 'block';
+                valid = false;
+            }
+            if (!valid) return;
+
+            const activeSub = state.subtiers[state.plan];
+            const payload = {
+                plan: state.plan,
+                subtier: activeSub,
+                cycle: state.cycle,
+                amountUSD: computeUSD(state.plan, activeSub, state.cycle),
+                amountINR: computeINR(state.plan, activeSub, state.cycle),
+                email,
+                utr
+            };
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<span class="material-symbols-rounded" style="font-size:20px;">hourglass_top</span><span>Submitting...</span>`;
+
+            try {
+                const headers = { 'Content-Type': 'application/json' };
+                if (state.authToken) headers['Authorization'] = `Bearer ${state.authToken}`;
+
+                const res = await fetch(`${API_BASE}/api/billing/verify-upi`, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json().catch(() => ({}));
+
+                if (!res.ok) {
+                    if (res.status === 409) {
+                        throw new Error(data.detail || 'This UTR has already been submitted.');
+                    }
+                    if (res.status === 422) {
+                        throw new Error(data.detail || 'Invalid submission. Please check your details.');
+                    }
+                    throw new Error(data.detail || 'Server error. Please try again.');
+                }
+
+                document.getElementById('modal-utr-display').textContent = `UTR: ${utr}`;
+                document.getElementById('success-modal').classList.add('active');
+                document.getElementById('verification-form').reset();
+                if (state.authEmail) emailInput.value = state.authEmail;
+            } catch (err) {
+                alert(err.message || 'Something went wrong. Please try again.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `<span class="material-symbols-rounded" style="font-size:20px;">check_circle</span><span>Submit Verification</span>`;
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('success-modal').classList.remove('active');
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           INIT
+           ═══════════════════════════════════════════════════════════════ */
+        function init() {
+            // Auth check
+            state.authToken = getAuthToken();
+            state.authEmail = getAuthEmail();
+
+            const gate = document.getElementById('auth-gate');
+            const container = document.getElementById('checkout-container');
+
+            if (!state.authToken) {
+                gate.style.display = 'block';
+                container.style.display = 'none';
+                return;
+            }
+
+            gate.style.display = 'none';
+            container.style.display = 'block';
+
+            // Pre-fill email
+            if (state.authEmail) {
+                const emailInput = document.getElementById('email');
+                emailInput.value = state.authEmail;
+                emailInput.setAttribute('readonly', 'readonly');
+                emailInput.style.opacity = '0.7';
+                document.getElementById('email-hint').textContent = 'Locked to your signed-in account.';
+            }
+
+            // Read URL params
+            const params = new URLSearchParams(window.location.search);
+            const planParam = params.get('plan');
+            const subtierParam = params.get('subtier');
+            const cycleParam = params.get('cycle');
+
+            if (planParam === 'pro' || planParam === 'business') {
+                state.plan = planParam;
+            }
+            if (subtierParam && ['full', 'data', 'design'].includes(subtierParam)) {
+                state.subtiers[state.plan] = subtierParam;
+            }
+            if (cycleParam === 'annual' || cycleParam === 'monthly') {
+                state.cycle = cycleParam;
+            }
+
+            // Wire up subtier radios (event delegation)
+            document.querySelectorAll('.subtier-selector').forEach(sel => {
+                const plan = sel.dataset.plan;
+                sel.querySelectorAll('.subtier-option').forEach(opt => {
+                    opt.addEventListener('click', (ev) => {
+                        ev.preventDefault();
+                        selectSubtier(plan, opt.dataset.subtier);
+                    });
+                });
+            });
+
+            // Wire up plan cards (clicking anywhere selects the plan)
+            document.querySelectorAll('.plan-card').forEach(card => {
+                card.addEventListener('click', (ev) => {
+                    // Don't override subtier clicks
+                    if (ev.target.closest('.subtier-option')) return;
+                    selectPlan(card.dataset.plan);
+                });
+            });
+
+            // Form
+            document.getElementById('verification-form').addEventListener('submit', handleFormSubmit);
+
+            // Modal dismissal
+            document.getElementById('success-modal').addEventListener('click', function(e) {
+                if (e.target === this) closeModal();
+            });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') closeModal();
+            });
+
+            render();
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

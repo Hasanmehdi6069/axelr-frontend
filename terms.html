@@ -3,37 +3,582 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Terms of Service – Axelr AI</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <title>Terms of Service — AXELR AI</title>
+    <meta name="description" content="Terms of Service for the AXELR AI Intelligence Execution Platform." />
+    <link rel="icon" type="image/png" href="/Axelr-Frontend/favicon.png" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,600,1,0" rel="stylesheet" />
     <style>
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { background:#050505; color:#e5e7eb; font-family:'Inter',sans-serif; padding:40px 20px; line-height:1.7; }
-        .container { max-width:800px; margin:0 auto; background:rgba(16,16,16,0.8); backdrop-filter:blur(12px); padding:40px; border-radius:24px; border:1px solid rgba(255,255,255,0.06); }
-        h1 { font-size:32px; margin-bottom:20px; color:#00f2fe; }
-        h2 { font-size:22px; margin-top:30px; margin-bottom:12px; color:#a78bfa; }
-        p { margin-bottom:16px; color:#9ca3af; }
-        a { color:#00f2fe; text-decoration:none; }
-        a:hover { text-decoration:underline; }
-        .back { display:inline-block; margin-top:30px; padding:10px 20px; border:1px solid var(--border-muted); border-radius:8px; color:var(--text-muted); cursor:pointer; transition:0.2s; }
-        .back:hover { background:rgba(255,255,255,0.05); color:#fff; }
+        :root {
+            --legal-bg: #050508;
+            --legal-card: rgba(12, 12, 20, 0.72);
+            --legal-border: rgba(255, 255, 255, 0.06);
+            --legal-border-hover: rgba(255, 255, 255, 0.14);
+            --legal-accent: #00f2fe;
+            --legal-accent-2: #8b5cf6;
+            --legal-text: #f4f8ff;
+            --legal-muted: #a1b5cc;
+            --legal-dim: #62778f;
+            --legal-mono: 'JetBrains Mono', ui-monospace, monospace;
+            --legal-sans: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html { scroll-behavior: smooth; }
+        body {
+            background: var(--legal-bg);
+            color: var(--legal-text);
+            font-family: var(--legal-sans);
+            min-height: 100vh;
+            line-height: 1.65;
+            -webkit-font-smoothing: antialiased;
+            position: relative;
+            overflow-x: hidden;
+        }
+        body::before {
+            content: ''; position: fixed; inset: 0;
+            background:
+                radial-gradient(ellipse 60% 40% at 20% 0%, rgba(0, 242, 254, 0.05), transparent 60%),
+                radial-gradient(ellipse 60% 40% at 80% 20%, rgba(139, 92, 246, 0.04), transparent 60%),
+                radial-gradient(ellipse 80% 50% at 50% 100%, rgba(244, 63, 94, 0.03), transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Progress bar */
+        .legal-progress {
+            position: fixed; top: 0; left: 0; height: 2px;
+            width: 0%;
+            background: linear-gradient(90deg, var(--legal-accent), var(--legal-accent-2), #f43f5e);
+            box-shadow: 0 0 12px var(--legal-accent);
+            z-index: 99999;
+            transition: width 0.08s linear;
+        }
+
+        /* Topbar */
+        .legal-topbar {
+            position: sticky; top: 0; z-index: 900;
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 16px;
+            padding: 14px 32px;
+            background: rgba(5, 5, 8, 0.72);
+            backdrop-filter: blur(24px) saturate(150%);
+            -webkit-backdrop-filter: blur(24px) saturate(150%);
+            border-bottom: 1px solid var(--legal-border);
+        }
+        .legal-brand {
+            display: flex; align-items: center; gap: 10px;
+            font-family: var(--legal-mono);
+            font-weight: 800; font-size: 15px; letter-spacing: 2px;
+            color: var(--legal-text); text-decoration: none;
+            white-space: nowrap;
+        }
+        .legal-brand-chip {
+            font-size: 10px; font-weight: 700; letter-spacing: 1px;
+            padding: 3px 8px; border-radius: 4px;
+            background: rgba(0, 242, 254, 0.1);
+            color: var(--legal-accent);
+            border: 1px solid rgba(0, 242, 254, 0.22);
+        }
+        .legal-nav { display: flex; align-items: center; gap: 4px; }
+        .legal-nav a {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 8px 14px; border-radius: 8px;
+            font-size: 13px; font-weight: 500;
+            color: var(--legal-muted); text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        .legal-nav a:hover { color: var(--legal-text); background: rgba(255, 255, 255, 0.05); }
+        .legal-nav a.active {
+            color: var(--legal-accent);
+            background: rgba(0, 242, 254, 0.08);
+        }
+        .legal-nav a .material-symbols-rounded { font-size: 16px; }
+        .legal-topbar-cta {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 8px 16px; border-radius: 10px;
+            background: var(--legal-text); color: var(--legal-bg);
+            font-size: 13px; font-weight: 600; text-decoration: none;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .legal-topbar-cta:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(0, 242, 254, 0.15); }
+        .legal-topbar-cta .material-symbols-rounded { font-size: 16px; }
+
+        /* Layout */
+        .legal-shell {
+            position: relative; z-index: 1;
+            display: grid;
+            grid-template-columns: 260px minmax(0, 1fr);
+            gap: 0;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 24px;
+            min-height: calc(100vh - 60px);
+        }
+
+        /* Sidebar TOC */
+        .legal-toc {
+            position: sticky; top: 80px;
+            align-self: start;
+            padding: 40px 20px 60px 0;
+            max-height: calc(100vh - 100px);
+            overflow-y: auto;
+        }
+        .legal-toc-header {
+            font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+            text-transform: uppercase; color: var(--legal-dim);
+            margin-bottom: 14px;
+        }
+        .legal-toc a {
+            display: flex; align-items: baseline; gap: 10px;
+            font-size: 12.5px; line-height: 1.5;
+            color: var(--legal-muted); text-decoration: none;
+            padding: 7px 0 7px 12px;
+            border-left: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+        .legal-toc a .num {
+            font-family: var(--legal-mono);
+            font-size: 11px;
+            color: var(--legal-dim);
+            min-width: 18px;
+            transition: color 0.2s;
+        }
+        .legal-toc a:hover { color: var(--legal-text); border-left-color: var(--legal-border-hover); }
+        .legal-toc a.active {
+            color: var(--legal-accent);
+            border-left-color: var(--legal-accent);
+            font-weight: 600;
+        }
+        .legal-toc a.active .num { color: var(--legal-accent); }
+
+        /* Article */
+        .legal-main { padding: 40px 0 120px; min-width: 0; }
+        .legal-hero { margin-bottom: 56px; }
+        .legal-hero-pill {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 6px 14px; border-radius: 999px;
+            font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+            text-transform: uppercase;
+            background: rgba(0, 242, 254, 0.08);
+            border: 1px solid rgba(0, 242, 254, 0.2);
+            color: var(--legal-accent);
+            margin-bottom: 22px;
+        }
+        .legal-hero-pill .material-symbols-rounded { font-size: 14px; }
+        .legal-hero h1 {
+            font-size: clamp(36px, 5vw, 56px);
+            font-weight: 800; letter-spacing: -1.5px;
+            line-height: 1.05; margin: 0 0 20px;
+            background: linear-gradient(135deg, var(--legal-text) 0%, var(--legal-muted) 100%);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .legal-hero .lede {
+            font-size: 17px; line-height: 1.65;
+            color: var(--legal-muted);
+            max-width: 620px;
+            margin-bottom: 28px;
+        }
+        .legal-hero-meta {
+            display: flex; flex-wrap: wrap; gap: 12px;
+        }
+        .legal-meta-pill {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 8px 14px; border-radius: 10px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--legal-border);
+            font-size: 12.5px;
+            color: var(--legal-muted);
+            font-family: var(--legal-mono);
+        }
+        .legal-meta-pill .material-symbols-rounded { font-size: 16px; color: var(--legal-accent); }
+
+        /* Article card */
+        .legal-card {
+            background: var(--legal-card);
+            backdrop-filter: blur(24px) saturate(150%);
+            -webkit-backdrop-filter: blur(24px) saturate(150%);
+            border: 1px solid var(--legal-border);
+            border-radius: 24px;
+            padding: 48px 48px 56px;
+            box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.7),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.03);
+        }
+
+        .legal-section {
+            scroll-margin-top: 90px;
+            padding: 40px 0;
+            border-bottom: 1px solid var(--legal-border);
+        }
+        .legal-section:last-child { border-bottom: none; padding-bottom: 0; }
+        .legal-section:first-child { padding-top: 0; }
+
+        .legal-section-header {
+            display: flex; align-items: center; gap: 14px;
+            margin-bottom: 20px;
+        }
+        .legal-section-num {
+            display: inline-flex; align-items: center; justify-content: center;
+            min-width: 36px; height: 36px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, rgba(0, 242, 254, 0.12), rgba(139, 92, 246, 0.12));
+            border: 1px solid rgba(0, 242, 254, 0.2);
+            color: var(--legal-accent);
+            font-family: var(--legal-mono);
+            font-weight: 700;
+            font-size: 13px;
+        }
+        .legal-section h2 {
+            font-size: clamp(20px, 2.6vw, 26px);
+            font-weight: 700; letter-spacing: -0.4px;
+            line-height: 1.25;
+            color: var(--legal-text);
+            margin: 0;
+        }
+        .legal-section p {
+            font-size: 15px; line-height: 1.8;
+            color: var(--legal-muted);
+            margin-bottom: 14px;
+        }
+        .legal-section p:last-child { margin-bottom: 0; }
+        .legal-section strong { color: var(--legal-text); font-weight: 600; }
+        .legal-section em { color: var(--legal-text); font-style: italic; }
+        .legal-section ul {
+            margin: 12px 0 18px;
+            padding-left: 0;
+            list-style: none;
+        }
+        .legal-section ul li {
+            position: relative;
+            padding-left: 24px;
+            font-size: 14.5px;
+            line-height: 1.75;
+            color: var(--legal-muted);
+            margin-bottom: 10px;
+        }
+        .legal-section ul li::before {
+            content: '';
+            position: absolute;
+            left: 4px; top: 12px;
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--legal-accent);
+            box-shadow: 0 0 8px var(--legal-accent);
+        }
+        .legal-section a {
+            color: var(--legal-accent);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.2s;
+        }
+        .legal-section a:hover { border-bottom-color: var(--legal-accent); }
+        .legal-section code {
+            padding: 2px 7px;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid var(--legal-border);
+            border-radius: 5px;
+            font-family: var(--legal-mono);
+            font-size: 13px;
+            color: var(--legal-text);
+        }
+
+        /* Callout */
+        .legal-callout {
+            display: flex; gap: 14px;
+            padding: 18px 22px;
+            margin: 22px 0;
+            background: rgba(0, 242, 254, 0.04);
+            border: 1px solid rgba(0, 242, 254, 0.15);
+            border-radius: 14px;
+            font-size: 14px; line-height: 1.65;
+            color: var(--legal-text);
+        }
+        .legal-callout .material-symbols-rounded {
+            font-size: 22px; color: var(--legal-accent); flex-shrink: 0;
+        }
+        .legal-callout.warn {
+            background: rgba(234, 179, 8, 0.05);
+            border-color: rgba(234, 179, 8, 0.2);
+        }
+        .legal-callout.warn .material-symbols-rounded { color: #eab308; }
+
+        /* Footer */
+        .legal-footer {
+            position: relative; z-index: 1;
+            display: flex; flex-wrap: wrap;
+            align-items: center; justify-content: space-between;
+            gap: 20px;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 32px 24px;
+            border-top: 1px solid var(--legal-border);
+            font-size: 13px;
+            color: var(--legal-muted);
+        }
+        .legal-footer-links { display: flex; flex-wrap: wrap; gap: 20px; }
+        .legal-footer-links a {
+            color: var(--legal-muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .legal-footer-links a:hover { color: var(--legal-accent); }
+
+        /* Back-to-top FAB */
+        .legal-fab {
+            position: fixed; right: 24px; bottom: 24px;
+            z-index: 500;
+            display: flex; align-items: center; justify-content: center;
+            width: 44px; height: 44px;
+            border-radius: 50%;
+            background: var(--legal-text); color: var(--legal-bg);
+            border: none; cursor: pointer;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+            opacity: 0; visibility: hidden;
+            transform: translateY(12px);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .legal-fab.show { opacity: 1; visibility: visible; transform: translateY(0); }
+        .legal-fab:hover { transform: translateY(-3px) scale(1.05); }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .legal-shell { grid-template-columns: 1fr; padding: 0 20px; }
+            .legal-toc {
+                position: static;
+                padding: 20px 0;
+                max-height: none;
+                border-bottom: 1px solid var(--legal-border);
+                margin-bottom: 20px;
+            }
+            .legal-main { padding: 24px 0 80px; }
+            .legal-card { padding: 32px 24px 40px; border-radius: 20px; }
+            .legal-section { padding: 32px 0; }
+            .legal-topbar { padding: 12px 20px; }
+            .legal-nav a span:not(.material-symbols-rounded) { display: none; }
+            .legal-footer { padding: 24px 20px; }
+        }
+        @media (max-width: 480px) {
+            .legal-card { padding: 24px 18px 32px; border-radius: 16px; }
+            .legal-hero h1 { font-size: 32px; letter-spacing: -0.8px; }
+            .legal-hero .lede { font-size: 15px; }
+            .legal-section-num { min-width: 32px; height: 32px; font-size: 12px; }
+            .legal-topbar-cta span:not(.material-symbols-rounded) { display: none; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Terms of Service</h1>
-        <p><strong>Last Updated:</strong> 2026-09-02</p>
-        <p>Welcome to Axelr AI ("Axelr", "we", "our", "us"). By using our platform, you agree to the following terms.</p>
-        <h2>1. Acceptance of Terms</h2>
-        <p>By accessing or using Axelr, you agree to be bound by these Terms. If you do not agree, please do not use the service.</p>
-        <h2>2. Use of Service</h2>
-        <p>You may use Axelr for lawful purposes only. You are responsible for all content you input and the outputs you generate. You must not attempt to manipulate, bypass, or interfere with the system’s security, rate limits, or intended functionality.</p>
-        <h2>3. Intellectual Property</h2>
-        <p>All content, logos, and software are the property of Axelr. You retain ownership of your input data, but you grant Axelr a license to process and store it for the purpose of providing the service.</p>
-        <h2>4. Limitation of Liability</h2>
-        <p>Axelr is provided "as is" without warranties of any kind. We are not liable for any damages arising from use of the service, including but not limited to data loss, inaccuracies, or service interruptions.</p>
-        <h2>5. Changes to Terms</h2>
-        <p>We may update these Terms from time to time. Continued use constitutes acceptance of the updated Terms.</p>
-        <a href="https://www.axelr.com/login" class="back" style="margin-left: 10px;">← Back to Axelr</a>
+    <div class="legal-progress" id="legal-progress"></div>
+
+    <header class="legal-topbar">
+        <a href="/" class="legal-brand">
+            <svg viewBox="0 0 100 100" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M50 15 L20 32.5 L20 67.5 L50 85" stroke="currentColor" stroke-width="6" stroke-linejoin="bevel" fill="rgba(0,242,254,0.08)" />
+                <path d="M50 15 L80 32.5 L50 50 L80 67.5 L50 85" stroke="var(--legal-accent)" stroke-width="6" stroke-linejoin="bevel" fill="none" />
+            </svg>
+            AXELR
+            <span class="legal-brand-chip">LEGAL</span>
+        </a>
+
+        <nav class="legal-nav">
+            <a href="/Axelr-Frontend/docs.html">
+                <span class="material-symbols-rounded">menu_book</span>
+                <span>Docs</span>
+            </a>
+            <a href="/Axelr-Frontend/terms.html" class="active">
+                <span class="material-symbols-rounded">gavel</span>
+                <span>Terms</span>
+            </a>
+            <a href="/Axelr-Frontend/privacy.html">
+                <span class="material-symbols-rounded">shield</span>
+                <span>Privacy</span>
+            </a>
+        </nav>
+
+        <a href="/" class="legal-topbar-cta">
+            <span class="material-symbols-rounded">arrow_back</span>
+            <span>Platform</span>
+        </a>
+    </header>
+
+    <div class="legal-shell">
+        <!-- TOC -->
+        <aside class="legal-toc">
+            <div class="legal-toc-header">On this page</div>
+            <a href="#acceptance" data-toc="acceptance"><span class="num">01</span> Acceptance of Terms</a>
+            <a href="#use" data-toc="use"><span class="num">02</span> Use of Service</a>
+            <a href="#ip" data-toc="ip"><span class="num">03</span> Intellectual Property</a>
+            <a href="#liability" data-toc="liability"><span class="num">04</span> Limitation of Liability</a>
+            <a href="#changes" data-toc="changes"><span class="num">05</span> Changes to Terms</a>
+        </aside>
+
+        <!-- Main -->
+        <main class="legal-main">
+            <div class="legal-hero">
+                <div class="legal-hero-pill">
+                    <span class="material-symbols-rounded">gavel</span>
+                    Legal
+                </div>
+                <h1>Terms of Service</h1>
+                <p class="lede">
+                    The rules of engagement for using AXELR AI. Written to be readable, not just legally
+                    binding — because clarity is a feature.
+                </p>
+                <div class="legal-hero-meta">
+                    <div class="legal-meta-pill">
+                        <span class="material-symbols-rounded">schedule</span>
+                        Last updated: 2026-09-02
+                    </div>
+                    <div class="legal-meta-pill">
+                        <span class="material-symbols-rounded">menu_book</span>
+                        5 sections
+                    </div>
+                    <div class="legal-meta-pill">
+                        <span class="material-symbols-rounded">schedule</span>
+                        ~3 min read
+                    </div>
+                </div>
+            </div>
+
+            <article class="legal-card">
+                <section id="acceptance" class="legal-section">
+                    <div class="legal-section-header">
+                        <span class="legal-section-num">01</span>
+                        <h2>Acceptance of Terms</h2>
+                    </div>
+                    <p>
+                        Welcome to <strong>AXELR AI</strong> ("Axelr", "we", "our", "us"). By accessing or using our
+                        platform, you agree to be bound by these Terms. If you do not agree, please do not use the
+                        service.
+                    </p>
+                </section>
+
+                <section id="use" class="legal-section">
+                    <div class="legal-section-header">
+                        <span class="legal-section-num">02</span>
+                        <h2>Use of Service</h2>
+                    </div>
+                    <p>
+                        You may use Axelr for lawful purposes only. You are responsible for all content you input and
+                        the outputs you generate.
+                    </p>
+                    <p>You must <strong>not</strong> attempt to:</p>
+                    <ul>
+                        <li>Manipulate, bypass, or interfere with the system's security</li>
+                        <li>Circumvent rate limits or abuse the intended functionality</li>
+                        <li>Reverse-engineer, scrape, or automate access to the platform in violation of these Terms</li>
+                        <li>Generate or distribute harmful, illegal, or deceptive content</li>
+                    </ul>
+                    <div class="legal-callout warn">
+                        <span class="material-symbols-rounded">warning</span>
+                        <div>
+                            Violations may result in <strong>immediate account suspension</strong> and, where
+                            applicable, referral to legal authorities.
+                        </div>
+                    </div>
+                </section>
+
+                <section id="ip" class="legal-section">
+                    <div class="legal-section-header">
+                        <span class="legal-section-num">03</span>
+                        <h2>Intellectual Property</h2>
+                    </div>
+                    <p>
+                        All content, logos, and software are the property of Axelr. You retain ownership of your input
+                        data, but you grant Axelr a limited license to process and store it for the purpose of providing
+                        the service.
+                    </p>
+                    <p>
+                        Outputs generated by the platform are yours to use under the terms of your active plan. Certain
+                        provider-level restrictions may apply to specific models — these are surfaced in the workspace
+                        UI when relevant.
+                    </p>
+                </section>
+
+                <section id="liability" class="legal-section">
+                    <div class="legal-section-header">
+                        <span class="legal-section-num">04</span>
+                        <h2>Limitation of Liability</h2>
+                    </div>
+                    <p>
+                        Axelr is provided <em>"as is"</em> without warranties of any kind, express or implied. We are
+                        not liable for any damages arising from use of the service, including but not limited to data
+                        loss, inaccuracies, or service interruptions.
+                    </p>
+                    <p>
+                        AI outputs are probabilistic. Always verify critical information before acting on it. For
+                        additional safety guidance, see our <a href="/docs.html">Documentation</a>.
+                    </p>
+                </section>
+
+                <section id="changes" class="legal-section">
+                    <div class="legal-section-header">
+                        <span class="legal-section-num">05</span>
+                        <h2>Changes to Terms</h2>
+                    </div>
+                    <p>
+                        We may update these Terms from time to time. Material changes will be communicated via email or
+                        through the platform. Continued use after changes constitutes acceptance of the updated Terms.
+                    </p>
+                    <div class="legal-callout">
+                        <span class="material-symbols-rounded">mail</span>
+                        <div>
+                            Questions? Reach us at <a href="mailto:support@axelr.in">support@axelr.in</a>.
+                        </div>
+                    </div>
+                </section>
+            </article>
+        </main>
     </div>
+
+    <footer class="legal-footer">
+        <div>© 2026 AXELR AI — Intelligence Execution Platform</div>
+        <div class="legal-footer-links">
+            <a href="/docs.html">Docs</a>
+            <a href="/terms.html">Terms</a>
+            <a href="/privacy.html">Privacy</a>
+            <a href="/">Platform</a>
+        </div>
+    </footer>
+
+    <button class="legal-fab" id="legal-fab" aria-label="Back to top">
+        <span class="material-symbols-rounded">arrow_upward</span>
+    </button>
+
+    <script>
+        // Progress bar
+        const prog = document.getElementById('legal-progress');
+        const fab = document.getElementById('legal-fab');
+        function onScroll() {
+            const h = document.documentElement;
+            const pct = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+            prog.style.width = pct + '%';
+            fab.classList.toggle('show', h.scrollTop > 400);
+        }
+        window.addEventListener('scroll', onScroll, { passive: true });
+
+        fab.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        // Active TOC
+        const sections = document.querySelectorAll('.legal-section');
+        const tocLinks = document.querySelectorAll('.legal-toc a');
+        const obs = new IntersectionObserver((entries) => {
+            entries.forEach((e) => {
+                if (e.isIntersecting) {
+                    const id = e.target.id;
+                    tocLinks.forEach(l => l.classList.toggle('active', l.dataset.toc === id));
+                }
+            });
+        }, { rootMargin: '-30% 0px -60% 0px' });
+        sections.forEach(s => obs.observe(s));
+    </script>
 </body>
 </html>

@@ -15,13 +15,18 @@
 //   - Never blocks the network, never 5xx.
 // ============================================================================
 
-const SW_VERSION    = 'axelr-v3';
+const SW_VERSION    = 'axelr-v4';
 const SHELL_CACHE   = `${SW_VERSION}-shell`;
 const RUNTIME_CACHE = `${SW_VERSION}-runtime`;
 const QUEUE_STORE   = 'queue';
-
 const SHELL_ASSETS = [
-  '/', '/index.html', '/style.css', '/script.js',
+  '/', '/index.html',
+  '/00-tokens.css', '/10-base.css', '/20-shell.css', '/25-workspace.css',
+  '/30-chat.css', '/40-command.css', '/50-modals.css', '/60-auth.css',
+  '/70-light.css', '/99-responsive.css',
+  '/js/00-core.js', '/js/05-recovery.js', '/js/10-toast.js', '/js/20-auth.js',
+  '/js/30-ui.js', '/js/40-history.js', '/js/50-command.js', '/js/60-modals.js',
+  '/js/70-features.js', '/js/80-billing.js',
   '/favicon.png', '/offline.html',
 ];
 
@@ -433,6 +438,37 @@ async function handleAiRequest(req) {
     // 4. Rule-based fallback
     if (!text) text = ruleBasedReply(prompt);
 
+    // Check if this is an SSE request (chat/agent streams use text/event-stream)
+    const acceptHeader = req.headers.get('accept') || '';
+    const isSseRequest = acceptHeader.includes('text/event-stream');
+
+    if (isSseRequest) {
+      // Return valid SSE stream for offline responses
+      const sseData = JSON.stringify({
+        success: true,
+        text,
+        provider: source,
+        model_used: source === 'offline-local' ? 'rules' : 'cache',
+        cached: source !== 'offline-local',
+        offline: true,
+        done: true, // Mark stream as complete
+      });
+      
+      return new Response(
+        `data: ${sseData}\n\n`,
+        {
+          status: 200,
+          headers: {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'X-Axelr-Offline': '1',
+          },
+        }
+      );
+    }
+
+    // Regular JSON response for non-SSE requests
     return new Response(
       JSON.stringify({
         success: true,

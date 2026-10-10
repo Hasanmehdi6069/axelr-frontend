@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    <title>Documentation — AXELR AI</title>
+    <meta name="description" content="How AXELR AI actually works — pipeline, workspaces, differentiators, pricing, and FAQ. No fake API docs." />
+    <link rel="canonical" href="https://axelr.in/docs.html" />
+    <meta property="og:title" content="AXELR AI Documentation" />
+    <meta property="og:description" content="How the pipeline, workspaces, and providers actually work." />
+    <meta property="og:url" content="https://axelr.in/docs.html" />
+    <meta property="og:type" content="website" />
+    <link rel="icon" type="image/png" href="/Axelr-Frontend/favicon.png" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,600,1,0" rel="stylesheet" />
+
+    <style>
+        /* ── Design tokens (unchanged) ────────────────────────── */
+        :root {
+            --docs-bg: #050508;
+            --docs-bg-soft: #08080f;
+            --docs-card: rgba(12, 12, 20, 0.72);
+            --docs-card-2: rgba(16, 16, 26, 0.6);
+            --docs-border: rgba(255, 255, 255, 0.06);
+            --docs-border-hover: rgba(255, 255, 255, 0.14);
+            --docs-accent: #00f2fe;
+            --docs-accent-2: #8b5cf6;
+            --docs-accent-3: #f43f5e;
+            --docs-success: #10b981;
+            --docs-warn: #eab308;
+            --docs-text: #f4f8ff;
+            --docs-muted: #a1b5cc;
+            --docs-dim: #62778f;
+            --docs-mono: 'JetBrains Mono', ui-monospace, monospace;
+            --docs-sans: 'Inter', system-ui, -apple-system, sans-serif;
+            --docs-topbar-h: 60px;
+            --docs-sidebar-w: 260px;
+            --docs-toc-w: 220px;
+            --docs-main-max: 820px;
+            --docs-ease: cubic-bezier(0.16, 1, 0.3, 1);
+            --docs-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        body.light-theme {
+            --docs-bg: #f8fafc;
+            --docs-bg-soft: #ffffff;
+            --docs-card: rgba(255, 255, 255, 0.85);
+            --docs-card-2: rgba(255, 255, 255, 0.7);
+            --docs-border: rgba(15, 23, 42, 0.08);
+            --docs-border-hover: rgba(15, 23, 42, 0.16);
+            --docs-text: #0f172a;
+            --docs-muted: #475569;
+            --docs-dim: #94a3b8;
+        }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+        body {
+            background: var(--docs-bg); color: var(--docs-text);
+            font-family: var(--docs-sans); min-height: 100vh; line-height: 1.65;
+            -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+            position: relative; overflow-x: hidden;
+        }
+        body::before {
+            content: ''; position: fixed; inset: 0;
+            background:
+                radial-gradient(ellipse 60% 40% at 20% 0%, rgba(0, 242, 254, 0.05), transparent 60%),
+                radial-gradient(ellipse 50% 40% at 85% 10%, rgba(139, 92, 246, 0.04), transparent 60%),
+                radial-gradient(ellipse 80% 50% at 50% 100%, rgba(244, 63, 94, 0.025), transparent 60%);
+            pointer-events: none; z-index: 0;
+        }
+        .docs-progress {
+            position: fixed; top: 0; left: 0; height: 2px; width: 0%;
+            background: linear-gradient(90deg, var(--docs-accent) 0%, var(--docs-accent-2) 50%, var(--docs-accent-3) 100%);
+            box-shadow: 0 0 12px var(--docs-accent); z-index: 99999; transition: width 0.08s linear;
+        }
+        .docs-topbar {
+            position: sticky; top: 0; z-index: 900;
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 16px; padding: 14px 32px; height: var(--docs-topbar-h);
+            background: color-mix(in srgb, var(--docs-bg) 72%, transparent);
+            backdrop-filter: blur(24px) saturate(150%);
+            -webkit-backdrop-filter: blur(24px) saturate(150%);
+            border-bottom: 1px solid var(--docs-border);
+        }
+        .docs-topbar-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+        .docs-brand {
+            display: flex; align-items: center; gap: 10px;
+            font-family: var(--docs-mono); font-weight: 800; font-size: 15px; letter-spacing: 2px;
+            color: var(--docs-text); text-decoration: none; white-space: nowrap;
+        }
+        .docs-brand-chip {
+            font-size: 10px; font-weight: 700; letter-spacing: 1px;
+            padding: 3px 8px; border-radius: 4px;
+            background: rgba(0, 242, 254, 0.1); color: var(--docs-accent);
+            border: 1px solid rgba(0, 242, 254, 0.22);
+        }
+        .docs-nav-links { display: flex; align-items: center; gap: 4px; }
+        .docs-nav-links a {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 8px 14px; border-radius: 8px;
+            font-size: 13px; font-weight: 500; color: var(--docs-muted);
+            text-decoration: none; transition: all 0.2s var(--docs-ease);
+        }
+        .docs-nav-links a:hover { color: var(--docs-text); background: rgba(255, 255, 255, 0.05); }
+        .docs-nav-links a.active { color: var(--docs-accent); background: rgba(0, 242, 254, 0.08); }
+        .docs-nav-links a .material-symbols-rounded { font-size: 16px; }
+        .docs-topbar-cta {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 8px 16px; border-radius: 10px;
+            background: var(--docs-text); color: var(--docs-bg);
+            font-size: 13px; font-weight: 600; text-decoration: none;
+            transition: transform 0.2s var(--docs-ease), box-shadow 0.2s var(--docs-ease);
+        }
+        .docs-topbar-cta:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(0, 242, 254, 0.15); }
+        .docs-topbar-cta .material-symbols-rounded { font-size: 16px; }
+        .docs-menu-toggle {
+            display: none; background: transparent; border: 1px solid var(--docs-border);
+            border-radius: 8px; color: var(--docs-text); cursor: pointer; padding: 8px;
+            align-items: center; justify-content: center; transition: background 0.2s var(--docs-ease);
+        }
+        .docs-menu-toggle:hover { background: rgba(255, 255, 255, 0.05); }
+        .docs-shell {
+            position: relative; z-index: 1; display: grid;
+            grid-template-columns: var(--docs-sidebar-w) minmax(0, 1fr) var(--docs-toc-w);
+            max-width: 1440px; margin: 0 auto; padding: 0 24px;
+        }
+        .docs-sidebar {
+            position: sticky; top: var(--docs-topbar-h);
+            height: calc(100vh - var(--docs-topbar-h));
+            overflow-y: auto; padding: 40px 20px 60px 0;
+            border-right: 1px solid var(--docs-border);
+            scrollbar-width: thin; scrollbar-color: var(--docs-border) transparent;
+        }
+        .docs-sidebar::-webkit-scrollbar { width: 4px; }
+        .docs-sidebar::-webkit-scrollbar-thumb { background: var(--docs-border); border-radius: 4px; }
+        .docs-sidebar::-webkit-scrollbar-thumb:hover { background: var(--docs-border-hover); }
+        .docs-nav-group { margin-bottom: 26px; }
+        .docs-nav-group-header {
+            font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+            text-transform: uppercase; color: var(--docs-dim);
+            padding: 0 12px 10px; margin-bottom: 2px;
+        }
+        .docs-nav-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 9px 12px; margin-bottom: 2px; border-radius: 10px;
+            color: var(--docs-muted); text-decoration: none;
+            font-size: 13.5px; font-weight: 500; border-left: 2px solid transparent;
+            transition: all 0.22s var(--docs-ease); cursor: pointer; position: relative;
+        }
+        .docs-nav-item .material-symbols-rounded { font-size: 17px; color: var(--docs-dim); transition: color 0.2s var(--docs-ease); flex-shrink: 0; }
+        .docs-nav-item .nav-pill {
+            margin-left: auto; font-size: 9px; font-weight: 700; letter-spacing: 0.6px;
+            padding: 2px 6px; border-radius: 4px;
+            background: rgba(0, 242, 254, 0.1); color: var(--docs-accent);
+            border: 1px solid rgba(0, 242, 254, 0.2);
+        }
+        .docs-nav-item:hover { color: var(--docs-text); background: rgba(255, 255, 255, 0.03); transform: translateX(3px); }
+        .docs-nav-item:hover .material-symbols-rounded { color: var(--docs-accent); }
+        .docs-nav-item.active {
+            color: var(--docs-accent);
+            background: linear-gradient(90deg, rgba(0, 242, 254, 0.10), rgba(0, 242, 254, 0.02));
+            border-left-color: var(--docs-accent); font-weight: 600;
+        }
+        .docs-nav-item.active .material-symbols-rounded { color: var(--docs-accent); }
+        .docs-main { padding: 40px 56px 120px; max-width: var(--docs-main-max); width: 100%; min-width: 0; }
+        .docs-hero { margin-bottom: 72px; }
+        .docs-hero-pill {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 6px 14px; border-radius: 999px;
+            font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+            background: rgba(0, 242, 254, 0.08); border: 1px solid rgba(0, 242, 254, 0.2);
+            color: var(--docs-accent); margin-bottom: 24px;
+        }
+        .docs-hero-pill .material-symbols-rounded { font-size: 14px; }
+        .docs-hero h1 { font-size: clamp(34px, 5vw, 54px); font-weight: 800; line-height: 1.06; letter-spacing: -1.6px; margin: 0 0 20px; color: var(--docs-text); }
+        .docs-hero h1 .gradient {
+            background: linear-gradient(135deg, var(--docs-accent) 0%, var(--docs-accent-2) 55%, var(--docs-accent-3) 100%);
+            -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .docs-hero p { font-size: 17px; line-height: 1.65; color: var(--docs-muted); max-width: 640px; margin: 0 0 32px; }
+        .docs-hero-meta { display: flex; flex-wrap: wrap; gap: 12px; padding: 16px 0; border-top: 1px solid var(--docs-border); border-bottom: 1px solid var(--docs-border); }
+        .docs-hero-meta-item {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 6px 12px; border-radius: 8px;
+            background: rgba(255, 255, 255, 0.02); border: 1px solid var(--docs-border);
+            font-size: 12.5px; color: var(--docs-muted); font-family: var(--docs-mono);
+        }
+        .docs-hero-meta-item .material-symbols-rounded { font-size: 15px; color: var(--docs-accent); }
+        .docs-section {
+            margin-bottom: 96px; scroll-margin-top: 90px;
+            opacity: 0; transform: translateY(16px);
+            transition: opacity 0.7s var(--docs-ease), transform 0.7s var(--docs-ease);
+        }
+        .docs-section.revealed { opacity: 1; transform: translateY(0); }
+        .docs-section-eyebrow {
+            font-family: var(--docs-mono); font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+            text-transform: uppercase; color: var(--docs-accent); margin-bottom: 12px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .docs-section-eyebrow::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(0, 242, 254, 0.3), transparent); }
+        .docs-section h2 {
+            font-size: clamp(24px, 3vw, 32px); font-weight: 700; letter-spacing: -0.5px;
+            line-height: 1.2; margin: 0 0 16px; color: var(--docs-text);
+            display: flex; align-items: center; gap: 12px;
+        }
+        .docs-section h2 .anchor { font-size: 18px; color: var(--docs-dim); opacity: 0; text-decoration: none; transition: opacity 0.2s var(--docs-ease); font-family: var(--docs-mono); }
+        .docs-section h2:hover .anchor { opacity: 0.7; }
+        .docs-section h3 { font-size: 17px; font-weight: 600; margin: 40px 0 14px; color: var(--docs-text); letter-spacing: -0.2px; }
+        .docs-section p, .docs-section li { font-size: 15px; line-height: 1.75; color: var(--docs-muted); }
+        .docs-section p { margin-bottom: 18px; }
+        .docs-section ul { margin: 12px 0 24px; padding-left: 0; list-style: none; }
+        .docs-section ul li { position: relative; padding-left: 26px; margin-bottom: 10px; }
+        .docs-section ul li::before {
+            content: ''; position: absolute; left: 4px; top: 10px;
+            width: 6px; height: 6px; border-radius: 50%;
+            background: var(--docs-accent); box-shadow: 0 0 8px var(--docs-accent);
+        }
+        .docs-section strong { color: var(--docs-text); font-weight: 600; }
+        .docs-section em { color: var(--docs-text); font-style: italic; }
+        .docs-section a:not(.anchor) { color: var(--docs-accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.2s; }
+        .docs-section a:not(.anchor):hover { border-bottom-color: var(--docs-accent); }
+        .docs-section code:not(pre code) {
+            padding: 2px 7px; background: rgba(0, 0, 0, 0.35);
+            border: 1px solid var(--docs-border); border-radius: 5px;
+            font-family: var(--docs-mono); font-size: 13px; color: var(--docs-text);
+        }
+        body.light-theme .docs-section code:not(pre code) { background: rgba(15, 23, 42, 0.06); }
+        .docs-code {
+            position: relative; margin: 24px 0; border-radius: 16px; overflow: hidden;
+            background: #050508; border: 1px solid rgba(255, 255, 255, 0.07);
+            box-shadow: 0 20px 60px -20px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+            transition: transform 0.3s var(--docs-ease), box-shadow 0.3s var(--docs-ease);
+        }
+        .docs-code:hover { transform: translateY(-2px); box-shadow: 0 28px 70px -22px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(0, 242, 254, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.04); }
+        .docs-code-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 11px 16px; background: rgba(255, 255, 255, 0.025);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .docs-code-lang { display: flex; align-items: center; gap: 10px; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #8b9cb3; font-family: var(--docs-mono); }
+        .docs-code-dots { display: flex; gap: 6px; }
+        .docs-code-dots span { width: 10px; height: 10px; border-radius: 50%; background: rgba(255, 255, 255, 0.08); }
+        .docs-code-dots span:nth-child(1) { background: #ff5f56; }
+        .docs-code-dots span:nth-child(2) { background: #ffbd2e; }
+        .docs-code-dots span:nth-child(3) { background: #27c93f; }
+        .docs-code-copy {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 5px 12px; border-radius: 6px; background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.08); color: #8b9cb3;
+            font-size: 11px; font-weight: 600; cursor: pointer;
+            transition: all 0.2s var(--docs-ease); font-family: var(--docs-sans);
+        }
+        .docs-code-copy:hover { color: #fff; border-color: rgba(255, 255, 255, 0.22); background: rgba(255, 255, 255, 0.05); }
+        .docs-code-copy.copied { color: var(--docs-success); border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.08); }
+        .docs-code-copy .material-symbols-rounded { font-size: 14px; }
+        .docs-code pre {
+            margin: 0; padding: 22px 24px; font-family: var(--docs-mono);
+            font-size: 13.5px; line-height: 1.75; color: #e5e7eb;
+            overflow-x: auto; white-space: pre;
+            scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent;
+        }
+        .docs-code pre::-webkit-scrollbar { height: 8px; }
+        .docs-code pre::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 4px; }
+        .tk-kw { color: #ff7bb8; font-weight: 600; }
+        .tk-fn { color: #ffd479; }
+        .tk-str { color: #86efac; }
+        .tk-num { color: #a78bfa; }
+        .tk-com { color: #64748b; font-style: italic; }
+        .tk-prop { color: #7dd3fc; }
+        .tk-attr { color: #7dd3fc; }
+        .docs-callout {
+            display: flex; gap: 14px; padding: 18px 22px;
+            background: rgba(0, 242, 254, 0.04); border: 1px solid rgba(0, 242, 254, 0.15);
+            border-radius: 14px; margin: 24px 0;
+            font-size: 14px; line-height: 1.65; color: var(--docs-text);
+            position: relative; overflow: hidden;
+        }
+        .docs-callout::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--docs-accent); }
+        .docs-callout .material-symbols-rounded { font-size: 22px; color: var(--docs-accent); flex-shrink: 0; }
+        .docs-callout strong { color: var(--docs-text); }
+        .docs-callout.warn { background: rgba(234, 179, 8, 0.05); border-color: rgba(234, 179, 8, 0.2); }
+        .docs-callout.warn::before { background: var(--docs-warn); }
+        .docs-callout.warn .material-symbols-rounded { color: var(--docs-warn); }
+        .docs-callout.success { background: rgba(16, 185, 129, 0.05); border-color: rgba(16, 185, 129, 0.2); }
+        .docs-callout.success::before { background: var(--docs-success); }
+        .docs-callout.success .material-symbols-rounded { color: var(--docs-success); }
+        .docs-toc-right { position: sticky; top: var(--docs-topbar-h); height: calc(100vh - var(--docs-topbar-h)); overflow-y: auto; padding: 60px 24px; border-left: 1px solid var(--docs-border); }
+        .docs-toc-right-header { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--docs-dim); margin-bottom: 16px; }
+        .docs-toc-right a {
+            display: block; font-size: 12.5px; color: var(--docs-muted); text-decoration: none;
+            padding: 7px 0 7px 12px; border-left: 2px solid transparent;
+            transition: all 0.2s var(--docs-ease); line-height: 1.4;
+        }
+        .docs-toc-right a:hover { color: var(--docs-text); border-left-color: var(--docs-border-hover); }
+        .docs-toc-right a.active { color: var(--docs-accent); border-left-color: var(--docs-accent); font-weight: 600; }
+        .docs-nav-footer { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 96px; padding-top: 32px; border-top: 1px solid var(--docs-border); }
+        .docs-nav-footer a {
+            display: flex; flex-direction: column; gap: 6px; padding: 20px 22px;
+            background: rgba(255, 255, 255, 0.02); border: 1px solid var(--docs-border);
+            border-radius: 14px; text-decoration: none; transition: all 0.28s var(--docs-ease);
+        }
+        .docs-nav-footer a:hover { border-color: var(--docs-accent); background: rgba(0, 242, 254, 0.04); transform: translateY(-3px); box-shadow: 0 14px 30px -10px rgba(0, 242, 254, 0.2); }
+        .docs-nav-footer a.next { text-align: right; grid-column: 2; }
+        .docs-nav-footer .label { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--docs-dim); font-family: var(--docs-mono); }
+        .docs-nav-footer .title { font-size: 15px; font-weight: 600; color: var(--docs-text); }
+        .docs-footer {
+            position: relative; z-index: 1; display: flex; flex-wrap: wrap;
+            align-items: center; justify-content: space-between; gap: 20px;
+            max-width: 1440px; margin: 0 auto; padding: 32px 24px;
+            border-top: 1px solid var(--docs-border); font-size: 13px; color: var(--docs-muted);
+        }
+        .docs-footer-links { display: flex; flex-wrap: wrap; gap: 20px; }
+        .docs-footer-links a { color: var(--docs-muted); text-decoration: none; transition: color 0.2s; }
+        .docs-footer-links a:hover { color: var(--docs-accent); }
+        .docs-fab {
+            position: fixed; right: 24px; bottom: 24px; z-index: 500;
+            display: flex; align-items: center; justify-content: center;
+            width: 44px; height: 44px; border-radius: 50%;
+            background: var(--docs-text); color: var(--docs-bg);
+            border: none; cursor: pointer; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+            opacity: 0; visibility: hidden; transform: translateY(12px);
+            transition: all 0.3s var(--docs-ease);
+        }
+        .docs-fab.show { opacity: 1; visibility: visible; transform: translateY(0); }
+        .docs-fab:hover { transform: translateY(-3px) scale(1.05); }
+        .docs-backdrop {
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+            opacity: 0; visibility: hidden;
+            transition: opacity 0.25s, visibility 0.25s; z-index: 998;
+        }
+        .docs-backdrop.show { opacity: 1; visibility: visible; }
+
+        /* ── Comparison table ─────────────────────────────────── */
+        .docs-table {
+            width: 100%; margin: 24px 0; border-collapse: collapse;
+            border-radius: 14px; overflow: hidden;
+            border: 1px solid var(--docs-border);
+            background: var(--docs-card);
+            font-size: 14px;
+        }
+        .docs-table thead { background: rgba(0, 242, 254, 0.05); }
+        .docs-table th {
+            text-align: left; padding: 12px 16px;
+            font-weight: 700; color: var(--docs-text);
+            font-size: 12px; letter-spacing: 0.4px; text-transform: uppercase;
+            border-bottom: 1px solid var(--docs-border);
+        }
+        .docs-table td {
+            padding: 12px 16px; color: var(--docs-muted);
+            border-bottom: 1px solid var(--docs-border);
+            vertical-align: top;
+        }
+        .docs-table tr:last-child td { border-bottom: none; }
+        .docs-table td strong { color: var(--docs-text); }
+        .docs-table td .yes { color: var(--docs-success); font-weight: 600; }
+        .docs-table td .no  { color: var(--docs-dim); }
+        .docs-table td .partial { color: var(--docs-warn); font-weight: 600; }
+
+        /* ── FAQ accordion ────────────────────────────────────── */
+        .docs-faq { display: flex; flex-direction: column; gap: 12px; margin: 24px 0; }
+        .docs-faq details {
+            background: var(--docs-card); border: 1px solid var(--docs-border);
+            border-radius: 14px; padding: 0; overflow: hidden;
+            transition: border-color 0.2s var(--docs-ease), background 0.2s var(--docs-ease);
+        }
+        .docs-faq details[open] { border-color: rgba(0, 242, 254, 0.3); background: rgba(0, 242, 254, 0.03); }
+        .docs-faq summary {
+            cursor: pointer; list-style: none; padding: 18px 22px;
+            font-size: 15px; font-weight: 600; color: var(--docs-text);
+            display: flex; align-items: center; justify-content: space-between; gap: 12px;
+            user-select: none;
+        }
+        .docs-faq summary::-webkit-details-marker { display: none; }
+        .docs-faq summary::after {
+            content: '+'; font-family: var(--docs-mono); font-size: 20px;
+            color: var(--docs-accent); transition: transform 0.25s var(--docs-ease);
+        }
+        .docs-faq details[open] summary::after { content: '−'; }
+        .docs-faq .docs-faq-answer {
+            padding: 0 22px 20px; font-size: 14.5px; line-height: 1.75;
+            color: var(--docs-muted);
+        }
+        .docs-faq .docs-faq-answer p { margin-bottom: 12px; }
+        .docs-faq .docs-faq-answer p:last-child { margin-bottom: 0; }
+
+        @media (max-width: 1180px) {
+            .docs-shell { grid-template-columns: var(--docs-sidebar-w) minmax(0, 1fr); }
+            .docs-toc-right { display: none; }
+        }
+        @media (max-width: 860px) {
+            .docs-menu-toggle { display: inline-flex; }
+            .docs-nav-links { display: none; }
+            .docs-shell { grid-template-columns: 1fr; padding: 0; }
+            .docs-sidebar {
+                position: fixed; top: 0; left: 0; height: 100dvh; width: 300px;
+                padding: 80px 20px 60px; background: var(--docs-bg-soft);
+                transform: translateX(-100%); transition: transform 0.3s var(--docs-ease);
+                z-index: 999; box-shadow: 30px 0 80px rgba(0, 0, 0, 0.6);
+                border-right: 1px solid var(--docs-border);
+            }
+            .docs-sidebar.open { transform: translateX(0); }
+            .docs-main { padding: 40px 24px 80px; max-width: 100%; }
+            .docs-footer { padding: 24px 20px; flex-direction: column; align-items: flex-start; }
+            .docs-nav-footer { grid-template-columns: 1fr; }
+            .docs-nav-footer a.next { grid-column: auto; text-align: left; }
+            .docs-hero h1 { letter-spacing: -1px; }
+            .docs-table { font-size: 13px; }
+            .docs-table th, .docs-table td { padding: 10px 12px; }
+        }
+        @media (max-width: 480px) {
+            .docs-topbar { padding: 12px 20px; }
+            .docs-main { padding: 32px 18px 60px; }
+            .docs-hero h1 { font-size: 28px; letter-spacing: -0.8px; }
+            .docs-hero p { font-size: 15px; }
+            .docs-code pre { font-size: 12.5px; padding: 16px 18px; }
+            .docs-code-header { padding: 9px 12px; }
+            .docs-code-lang { font-size: 10px; }
+            .docs-topbar-cta span:not(.material-symbols-rounded) { display: none; }
+            .docs-hero-meta-item { font-size: 11px; padding: 5px 10px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+            .docs-section { opacity: 1 !important; transform: none !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="docs-progress" id="docs-progress"></div>
+
+    <header class="docs-topbar">
+        <div class="docs-topbar-left">
+            <button class="docs-menu-toggle" id="docs-menu-toggle" aria-label="Toggle navigation">
+                <span class="material-symbols-rounded">menu</span>
+            </button>
+            <a href="/" class="docs-brand">
+                <svg viewBox="0 0 100 100" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M50 15 L20 32.5 L20 67.5 L50 85" stroke="currentColor" stroke-width="6" stroke-linejoin="bevel" fill="rgba(0,242,254,0.08)" />
+                    <path d="M50 15 L80 32.5 L50 50 L80 67.5 L50 85" stroke="var(--docs-accent)" stroke-width="6" stroke-linejoin="bevel" fill="none" />
+                </svg>
+                AXELR
+                <span class="docs-brand-chip">DOCS</span>
+            </a>
+        </div>
+
+        <nav class="docs-nav-links">
+            <a href="#how-it-works" class="active" data-nav="how-it-works">
+                <span class="material-symbols-rounded">account_tree</span>
+                <span>Pipeline</span>
+            </a>
+            <a href="#workspaces" data-nav="workspaces">
+                <span class="material-symbols-rounded">grid_view</span>
+                <span>Workspaces</span>
+            </a>
+            <a href="#pricing" data-nav="pricing">
+                <span class="material-symbols-rounded">payments</span>
+                <span>Pricing</span>
+            </a>
+        </nav>
+
+        <a href="/" class="docs-topbar-cta">
+            <span class="material-symbols-rounded">arrow_back</span>
+            <span>Back to Platform</span>
+        </a>
+    </header>
+
+    <div class="docs-backdrop" id="docs-backdrop"></div>
+
+    <div class="docs-shell">
+        <aside class="docs-sidebar" id="docs-sidebar">
+            <div class="docs-nav-group">
+                <div class="docs-nav-group-header">Overview</div>
+                <a class="docs-nav-item active" data-section="how-it-works">
+                    <span class="material-symbols-rounded">account_tree</span>
+                    How Axelr Works
+                </a>
+                <a class="docs-nav-item" data-section="workspaces">
+                    <span class="material-symbols-rounded">grid_view</span>
+                    The 3 Workspaces
+                </a>
+            </div>
+
+            <div class="docs-nav-group">
+                <div class="docs-nav-group-header">Details</div>
+                <a class="docs-nav-item" data-section="differentiators">
+                    <span class="material-symbols-rounded">bolt</span>
+                    What's Different
+                </a>
+                <a class="docs-nav-item" data-section="pricing">
+                    <span class="material-symbols-rounded">payments</span>
+                    Pricing & Tiers
+                </a>
+                <a class="docs-nav-item" data-section="vs-chatgpt">
+                    <span class="material-symbols-rounded">compare_arrows</span>
+                    Axelr vs ChatGPT
+                </a>
+            </div>
+
+            <div class="docs-nav-group">
+                <div class="docs-nav-group-header">More</div>
+                <a class="docs-nav-item" data-section="faq">
+                    <span class="material-symbols-rounded">help</span>
+                    FAQ
+                </a>
+                <a class="docs-nav-item" href="/Axelr-Frontend/terms.html">
+                    <span class="material-symbols-rounded">gavel</span>
+                    Terms of Service
+                </a>
+                <a class="docs-nav-item" href="/Axelr-Frontend/privacy.html">
+                    <span class="material-symbols-rounded">shield</span>
+                    Privacy Policy
+                </a>
+                <a class="docs-nav-item" href="/Axelr-Frontend/login.html">
+                    <span class="material-symbols-rounded">rocket_launch</span>
+                    Launch Platform
+                </a>
+            </div>
+        </aside>
+
+        <main class="docs-main">
+            <div class="docs-hero">
+                <div class="docs-hero-pill">
+                    <span class="material-symbols-rounded">auto_awesome</span>
+                    Documentation
+                </div>
+                <h1>
+                    How <span class="gradient">AXELR AI</span> actually works
+                </h1>
+                <p>
+                    No marketing haze, no fabricated endpoints. This page describes the pipeline
+                    that runs on every request, the three workspaces, the differentiators that
+                    aren't just rebranded ChatGPT, and the honest limits of each tier.
+                </p>
+                <div class="docs-hero-meta">
+                    <div class="docs-hero-meta-item">
+                        <span class="material-symbols-rounded">route</span>
+                        <span>9+ provider cascade</span>
+                    </div>
+                    <div class="docs-hero-meta-item">
+                        <span class="material-symbols-rounded">memory</span>
+                        <span>Context-aware semantic cache</span>
+                    </div>
+                    <div class="docs-hero-meta-item">
+                        <span class="material-symbols-rounded">offline_bolt</span>
+                        <span>Local Twin fallback</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── 01 — How Axelr Actually Works ──────────────────────── -->
+            <section id="how-it-works" class="docs-section">
+                <div class="docs-section-eyebrow">01 — Under the hood</div>
+                <h2>How Axelr Actually Works <a href="#how-it-works" class="anchor">#</a></h2>
+                <p>
+                    Every request flows through the same pipeline. The order matters — semantic
+                    caching runs <em>before</em> memory recall, and memory recall runs before
+                    any provider is contacted. That is why repeat prompts return in ~14&nbsp;ms
+                    without ever touching a language model.
+                </p>
+
+                <div class="docs-code">
+                    <div class="docs-code-header">
+                        <div class="docs-code-dots">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <div class="docs-code-lang">text · request lifecycle</div>
+                        <button class="docs-code-copy" data-copy>
+                            <span class="material-symbols-rounded">content_copy</span>
+                            <span>Copy</span>
+                        </button>
+                    </div>
+<pre><code>request
+  │
+  ├─▶ sanitize_input → detect_manipulation → contains_explicit
+  │     └─ rejected → { success: false, provider: "security" }
+  │
+  ├─▶ semantic cache lookup
+  │     key = workspace : task_type : prompt : (last 2 turns) : context_hash
+  │     └─ HIT → return in ~14 ms (provider="semantic_cache")
+  │
+  ├─▶ context assembly
+  │     ├─ conversation memory recall
+  │     ├─ workspace addenda (per-workspace system prompt)
+  │     └─ schema discovery (CSV/XLSX headers injected as context)
+  │
+  ├─▶ provider cascade  (ranked by circuit-breaker state + tier allow-list)
+  │     ├─ primary provider gets a 400 ms TTFT threshold
+  │     └─ sequential fallback chain: 0.5 s → 1.0 s → 2.0 s (jittered)
+  │           └─ success → sanitize_ai_output → semantic cache write → return
+  │
+  ├─▶ local Twin Engine (hot-swap, offline inference)
+  │     └─ success → return (provider="local_hot_swap")
+  │
+  └─▶ stub fallback (marked "[stub]" — never a fabricated answer)
+        └─ return (provider="local_stub")</code></pre>
+                </div>
+
+                <div class="docs-callout">
+                    <span class="material-symbols-rounded">info</span>
+                    <div>
+                        <strong>Providers currently wired:</strong> Groq, Google Gemini, Cloudflare Workers AI,
+                        OpenRouter, Mistral, HuggingFace, GitHub Models, NRouter, TextCortex. Order is
+                        re-ranked at runtime from per-provider latency percentiles stored in Redis.
+                    </div>
+                </div>
+
+                <h3>Circuit breakers, not retry storms</h3>
+                <ul>
+                    <li>Every provider <em>and</em> every (provider, model) pair has an independent circuit breaker.</li>
+                    <li>Rate-limit failures (HTTP 429 / 402) open the breaker for 30 minutes.</li>
+                    <li>Ordinary failures open it for 60 seconds after 3 consecutive errors.</li>
+                    <li>Winners are always the least-recently-failed, not the least-recently-used.</li>
+                </ul>
+            </section>
+
+            <!-- ── 02 — The 3 Workspaces ──────────────────────────────── -->
+            <section id="workspaces" class="docs-section">
+                <div class="docs-section-eyebrow">02 — Workspaces</div>
+                <h2>The 3 Workspaces <a href="#workspaces" class="anchor">#</a></h2>
+                <p>
+                    A workspace is not a skin. It changes the system prompt, the default task type,
+                    the file types allowed, the provider allow-list for free/pro tiers, and the
+                    daily quota. Auto-detection exists — if you upload a CSV in Core, Axelr will
+                    offer to switch to Data. You can also lock the workspace in Settings.
+                </p>
+
+                <div class="docs-code">
+                    <div class="docs-code-header">
+                        <div class="docs-code-dots"><span></span><span></span><span></span></div>
+                        <div class="docs-code-lang">comparison</div>
+                        <button class="docs-code-copy" data-copy>
+                            <span class="material-symbols-rounded">content_copy</span>
+                            <span>Copy</span>
+                        </button>
+                    </div>
+<pre><code>workspace   task_type        accepts                       default endpoint
+─────────   ──────────────   ───────────────────────────   ─────────────────
+data        "extraction"     .csv .xls .xlsx .pdf          /api/extract
+                             .png .jpg .txt .doc(x)
+
+design      "frontend"       .html .css .js .ts .jsx       /api/extract
+                             .py .go .rs .md .svg
+                             .png .jpg (mockups)
+
+core        "structuring"    anything (small text)         /api/extract
+                             .txt .md</code></pre>
+                </div>
+
+                <h3>What changes per workspace</h3>
+                <ul>
+                    <li><strong>System prompt</strong> — Data gets an analyst prompt; Design gets a senior frontend engineer prompt; Core gets a generalist prompt.</li>
+                    <li><strong>Temperature & max_tokens</strong> — pulled from <code>WORKSPACE_LLM_CONFIG</code>; Data runs cooler, Design runs warmer.</li>
+                    <li><strong>Critic pass</strong> — code-bearing responses go through <code>code_guard</code>; if syntax or score fails, <code>self_healer</code> re-rolls once.</li>
+                    <li><strong>Structured output</strong> — Data responses can emit <code>[JSON-DATA]…[/JSON-DATA]</code> blocks that the UI renders as a table/chart and offers as CSV download.</li>
+                </ul>
+            </section>
+
+            <!-- ── 03 — Differentiators ───────────────────────────────── -->
+            <section id="differentiators" class="docs-section">
+                <div class="docs-section-eyebrow">03 — Differentiators</div>
+                <h2>Features That Don't Exist Elsewhere <a href="#differentiators" class="anchor">#</a></h2>
+
+                <h3>1. AHE — Anti-Hallucination Engine</h3>
+                <p>
+                    When structured extraction is required, AHE produces a deterministic verifier
+                    DAG over the retrieved fields. If a field can't be proven from the source,
+                    it's returned as <code>null</code> with a reason — never invented. AHE errors
+                    serialise as <code>{ code, doc_id, field, reason }</code>, not as a 500.
+                </p>
+
+                <h3>2. Context-aware semantic cache</h3>
+                <p>
+                    Most caches key on the raw prompt. Ours keys on
+                    <code>workspace : task_type : prompt : last-2-turns : context_hash</code>.
+                    The same question asked after a different conversation will not hit the cache,
+                    because the <em>meaning</em> of the question changed. That's why we can cache
+                    aggressively without returning stale answers.
+                </p>
+
+                <h3>3. Touch-Fix</h3>
+                <p>
+                    Paste an error message next to a generated code block and the
+                    <code>TouchFixEngine</code> returns a patched version. It re-runs the same
+                    prompt that produced the code, injects the error as context, and passes the
+                    result back through the critic pass before returning. If the fix doesn't
+                    compile, it's marked as failed — not silently shipped.
+                </p>
+
+                <div class="docs-callout warn">
+                    <span class="material-symbols-rounded">warning</span>
+                    <div>
+                        <strong>Not on this list:</strong> the public webhook API. It exists
+                        internally (<code>core/webhook_pipeline.py</code> mounts at startup when
+                        available) but is <em>not</em> a stable public contract. There is no
+                        API key system, no rate-limit SLA, no versioning promise. We're not
+                        going to write docs for something we can't support.
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── 04 — Pricing & Tiers ───────────────────────────────── -->
+            <section id="pricing" class="docs-section">
+                <div class="docs-section-eyebrow">04 — Pricing</div>
+                <h2>Pricing & Tiers <a href="#pricing" class="anchor">#</a></h2>
+                <p>
+                    Limits are enforced per user, per UTC day. The counters live in Redis
+                    (<code>check_and_update_quota</code>); MongoDB only tracks cumulative token
+                    and storage usage. Values below are the exact limits in the current build
+                    — not aspirational marketing numbers.
+                </p>
+
+                <table class="docs-table">
+                    <thead>
+                        <tr>
+                            <th>Tier</th>
+                            <th>Data / day</th>
+                            <th>Design / day</th>
+                            <th>Providers</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Free</strong></td>
+                            <td>5</td>
+                            <td>3</td>
+                            <td>Free-eligible pool only</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Pro — data only</strong></td>
+                            <td>19</td>
+                            <td class="no">0</td>
+                            <td>Extended pool</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Pro — design only</strong></td>
+                            <td class="no">0</td>
+                            <td>13</td>
+                            <td>Extended pool</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Pro — both add-ons</strong></td>
+                            <td>20</td>
+                            <td>15</td>
+                            <td>Extended pool</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Business — data only</strong></td>
+                            <td>28</td>
+                            <td class="no">0</td>
+                            <td>Full pool</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Business — design only</strong></td>
+                            <td class="no">0</td>
+                            <td>20</td>
+                            <td>Full pool</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Business — both add-ons</strong></td>
+                            <td>30</td>
+                            <td>25</td>
+                            <td>Full pool</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Rate limits (separate from daily quota)</h3>
+                <ul>
+                    <li><code>/api/chat</code> — 30 / minute</li>
+                    <li><code>/api/extract</code> — 100 / minute</li>
+                    <li><code>/api/extract_stream</code> — 5 / minute</li>
+                </ul>
+
+                <h3>Upload limits</h3>
+                <ul>
+                    <li><strong>Free</strong> — max 2 files, 5 MB each, 5 MB total</li>
+                    <li><strong>Pro</strong> — max 5 files, 20 MB each</li>
+                    <li><strong>Designer / Business</strong> — max 5 files, 50 MB each</li>
+                    <li>Backend hard cap: 5 files per request, 10 MB per file, 50 MB total</li>
+                </ul>
+
+                <div class="docs-callout success">
+                    <span class="material-symbols-rounded">verified_user</span>
+                    <div>
+                        <strong>Quota errors are structured.</strong> A quota violation returns
+                        <code>{"code": "LIMIT_REACHED", "usage": n, "limit": m}</code>, so the UI
+                        can show the exact number rather than a generic "upgrade" nudge.
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── 05 — Axelr vs ChatGPT ──────────────────────────────── -->
+            <section id="vs-chatgpt" class="docs-section">
+                <div class="docs-section-eyebrow">05 — Comparison</div>
+                <h2>Why Axelr vs ChatGPT <a href="#vs-chatgpt" class="anchor">#</a></h2>
+
+                <h3>1. Multi-provider cascade, not a single backend</h3>
+                <p>
+                    ChatGPT serves from one backend. Axelr routes across nine+ providers with
+                    per-provider and per-(provider, model) circuit breakers. When Groq gets
+                    rate-limited, Gemini is already warm. When Gemini errors, OpenRouter is next.
+                    A single provider outage never becomes a full product outage.
+                </p>
+
+                <h3>2. Local Twin Engine fallback</h3>
+                <p>
+                    When every remote provider is down — all breakers open, keys missing, or
+                    TTFT thresholds tripped — Axelr can still answer. The Twin Engine runs local
+                    inference on the same host. If the engine isn't loaded either, the pipeline
+                    returns a <strong>stub with a <code>[stub]</code> marker</strong>. It will
+                    <em>never</em> fabricate an answer. You always know whether you got a real
+                    response or a degraded one.
+                </p>
+
+                <h3>3. Workspace-specialised prompts and task types</h3>
+                <p>
+                    A Data request is <code>task_type="extraction"</code> with an analyst system
+                    prompt and a critic pass that verifies extracted fields. A Design request is
+                    <code>task_type="frontend"</code> with a senior-engineer prompt, code_guard
+                    syntax scanning, and an optional <code>self_healer</code> re-roll. There is
+                    no generic "assistant" mode that glosses over the task.
+                </p>
+
+                <table class="docs-table">
+                    <thead>
+                        <tr>
+                            <th>Aspect</th>
+                            <th>Axelr</th>
+                            <th>ChatGPT</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Provider redundancy</td>
+                            <td><span class="yes">9+ providers, circuit-broken</span></td>
+                            <td><span class="no">Single backend</span></td>
+                        </tr>
+                        <tr>
+                            <td>Offline / full outage</td>
+                            <td><span class="partial">Local Twin or marked stub</span></td>
+                            <td><span class="no">Hard fail</span></td>
+                        </tr>
+                        <tr>
+                            <td>Task specialisation</td>
+                            <td><span class="yes">Per-workspace prompts + task types</span></td>
+                            <td><span class="no">One generic model</span></td>
+                        </tr>
+                        <tr>
+                            <td>Structured extraction</td>
+                            <td><span class="yes">JSON-DATA blocks → table + CSV</span></td>
+                            <td><span class="partial">Prompt-dependent</span></td>
+                        </tr>
+                        <tr>
+                            <td>Public API</td>
+                            <td><span class="no">Not shipped</span></td>
+                            <td><span class="yes">Yes</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- ── 06 — FAQ ───────────────────────────────────────────── -->
+            <section id="faq" class="docs-section">
+                <div class="docs-section-eyebrow">06 — FAQ</div>
+                <h2>Frequently Asked Questions <a href="#faq" class="anchor">#</a></h2>
+
+                <div class="docs-faq">
+                    <details>
+                        <summary>Do you offer a public API?</summary>
+                        <div class="docs-faq-answer">
+                            <p>
+                                Not yet. Internally the routers exist (<code>api/routes_core.py</code>,
+                                <code>api/routes_agents.py</code>, <code>api/routes_billing.py</code>,
+                                <code>api/routes_admin.py</code>) and a webhook pipeline mounts at
+                                startup when available. But there is no public API key system, no
+                                published rate-limit SLA, and no versioning guarantee.
+                            </p>
+                            <p>
+                                We're not going to publish fake docs for something you can't call.
+                                When a public API ships, this page will say so and there will be a
+                                real reference for it.
+                            </p>
+                        </div>
+                    </details>
+
+                    <details>
+                        <summary>Why do I have to pick a workspace?</summary>
+                        <div class="docs-faq-answer">
+                            <p>
+                                Because each workspace changes real behaviour: the system prompt,
+                                the default <code>task_type</code>, the file types accepted, the
+                                provider allow-list for your tier, and the daily quota counters.
+                            </p>
+                            <p>
+                                Auto-detection exists — upload a CSV in Core and Axelr will offer to
+                                switch you to Data. If you'd rather it never did that, pin the
+                                workspace in Settings (see "Workspace lock").
+                            </p>
+                        </div>
+                    </details>
+
+                    <details>
+                        <summary>What's the real difference between Free and Pro?</summary>
+                        <div class="docs-faq-answer">
+                            <p>
+                                Free: 5 data extractions/day, 3 design generations/day, and only
+                                the free-eligible provider pool. Pro: 20/15 if you have both add-ons,
+                                otherwise 19/0 (data only) or 0/13 (design only), plus access to the
+                                extended provider pool. Business bumps it to 30/25 and unlocks the
+                                full pool.
+                            </p>
+                            <p>
+                                The full table is above. Rate limits (per minute) are separate from
+                                daily quotas and don't change with tier in the current build.
+                            </p>
+                        </div>
+                    </details>
+
+                    <details>
+                        <summary>Is my data used for training?</summary>
+                        <div class="docs-faq-answer">
+                            <p>
+                                No. Sessions are stored per-user in MongoDB, keyed by your user id.
+                                The semantic cache key is derived from your prompt, workspace, task
+                                type, and the last two turns of <em>your own</em> conversation — it
+                                does not cross users.
+                            </p>
+                            <p>
+                                When a provider is called, the request goes directly from our
+                                server to that provider. We don't insert a middle-man training
+                                layer, and we don't send your history to a provider that isn't
+                                handling your request.
+                            </p>
+                        </div>
+                    </details>
+
+                    <details>
+                        <summary>What is the "Twin Engine" and why does it matter?</summary>
+                        <div class="docs-faq-answer">
+                            <p>
+                                The Twin Engine is a local inference engine (<code>core.twin_engine</code>)
+                                that takes over when every remote provider has failed — all circuit
+                                breakers open, no keys configured, or TTFT thresholds tripped on the
+                                fallback chain.
+                            </p>
+                            <p>
+                                If the engine itself isn't available (weights not loaded, host out
+                                of memory), the pipeline falls back to a stub response that is
+                                explicitly marked <code>[stub]</code> or <code>{"_stub": true}</code>.
+                                Downstream code treats that as a hard failure and surfaces it —
+                                it never renders as a normal answer.
+                            </p>
+                        </div>
+                    </details>
+                </div>
+            </section>
+
+            <div class="docs-nav-footer">
+                <a href="/" class="prev">
+                    <span class="label">← Back to</span>
+                    <span class="title">AXELR Platform</span>
+                </a>
+                <a href="#workspaces" class="next">
+                    <span class="label">Next →</span>
+                    <span class="title">The 3 Workspaces</span>
+                </a>
+            </div>
+        </main>
+
+        <aside class="docs-toc-right">
+            <div class="docs-toc-right-header">On this page</div>
+            <a href="#how-it-works" class="active" data-toc="how-it-works">How Axelr Works</a>
+            <a href="#workspaces" data-toc="workspaces">The 3 Workspaces</a>
+            <a href="#differentiators" data-toc="differentiators">What's Different</a>
+            <a href="#pricing" data-toc="pricing">Pricing & Tiers</a>
+            <a href="#vs-chatgpt" data-toc="vs-chatgpt">Axelr vs ChatGPT</a>
+            <a href="#faq" data-toc="faq">FAQ</a>
+        </aside>
+    </div>
+
+    <footer class="docs-footer">
+        <div>© 2026 AXELR AI — Intelligence Execution Platform</div>
+        <div class="docs-footer-links">
+            <a href="/Axelr-Frontend/docs.html">Docs</a>
+            <a href="/Axelr-Frontend/terms.html">Terms</a>
+            <a href="/Axelr-Frontend/privacy.html">Privacy</a>
+            <a href="/">Platform</a>
+        </div>
+    </footer>
+
+    <button class="docs-fab" id="docs-fab" aria-label="Back to top">
+        <span class="material-symbols-rounded">arrow_upward</span>
+    </button>
+
+    <script>
+    (function () {
+        "use strict";
+
+        /* ── 1. Reading progress bar ─────────────────────────── */
+        const progress = document.getElementById('docs-progress');
+        const fab = document.getElementById('docs-fab');
+        let rafPending = false;
+        function onScroll() {
+            if (rafPending) return;
+            rafPending = true;
+            requestAnimationFrame(() => {
+                rafPending = false;
+                const h = document.documentElement;
+                const max = h.scrollHeight - h.clientHeight;
+                const pct = max > 0 ? (h.scrollTop / max) * 100 : 0;
+                progress.style.width = pct + '%';
+                fab.classList.toggle('show', h.scrollTop > 400);
+            });
+        }
+        window.addEventListener('scroll', onScroll, { passive: true });
+        onScroll();
+        fab.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+        /* ── 2. Scroll reveal ────────────────────────────────── */
+        const sections = document.querySelectorAll('.docs-section');
+        const revealObs = new IntersectionObserver((entries) => {
+            entries.forEach((e) => {
+                if (e.isIntersecting) { e.target.classList.add('revealed'); revealObs.unobserve(e.target); }
+            });
+        }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+        sections.forEach(s => revealObs.observe(s));
+
+        /* ── 3. Active section tracking ──────────────────────── */
+        const navItems = document.querySelectorAll('.docs-nav-item[data-section]');
+        const tocLinks = document.querySelectorAll('.docs-toc-right a');
+        const topbarLinks = document.querySelectorAll('.docs-nav-links a[data-nav]');
+        const activeObs = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    const id = entry.target.id;
+                    navItems.forEach(n => n.classList.toggle('active', n.dataset.section === id));
+                    tocLinks.forEach(l => l.classList.toggle('active', l.dataset.toc === id));
+                    topbarLinks.forEach(l => l.classList.toggle('active', l.dataset.nav === id));
+                }
+            });
+        }, { rootMargin: '-30% 0px -60% 0px', threshold: 0 });
+        sections.forEach(s => activeObs.observe(s));
+
+        /* ── 4. Smooth scroll for nav items ──────────────────── */
+        navItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                const id = item.dataset.section;
+                if (!id) return;
+                e.preventDefault();
+                document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                closeMobileNav();
+            });
+        });
+
+        /* ── 5. Copy code buttons ────────────────────────────── */
+        document.querySelectorAll('[data-copy]').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const code = btn.closest('.docs-code').querySelector('pre code');
+                if (!code) return;
+                try {
+                    await navigator.clipboard.writeText(code.innerText);
+                    btn.classList.add('copied');
+                    const icon = btn.querySelector('.material-symbols-rounded');
+                    const label = btn.querySelector('span:last-child');
+                    const prevIcon = icon.textContent;
+                    const prevLabel = label.textContent;
+                    icon.textContent = 'check';
+                    label.textContent = 'Copied';
+                    setTimeout(() => {
+                        btn.classList.remove('copied');
+                        icon.textContent = prevIcon;
+                        label.textContent = prevLabel;
+                    }, 2000);
+                } catch (_) { /* clipboard unavailable */ }
+            });
+        });
+
+        /* ── 6. Mobile sidebar ───────────────────────────────── */
+        const menuToggle = document.getElementById('docs-menu-toggle');
+        const sidebar = document.getElementById('docs-sidebar');
+        const backdrop = document.getElementById('docs-backdrop');
+        function openMobileNav() {
+            sidebar.classList.add('open');
+            backdrop.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeMobileNav() {
+            sidebar.classList.remove('open');
+            backdrop.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+        if (menuToggle) {
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.contains('open') ? closeMobileNav() : openMobileNav();
+            });
+        }
+        if (backdrop) backdrop.addEventListener('click', closeMobileNav);
+
+        /* ── 7. Keyboard: Esc closes nav ─────────────────────── */
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && sidebar.classList.contains('open')) closeMobileNav();
+        });
+
+        /* ── 8. Deep-link on load ────────────────────────────── */
+        if (window.location.hash) {
+            const id = window.location.hash.slice(1);
+            requestAnimationFrame(() => {
+                document.getElementById(id)?.scrollIntoView({ behavior: 'auto', block: 'start' });
+            });
+        }
+    })();
+    </script>
+</body>
+</html>
