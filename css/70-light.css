@@ -1,0 +1,497 @@
+/* ============================================================
+   LIGHT THEME OVERRIDES — deduped, single canonical per selector
+   ============================================================ */
+
+/* ── Base surfaces ───────────────────────────────────────────────── */
+body.light-theme textarea::placeholder { color: #9ca3af; }
+body.light-theme .profile-stat-value { color: #000; }
+body.light-theme .dropdown-email { color: #4b5563; }
+body.light-theme .sub-box-title { color: #000; }
+
+/* ── Accent overrides ────────────────────────────────────────────── */
+body.light-theme .accent-glow { color: #0ea5e9; }
+body.light-theme .accent-glow-pro { color: #7c3aed; }
+body.light-theme .accent-glow-designer { color: #dc2626; }
+
+/* ── Brand logo ──────────────────────────────────────────────────── */
+body.light-theme .brand-logo { color: #0d9488 !important; }
+body.light-theme .brand-logo svg path:first-child { stroke: #000; }
+body.light-theme .brand-logo svg path:last-child  { stroke: #000; }
+body.light-theme .auth-logo span,
+body.light-theme .brand-logo span { color: #000 !important; }
+body.light-theme .workspace-data .brand-logo {
+    color: #0d9488;
+    text-shadow: 0 0 20px rgba(13, 148, 136, 0.3);
+}
+body.light-theme .workspace-design .brand-logo {
+    color: #dc2626;
+    text-shadow: 0 0 20px rgba(220, 38, 38, 0.3);
+}
+
+/* ── AI avatar strokes ───────────────────────────────────────────── */
+body.light-theme .ai-avatar-bubble svg path:first-child { stroke: #000000 !important; }
+body.light-theme .ai-avatar-bubble svg path:last-child  { stroke: #000000 !important; }
+
+/* ── Input frames ────────────────────────────────────────────────── */
+body.light-theme .input-frame {
+    background: #ffffff !important;
+    border-color: rgba(15, 23, 42, 0.10) !important;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06) !important;
+}
+body.light-theme .input-frame:focus-within {
+    border-color: #0d9488 !important;
+    box-shadow: 0 0 30px rgba(13, 148, 136, 0.15) !important;
+}
+body.light-theme .workspace-design .input-frame:focus-within {
+    border-color: #dc2626 !important;
+    box-shadow: 0 0 30px rgba(220, 38, 38, 0.15) !important;
+}
+body.light-theme textarea { color: #0f172a !important; }
+body.light-theme textarea::placeholder { color: #94a3b8 !important; }
+body.light-theme .action-btn { color: #64748b; }
+body.light-theme .action-btn:hover { color: #0f172a; background: rgba(0,0,0,0.05); }
+body.light-theme .send-btn { background: #0f172a; color: #ffffff; }
+body.light-theme .send-btn:hover:not(:disabled) { background: #1e293b; }
+body.light-theme .send-btn:disabled { background: #f1f5f9; color: #94a3b8; }
+
+/* ── Back button ─────────────────────────────────────────────────── */
+body.light-theme .back-btn:hover { background: rgba(0, 0, 0, 0.05); }
+
+/* ── Action icon buttons ─────────────────────────────────────────── */
+body.light-theme .action-icon-btn { color: #6b7280; }
+body.light-theme .action-icon-btn:hover { color: #1a1a1a; background: rgba(0, 0, 0, 0.05); }
+body.light-theme .action-icon-btn.regen-active {
+    color: #0ea5e9;
+    border-color: rgba(14, 165, 233, 0.3);
+}
+
+/* ── Theme option ────────────────────────────────────────────────── */
+body.light-theme .theme-option.active {
+    background: #e5e7eb;
+    border-color: var(--accent-glow);
+    color: #000;
+}
+body.light-theme .theme-option:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: #000;
+}
+
+/* ── Sidebar tabs ────────────────────────────────────────────────── */
+body.light-theme .sidebar-tabs {
+    background: #e5e7eb !important;
+    border-radius: 8px;
+    padding: 4px;
+}
+body.light-theme .tab-btn {
+    color: #4b5563 !important;
+    background: transparent !important;
+    border: none;
+    padding: 6px;
+    font-size: 11px;
+    font-weight: 600;
+}
+body.light-theme .tab-btn.active {
+    background: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* ── Sidebar shell ───────────────────────────────────────────────── */
+body.light-theme #sidebar-container-node {
+    background: #ffffff !important;
+    border-right-color: rgba(15, 23, 42, 0.08) !important;
+}
+body.light-theme .sidebar-header { border-bottom-color: rgba(15, 23, 42, 0.08); }
+body.light-theme .sidebar-search-box {
+    background: #f8fafc !important;
+    border-color: rgba(15, 23, 42, 0.08) !important;
+}
+body.light-theme .sidebar-search-box input { color: #0f172a !important; }
+body.light-theme .sidebar-search-box input::placeholder { color: #94a3b8; }
+body.light-theme .sidebar-footer {
+    background: #ffffff !important;
+    border-top-color: rgba(15, 23, 42, 0.08);
+}
+body.light-theme .sidebar-sub-box {
+    background: #f8fafc !important;
+    border-color: rgba(15, 23, 42, 0.08) !important;
+}
+body.light-theme .sidebar-sub-box:hover { background: #f1f5f9 !important; }
+body.light-theme .sub-box-desc { color: #64748b !important; }
+body.light-theme .footer-opt { color: #334155; }
+body.light-theme .footer-opt:hover { background: rgba(0,0,0,0.04); color: #0f172a; }
+
+/* ── History items + action list ─────────────────────────────────── */
+body.light-theme .history-item:hover {
+    background: rgba(15, 23, 42, 0.04) !important;
+    border-color: rgba(15, 23, 42, 0.10) !important;
+}
+body.light-theme .history-title { color: #0f172a; }
+body.light-theme .actions-dropdown-list {
+    background: #ffffff !important;
+    border-color: rgba(15, 23, 42, 0.10) !important;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12) !important;
+}
+body.light-theme .action-list-item { color: #334155; }
+body.light-theme .action-list-item:hover { background: rgba(0,0,0,0.04); color: #0f172a; }
+
+/* ── Workspace header ────────────────────────────────────────────── */
+body.light-theme .workspace-header {
+    background: rgba(255, 255, 255, 0.85);
+    border-bottom-color: rgba(15, 23, 42, 0.08);
+}
+
+/* ── Workspace switcher ──────────────────────────────────────────── */
+body.light-theme .workspace-switcher-pill {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.08);
+}
+body.light-theme .ws-btn { color: #475569; }
+body.light-theme .ws-btn:hover { color: #0f172a; background: rgba(0, 0, 0, 0.05); }
+body.light-theme .ws-btn.active {
+    color: #0f172a;
+    background: #ffffff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+/* ── Model + account dropdowns ───────────────────────────────────── */
+body.light-theme #account-dropdown-card,
+body.light-theme #model-dropdown-card {
+    background: #ffffff !important;
+    border-color: rgba(15, 23, 42, 0.10) !important;
+    box-shadow: 0 12px 36px rgba(15, 23, 42, 0.12) !important;
+}
+body.light-theme .model-option { color: #0f172a; }
+body.light-theme .model-option:hover { background: rgba(0, 0, 0, 0.03); }
+body.light-theme .model-option.active {
+    background: rgba(0, 242, 254, 0.06);
+    border-color: rgba(0, 242, 254, 0.35);
+}
+body.light-theme .model-desc { color: #64748b; }
+
+/* ── Features menu ───────────────────────────────────────────────── */
+body.light-theme .features-menu {
+    background: #ffffff !important;
+    border-color: rgba(15, 23, 42, 0.10) !important;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12) !important;
+}
+body.light-theme .feature-item { color: #1e293b; }
+body.light-theme .feature-item:hover { background: rgba(0, 0, 0, 0.04); }
+body.light-theme .feature-item.upload-highlight { border-bottom-color: rgba(15, 23, 42, 0.08); }
+
+/* ── Command wrapper ─────────────────────────────────────────────── */
+body.light-theme .command-wrapper {
+    background: linear-gradient(to top, #f8fafc 70%, transparent) !important;
+}
+
+/* ── Chat bubbles ────────────────────────────────────────────────── */
+body.light-theme .user-bubble {
+    background: #0f172a !important;
+    color: #ffffff !important;
+    border-color: #0f172a !important;
+}
+body.light-theme .nexus-bubble {
+    background: #ffffff !important;
+    border-color: rgba(15, 23, 42, 0.10) !important;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06) !important;
+}
+body.light-theme .nexus-bubble pre {
+    background: #0f172a !important;
+    border-color: rgba(15, 23, 42, 0.15) !important;
+}
+body.light-theme .bubble-action-bar { border-top-color: rgba(15, 23, 42, 0.08); }
+body.light-theme .action-icon-btn { color: #64748b; }
+body.light-theme .action-icon-btn:hover { color: #0f172a; background: rgba(0, 0, 0, 0.05); }
+
+/* ── Hero ────────────────────────────────────────────────────────── */
+body.light-theme .hero-text h1 { color: #0f172a; }
+body.light-theme .hero-text p  { color: #64748b; }
+
+/* ── Search overlay ──────────────────────────────────────────────── */
+/* ELITE: lowered from 0.92 → 0.85 so the glass blur actually reads.
+   0.92 was effectively opaque; the overlay lost its layered feel. */
+body.light-theme #search-overlay { background: rgba(248, 250, 252, 0.85); }
+
+/* ── Toggle switch ───────────────────────────────────────────────── */
+body.light-theme .slider { background-color: #cbd5e1; }
+body.light-theme input:checked + .slider { background-color: var(--accent-glow); }
+
+/* ── Modals ──────────────────────────────────────────────────────── */
+body.light-theme .modal-card {
+    background: #ffffff !important;
+    border-color: rgba(15, 23, 42, 0.08) !important;
+    box-shadow: 0 24px 60px -12px rgba(15, 23, 42, 0.18) !important;
+}
+body.light-theme .modal-header { border-bottom-color: rgba(15, 23, 42, 0.08); }
+body.light-theme .modal-title { color: #0f172a; }
+body.light-theme .close-modal-btn { color: #64748b; }
+body.light-theme .close-modal-btn:hover { color: #0f172a; background: rgba(0, 0, 0, 0.05); }
+body.light-theme .modal-input {
+    background: #f8fafc !important;
+    color: #0f172a !important;
+    border-color: rgba(15, 23, 42, 0.10) !important;
+}
+body.light-theme .modal-input::placeholder { color: #94a3b8; }
+body.light-theme .modal-submit-btn {
+    background: #18181b !important;
+    color: #ffffff !important;
+    border: 1px solid transparent;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+body.light-theme .modal-submit-btn:hover {
+    background: #27272a !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* ── Toasts ──────────────────────────────────────────────────────── */
+body.light-theme .toast.error {
+    background: rgba(254, 242, 242, 0.96);
+    border-color: #fecaca;
+    color: #991b1b;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+body.light-theme .toast.success {
+    background: rgba(240, 253, 244, 0.96);
+    border-color: #bbf7d0;
+    color: #166534;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+body.light-theme .toast.info {
+    background: rgba(239, 246, 255, 0.96);
+    border-color: #bfdbfe;
+    color: #1e40af;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* ── Tier cards (upgrade modal) ──────────────────────────────────── */
+body.light-theme .tier-card,
+body.light-theme .tier-card-modern {
+    background: #ffffff !important;
+    border-color: rgba(15, 23, 42, 0.08) !important;
+    box-shadow: 0 6px 24px rgba(15, 23, 42, 0.06) !important;
+    color: #0f172a;
+}
+body.light-theme .tier-card-modern.popular {
+    background: #f8fafc !important;
+    border-color: rgba(0, 242, 254, 0.4) !important;
+}
+body.light-theme .tier-name,
+body.light-theme .tier-card h3,
+body.light-theme .tier-amount,
+body.light-theme .tier-card .price-output,
+body.light-theme #sub-plan-name { color: #0f172a !important; }
+body.light-theme .tier-summary,
+body.light-theme .tier-card p.sub-desc,
+body.light-theme .tier-term,
+body.light-theme .tier-currency { color: #475569 !important; }
+body.light-theme .tier-card .price-output span { color: #555; }
+body.light-theme .tier-card .options-group label .opt-content .opt-row .opt-name { color: #000; }
+body.light-theme .tier-card .options-group label .opt-content .opt-desc { color: #666; }
+body.light-theme .tier-card .options-group label {
+    background: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.08);
+}
+body.light-theme .axelr-pricing-container .tier-card.pro-premium {
+    border-color: rgba(16, 185, 129, 0.3);
+}
+body.light-theme .axelr-pricing-container .tier-card.business-premium {
+    border-color: rgba(239, 68, 68, 0.3);
+}
+body.light-theme .tier-models-section {
+    background: rgba(0, 0, 0, 0.03) !important;
+    border-color: rgba(15, 23, 42, 0.06) !important;
+}
+body.light-theme .model-section-title { color: #64748b !important; }
+body.light-theme .provider-pill { color: #1e293b !important; }
+body.light-theme .subtier-option {
+    background: rgba(0, 0, 0, 0.02) !important;
+    border-color: rgba(15, 23, 42, 0.08) !important;
+}
+body.light-theme .subtier-option:has(input:checked) {
+    background: #f0f9ff !important;
+    border-color: rgba(0, 242, 254, 0.5) !important;
+}
+body.light-theme .subtier-row { color: #0f172a !important; }
+body.light-theme .subtier-desc { color: #64748b !important; }
+body.light-theme .tier-feature-list li { color: #334155 !important; }
+body.light-theme .tier-feature-list li.disabled { color: #94a3b8 !important; }
+body.light-theme .limit-chip {
+    background: rgba(0, 0, 0, 0.04) !important;
+    border-color: rgba(15, 23, 42, 0.08) !important;
+    color: #334155 !important;
+}
+body.light-theme .limit-chip.highlight {
+    background: rgba(0, 242, 254, 0.10) !important;
+    border-color: rgba(0, 242, 254, 0.4) !important;
+    color: #0891b2 !important;
+}
+
+/* ── Settings modal ──────────────────────────────────────────────── */
+body.light-theme .settings-item {
+    background: #f8fafc !important;
+    border-color: rgba(15, 23, 42, 0.08) !important;
+}
+body.light-theme .settings-item:hover {
+    background: #f1f5f9 !important;
+    border-color: rgba(15, 23, 42, 0.14) !important;
+}
+body.light-theme .settings-item .title { color: #0f172a; }
+body.light-theme .settings-item .desc  { color: #64748b; }
+body.light-theme .settings-item .icon,
+body.light-theme .settings-item .arrow { color: #64748b; }
+
+/* ── Quota box ───────────────────────────────────────────────────── */
+body.light-theme .axelr-quota-box {
+    background: #f8fafc !important;
+    border-color: rgba(15, 23, 42, 0.08) !important;
+}
+body.light-theme .axelr-quota-box .quota-label { color: #64748b !important; }
+body.light-theme .axelr-quota-box .quota-count { color: #0f172a !important; }
+body.light-theme .axelr-quota-box .quota-track { background: rgba(15, 23, 42, 0.08) !important; }
+body.light-theme .axelr-quota-box .quota-fill {
+    background: linear-gradient(90deg, #0d9488, #0ea5e9);
+}
+body.light-theme .quota-label { color: #6b7280; }
+body.light-theme .quota-count { color: #000; }
+
+/* ── Workspace cards ─────────────────────────────────────────────── */
+body.light-theme #workspace-selector { background: #f8fafc !important; }
+body.light-theme #workspace-selector h2 { color: #0f172a; }
+body.light-theme .workspace-card {
+    background: #ffffff !important;
+    border-color: rgba(15, 23, 42, 0.08) !important;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05) !important;
+}
+body.light-theme .workspace-card .ws-title { color: #0f172a; }
+body.light-theme .workspace-card .ws-desc  { color: #475569; }
+body.light-theme .workspace-card .ws-feature-badge {
+    background: rgba(0, 0, 0, 0.04);
+    border-color: rgba(15, 23, 42, 0.08);
+    color: #475569;
+}
+
+/* ── Knowledge vault ─────────────────────────────────────────────── */
+body.light-theme .knowledge-content { background: rgba(0, 0, 0, 0.02); }
+body.light-theme .sidebar-section-header:hover { background: rgba(0, 0, 0, 0.03); }
+
+/* ── Admin / profile stats ───────────────────────────────────────── */
+body.light-theme .profile-stat-row { border-bottom-color: rgba(15, 23, 42, 0.08); }
+body.light-theme .profile-stat-label { color: #64748b; }
+body.light-theme .profile-stat-value { color: #0f172a; }
+
+/* ── Scrollbar ───────────────────────────────────────────────────── */
+body.light-theme ::-webkit-scrollbar-thumb { background: rgba(15, 23, 42, 0.15); }
+body.light-theme ::-webkit-scrollbar-thumb:hover { background: rgba(15, 23, 42, 0.25); }
+
+/* ============================================================
+   AUTH WALL — LIGHT THEME
+   ============================================================ */
+body.light-theme #auth-wall {
+    background:
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(14, 165, 233, 0.12), transparent 60%),
+        radial-gradient(ellipse 60% 50% at 50% 110%, rgba(139, 92, 246, 0.08), transparent 60%),
+        linear-gradient(180deg, #f8fafc, #e2e8f0);
+}
+body.light-theme #auth-wall::before {
+    background-image:
+        linear-gradient(rgba(15, 23, 42, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(15, 23, 42, 0.04) 1px, transparent 1px);
+}
+body.light-theme .auth-card {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(15, 23, 42, 0.06);
+    box-shadow:
+        0 1px 0 0 rgba(255, 255, 255, 0.9) inset,
+        0 30px 80px -20px rgba(15, 23, 42, 0.18),
+        0 0 100px -30px rgba(0, 242, 254, 0.25);
+}
+body.light-theme .auth-brand span {
+    background: linear-gradient(180deg, #0f172a 0%, #334155 100%);
+    -webkit-background-clip: text;
+            background-clip: text;
+    color: transparent;
+}
+body.light-theme .auth-tagline { color: #334155; }
+body.light-theme .auth-sub { color: #64748b; }
+body.light-theme .auth-terms { color: #475569 !important; }
+body.light-theme .auth-provider-btn {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: rgba(15, 23, 42, 0.10);
+    color: #0f172a;
+}
+body.light-theme .auth-provider-btn:hover { background: #ffffff; }
+body.light-theme .auth-divider { color: #94a3b8; }
+body.light-theme .auth-divider::before,
+body.light-theme .auth-divider::after { background: rgba(15, 23, 42, 0.08); }
+body.light-theme .auth-guest-btn {
+    background: rgba(0, 0, 0, 0.03);
+    color: #334155;
+    border-color: rgba(15, 23, 42, 0.10);
+}
+/* ============================================================
+   ELITE LIGHT THEME — inverted depth, softer glows
+   ============================================================ */
+@layer elite {
+
+/* In light theme, glows need higher opacity to read at all.
+   Shadows need to be softer and further from black. */
+body.light-theme {
+    --glow-ambient: 0 0 40px -10px color-mix(in srgb, var(--accent-glow) 30%, transparent);
+    --glow-active:  0 0 0 1px color-mix(in srgb, var(--accent-glow) 40%, transparent),
+                    0 0 24px -4px color-mix(in srgb, var(--accent-glow) 40%, transparent);
+    --glow-bloom:   0 0 0 1px color-mix(in srgb, var(--accent-glow) 30%, transparent),
+                    0 12px 40px -12px rgba(15, 23, 42, 0.10),
+                    0 0 60px -20px color-mix(in srgb, var(--accent-glow) 30%, transparent);
+    --shadow-surface-1: 0 1px 2px rgba(15, 23, 42, 0.05),
+                        0 0 0 1px rgba(15, 23, 42, 0.04);
+    --shadow-surface-2: 0 4px 12px -2px rgba(15, 23, 42, 0.08),
+                        0 0 0 1px rgba(15, 23, 42, 0.05);
+    --shadow-surface-3: 0 12px 32px -8px rgba(15, 23, 42, 0.10),
+                        0 0 0 1px rgba(15, 23, 42, 0.06);
+    --shadow-surface-4: 0 24px 60px -12px rgba(15, 23, 42, 0.14),
+                        0 0 0 1px rgba(15, 23, 42, 0.08);
+    --shadow-floating:  0 32px 80px -20px rgba(15, 23, 42, 0.18),
+                        0 0 0 1px rgba(15, 23, 42, 0.08);
+}
+
+/* Noise overlay — reduce opacity in light theme so it reads subtle */
+body.light-theme::after {
+    opacity: 0.020;
+    mix-blend-mode: multiply;
+}
+
+/* Selection colorway shifts for light theme legibility */
+body.light-theme ::selection {
+    background: color-mix(in srgb, var(--accent-glow) 30%, transparent);
+    color: #0f172a;
+}
+
+/* Scrollbar thumb in light theme */
+body.light-theme ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg,
+        rgba(15, 23, 42, 0.10) 0%,
+        rgba(15, 23, 42, 0.18) 100%);
+    background-clip: padding-box;
+    border: 2px solid transparent;
+}
+body.light-theme ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg,
+        color-mix(in srgb, var(--accent-glow) 55%, transparent) 0%,
+        color-mix(in srgb, var(--accent-pro) 45%, transparent) 100%);
+    background-clip: padding-box;
+    border: 2px solid transparent;
+}
+
+/* Focus gems in light theme — dark ring instead of dark buffer */
+body.light-theme :focus-visible,
+body.light-theme .action-icon-btn:focus-visible,
+body.light-theme .send-btn:focus-visible,
+body.light-theme .ws-btn:focus-visible,
+body.light-theme .modal-submit-btn:focus-visible {
+    box-shadow:
+        0 0 0 2px #ffffff,
+        0 0 0 4px color-mix(in srgb, var(--focus-ring-color) 90%, transparent),
+        0 0 20px -4px color-mix(in srgb, var(--focus-ring-color) 45%, transparent);
+}
+
+} /* end @layer elite */

@@ -1,0 +1,380 @@
+/* ============================================================
+   WORKSPACE SELECTOR
+   ============================================================ */
+@layer workspace {
+
+#workspace-selector {
+    position: fixed;
+    inset: 0;
+    background: var(--bg-deep);
+    z-index: var(--z-modal);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: clamp(14px, 3vw, 32px);
+    overflow-y: auto;
+    /* ELITE: container for the grid below — cards respond to
+       available width, not viewport width. */
+    container-type: inline-size;
+    container-name: workspace-selector;
+}
+#workspace-selector h2 {
+    color: var(--text-main);
+    font-size: clamp(21px, 3vw, 28px);
+    font-weight: 700;
+    margin: 0 0 clamp(14px, 3vw, 26px);
+    letter-spacing: -0.5px;
+    text-align: center;
+    text-wrap: balance; /* ELITE: no orphan words in headings */
+}
+#workspace-selector.active { display: flex; }
+
+/* ============================================================
+   WORKSPACE GRID — container-query driven
+   ============================================================ */
+.ws-grid {
+    width: min(1100px, 100%);
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(12px, 2vw, 20px);
+    padding: 0;
+    margin: 0 auto;
+}
+
+/* ELITE: Container queries replace viewport breakpoints.
+   The grid adapts to the workspace-selector's own width, not the
+   window's. This means the component is now truly portable —
+   drop it into a modal, a panel, or a full page and it responds
+   to its actual environment. */
+@container workspace-selector (max-width: 900px) {
+    .ws-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@container workspace-selector (max-width: 640px) {
+    .ws-grid {
+        grid-template-columns: 1fr;
+        max-width: 460px;
+        gap: 14px;
+    }
+    .workspace-card { min-height: 0; padding: 18px; }
+    .workspace-card .ws-card-icon,
+    .workspace-card .ws-card-icon svg,
+    .workspace-card .ws-card-icon .material-symbols-rounded {
+        width: 32px; height: 32px; font-size: 32px;
+    }
+    .workspace-card .ws-title { font-size: 16px; }
+    .workspace-card .ws-desc  { font-size: 12px; }
+}
+
+/* ============================================================
+   WORKSPACE CARD — MASTER (single source of truth)
+   ============================================================ */
+.workspace-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    min-height: 240px;
+    padding: clamp(16px, 2.2vw, 24px);
+    gap: 6px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-muted);
+    border-radius: 16px;
+    cursor: pointer;
+    overflow: hidden;
+    text-align: left;
+    transform: translateY(0);
+    transition: transform 0.35s var(--ease-spring),
+                border-color 0.25s ease,
+                box-shadow 0.25s ease;
+}
+.workspace-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--card-accent, var(--accent-glow));
+    box-shadow: 0 16px 44px -12px color-mix(in srgb, var(--card-accent, var(--accent-glow)) 22%, transparent);
+}
+
+/* Per-workspace accent variable */
+.workspace-card.general { --card-accent: var(--workspace-general); }
+.workspace-card.data    { --card-accent: var(--workspace-data);    }
+.workspace-card.design  { --card-accent: var(--workspace-design);  }
+
+/* ============================================================
+   WORKSPACE CARD GLOW — single canonical definition
+   ============================================================ */
+.workspace-card .ws-card-glow {
+    position: absolute;
+    inset: -50%;
+    opacity: 0;
+    filter: blur(60px);
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+    background: radial-gradient(circle at 50% 50%,
+                color-mix(in srgb, var(--card-accent) 30%, transparent),
+                transparent 70%);
+}
+.workspace-card:hover .ws-card-glow { opacity: 0.35; }
+
+/* ============================================================
+   WORKSPACE CARD — INNER CONTENT
+   ============================================================ */
+.workspace-card .ws-card-icon {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    color: var(--card-accent);
+    height: 42px;
+    margin-bottom: 4px;
+    transition: transform 0.3s var(--ease-spring);
+}
+.workspace-card:hover .ws-card-icon { transform: scale(1.05); }
+
+.workspace-card .ws-card-icon svg,
+.workspace-card .ws-card-icon .material-symbols-rounded {
+    width: 42px;
+    height: 42px;
+    font-size: 42px;
+}
+.workspace-card .ws-card-content {
+    position: relative;
+    z-index: 1;
+}
+.workspace-card .ws-title {
+    font-size: clamp(16px, 1.6vw, 19px);
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0 0 4px 0;
+    text-wrap: balance; /* ELITE: prevent orphaned words */
+}
+.workspace-card .ws-desc {
+    font-size: clamp(12px, 1.1vw, 13px);
+    color: var(--text-muted);
+    line-height: 1.45;
+    margin: 0 0 10px 0;
+    text-wrap: pretty; /* ELITE: modern ragged-edge typography */
+}
+.workspace-card .ws-features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    position: relative;
+    z-index: 1;
+}
+.workspace-card .ws-feature-badge {
+    padding: 3px 9px;
+    border-radius: 100px;
+    font-size: 10.5px;
+    font-weight: 500;
+    color: color-mix(in srgb, var(--card-accent) 80%, var(--text-main));
+    background: color-mix(in srgb, var(--card-accent) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--card-accent) 22%, transparent);
+}
+.workspace-card .ws-card-arrow {
+    position: relative;
+    z-index: 1;
+    margin-top: auto;
+    align-self: flex-end;
+    color: var(--card-accent);
+    opacity: 0.7;
+    transition: opacity 0.2s, transform 0.2s;
+}
+.workspace-card:hover .ws-card-arrow {
+    opacity: 1;
+    transform: translateX(3px);
+}
+
+/* Legacy alias — kept for backward compat with any inline markup */
+.ws-icon { font-size: 48px; margin-bottom: 20px; }
+.ws-title {
+    color: var(--text-main);
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+.ws-desc {
+    color: var(--text-muted);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+/* ============================================================
+   VIEWPORT
+   ============================================================ */
+#viewport {
+    flex: 1;
+    overflow-y: auto;
+    width: 100%;
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 100px 24px 180px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+    scroll-behavior: smooth;
+    height: 100vh;
+    max-height: calc(100vh - 60px);
+    scrollbar-gutter: stable; /* ELITE: no layout shift on scrollbar reveal */
+    overscroll-behavior: contain;
+}
+
+/* ============================================================
+   WORKSPACE VARIABLE OVERRIDES
+
+   With @layer, cascade order alone guarantees these win over
+   the :root defaults — no !important needed. The cascade is
+   now honest.
+   ============================================================ */
+body.workspace-data {
+    --accent-glow: #10b981;
+    --accent-secondary: #059669;
+    --border-muted: rgba(16, 185, 129, 0.3);
+    --theme-surface-glow: radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.06), transparent 70%);
+    --workspace-accent: var(--workspace-data);
+}
+body.workspace-design {
+    --accent-glow: #ef4444;
+    --accent-glow-designer: #ef4444;
+    /* Intentional: secondary stays emerald even on the crimson workspace
+       so success states (saved, deployed, checkmarks) remain legible and
+       semantically unambiguous. */
+    --accent-secondary: #18ad7b;
+    --border-muted: rgba(239, 68, 68, 0.3);
+    --theme-surface-glow: radial-gradient(circle at 50% 0%, rgba(239, 68, 68, 0.06), transparent 70%);
+    --workspace-accent: var(--workspace-design);
+}
+body.workspace-general {
+    --workspace-accent: var(--workspace-general);
+}
+
+/* ============================================================
+   WORKSPACE-DESIGN FINAL OVERRIDES
+   ============================================================ */
+body.workspace-design .brand-logo {
+    color: var(--accent-glow);
+}
+body.workspace-design .input-frame:focus-within {
+    border-color: #ef4444;
+    box-shadow: 0 0 30px rgba(239, 68, 68, 0.2);
+}
+
+/* ============================================================
+   SUBSCRIPTION / PLAN TEXT
+   ============================================================ */
+#subscription-modal .modal-card .profile-stat-value,
+#subscription-modal .modal-card .sub-plan-name,
+#subscription-modal .modal-card h3 {
+    color: var(--text-main);
+}
+#free-tier-message { color: var(--text-main); }
+#free-tier-message strong { color: var(--accent-glow); }
+#sub-plan-name { color: var(--text-main); }
+
+/* ============================================================
+   PREMIUM LOGO HOVER
+   ============================================================ */
+.brand-logo:hover svg path {
+    animation: logoPulse 2s infinite;
+}
+
+} /* end @layer workspace */
+/* ============================================================
+   ELITE WORKSPACE CARDS — gradient borders, spatial depth, sheen
+   ============================================================ */
+@layer elite {
+
+/* Card — inner sheen (top light) + floor shadow (bottom weight) */
+.workspace-card {
+    isolation: isolate;
+    box-shadow: var(--shadow-surface-2);
+    transition:
+        transform var(--duration-flow) var(--ease-overshoot),
+        border-color var(--duration-swift) var(--ease-smooth),
+        box-shadow var(--duration-swift) var(--ease-smooth);
+}
+
+/* Top sheen — mimics light catching the top edge of the surface */
+.workspace-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50%;
+    background: var(--gradient-surface-sheen);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--duration-flow) var(--ease-smooth);
+    z-index: 0;
+}
+.workspace-card:hover::before { opacity: 1; }
+
+/* Gradient border via mask-composite — the Linear/Vercel signature.
+   Reads as a light-catching edge rather than a hard stroke. */
+.workspace-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    background: linear-gradient(135deg,
+        color-mix(in srgb, var(--card-accent) 0%, transparent) 0%,
+        color-mix(in srgb, var(--card-accent) 60%, transparent) 50%,
+        color-mix(in srgb, var(--card-accent) 0%, transparent) 100%);
+    -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--duration-swift) var(--ease-smooth);
+    z-index: 2;
+}
+.workspace-card:hover::after { opacity: 1; }
+
+.workspace-card:hover {
+    transform: translateY(-6px);
+    box-shadow:
+        var(--shadow-surface-4),
+        0 0 0 1px color-mix(in srgb, var(--card-accent) 15%, transparent),
+        0 24px 60px -20px color-mix(in srgb, var(--card-accent) 25%, transparent);
+}
+
+/* Card icon — subtle scale + accent bloom on hover */
+.workspace-card .ws-card-icon {
+    transition: transform var(--duration-flow) var(--ease-overshoot),
+                filter var(--duration-flow) var(--ease-smooth);
+}
+.workspace-card:hover .ws-card-icon {
+    transform: scale(1.06);
+    filter: drop-shadow(0 0 20px color-mix(in srgb, var(--card-accent) 50%, transparent));
+}
+
+/* Feature badges — inner glow appears on card hover */
+.workspace-card .ws-feature-badge {
+    transition:
+        background var(--duration-swift) var(--ease-smooth),
+        border-color var(--duration-swift) var(--ease-smooth);
+}
+.workspace-card:hover .ws-feature-badge {
+    background: color-mix(in srgb, var(--card-accent) 18%, transparent);
+    border-color: color-mix(in srgb, var(--card-accent) 35%, transparent);
+}
+
+/* Arrow — slides right with anticipation */
+.workspace-card .ws-card-arrow {
+    transition: opacity var(--duration-swift) var(--ease-smooth),
+                transform var(--duration-swift) var(--ease-elastic);
+}
+.workspace-card:hover .ws-card-arrow {
+    transform: translateX(6px);
+}
+
+} /* end @layer elite */

@@ -1,0 +1,430 @@
+/* ============================================================
+   COMMAND WRAPPER — file staging
+   ============================================================ */
+#file-staging-container {
+    width: 100%;
+    min-height: 40px;
+    max-height: 80px;
+    overflow-y: auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--border-muted);
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    background: var(--bg-deep);
+    z-index: 5;
+}
+#file-staging-container:empty {
+    display: none;
+    min-height: 0;
+}
+
+/* ============================================================
+   INPUT FRAME (single canonical)
+   ============================================================ */
+.input-frame {
+    background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+    border: none;
+    border-radius: 24px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    transition: background-color 0.25s ease, box-shadow 0.25s ease;
+    box-shadow:
+        0 20px 40px -20px rgba(0, 0, 0, 0.65),
+        0 0 0 1px var(--border-muted);
+}
+.input-frame:focus-within {
+    background: color-mix(in srgb, var(--bg-card) 98%, transparent);
+    box-shadow:
+        0 20px 40px -20px rgba(0, 0, 0, 0.65),
+        0 0 0 1px color-mix(in srgb, var(--accent-glow) 45%, transparent),
+        0 0 40px -12px color-mix(in srgb, var(--accent-glow) 25%, transparent);
+}
+
+/* ============================================================
+   INPUT ROW + TEXTAREA
+   ============================================================ */
+.input-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    width: 100%;
+    min-height: 42px;
+}
+textarea {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    font-size: 14px;
+    padding: 8px 5px;
+    resize: none;
+    max-height: 180px;
+    font-family: 'Inter', sans-serif;
+    line-height: 1.5;
+}
+textarea::placeholder { color: #6b7280; }
+textarea::-webkit-scrollbar { width: 4px; }
+textarea::-webkit-scrollbar-thumb {
+    background: var(--border-muted);
+    border-radius: 2px;
+}
+
+/* ============================================================
+   INPUT ACTIONS
+   ============================================================ */
+.input-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.action-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.2s;
+    flex-shrink: 0;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: 'Inter', sans-serif;
+}
+.action-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-main);
+}
+
+/* ============================================================
+   ENHANCE BUTTON
+   ============================================================ */
+.enhance-btn {
+    color: var(--accent-glow-pro);
+}
+.enhance-btn:hover {
+    background: rgba(139, 92, 246, 0.15);
+    color: #fff;
+    box-shadow: 0 0 10px rgba(139, 92, 246, 0.3);
+}
+.enhance-btn.loading {
+    animation: pulse 1s infinite;
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ============================================================
+   ATTACH + MIC
+   ============================================================ */
+.attach-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-main);
+}
+.mic-btn.listening {
+    color: var(--color-danger);
+    animation: pulse 1.5s infinite;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+/* ============================================================
+   SEND BUTTON — MASTER
+   ============================================================ */
+.send-btn {
+    background: var(--text-main);
+    color: var(--bg-deep);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+}
+.send-btn:hover {
+    opacity: 0.8;
+}
+.send-btn:hover:not(:disabled) {
+    transform: scale(1.05);
+    background: #ffffff;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+}
+.send-btn:disabled {
+    background: var(--bg-card);
+    color: #4b5563;
+    cursor: not-allowed;
+}
+.send-btn.btn-stop-active {
+    background: rgba(255, 255, 255, 0.05) !important;
+    color: var(--accent-glow) !important;
+    border: 1px solid var(--accent-glow) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 0 25px -5px color-mix(in srgb, var(--accent-glow) 25%, transparent) !important;
+    width: auto !important;
+    padding: 0 12px !important;
+}
+
+/* Per-workspace stop-active tint */
+body.workspace-data .send-btn.btn-stop-active {
+    background: rgba(0, 255, 136, 0.15) !important;
+    color: #00ff88 !important;
+    border-color: #00ff88 !important;
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.4) !important;
+}
+body.workspace-design .send-btn.btn-stop-active {
+    background: rgba(255, 26, 74, 0.15) !important;
+    color: #ff1a4a !important;
+    border-color: #ff1a4a !important;
+    box-shadow: 0 0 20px rgba(255, 26, 74, 0.4) !important;
+}
+
+/* ============================================================
+   PLUS MENU / FEATURES DROPDOWN
+   ============================================================ */
+.plus-menu-btn {
+    color: var(--text-muted);
+    transition: transform 0.2s var(--ease-out-expo), background 0.2s;
+}
+.plus-menu-btn:hover {
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.08);
+}
+.features-dropdown-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+.features-dropdown-wrapper:has(.features-menu.open) .plus-menu-btn {
+    transform: rotate(45deg);
+    color: var(--accent-glow);
+}
+
+.features-menu {
+    position: absolute;
+    bottom: calc(100% + 14px);
+    left: 0;
+    right: auto;
+    min-width: 260px;
+    max-height: 420px;
+    overflow-y: auto;
+    border-radius: 16px;
+    padding: 6px;
+    display: none;
+    flex-direction: column;
+    gap: 2px;
+    z-index: var(--z-floating);
+}
+.features-menu.open {
+    display: flex !important;
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    color: var(--text-main);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background 0.15s ease;
+    border: none;
+    background: transparent;
+}
+.feature-item:hover { background: rgba(255, 255, 255, 0.08); }
+.feature-item .material-symbols-rounded {
+    font-size: 18px;
+    color: var(--accent-glow);
+}
+.feature-item.upload-highlight {
+    border-bottom: 1px solid var(--border-muted);
+    margin-bottom: 4px;
+    padding-bottom: 12px;
+    font-weight: 600;
+}
+.feature-item.upload-highlight .material-symbols-rounded {
+    color: var(--accent-secondary);
+}
+.feature-item span:last-child { flex: 1; }
+
+/* ============================================================
+   COMMAND WRAPPER
+   ============================================================ */
+.command-wrapper {
+    position: fixed;
+    bottom: max(14px, env(safe-area-inset-bottom));
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(800px, calc(100% - 24px));
+    padding: 0;
+    z-index: var(--z-command-bar);
+    background: transparent !important;
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+    overflow: visible !important;
+    transition: transform var(--transition-base), opacity var(--transition-base);
+}
+
+.command-disclaimer {
+    color: var(--text-muted);
+    font-size: 11px;
+    margin-top: 8px;
+    text-align: center;
+}
+
+/* ============================================================
+   OFFLINE BANNER
+   ============================================================ */
+#offline-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: var(--color-danger);
+    color: #fff;
+    text-align: center;
+    padding: 10px;
+    z-index: var(--z-toast);
+    font-weight: 600;
+    font-size: 14px;
+    display: none;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+    font-family: 'Inter', sans-serif;
+}
+/* ============================================================
+   ELITE COMMAND — rotating send ring, glass depth, spring menus
+   ============================================================ */
+@layer elite {
+
+/* Command bar — at-rest ambient glow, focus bloom */
+.input-frame {
+    transition:
+        background-color var(--duration-swift) var(--ease-smooth),
+        box-shadow var(--duration-swift) var(--ease-smooth),
+        transform var(--duration-swift) var(--ease-overshoot);
+}
+.input-frame:focus-within {
+    transform: translateY(-1px);
+    box-shadow:
+        0 24px 60px -20px rgba(0,0,0,0.7),
+        0 0 0 1px color-mix(in srgb, var(--accent-glow) 50%, transparent),
+        0 0 60px -16px color-mix(in srgb, var(--accent-glow) 35%, transparent);
+}
+
+/* Send button — rotating conic glow ring on hover.
+   Modern, restrained, unmistakably premium. */
+.send-btn {
+    position: relative;
+    z-index: 0;
+    transition:
+        transform var(--duration-quick) var(--ease-elastic),
+        background var(--duration-quick) var(--ease-smooth),
+        box-shadow var(--duration-quick) var(--ease-smooth);
+}
+.send-btn::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    background: conic-gradient(from var(--gradient-angle),
+        transparent 0deg,
+        var(--accent-glow) 60deg,
+        transparent 180deg,
+        var(--accent-pro) 240deg,
+        transparent 360deg);
+    opacity: 0;
+    z-index: -1;
+    pointer-events: none;
+    filter: blur(2px);
+    transition: opacity var(--duration-swift) var(--ease-smooth);
+}
+.send-btn:hover:not(:disabled)::before {
+    opacity: 1;
+    animation: rotateGradient 3s linear infinite;
+}
+@keyframes rotateGradient {
+    to { --gradient-angle: 360deg; }
+}
+.send-btn:active:not(:disabled) { transform: scale(0.92); }
+
+/* Action buttons (attach / mic / enhance) — tactile press */
+.action-btn {
+    transition:
+        background var(--duration-quick) var(--ease-smooth),
+        color var(--duration-quick) var(--ease-smooth),
+        transform var(--duration-quick) var(--ease-elastic),
+        box-shadow var(--duration-quick) var(--ease-smooth);
+}
+.action-btn:active { transform: scale(0.90); }
+.action-btn:hover {
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.08) inset,
+                0 4px 12px -4px rgba(0,0,0,0.4);
+}
+
+/* Features menu — spring entry, elevated surface */
+.features-menu {
+    background: color-mix(in srgb, var(--bg-card) 85%, transparent);
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow:
+        0 1px 0 rgba(255,255,255,0.05) inset,
+        var(--shadow-floating),
+        0 0 60px -20px color-mix(in srgb, var(--accent-glow) 25%, transparent);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    transform-origin: bottom left;
+}
+.features-menu.open {
+    animation: menuSpring 0.28s var(--ease-overshoot) forwards;
+}
+@keyframes menuSpring {
+    from { opacity: 0; transform: translateY(8px) scale(0.94); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.feature-item {
+    transition:
+        background var(--duration-quick) var(--ease-smooth),
+        transform var(--duration-quick) var(--ease-elastic);
+}
+.feature-item:hover {
+    background: color-mix(in srgb, var(--accent-glow) 8%, transparent);
+    transform: translateX(2px);
+}
+.feature-item .material-symbols-rounded {
+    transition: transform var(--duration-quick) var(--ease-elastic);
+}
+.feature-item:hover .material-symbols-rounded {
+    transform: scale(1.15);
+}
+
+/* File staging chips — sparkle on new file */
+.file-chip {
+    animation: chipArrive 0.4s var(--ease-overshoot) both;
+}
+@keyframes chipArrive {
+    from { opacity: 0; transform: scale(0.8) translateY(4px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+} /* end @layer elite */
+
+/* ============================================================
+   BUG FIX 2: REMOVE INNER BORDER RADIUS ON PROMPT INPUT
+   ============================================================ */
+#prompt-input,
+#prompt-input:focus,
+#prompt-input:focus-visible {
+    border-radius: 0 !important;
+    outline: none !important;
+    box-shadow: none !important; /* Removes the inner glowing focus ring */
+    background: transparent !important;
+}

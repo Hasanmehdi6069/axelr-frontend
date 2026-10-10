@@ -1,0 +1,1012 @@
+/* ============================================================
+   MODALS — base shell
+   ============================================================ */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: var(--z-floating);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.modal-overlay.active {
+    display: flex;
+    opacity: 1;
+}
+.modal-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-muted);
+    width: 90%;
+    max-width: 700px;
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: 0 25px 50px var(--shadow-color);
+    transform: translateY(20px);
+    transition: transform 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+.modal-overlay.active .modal-card {
+    transform: translateY(0);
+}
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-muted);
+    padding-bottom: 15px;
+}
+.modal-title {
+    color: var(--text-main);
+    font-size: 18px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.close-modal-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: 0.2s;
+    font-size: 18px;
+    padding: 4px;
+    border-radius: 6px;
+    line-height: 1;
+}
+.close-modal-btn:hover {
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.05);
+}
+.modal-input {
+    background: var(--bg-input);
+    border: 1px solid var(--border-muted);
+    color: var(--text-main);
+    padding: 12px;
+    border-radius: 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    width: 100%;
+    resize: vertical;
+    min-height: 100px;
+}
+.modal-input:focus { border-color: var(--accent-glow); }
+.modal-input::placeholder { color: #6b7280; }
+
+/* ============================================================
+   MODAL SUBMIT BUTTON — canonical (base + hover + active + disabled)
+   ============================================================ */
+.modal-submit-btn {
+    background: #ffffff;
+    color: #09090b;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 12px 18px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    margin-top: 14px;
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+.modal-submit-btn:hover {
+    background: #f4f4f5;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+.modal-submit-btn:active { transform: scale(0.99); }
+.modal-submit-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ============================================================
+   PROFILE STAT ROWS
+   ============================================================ */
+.profile-stat-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-muted);
+    font-size: 14px;
+}
+.profile-stat-label { color: var(--text-muted); }
+.profile-stat-value {
+    color: var(--text-main);
+    font-weight: 500;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* ============================================================
+   UPGRADE MODAL — legacy tier-card system
+   ============================================================ */
+.axelr-pricing-container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    box-sizing: border-box;
+}
+.axelr-pricing-container > div {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    width: 100%;
+}
+.tier-card {
+    background: #0A0F0D;
+    border-radius: 16px;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    box-shadow: 0 8px 32px var(--shadow-color);
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
+}
+.tier-card.pro-premium { border: 1px solid rgba(16, 185, 129, 0.15); }
+.tier-card.business-premium { border: 1px solid rgba(239, 68, 68, 0.15); }
+.tier-card .tier-badge-pos {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+    z-index: 2;
+}
+.pro-premium .tier-badge-pos {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10B981;
+}
+.business-premium .tier-badge-pos {
+    background: rgba(239, 68, 68, 0.1);
+    color: #EF4444;
+}
+.tier-card h3 {
+    margin: 0 0 4px 0;
+    font-size: 22px;
+    color: #FFF;
+    font-weight: 700;
+    padding-right: 90px;
+}
+.tier-card p.sub-desc {
+    margin: 0 0 20px 0;
+    font-size: 14px;
+    color: #888;
+    line-height: 1.5;
+}
+.tier-card .price-output {
+    font-size: 36px;
+    font-weight: 700;
+    color: #FFF;
+    margin-bottom: 24px;
+}
+.tier-card .price-output span {
+    font-size: 14px;
+    color: #555;
+    font-weight: 400;
+}
+.tier-card .options-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 28px;
+}
+.tier-card .options-group label {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+}
+.pro-premium .options-group label:has(input:checked) {
+    border-color: rgba(16, 185, 129, 0.5);
+    background: rgba(16, 185, 129, 0.05);
+}
+.business-premium .options-group label:has(input:checked) {
+    border-color: rgba(239, 68, 68, 0.5);
+    background: rgba(239, 68, 68, 0.05);
+}
+.tier-card .options-group label input[type="radio"] {
+    margin-top: 3px;
+    flex-shrink: 0;
+}
+.pro-premium .options-group label input[type="radio"] { accent-color: #10B981; }
+.business-premium .options-group label input[type="radio"] { accent-color: #EF4444; }
+.tier-card .options-group label .opt-content { flex: 1; min-width: 0; }
+.tier-card .options-group label .opt-content .opt-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2px;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+.tier-card .options-group label .opt-content .opt-row .opt-name {
+    color: #FFF;
+    font-size: 14px;
+    font-weight: 600;
+}
+.tier-card .options-group label .opt-content .opt-row .opt-price {
+    font-size: 14px;
+    font-weight: 700;
+}
+.pro-premium .options-group label .opt-content .opt-row .opt-price { color: #10B981; }
+.business-premium .options-group label .opt-content .opt-row .opt-price { color: #EF4444; }
+.tier-card .options-group label .opt-content .opt-desc {
+    color: #888;
+    font-size: 12px;
+    line-height: 1.4;
+}
+.tier-card .upgrade-btn {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+    margin-top: auto;
+    color: #000;
+    font-family: 'Inter', sans-serif;
+}
+.pro-premium .upgrade-btn { background: #10B981; }
+.business-premium .upgrade-btn { background: #EF4444; color: #FFF; }
+.tier-card .upgrade-btn:hover { opacity: 0.9; }
+
+/* ============================================================
+   SETTINGS MODAL
+   ============================================================ */
+.settings-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.settings-item {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-muted);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: 0.2s;
+    width: 100%;
+    text-align: left;
+    font-family: 'Inter', sans-serif;
+}
+.settings-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+.settings-item .icon {
+    color: var(--text-muted);
+    font-size: 22px;
+    flex-shrink: 0;
+}
+.settings-item .content { flex: 1; }
+.settings-item .title {
+    color: var(--text-main);
+    font-weight: 500;
+    font-size: 14px;
+}
+.settings-item .desc {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+.settings-item .arrow {
+    color: var(--text-muted);
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+/* ============================================================
+   QUOTA BOX
+   ============================================================ */
+.axelr-quota-box {
+    display: flex !important;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 0;
+}
+.axelr-quota-box .quota-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+.axelr-quota-box .quota-label {
+    color: #888;
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.5px;
+}
+.axelr-quota-box .quota-count {
+    color: var(--text-main);
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+}
+.axelr-quota-box .quota-track {
+    width: 100%;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+    overflow: hidden;
+}
+.axelr-quota-box .quota-fill {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-glow), #FFF);
+    transition: width 0.4s ease;
+}
+
+/* ============================================================
+   TOGGLE SWITCH
+   ============================================================ */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 24px;
+    flex-shrink: 0;
+}
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 24px;
+}
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+input:checked + .slider { background-color: var(--accent-glow); }
+input:checked + .slider:before { transform: translateX(16px); }
+
+/* ============================================================
+   ADMIN METRICS
+   ============================================================ */
+#admin-metrics-container .profile-stat-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-muted);
+    font-size: 13px;
+}
+#admin-metrics-container .profile-stat-row .profile-stat-label {
+    min-width: 120px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+#admin-metrics-container .profile-stat-row .profile-stat-value {
+    font-weight: 500;
+    color: var(--text-main);
+    word-break: break-word;
+    text-align: right;
+}
+
+/* ============================================================
+   TIER MATRIX — modern system (billing toggle + sub-tier + features)
+   ============================================================ */
+.tier-billing-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-muted);
+    border-radius: 30px;
+    padding: 3px;
+    width: fit-content;
+    margin: 0 auto 14px auto;
+    flex-wrap: wrap;
+}
+.billing-period-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Inter', sans-serif;
+}
+.billing-period-btn.active {
+    background: var(--bg-card);
+    color: var(--text-main);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+.discount-pill {
+    background: rgba(244, 63, 94, 0.15);
+    color: #fb7185;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 10px;
+    letter-spacing: 0.3px;
+}
+
+.tier-card-modern:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+.tier-card-modern.popular {
+    border-color: rgba(0, 242, 254, 0.35);
+    background: rgba(14, 20, 32, 0.75);
+    box-shadow: 0 8px 24px rgba(0, 242, 254, 0.08);
+}
+.tier-badge-status {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-muted);
+}
+.tier-badge-status.highlight {
+    background: rgba(0, 242, 254, 0.15);
+    color: var(--accent-glow);
+    border: 1px solid rgba(0, 242, 254, 0.3);
+}
+.tier-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0 0 2px 0;
+}
+.tier-summary {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.35;
+    min-height: 28px;
+    margin: 0 0 8px 0;
+}
+.tier-price-box {
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+    margin-bottom: 8px;
+}
+.tier-currency {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+.tier-amount {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--text-main);
+    font-family: 'JetBrains Mono', monospace;
+    line-height: 1;
+}
+.tier-term {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-left: 3px;
+}
+.tier-limits-box {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 10px;
+}
+.limit-chip {
+    font-size: 9px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-muted);
+    color: var(--text-main);
+    font-family: 'JetBrains Mono', monospace;
+}
+.limit-chip.highlight {
+    border-color: rgba(0, 242, 254, 0.3);
+    color: var(--accent-glow);
+}
+
+/* Sub-tier radio selector */
+.subtier-selector-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 10px;
+}
+.subtier-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-muted);
+    border-radius: 6px;
+    padding: 5px 8px;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+.subtier-option:has(input:checked) {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: var(--accent-glow);
+}
+.subtier-option input[type="radio"] {
+    accent-color: var(--accent-glow);
+    cursor: pointer;
+    margin: 0;
+    transform: scale(0.85);
+}
+.subtier-content { flex: 1; min-width: 0; }
+.subtier-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--text-main);
+}
+.subtier-desc {
+    font-size: 8.5px;
+    color: var(--text-muted);
+    display: block;
+    margin-top: 1px;
+}
+
+/* Models section */
+.tier-models-section {
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 8px;
+    padding: 7px 8px;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.model-section-title {
+    font-size: 8px;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 0.4px;
+    margin-bottom: 1px;
+}
+.workspace-model-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 9.5px;
+}
+.ws-tag {
+    font-size: 7.5px;
+    font-weight: 700;
+    padding: 1px 3px;
+    border-radius: 3px;
+    letter-spacing: 0.3px;
+}
+.ws-tag.data    { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+.ws-tag.design  { background: rgba(244, 63, 94, 0.2);  color: #f43f5e; }
+.ws-tag.general { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+.provider-pill {
+    color: var(--text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+}
+
+/* Infra pill — single canonical */
+.infra-pill {
+    display: inline-block;
+    margin-left: 4px;
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: rgba(0, 242, 254, 0.10);
+    color: var(--accent-glow);
+    font-size: 8.5px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    border: 1px solid rgba(0, 242, 254, 0.18);
+    white-space: nowrap;
+    vertical-align: middle;
+}
+body.workspace-design .infra-pill {
+    background: rgba(239, 68, 68, 0.10);
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.22);
+}
+body.workspace-data .infra-pill {
+    background: rgba(16, 185, 129, 0.10);
+    color: #10b981;
+    border-color: rgba(16, 185, 129, 0.22);
+}
+
+/* Features list */
+.tier-feature-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 12px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 10.5px;
+    color: var(--text-main);
+    flex: 1;
+}
+.tier-feature-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    line-height: 1.3;
+}
+.tier-feature-list li.disabled {
+    color: var(--text-muted);
+    opacity: 0.4;
+}
+.tier-feature-list .check {
+    color: var(--accent-secondary);
+    font-size: 13px;
+    flex-shrink: 0;
+}
+.tier-feature-list .cross {
+    color: var(--text-muted);
+    font-size: 13px;
+    flex-shrink: 0;
+}
+
+/* CTA buttons */
+.tier-cta-btn {
+    width: 100%;
+    padding: 9px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    font-family: 'Inter', sans-serif;
+    margin-top: auto;
+}
+.tier-cta-btn:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+.tier-cta-btn.current {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-muted);
+    cursor: not-allowed;
+    border: 1px solid var(--border-muted);
+}
+.tier-cta-btn.pro-btn {
+    background: var(--accent-glow);
+    color: #000;
+    box-shadow: 0 2px 10px rgba(0, 242, 254, 0.25);
+}
+.tier-cta-btn.business-btn {
+    background: #8b5cf6;
+    color: #fff;
+    box-shadow: 0 2px 10px rgba(139, 92, 246, 0.25);
+}
+.tier-cta-btn.enterprise-btn {
+    background: transparent;
+    border: 1px solid var(--border-muted);
+    color: var(--text-main);
+}
+.tier-modal-footer {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-muted);
+    padding-top: 8px;
+    border-top: 1px solid var(--border-muted);
+}
+
+/* ============================================================
+   TIER MATRIX — fluid container + grid
+   ============================================================ */
+.tier-modal-card {
+    width: min(1200px, 96vw) !important;
+    max-height: 92vh !important;
+    padding: clamp(12px, 2vw, 22px) !important;
+    border-radius: clamp(14px, 2vw, 22px) !important;
+}
+.tier-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(8px, 1.2vw, 14px);
+    margin-bottom: 14px;
+    width: 100%;
+}
+.tier-card-modern {
+    min-width: 0;
+    width: 100%;
+    padding: clamp(12px, 1.5vw, 18px) clamp(10px, 1.2vw, 16px);
+    border-radius: clamp(12px, 1.5vw, 16px);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.tier-name       { font-size: clamp(13px, 1.4vw, 16px) !important; }
+.tier-summary    { font-size: clamp(10px, 1.05vw, 11.5px) !important; min-height: 0; }
+.tier-amount     { font-size: clamp(20px, 2.4vw, 28px) !important; }
+.tier-currency,
+.tier-term       { font-size: clamp(10px, 1.1vw, 12px) !important; }
+.limit-chip      { font-size: clamp(8.5px, 0.9vw, 10px) !important; padding: 2px 6px; }
+.model-section-title { font-size: clamp(8px, 0.85vw, 9px) !important; }
+.workspace-model-row { font-size: clamp(9px, 0.95vw, 10.5px) !important; }
+.provider-pill   { font-size: clamp(9px, 0.95vw, 10.5px) !important; }
+.infra-pill      { font-size: clamp(7.5px, 0.8vw, 8.5px) !important; }
+.tier-feature-list li {
+    font-size: clamp(10px, 1.05vw, 11.5px) !important;
+    gap: 5px;
+}
+.tier-feature-list .check,
+.tier-feature-list .cross { font-size: 12px !important; }
+.subtier-row  { font-size: clamp(9.5px, 1vw, 11px) !important; }
+.subtier-desc { font-size: clamp(8px, 0.85vw, 9px) !important; }
+.tier-cta-btn {
+    padding: clamp(8px, 1vw, 11px) !important;
+    font-size: clamp(11px, 1.15vw, 13px) !important;
+    border-radius: 10px !important;
+}
+.billing-period-btn { padding: clamp(5px,0.7vw,8px) clamp(10px,1.5vw,18px); font-size: clamp(11px,1.1vw,13px); }
+
+.tier-modal-card * { min-width: 0; max-width: 100%; box-sizing: border-box; }
+.tier-modal-card pre,
+.tier-modal-card code { white-space: normal; word-break: break-word; }
+
+/* ============================================================
+   TIER MATRIX — responsive (kept inline, single source)
+   ============================================================ */
+@media (max-width: 1200px) {
+    .tier-grid { gap: 10px; }
+}
+@media (max-width: 1024px) {
+    .tier-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .tier-card-modern { padding: 16px 14px; }
+    .tier-modal-card { width: 96vw !important; }
+}
+@media (max-width: 768px) {
+    .tier-grid { gap: 10px; }
+    .tier-card-modern { padding: 14px 12px; }
+    .tier-modal-card { padding: 12px !important; }
+    .tier-feature-list { gap: 5px; }
+    .tier-card {
+        width: 100% !important;
+        margin: 12px 0 !important;
+        padding: 20px 16px !important;
+        min-width: unset !important;
+    }
+}
+@media (max-width: 600px) {
+    .tier-modal-card {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 100vh !important;
+        max-height: 100vh !important;
+        border-radius: 0 !important;
+        padding: 12px !important;
+    }
+    .tier-grid { grid-template-columns: 1fr; gap: 12px; }
+    .tier-card-modern { padding: 14px; }
+    .tier-amount { font-size: 26px !important; }
+    .tier-name { font-size: 15px !important; }
+    .subtier-option { padding: 7px 9px; }
+    .tier-billing-toggle { width: 100%; }
+    .billing-period-btn { flex: 1; justify-content: center; }
+}
+@media (max-width: 380px) {
+    .tier-card-modern { padding: 11px 10px; }
+    .tier-amount     { font-size: 22px !important; }
+    .limit-chip      { font-size: 8px !important; padding: 2px 5px; }
+    .tier-cta-btn    { font-size: 11px !important; padding: 8px !important; }
+    .subtier-desc    { display: none; }
+    .workspace-model-row { gap: 4px; }
+}
+
+/* ============================================================
+   DIFF VIEW
+   ============================================================ */
+.diff-add {
+    background: rgba(16,185,129,0.18);
+    color: #6ee7b7;
+    text-decoration: none;
+    border-radius: 3px;
+    padding: 1px 3px;
+}
+.diff-remove {
+    background: rgba(239,68,68,0.15);
+    color: #fca5a5;
+    text-decoration: line-through;
+    border-radius: 3px;
+    padding: 1px 3px;
+    opacity: 0.85;
+}
+/* ============================================================
+   ELITE: Native modal entry via @starting-style. The browser
+   animates from the starting state the first time the element
+   enters the top layer, without needing a class toggle dance.
+   Supported in Chrome 117+, Safari 17.5+, Firefox 129+.
+   Silently degrades — the .modal-overlay opacity transition
+   still handles the fallback path.
+   ============================================================ */
+@starting-style {
+    .modal-overlay.active .modal-card {
+        transform: translateY(20px) scale(0.98);
+        opacity: 0;
+    }
+    .modal-overlay.active {
+        opacity: 0;
+    }
+}
+/* ============================================================
+   ELITE MODALS — spring entry, gradient borders, cinematic backdrop
+   ============================================================ */
+@layer elite {
+
+/* Backdrop — radial haze + saturation drop behind the card */
+.modal-overlay {
+    background:
+        radial-gradient(ellipse 80% 60% at 50% -10%,
+            color-mix(in srgb, var(--accent-glow) 12%, transparent) 0%,
+            transparent 60%),
+        rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    transition: opacity var(--duration-flow) var(--ease-smooth);
+}
+
+/* Modal card — spring entry replaces linear slide */
+.modal-overlay.active .modal-card {
+    animation: modalSpring 0.42s var(--ease-overshoot) both;
+    box-shadow:
+        0 1px 0 rgba(255,255,255,0.06) inset,
+        var(--shadow-floating),
+        0 0 120px -30px color-mix(in srgb, var(--accent-glow) 30%, transparent);
+}
+@keyframes modalSpring {
+    from { opacity: 0; transform: translateY(24px) scale(0.94); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Gradient border on premium modal surfaces (tier matrix) */
+.tier-modal-card {
+    position: relative;
+    isolation: isolate;
+}
+.tier-modal-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    background: linear-gradient(135deg,
+        color-mix(in srgb, var(--accent-glow) 40%, transparent) 0%,
+        transparent 30%,
+        transparent 70%,
+        color-mix(in srgb, var(--accent-pro) 30%, transparent) 100%);
+    -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    pointer-events: none;
+    z-index: 3;
+}
+
+/* Popular tier card — rotating conic border. Cinematic, restrained. */
+.tier-card-modern.popular {
+    position: relative;
+    isolation: isolate;
+    box-shadow:
+        var(--shadow-surface-3),
+        0 0 60px -20px color-mix(in srgb, var(--accent-glow) 40%, transparent);
+}
+.tier-card-modern.popular::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    padding: 1px;
+    border-radius: inherit;
+    background: conic-gradient(from var(--gradient-angle),
+        transparent 0deg,
+        color-mix(in srgb, var(--accent-glow) 60%, transparent) 60deg,
+        transparent 140deg,
+        color-mix(in srgb, var(--accent-pro) 50%, transparent) 240deg,
+        transparent 360deg);
+    -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    pointer-events: none;
+    animation: rotateGradient 6s linear infinite;
+    z-index: 3;
+}
+
+/* Modal submit — spring press */
+.modal-submit-btn {
+    transition:
+        background var(--duration-quick) var(--ease-smooth),
+        color var(--duration-quick) var(--ease-smooth),
+        transform var(--duration-quick) var(--ease-elastic),
+        box-shadow var(--duration-quick) var(--ease-smooth);
+}
+.modal-submit-btn:active:not(:disabled) { transform: scale(0.97); }
+
+/* Settings rows — hover slide */
+.settings-item {
+    transition:
+        background var(--duration-quick) var(--ease-smooth),
+        border-color var(--duration-quick) var(--ease-smooth),
+        transform var(--duration-quick) var(--ease-elastic);
+}
+.settings-item:hover { transform: translateX(2px); }
+
+/* Toggle switch — spring knob, glow on active */
+.slider:before {
+    transition:
+        transform var(--duration-swift) var(--ease-overshoot),
+        background var(--duration-quick) var(--ease-smooth);
+}
+input:checked + .slider {
+    box-shadow: 0 0 16px -2px color-mix(in srgb, var(--accent-glow) 60%, transparent);
+}
+
+/* Diff tokens — glow for added lines */
+.diff-add {
+    box-shadow: 0 0 0 1px rgba(16,185,129,0.20) inset,
+                0 0 20px -8px rgba(16,185,129,0.40);
+}
+
+} /* end @layer elite */

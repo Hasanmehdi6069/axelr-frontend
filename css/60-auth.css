@@ -1,0 +1,385 @@
+/* Give the auth-wall overlay spinner an explicit clean target */
+#google-loading-overlay .material-symbols-rounded {
+    animation: spin 0.85s linear infinite !important;
+    display: inline-block;
+    will-change: transform;
+    transform-origin: 50% 50%;
+}
+
+/* ============================================================
+   GLASS PRIMITIVES
+   ============================================================ */
+.glass-card {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+.glass-3d {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.08);
+}
+
+/* ============================================================
+   GUEST BANNER
+   ============================================================ */
+#guest-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: var(--z-floating);
+    background: rgba(234, 179, 8, 0.10);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(234, 179, 8, 0.2);
+    padding: 8px 20px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-muted);
+    display: none;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    transition: opacity 0.3s ease;
+}
+#guest-banner strong { color: #fde047; }
+
+/* ============================================================
+   AUTH WALL — MASTER (single canonical, top-tier production)
+   ============================================================ */
+#auth-wall {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-auth-wall);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background:
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(0, 242, 254, 0.10), transparent 60%),
+        radial-gradient(ellipse 60% 50% at 50% 110%, rgba(139, 92, 246, 0.08), transparent 60%),
+        var(--bg-primary);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+}
+#auth-wall::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+    background-size: 42px 42px;
+    mask-image: radial-gradient(ellipse at center, #000 40%, transparent 75%);
+    -webkit-mask-image: radial-gradient(ellipse at center, #000 40%, transparent 75%);
+    pointer-events: none;
+}
+
+/* ============================================================
+   AUTH CARD — MASTER
+   ============================================================ */
+.auth-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+.auth-card {
+    position: relative;
+    width: 100%;
+    max-width: 420px;
+    padding: 40px 32px 32px;
+    background: color-mix(in srgb, var(--bg-elevated) 92%, transparent);
+    border: 1px solid var(--border-glass);
+    border-radius: 24px;
+    text-align: center;
+    box-shadow:
+        0 1px 0 0 rgba(255, 255, 255, 0.06) inset,
+        0 30px 80px -20px rgba(0, 0, 0, 0.75),
+        0 0 100px -30px var(--accent-glow);
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    overflow: hidden;
+    transition: transform var(--transition-base), opacity var(--transition-base);
+}
+.auth-card::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    padding: 1px;
+    border-radius: 24px;
+    background: linear-gradient(135deg,
+        color-mix(in srgb, var(--accent-glow) 45%, transparent),
+        transparent 40%,
+        transparent 60%,
+        color-mix(in srgb, var(--accent-pro) 35%, transparent));
+    -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    pointer-events: none;
+}
+.auth-card:hover { transform: scale(1.02); }
+
+/* ============================================================
+   AUTH BRAND + TAGLINE
+   ============================================================ */
+.auth-logo {
+    font-size: 28px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+.auth-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 6px;
+}
+.auth-brand span {
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    background: linear-gradient(180deg, var(--text-main) 0%, color-mix(in srgb, var(--text-main) 70%, var(--accent-glow)) 100%);
+    -webkit-background-clip: text;
+            background-clip: text;
+    color: transparent;
+    font-family: 'Inter', sans-serif;
+}
+.auth-tagline {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-bottom: 26px;
+    letter-spacing: -0.005em;
+}
+.auth-sub {
+    color: var(--text-dim);
+    font-size: 13px;
+    line-height: 1.5;
+    margin-bottom: 24px;
+}
+
+/* ============================================================
+   AUTH DIVIDER
+   ============================================================ */
+.auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0;
+    color: var(--text-dim);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+}
+.auth-divider::before,
+.auth-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-muted);
+}
+
+/* ============================================================
+   AUTH PROVIDERS
+   ============================================================ */
+.auth-providers {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 4px;
+}
+.auth-provider-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 10px;
+    border-radius: 12px;
+    border: 1px solid var(--border-muted);
+    background: rgba(255, 255, 255, 0.02);
+    color: var(--text-main);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+    font-family: 'Inter', sans-serif;
+}
+.auth-provider-btn:hover {
+    transform: translateY(-1px);
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+}
+.auth-provider-btn:active { transform: scale(0.97); }
+
+/* Provider-specific ring colors */
+.auth-provider-btn.google  { box-shadow: 0 0 0 1px rgba(66, 133, 244, 0.20) inset; }
+.auth-provider-btn.github  { box-shadow: 0 0 0 1px rgba(88, 101, 242, 0.20) inset; }
+.auth-provider-btn.email   { box-shadow: 0 0 0 1px rgba(104, 185, 124, 0.20) inset; }
+.auth-provider-btn.passkey { box-shadow: 0 0 0 1px rgba(227, 174, 17, 0.20) inset; }
+
+.auth-provider-btn.google:hover {
+    background: rgba(66, 133, 244, 0.15);
+    border-color: rgba(66, 133, 244, 0.5);
+    box-shadow: 0 8px 25px rgba(66, 133, 244, 0.2);
+}
+.auth-provider-btn.github:hover {
+    background: rgba(88, 101, 242, 0.15);
+    border-color: rgba(88, 101, 242, 0.5);
+    box-shadow: 0 8px 25px rgba(88, 101, 242, 0.2);
+}
+.auth-provider-btn.email:hover {
+    background: rgba(104, 185, 124, 0.15);
+    border-color: rgba(104, 185, 124, 0.5);
+    box-shadow: 0 8px 25px rgba(104, 185, 124, 0.2);
+}
+.auth-provider-btn.passkey:hover {
+    background: rgba(227, 174, 17, 0.15);
+    border-color: rgba(227, 174, 17, 0.5);
+    box-shadow: 0 8px 25px rgba(227, 174, 17, 0.2);
+}
+
+/* ============================================================
+   AUTH GUEST BUTTON
+   ============================================================ */
+.auth-guest-btn {
+    width: 100%;
+    margin-top: 16px;
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border-muted);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-muted);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    font-family: 'Inter', sans-serif;
+    backdrop-filter: blur(4px);
+}
+.auth-guest-btn:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: var(--accent-glow);
+    color: var(--text-main);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 242, 254, 0.1);
+}
+.auth-guest-btn:active { transform: scale(0.97); }
+
+/* ============================================================
+   AUTH TERMS
+   ============================================================ */
+.auth-terms {
+    margin-top: 22px;
+    font-size: 11.5px;
+    color: var(--text-dim);
+    line-height: 1.5;
+    text-align: center;
+}
+.auth-terms a {
+    color: var(--accent-glow);
+    text-decoration: none;
+}
+.auth-terms a:hover { text-decoration: underline; }
+/* ============================================================
+   ELITE AUTH — aurora backdrop, button shine, brand bloom
+   ============================================================ */
+@layer elite {
+
+/* Auth card — aurora background layer beneath content.
+   A conic gradient rotates slowly, giving the glass a living quality. */
+.auth-card {
+    isolation: isolate;
+    box-shadow:
+        0 1px 0 0 rgba(255,255,255,0.08) inset,
+        0 40px 100px -20px rgba(0,0,0,0.85),
+        0 0 140px -30px color-mix(in srgb, var(--accent-glow) 45%, transparent);
+}
+.auth-card::after {
+    content: '';
+    position: absolute;
+    inset: -60%;
+    background: conic-gradient(from 0deg,
+        transparent 0deg,
+        color-mix(in srgb, var(--accent-glow) 14%, transparent) 60deg,
+        transparent 140deg,
+        color-mix(in srgb, var(--accent-pro) 12%, transparent) 240deg,
+        transparent 360deg);
+    animation: auroraRotate 24s linear infinite;
+    opacity: 0.55;
+    pointer-events: none;
+    z-index: -1;
+    filter: blur(40px);
+}
+@keyframes auroraRotate {
+    to { transform: rotate(360deg); }
+}
+
+/* Auth brand — subtle glow under the wordmark */
+.auth-brand span {
+    filter: drop-shadow(0 0 24px color-mix(in srgb, var(--accent-glow) 30%, transparent));
+}
+
+/* Provider buttons — press physics + shine sweep on hover */
+.auth-provider-btn {
+    position: relative;
+    overflow: hidden;
+    transition:
+        background var(--duration-swift) var(--ease-smooth),
+        border-color var(--duration-swift) var(--ease-smooth),
+        transform var(--duration-quick) var(--ease-elastic),
+        box-shadow var(--duration-swift) var(--ease-smooth);
+}
+.auth-provider-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg,
+        transparent 0%,
+        rgba(255,255,255,0.15) 50%,
+        transparent 100%);
+    transform: translateX(-100%);
+    transition: transform var(--duration-glacial) var(--ease-smooth);
+    pointer-events: none;
+}
+.auth-provider-btn:hover::after { transform: translateX(100%); }
+.auth-provider-btn:active { transform: scale(0.97); }
+.auth-provider-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px -8px rgba(0,0,0,0.5);
+}
+
+/* Guest button — tactile, distinguished */
+.auth-guest-btn {
+    transition:
+        background var(--duration-swift) var(--ease-smooth),
+        color var(--duration-swift) var(--ease-smooth),
+        border-color var(--duration-swift) var(--ease-smooth),
+        transform var(--duration-quick) var(--ease-elastic),
+        box-shadow var(--duration-swift) var(--ease-smooth);
+}
+.auth-guest-btn:hover {
+    transform: translateY(-2px);
+    box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--accent-glow) 30%, transparent),
+        0 12px 32px -8px color-mix(in srgb, var(--accent-glow) 25%, transparent);
+}
+
+/* Guest banner — soft pulse for ambient presence */
+#guest-banner {
+    box-shadow:
+        0 4px 20px rgba(0,0,0,0.30),
+        0 0 40px -12px rgba(234,179,8,0.35);
+}
+
+} /* end @layer elite */
