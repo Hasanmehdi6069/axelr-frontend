@@ -2069,42 +2069,12 @@ body.light-theme .nexus-bubble a:hover {
 }
 
 
-/* ============================================================
-   3. AUTH CARD — buttery lift, zero jitter
-   ============================================================ */
-
-.auth-card {
-    transition:
-        transform     0.55s cubic-bezier(0.22, 1, 0.36, 1),
-        box-shadow    0.55s cubic-bezier(0.22, 1, 0.36, 1),
-        border-color  0.55s cubic-bezier(0.22, 1, 0.36, 1),
-        opacity       0.4s  ease !important;
-    will-change: transform, box-shadow;
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-    transform: translateZ(0);
-}
-
-.auth-card:hover {
-    transform: translateY(-3px) scale(1.006) !important;
-    box-shadow:
-        0 1px 0 0 rgba(255, 255, 255, 0.08) inset,
-        0 44px 100px -25px rgba(0, 0, 0, 0.85),
-        0 0 160px -30px color-mix(in srgb, var(--accent-glow) 55%, transparent) !important;
-}
-
-/* Leave animation is slower than enter — no rubber-band snap */
-.auth-card:not(:hover) {
-    transition:
-        transform    0.6s cubic-bezier(0.22, 1, 0.36, 1),
-        box-shadow   0.6s cubic-bezier(0.22, 1, 0.36, 1),
-        border-color 0.4s ease !important;
-}
 
 
 /* ============================================================
    4. AUTH — demo link + guest button choreography
    ============================================================ */
+
 
 /* The inline demo link — low-key tertiary action */
 #auth-wall .auth-terms > a[onclick*="continueAsGuest"] {
@@ -2165,31 +2135,6 @@ body.light-theme .nexus-bubble a:hover {
         transform    0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
         box-shadow   0.4s cubic-bezier(0.22, 1, 0.36, 1) !important;
     will-change: transform, box-shadow;
-}
-
-/* Shine sweep — crosses the button once per hover, corners respected */
-#auth-wall .auth-guest-btn::before {
-    content: '' !important;
-    position: absolute !important;
-    inset: 0 !important;
-    border-radius: inherit !important;
-    background: linear-gradient(
-        115deg,
-        transparent 0%,
-        transparent 35%,
-        rgba(0, 242, 254, 0.10) 45%,
-        rgba(0, 242, 254, 0.22) 50%,
-        rgba(0, 242, 254, 0.10) 55%,
-        transparent 65%,
-        transparent 100%
-    ) !important;
-    transform: translateX(-110%) !important;
-    transition: transform 0.75s cubic-bezier(0.22, 1, 0.36, 1) !important;
-    pointer-events: none !important;
-    z-index: -1 !important;
-}
-#auth-wall .auth-guest-btn:hover::before {
-    transform: translateX(110%) !important;
 }
 
 #auth-wall .auth-guest-btn:hover {
@@ -2360,11 +2305,6 @@ body.light-theme #auth-wall .auth-guest-btn::before {
     will-change: letter-spacing, color;
 }
 
-#sidebar-trigger-area:hover .trigger-text {
-    color: var(--text-main) !important;
-    letter-spacing: 5.5px !important;
-    text-shadow: 0 0 14px rgba(0, 242, 254, 0.45) !important;
-}
 
 /* When the sidebar is open, vanish silently */
 body:has(#sidebar-container-node.open) #sidebar-trigger-area {
@@ -2397,39 +2337,6 @@ body:has(#sidebar-container-node.open) #sidebar-trigger-area {
 
 #sidebar-container-node .brand-logo:active {
     transform: translateY(0) scale(0.99);
-}
-
-
-/* ============================================================
-   3. AUTH CARD — smooth, elastic lift (both ways)
-   ============================================================ */
-
-.auth-card {
-    transition:
-        transform    0.55s cubic-bezier(0.22, 1, 0.36, 1),
-        box-shadow   0.6s  cubic-bezier(0.22, 1, 0.36, 1),
-        border-color 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-        opacity      0.4s  ease !important;
-    will-change: transform, box-shadow;
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-    transform: translateZ(0);
-}
-
-.auth-card:hover {
-    transform: translateY(-6px) scale(1.012) !important;
-    box-shadow:
-        0 1px 0 0 rgba(255, 255, 255, 0.09) inset,
-        0 50px 120px -25px rgba(0, 0, 0, 0.9),
-        0 0 180px -30px color-mix(in srgb, var(--accent-glow) 60%, transparent) !important;
-}
-
-/* Leave curve is slightly slower — feels softer, less rubber-bandy */
-.auth-card:not(:hover) {
-    transition:
-        transform    0.7s cubic-bezier(0.22, 1, 0.36, 1),
-        box-shadow   0.7s cubic-bezier(0.22, 1, 0.36, 1),
-        border-color 0.5s ease !important;
 }
 
 body.light-theme .auth-card:hover {
@@ -2869,11 +2776,652 @@ body.light-theme #auth-wall .auth-guest-btn:hover {
     }
     #auth-wall .auth-guest-btn:hover,
     .auth-card:hover,
-    #sidebar-trigger-area:hover .trigger-text,
     .workspace-card:hover,
     .send-btn:hover:not(:disabled),
     #model-selector:hover,
     #sidebar-container-node .brand-logo:hover {
         transform: none !important;
     }
+}
+/* ════════════════════════════════════════════════════════════
+   HISTORY ITEM + OPTIONS BUTTON — always-visible, touch-safe
+   ════════════════════════════════════════════════════════════ */
+.history-item {
+    position: relative;
+    padding: 12px 46px 12px 14px;   /* reserve trailing space for the button */
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+}
+.history-info { min-width: 0; flex: 1; }
+.history-title { min-width: 0; }
+
+.history-options-btn {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    padding: 0;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid transparent;
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0.85;
+    transition:
+        opacity   0.2s var(--ease-smooth),
+        background 0.2s var(--ease-smooth),
+        border-color 0.2s var(--ease-smooth),
+        color 0.2s var(--ease-smooth),
+        transform 0.2s var(--ease-elastic);
+    z-index: 2;
+}
+.history-options-btn .material-symbols-rounded {
+    font-size: 18px;
+    line-height: 1;
+    pointer-events: none;
+}
+.history-item:hover .history-options-btn,
+.history-item:focus-within .history-options-btn {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--border-muted);
+    color: var(--text-main);
+}
+.history-options-btn:hover {
+    background: rgba(0, 242, 254, 0.14);
+    border-color: rgba(0, 242, 254, 0.40);
+    color: var(--accent-glow);
+    transform: translateY(-50%) scale(1.08);
+    box-shadow: 0 0 20px -6px color-mix(in srgb, var(--accent-glow) 55%, transparent);
+}
+.history-options-btn:active { transform: translateY(-50%) scale(0.92); }
+.history-options-btn:focus-visible {
+    outline: none;
+    box-shadow:
+        0 0 0 2px var(--bg-deep),
+        0 0 0 4px color-mix(in srgb, var(--accent-glow) 70%, transparent);
+}
+
+/* Touch devices — always fully visible, larger tap target */
+@media (hover: none), (max-width: 768px) {
+    .history-options-btn {
+        opacity: 1;
+        background: rgba(255, 255, 255, 0.06);
+        border-color: var(--border-muted);
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+    }
+    .history-item { padding-right: 52px; }
+}
+
+/* Light theme parity */
+body.light-theme .history-options-btn {
+    background: rgba(15, 23, 42, 0.04);
+    color: #64748b;
+}
+body.light-theme .history-item:hover .history-options-btn {
+    background: rgba(15, 23, 42, 0.06);
+    color: #0f172a;
+    border-color: rgba(15, 23, 42, 0.10);
+}
+/* ════════════════════════════════════════════════════════════
+   PLUS / FEATURES MENU — always-visible, fully responsive
+   ════════════════════════════════════════════════════════════ */
+.plus-menu-btn {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid var(--border-muted) !important;
+    color: var(--text-main) !important;
+    transition:
+        background 0.2s var(--ease-smooth),
+        border-color 0.2s var(--ease-smooth),
+        color 0.2s var(--ease-smooth),
+        transform 0.25s var(--ease-elastic) !important;
+}
+.plus-menu-btn:hover {
+    background: rgba(0, 242, 254, 0.10) !important;
+    border-color: rgba(0, 242, 254, 0.35) !important;
+    color: var(--accent-glow) !important;
+}
+.plus-menu-btn:active { transform: scale(0.92); }
+
+.features-dropdown-wrapper:has(.features-menu.open) .plus-menu-btn {
+    background: rgba(0, 242, 254, 0.15) !important;
+    border-color: rgba(0, 242, 254, 0.45) !important;
+    color: var(--accent-glow) !important;
+    transform: rotate(45deg);
+}
+
+/* Menu — bounded to viewport, never overflows */
+.features-menu {
+    position: absolute !important;
+    bottom: calc(100% + 12px) !important;
+    left: 0 !important;
+    right: auto !important;
+    width: max-content;
+    min-width: 240px;
+    max-width: min(320px, calc(100vw - 24px));
+    max-height: min(420px, 60vh);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding: 6px;
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.05) inset,
+        0 32px 80px -20px rgba(0, 0, 0, 0.85),
+        0 0 60px -20px color-mix(in srgb, var(--accent-glow) 25%, transparent);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    z-index: var(--z-floating);
+    display: none;
+    flex-direction: column;
+    gap: 2px;
+    transform-origin: bottom left;
+}
+.features-menu.open { display: flex !important; }
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    min-height: 42px;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    color: var(--text-main);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s var(--ease-smooth), color 0.15s;
+    text-align: left;
+    width: 100%;
+}
+.feature-item:hover,
+.feature-item:active {
+    background: rgba(0, 242, 254, 0.10);
+    color: var(--text-main);
+}
+.feature-item .material-symbols-rounded {
+    font-size: 18px;
+    color: var(--accent-glow);
+    flex-shrink: 0;
+}
+
+/* Small phones — drop the min-width entirely */
+@media (max-width: 480px) {
+    .features-menu {
+        left: 0 !important;
+        right: 0 !important;
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: calc(100vw - 20px) !important;
+        bottom: calc(100% + 10px) !important;
+        max-height: 55vh;
+    }
+    .feature-item { padding: 12px 14px; min-height: 46px; }
+}
+@media (max-width: 360px) {
+    .features-menu { max-width: calc(100vw - 14px) !important; }
+}
+
+/* Light theme */
+body.light-theme .plus-menu-btn {
+    background: rgba(15, 23, 42, 0.04) !important;
+    border-color: rgba(15, 23, 42, 0.10) !important;
+    color: #334155 !important;
+}
+body.light-theme .plus-menu-btn:hover {
+    background: rgba(14, 165, 233, 0.10) !important;
+    border-color: rgba(14, 165, 233, 0.40) !important;
+    color: #0369a1 !important;
+}
+body.light-theme .features-menu {
+    background: #ffffff !important;
+    border-color: rgba(15, 23, 42, 0.10) !important;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.14) !important;
+}
+body.light-theme .feature-item { color: #0f172a; }
+body.light-theme .feature-item:hover { background: rgba(14, 165, 233, 0.08); }
+
+/* ════════════════════════════════════════════════════════════
+   AUTH CARD — unified hover + persistent aurora
+   The aurora (::after) lives in 60-auth.css @layer elite and
+   keeps running. This block only defines the transform lift.
+   ════════════════════════════════════════════════════════════ */
+.auth-card {
+    transition:
+        transform    0.55s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow   0.6s  cubic-bezier(0.22, 1, 0.36, 1),
+        border-color 0.5s  cubic-bezier(0.22, 1, 0.36, 1),
+        opacity      0.4s  ease !important;
+    will-change: transform, box-shadow;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transform: translateZ(0);
+}
+
+/* Deliberate, visible lift — stronger than before so it actually reads */
+.auth-card:hover {
+    transform: translateY(-8px) scale(1.018) !important;
+    box-shadow:
+        0 1px 0 0 rgba(255, 255, 255, 0.12) inset,
+        0 55px 130px -25px rgba(0, 0, 0, 0.92),
+        0 0 200px -30px color-mix(in srgb, var(--accent-glow) 70%, transparent) !important;
+}
+
+/* Leave curve — slower than enter, feels physical */
+.auth-card:not(:hover) {
+    transition:
+        transform    0.75s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow   0.75s cubic-bezier(0.22, 1, 0.36, 1),
+        border-color 0.5s  ease !important;
+}
+
+/* Auroras dial down on light theme so the lift reads clean */
+body.light-theme .auth-card:hover {
+    box-shadow:
+        0 1px 0 0 rgba(255, 255, 255, 0.95) inset,
+        0 55px 130px -25px rgba(15, 23, 42, 0.22),
+        0 0 140px -30px rgba(14, 165, 233, 0.40) !important;
+}
+/* ════════════════════════════════════════════════════════════
+   SIDEBAR TRIGGER — pointer-only hover, no touch flip
+   ════════════════════════════════════════════════════════════ */
+
+/* Default (touch-safe) state — text visible, no animation pending */
+#sidebar-trigger-area .trigger-text {
+    color: rgba(161, 181, 204, 0.55) !important;
+    letter-spacing: 4.5px !important;
+    text-shadow: none !important;
+    transition:
+        color          0.45s cubic-bezier(0.32, 0.72, 0, 1),
+        letter-spacing 0.6s  cubic-bezier(0.32, 0.72, 0, 1),
+        text-shadow    0.45s cubic-bezier(0.32, 0.72, 0, 1) !important;
+}
+
+/* Hover animation is only allowed on real pointer devices */
+@media (hover: hover) and (pointer: fine) {
+    #sidebar-trigger-area:hover .trigger-text {
+        color: var(--text-main) !important;
+        letter-spacing: 5.5px !important;
+        text-shadow: 0 0 14px rgba(0, 242, 254, 0.45) !important;
+    }
+}
+
+/* Touch devices — freeze letter-spacing, keep colour lift only via :active */
+@media (hover: none), (pointer: coarse) {
+    #sidebar-trigger-area:hover .trigger-text,
+    #sidebar-trigger-area:active .trigger-text {
+        letter-spacing: 4.5px !important;
+        text-shadow: none !important;
+        color: rgba(161, 181, 204, 0.55) !important;
+    }
+    /* Rewire "hover glow" to the anchor dots instead — no layout shift */
+    #sidebar-trigger-area:active::before,
+    #sidebar-trigger-area:active::after {
+        opacity: 1 !important;
+        box-shadow: 0 0 12px var(--accent-glow), 0 0 3px #ffffff !important;
+        transform: translateX(-50%) scale(1.4) !important;
+    }
+    #sidebar-trigger-area:active {
+        background: linear-gradient(
+            180deg,
+            rgba(0, 242, 254, 0.045) 0%,
+            rgba(0, 242, 254, 0.015) 50%,
+            rgba(0, 242, 254, 0.045) 100%
+        ) !important;
+        border-right-color: rgba(0, 242, 254, 0.22) !important;
+    }
+}
+
+/* Light theme trigger */
+body.light-theme #sidebar-trigger-area {
+    background: linear-gradient(180deg,
+        rgba(15, 23, 42, 0.02) 0%,
+        rgba(15, 23, 42, 0.01) 50%,
+        rgba(15, 23, 42, 0.02) 100%) !important;
+    border-right-color: rgba(15, 23, 42, 0.06) !important;
+}
+body.light-theme #sidebar-trigger-area .trigger-text {
+    color: rgba(71, 85, 105, 0.65) !important;
+}
+@media (hover: hover) and (pointer: fine) {
+    body.light-theme #sidebar-trigger-area:hover .trigger-text {
+        color: #0f172a !important;
+        text-shadow: 0 0 14px rgba(14, 165, 233, 0.35) !important;
+    }
+}
+/* ═══════════════════════════════════════════════════════════════════
+   AXELR — ELITE POLISH v6.0
+   • Full responsive sweep (320 → 1440px)
+   • Light-theme parity for surfaces that were missed
+   • Micro-detail refinements: chips, focus, sticky bars
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── 1. Command bar — file chips + staging on phones ─────────────── */
+#file-staging-container {
+    gap: 6px;
+    padding: 8px 2px;
+    max-height: 96px;
+}
+.file-chip {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+@media (max-width: 480px) {
+    #file-staging-container { max-height: 82px; }
+    .file-chip { font-size: 10.5px; padding: 3px 8px; }
+}
+
+body.light-theme #file-staging-container { border-bottom-color: rgba(15, 23, 42, 0.08); }
+body.light-theme .file-chip {
+    background: rgba(14, 165, 233, 0.08);
+    border-color: rgba(14, 165, 233, 0.22);
+    color: #0369a1;
+}
+
+/* ── 2. Model selector — long labels never overflow ───────────────── */
+#model-text-display {
+    max-width: clamp(60px, 22vw, 180px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+@media (max-width: 380px) {
+    #model-text-display { max-width: 68px; }
+}
+
+/* ── 3. Tabs / sidebar-tabs — larger touch target on small screens ─ */
+@media (max-width: 480px) {
+    .sidebar-tabs { margin: 0 12px 6px; }
+    .tab-btn {
+        padding: 8px 6px;
+        font-size: 11.5px;
+        min-height: 34px;
+    }
+}
+
+/* ── 4. Modals — soft-sheet on phones, no dead space ─────────────── */
+@media (max-width: 600px) {
+    .modal-card {
+        width: 100% !important;
+        max-width: 100% !important;
+        border-radius: 20px 20px 0 0 !important;
+        max-height: 92dvh !important;
+        margin: auto 0 0 0 !important;
+        padding: 20px 18px calc(env(safe-area-inset-bottom, 12px) + 18px) !important;
+        transform: translateY(0) !important;
+    }
+    .modal-overlay.active .modal-card {
+        animation: modalSpring 0.42s var(--ease-overshoot) both;
+    }
+}
+
+/* ── 5. Toasts — never overlap guest banner on phones ────────────── */
+@media (max-width: 600px) {
+    .toast-container {
+        top: auto !important;
+        bottom: calc(env(safe-area-inset-bottom, 12px) + 96px) !important;
+        padding: 0 12px;
+    }
+    .toast { white-space: normal; font-size: 12.5px; }
+}
+
+/* ── 6. Search overlay — full-bleed on phones ────────────────────── */
+@media (max-width: 480px) {
+    #search-overlay { padding: 56px 14px 20px; }
+    #search-overlay .search-input-box { font-size: 15px; padding: 12px 14px; }
+    #search-overlay .search-result-item { padding: 12px 14px; }
+}
+
+/* ── 7. Sidebar — light theme + tighter phone width ──────────────── */
+@media (max-width: 480px) {
+    :root { --sidebar-width: 88%; }
+    #sidebar-container-node { max-width: 360px; }
+}
+body.light-theme .sidebar-tabs {
+    background: #e5e7eb !important;
+    box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.05);
+}
+
+/* ── 8. Input frame — no overflow on ultra-narrow devices ────────── */
+.input-row { min-width: 0; }
+#prompt-input { min-width: 0; }
+
+/* ── 9. Guest banner — collapsible + light-theme safe ───────────── */
+body.light-theme #guest-banner {
+    background: rgba(234, 179, 8, 0.10);
+    border-left-color: #ca8a04;
+    color: #78350f;
+}
+body.light-theme #guest-banner strong { color: #854d0e; }
+
+@media (max-width: 480px) {
+    #guest-banner {
+        padding: 10px 14px;
+        font-size: 12px;
+        max-width: calc(100% - 24px);
+        border-radius: 10px;
+    }
+}
+
+/* ── 10. Thinking indicator — light theme + phone sizing ────────── */
+body.light-theme .elite-thinking-container { color: #334155; }
+body.light-theme .elite-thinking-label {
+    background: linear-gradient(90deg,
+        #475569 0%, #475569 30%, #0891b2 50%, #475569 70%, #475569 100%);
+    background-size: 200% 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+@media (max-width: 480px) {
+    .elite-thinking-container { padding: 0 4px; gap: 10px; }
+    .thinking-steps-list { padding-left: 26px; gap: 6px; }
+    .thinking-step { font-size: 12px; }
+}
+
+/* ── 11. Focus gems on light theme ───────────────────────────────── */
+body.light-theme :focus-visible {
+    box-shadow:
+        0 0 0 2px #ffffff,
+        0 0 0 4px color-mix(in srgb, var(--accent-glow) 85%, transparent),
+        0 0 20px -4px color-mix(in srgb, var(--accent-glow) 45%, transparent);
+}
+
+/* ── 12. Ultra-narrow (≤320px) — kill everything non-essential ──── */
+@media (max-width: 340px) {
+    .command-disclaimer { font-size: 10px; }
+    .hero-text h1 { font-size: 18px !important; }
+    .hero-text p  { font-size: 11px !important; }
+    .history-item { padding: 10px 44px 10px 12px; }
+    .history-options-btn { width: 30px; height: 30px; min-width: 30px; }
+    .ws-btn { padding: 4px 7px !important; font-size: 10.5px !important; }
+}
+
+/* ── 13. Landscape phones — reclaim vertical space ──────────────── */
+@media (max-height: 500px) and (orientation: landscape) {
+    .hero-text { margin-top: 0 !important; }
+    .hero-text .auth-logo svg { width: 32px !important; height: 32px !important; }
+    #viewport { padding: 60px 24px 120px 24px !important; }
+    .command-wrapper { max-height: 70vh; }
+}
+
+/* ── 14. Light theme — model dropdown, search overlay, tabs polish ─ */
+body.light-theme #model-dropdown-card {
+    background: #ffffff !important;
+    border-color: rgba(15, 23, 42, 0.10) !important;
+    box-shadow: 0 12px 36px rgba(15, 23, 42, 0.12) !important;
+}
+body.light-theme .model-option.active {
+    background: rgba(14, 165, 233, 0.08) !important;
+    border-color: rgba(14, 165, 233, 0.35) !important;
+}
+body.light-theme #model-selector .badge {
+    color: #0369a1 !important;
+    background: rgba(14, 165, 233, 0.12) !important;
+}
+body.light-theme #search-overlay {
+    background: rgba(248, 250, 252, 0.88);
+}
+body.light-theme #search-overlay .search-input-box {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.10);
+    color: #0f172a;
+}
+body.light-theme #search-overlay .search-result-item {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.08);
+}
+body.light-theme #search-overlay .search-result-item:hover {
+    background: #f8fafc;
+}
+
+/* ── 15. Elite touch feedback — active states that feel native ──── */
+@media (hover: none) {
+    .ws-btn:active,
+    .tab-btn:active,
+    .feature-item:active,
+    .model-option:active,
+    .settings-item:active,
+    .footer-opt:active {
+        background: rgba(255, 255, 255, 0.08) !important;
+        transform: scale(0.985);
+    }
+    body.light-theme .ws-btn:active,
+    body.light-theme .tab-btn:active,
+    body.light-theme .feature-item:active,
+    body.light-theme .model-option:active,
+    body.light-theme .settings-item:active,
+    body.light-theme .footer-opt:active {
+        background: rgba(15, 23, 42, 0.06) !important;
+    }
+}
+/* ════════════════════════════════════════════════════════════════
+   HISTORY "…" DROPDOWN MENU — canonical, elite
+   Opens just below the button, inside the item's visual band,
+   with spring entry and full light-theme parity.
+   ════════════════════════════════════════════════════════════════ */
+.actions-dropdown-list {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 4px;
+    min-width: 190px;
+    max-width: min(240px, calc(100vw - 40px));
+    padding: 6px;
+    display: none;
+    flex-direction: column;
+    gap: 2px;
+    background: color-mix(in srgb, var(--bg-card) 96%, transparent);
+    border: 1px solid var(--border-muted);
+    border-radius: 14px;
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.05) inset,
+        0 20px 50px -12px rgba(0, 0, 0, 0.75),
+        0 0 0 1px rgba(255, 255, 255, 0.03),
+        0 0 40px -16px color-mix(in srgb, var(--accent-glow) 25%, transparent);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    z-index: 500;
+    transform-origin: top right;
+}
+.actions-dropdown-list.active {
+    display: flex;
+    animation: dropdownSpring 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes dropdownSpring {
+    from { opacity: 0; transform: translateY(-6px) scale(0.94); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.action-list-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    min-height: 38px;
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+.action-list-item .material-symbols-rounded {
+    font-size: 17px;
+    flex-shrink: 0;
+    color: currentColor;
+    opacity: 0.9;
+}
+.action-list-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-main);
+    transform: translateX(2px);
+}
+.action-list-item.danger { color: #f87171; }
+.action-list-item.danger .material-symbols-rounded { color: #ef4444; }
+.action-list-item.danger:hover {
+    background: rgba(239, 68, 68, 0.10);
+    color: #fca5a5;
+}
+
+/* When the item is near the bottom of the sidebar, JS can add
+   `.drop-up` to flip the menu upward — pure CSS hook, no logic here. */
+.history-item.drop-up .actions-dropdown-list {
+    top: auto;
+    bottom: calc(100% + 6px);
+    transform-origin: bottom right;
+}
+.history-item.drop-up .actions-dropdown-list.active {
+    animation: dropdownSpringUp 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes dropdownSpringUp {
+    from { opacity: 0; transform: translateY(6px) scale(0.94); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Light theme parity */
+body.light-theme .actions-dropdown-list {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.10);
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.9) inset,
+        0 20px 50px -12px rgba(15, 23, 42, 0.14),
+        0 0 0 1px rgba(15, 23, 42, 0.04);
+}
+body.light-theme .action-list-item { color: #475569; }
+body.light-theme .action-list-item:hover {
+    background: rgba(15, 23, 42, 0.05);
+    color: #0f172a;
+}
+body.light-theme .action-list-item.danger { color: #dc2626; }
+body.light-theme .action-list-item.danger:hover {
+    background: rgba(220, 38, 38, 0.08);
+    color: #b91c1c;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .actions-dropdown-list.active,
+    .history-item.drop-up .actions-dropdown-list.active { animation: none; }
+    .action-list-item:hover { transform: none; }
 }
