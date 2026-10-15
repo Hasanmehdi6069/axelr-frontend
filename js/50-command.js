@@ -13,126 +13,99 @@
     const st = window.Axelr.state;
 
     const apiFetch = window.Axelr.apiFetch || ((...a) => fetch(...a));
+    /* ═══════════════════════════════════════════════════════════════════
+   THINKING ANIMATION — Elite inline indicator
+   Uses the pre-rendered HTML structure inside #thinking-indicator.
+   Does NOT touch the reasoning chain (that's 35-thinking.js's job).
+   Renders ONLY:
+     • [Logo] + [3 pulsing dots] + rotating verb label
+     • A quiet list of steps that fade in one by one
+   Never creates alert-style chrome. Never overwrites the container.
+   ═══════════════════════════════════════════════════════════════════ */
+function startThinkingAnimation(userPrompt = "") {
+    const container = getEl("thinking-indicator");
+    if (!container) return () => {};
 
-    // ═══════════════════════════════════════════════════════════════════
-    // 0 · THINKING ANIMATION (restored from the orphaned v4.2 block)
-    //     Lives as a real function so the caller can capture its cleanup.
-    //     Renders into #thinking-indicator (or creates one), independent of
-    //     the inline reasoning chain rendered inside the AI bubble.
-    // ═══════════════════════════════════════════════════════════════════
-    const THINKING_STEPS = [
-        { icon: "psychology",    text: "Thinking",              delay: 1000 },
-        { icon: "manage_search", text: "Analyzing context",     delay: 1200 },
-        { icon: "sync_alt",      text: "Reconciling signals",   delay: 1400 },
-        { icon: "verified",      text: "Finalizing response",   delay: 1500 }
-    ];
+    // These are the pre-rendered nodes inside index.html's indicator.
+    const label    = getEl("thinking-text");
+    const stepsList= getEl("thinking-steps-list");
+    if (!label || !stepsList) return () => {};
 
-    function startThinkingAnimation() {
-        // Ensure keyframes are installed once.
-        if (!document.getElementById("elite-thinking-styles")) {
-            const s = document.createElement("style");
-            s.id = "elite-thinking-styles";
-            s.textContent = `
-                @keyframes elxPulse {0%,100%{opacity:1}50%{opacity:.7}}
-                @keyframes elxDotPulse {0%,60%,100%{opacity:.3}30%{opacity:1}}
-                .thinking-step {display:flex;align-items:center;gap:12px;animation:elxPulse 1.5s infinite}
-                .thinking-step .loading-dots span {display:inline-block;animation:elxDotPulse 1.4s infinite}
-                .thinking-step .loading-dots span:nth-child(2){animation-delay:.2s}
-                .thinking-step .loading-dots span:nth-child(3){animation-delay:.4s}
-            `;
-            document.head.appendChild(s);
-        }
+    // Reset to pristine state every time.
+    stepsList.innerHTML = "";
+    label.textContent = "Thinking";
+    container.style.display = "flex";
 
-        // Locate or create the container.
-        let container = getEl("thinking-indicator");
-        if (!container) {
-            container = document.createElement("div");
-            container.id = "thinking-indicator";
-            container.setAttribute("role", "status");
-            container.setAttribute("aria-live", "polite");
-            container.style.cssText = "display:flex;flex-direction:column;gap:8px;padding:10px 14px;margin:6px 0;border:1px dashed rgba(0,242,254,0.2);border-radius:8px;background:rgba(0,242,254,0.02);font-size:13px;";
-            if (viewport) viewport.appendChild(container);
-            else document.body.appendChild(container);
-        }
-        container.style.display = "flex";
-        container.style.opacity = "1";
-        container.innerHTML = "";
+    const ws = getWorkspace() || "core";
+    const VERBS = ["Thinking", "Reasoning", "Analyzing", "Synthesizing", "Composing"];
+    const STEPS_BY_WS = {
+        core:   ["Reading your request", "Recalling context", "Weighing approaches", "Composing response"],
+        data:   ["Parsing your data", "Mapping schema", "Extracting insights", "Preparing output"],
+        design: ["Reading the brief", "Sketching structure", "Composing components", "Finalizing markup"]
+    };
+    const steps = STEPS_BY_WS[ws] || STEPS_BY_WS.core;
 
-        let currentStep = 0;
-        let stepTimer = null;
-        let longWaitTimer = null;
+    let cancelled = false;
+    let stepTimer = null;
+    let labelTimer = null;
+    let longWaitTimer = null;
 
-        function showStep(step) {
-            const previous = container.querySelectorAll(".thinking-step.active");
-            previous.forEach(el => el.remove());
-            const el = document.createElement("div");
-            el.className = "thinking-step active";
-            el.innerHTML =
-                `<span class="material-symbols-rounded" style="color:var(--accent-glow);font-size:20px;">${step.icon}</span>` +
-                `<span style="color:var(--text-primary);font-weight:500;">${step.text}</span>` +
-                `<span class="loading-dots" style="margin-left:4px;">` +
-                    `<span>.</span><span>.</span><span>.</span>` +
-                `</span>`;
-            container.appendChild(el);
-            if (typeof scrollToBottom === "function") scrollToBottom();
-        }
+    // ── Rotating verb (every 2.4s) ───────────────────────────────────
+    let verbIdx = 0;
+    const rotateVerb = () => {
+        if (cancelled) return;
+        verbIdx = (verbIdx + 1) % VERBS.length;
+        if (label) label.textContent = VERBS[verbIdx];
+        labelTimer = setTimeout(rotateVerb, 2400);
+    };
+    labelTimer = setTimeout(rotateVerb, 2400);
 
-        function advance() {
-            if (currentStep < THINKING_STEPS.length) {
-                showStep(THINKING_STEPS[currentStep]);
-                const delay = THINKING_STEPS[currentStep].delay;
-                currentStep++;
-                stepTimer = setTimeout(advance, delay);
-            } else {
-                // Waiting state — all steps exhausted, socket still quiet.
-                const previous = container.querySelectorAll(".thinking-step.active");
-                previous.forEach(el => el.remove());
-                const el = document.createElement("div");
-                el.className = "thinking-step waiting";
-                el.innerHTML =
-                    `<span class="material-symbols-rounded" style="color:#f59e0b;font-size:20px;">hourglass_top</span>` +
-                    `<span style="color:var(--text-primary);">Finalizing response</span>` +
-                    `<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>`;
-                container.appendChild(el);
+    // ── Progressive steps (one every ~1.8s) ──────────────────────────
+    let stepIdx = 0;
+    const pushStep = () => {
+        if (cancelled) return;
+        if (stepIdx >= steps.length) return;
+
+        const el = document.createElement("div");
+        el.className = "thinking-step";
+        el.innerHTML =
+            `<span class="material-symbols-rounded">progress_activity</span>` +
+            `<span>${steps[stepIdx]}</span>`;
+        stepsList.appendChild(el);
+
+        // Mark every prior step as done
+        const all = stepsList.querySelectorAll(".thinking-step");
+        all.forEach((node, i) => {
+            if (i < all.length - 1) {
+                node.classList.add("done");
+                const icon = node.querySelector(".material-symbols-rounded");
+                if (icon) icon.textContent = "check";
             }
-        }
+        });
+        stepsList.scrollTop = stepsList.scrollHeight;
+        stepIdx++;
+        stepTimer = setTimeout(pushStep, 1700 + Math.random() * 500);
+    };
+    pushStep();
 
-        advance();
+    // ── Long-wait escalation at 6s ───────────────────────────────────
+    longWaitTimer = setTimeout(() => {
+        if (cancelled) return;
+        if (label) label.textContent = "Extended thinking";
+    }, 6000);
 
-        // Long-wait failover card at 5 s.
-        longWaitTimer = setTimeout(() => {
-            if (!container || container.style.display === "none") return;
-            const previous = container.querySelectorAll(".thinking-step.active, .thinking-step.waiting");
-            previous.forEach(el => el.remove());
-            const el = document.createElement("div");
-            el.className = "thinking-step failover";
-            el.innerHTML =
-                `<span class="material-symbols-rounded" style="color:#8b5cf6;font-size:20px;">swap_horiz</span>` +
-                `<span style="color:var(--text-primary);">Switching to dedicated AI agent</span>` +
-                `<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>`;
-            container.appendChild(el);
-        }, 5000);
+    // ── Cleanup — called by executeCommand's hideThinkingIndicator ──
+    return function cleanup() {
+        cancelled = true;
+        if (stepTimer)  clearTimeout(stepTimer);
+        if (labelTimer) clearTimeout(labelTimer);
+        if (longWaitTimer) clearTimeout(longWaitTimer);
+        container.style.display = "none";
+        stepsList.innerHTML = "";
+    };
+}
 
-        // Cleanup returned to caller — captured in cleanupThinkingAnimation.
-        return function cleanup() {
-            if (stepTimer) clearTimeout(stepTimer);
-            if (longWaitTimer) clearTimeout(longWaitTimer);
-            if (!container) return;
-            container.style.transition = "opacity 0.4s ease";
-            container.style.opacity = "0";
-            setTimeout(() => {
-                if (container && container.parentNode) container.parentNode.removeChild(container);
-            }, 400);
-        };
-    }
-// Force-override. The local version returns a cleanup closure; the
-// 00-core.js version does not. This module must win the registration
-// so hideThinkingIndicator can tear the animation down correctly.
 window.Axelr.startThinkingAnimation = startThinkingAnimation;
-window.Axelr.stopThinkingAnimation  = function () {
-    const ti = getEl('thinking-indicator');
-    if (ti) { ti.style.display = 'none'; ti.innerHTML = ''; }
-};
 
     // ═══════════════════════════════════════════════════════════════════
     // 1 · FILE CHIPS
@@ -197,10 +170,61 @@ window.Axelr.stopThinkingAnimation  = function () {
 
             const validFiles = incomingFiles.filter(file => {
                 if (file.size === 0) { alert(`⚠️ The file "${file.name}" is empty (0 bytes).`); return false; }
-                if (file.type && !file.type.startsWith('image/') && file.type !== 'text/plain' && file.type !== 'text/csv' && file.type !== 'application/pdf' && !file.type.includes('spreadsheet') && !file.type.includes('document')) {
-                    alert(`⚠️ File type "${file.type}" is not supported.`);
-                    return false;
+                
+                const currentWs = getWorkspace();
+                const fileExt = file.name.split('.').pop()?.toLowerCase() || '';
+                const fileName = file.name.toLowerCase();
+
+                // WORKSPACE-SPECIFIC FILE RULES:
+                // 1. Core workspace: Accept ALL valid file types (no restrictions except empty files)
+                if (currentWs === 'core') {
+                    return true; // Core accepts everything - only empty files are blocked above
                 }
+
+                // 2. Data workspace: Accept only data files (CSV, Excel, Parquet, JSON, PDF, images, databases, etc.)
+                if (currentWs === 'data') {
+                    const dataExts = ['csv', 'xlsx', 'xls', 'parquet', 'json', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp', 
+                                     'sqlite', 'db', ' feather', 'parquet', 'orc', 'avro', 'txt', 'md', 'yaml', 'yml', 
+                                     'toml', 'h5', 'hdf5', 'netcdf', 'nc', 'zarr', 'geojson', 'shp', 'gpkg'];
+                    const dataMimes = [
+                        'text/csv', 'application/pdf', 'image/', 'application/json',
+                        'application/vnd.openxmlformats-officedocument', 'application/vnd.ms-excel',
+                        'application/x-parquet', 'application/x-avro', 'application/x-orc',
+                        'text/plain', 'application/sqlite', 'application/x-hdf5'
+                    ];
+                    
+                    const isDataExt = dataExts.includes(fileExt);
+                    const isDataMime = dataMimes.some(mime => file.type.includes(mime));
+                    
+                    if (!isDataExt && !isDataMime) {
+                        alert(`⚠️ File type "${file.type}" is not supported in Data workspace. Only data files are allowed.`);
+                        return false;
+                    }
+                    return true;
+                }
+
+                // 3. Design workspace: Accept only code and design files (JS, TS, CSS, images, design files, etc.)
+                if (currentWs === 'design') {
+                    const designCodeExts = ['js', 'ts', 'jsx', 'tsx', 'css', 'scss', 'sass', 'less', 'html', 'htm', 
+                                           'vue', 'svelte', 'react', 'svg', 'png', 'jpg', 'jpeg', 'gif', 'webp', 
+                                           'fig', 'psd', 'ai', 'sketch', 'pdf', 'json', 'yaml', 'yml', 'toml', 
+                                           'md', 'markdown', 'py', 'java', 'cpp', 'c', 'h', 'go', 'rs', 'rb', 'php'];
+                    const designMimes = [
+                        'text/', 'application/javascript', 'application/json', 'image/',
+                        'image/svg+xml', 'application/pdf', 'application/postscript'
+                    ];
+                    
+                    const isDesignExt = designCodeExts.includes(fileExt);
+                    const isDesignMime = designMimes.some(mime => file.type.includes(mime));
+                    
+                    if (!isDesignExt && !isDesignMime) {
+                        alert(`⚠️ File type "${file.type}" is not supported in Design workspace. Only code and design files are allowed.`);
+                        return false;
+                    }
+                    return true;
+                }
+
+                // Fallback for unknown workspaces: allow all files
                 return true;
             });
 
@@ -364,9 +388,9 @@ window.Axelr.stopThinkingAnimation  = function () {
             if (ti) ti.style.display = 'none';
         }
 
-        // Kick off the thinking animation; capture its cleanup.
+        // Kick off the Elite thinking animation; capture its cleanup.
         if (window.Axelr.startThinkingAnimation) {
-            const maybeCleanup = window.Axelr.startThinkingAnimation();
+            const maybeCleanup = window.Axelr.startThinkingAnimation(st.lastUserCommand || "");
             if (typeof maybeCleanup === 'function') cleanupThinkingAnimation = maybeCleanup;
         }
 
@@ -516,8 +540,23 @@ window.Axelr.stopThinkingAnimation  = function () {
         scrollToBottom();
 
         const isGuest = st.isGuestMode && !localStorage.getItem('google_auth_token');
-        const formData = new FormData();
-        formData.append('command', finalCommand);
+                const formData = new FormData();
+        // Token-shrink once and append a single `command` field. The
+        // previous revision appended `command` twice; Starlette picks the
+        // first value, so the shrink silently never reached the server.
+        let outboundCommand = finalCommand;
+        if (window.Axelr.TokenShrinker) {
+            try { outboundCommand = window.Axelr.TokenShrinker.shrinkPrompt(finalCommand); } catch (_) {}
+        }
+        formData.append('command', outboundCommand);
+        // Cognitive Layer: observe the user's message for durable preferences
+if (window.Axelr.CognitiveLayer) {
+    try { window.Axelr.CognitiveLayer.observe(finalCommand); } catch (_) {}
+}
+if (window.Axelr.CognitiveLayer) {
+    const ctx = window.Axelr.CognitiveLayer.renderContextBlock();
+    if (ctx) formData.append("userStateProfile", ctx);
+}
         formData.append('workspace', getWorkspace());
         formData.append('isRetry', isRetry ? 'true' : 'false');
         if (isGuest) {
@@ -671,10 +710,25 @@ window.Axelr.stopThinkingAnimation  = function () {
 
             // Final residual packet flush.
             if (streamBuffer.trim().startsWith('data: ')) {
-                try {
+                                try {
                     const json = JSON.parse(streamBuffer.trim().slice(6));
                     const textPart = json.text || json.delta || json.content || '';
-                    if (textPart) { renderedText += textPart; fullResponse += textPart; }
+                    if (textPart) {
+                        renderedText += textPart;
+                        fullResponse += textPart;
+                    } else if (json.stage === "local" && json.status === "healing") {
+                        contentDiv.setAttribute("data-healing", "true");
+                        if (window.Axelr.showToast) {
+                            window.Axelr.showToast("Recovered from a network blip — stream continues.", "info");
+                        }
+                    }
+                    if (json.sessionId) sessionIdFromStream = json.sessionId;
+                    if (json.structuredData) structuredData = json.structuredData;
+                    if (json.filename) filename = json.filename;
+                    if (json.error) contentDiv.innerHTML = `⚠️ ${json.error}`;
+                } catch (e) {
+                    console.warn('Failed to parse final SSE buffer:', e);
+                }
                     if (json.sessionId) sessionIdFromStream = json.sessionId;
                     if (json.structuredData) structuredData = json.structuredData;
                     if (json.filename) filename = json.filename;
@@ -698,13 +752,98 @@ window.Axelr.stopThinkingAnimation  = function () {
                     iframe.style.backgroundColor = '#ffffff';
                     contentDiv.appendChild(iframe);
                     const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                    iframeDoc.open();
                     const sanitizedCode = DOMPurify.sanitize(rawCode, {
                         ADD_TAGS: ['script', 'style'],
                         ADD_ATTR: ['src', 'href', 'onload']
                     });
-                    iframeDoc.write(sanitizedCode);
+
+                    // ── Sandbox error bridge ────────────────────────────
+                    // Captures runtime errors, console.error, and unhandled
+                    // rejections inside the iframe, forwards them via
+                    // postMessage, and lets the user one-click fix.
+                    const BRIDGE_ID = "axelr-sandbox-bridge-" + Date.now();
+                    const bridge = [
+                        "<script>",
+                        "(function(){",
+                        "  var __e=[];",
+                        "  function push(k,m,s){",
+                        "    __e.push({kind:k,msg:String(m||'').slice(0,500),",
+                        "              stack:String(s||'').slice(0,800),ts:Date.now()});",
+                        "    if(__e.length>8)__e.shift();",
+                        "    try{parent.postMessage({__axelr:true,bridgeId:'" + BRIDGE_ID + "',errors:__e},'*');}catch(_){}",
+                        "  }",
+                        "  window.onerror=function(m,s,l,c,e){push('error',m,e&&e.stack);};",
+                        "  window.addEventListener('unhandledrejection',function(e){",
+                        "    push('promise',(e.reason&&e.reason.message)||e.reason,(e.reason&&e.reason.stack));",
+                        "  });",
+                        "  var _ce=console.error;",
+                        "  console.error=function(){push('console',Array.prototype.slice.call(arguments).join(' '),'');_ce.apply(console,arguments);};",
+                        "})();",
+                        "</script>"
+                    ].join("");
+
+                    // Inject the bridge as the first child of <head>, or at the
+                    // top of the document if no <head> is present.
+                    const finalDoc = /<head[^>]*>/i.test(sanitizedCode)
+                        ? sanitizedCode.replace(/<head([^>]*)>/i, "<head$1>" + bridge)
+                        : bridge + sanitizedCode;
+
+                    // SINGLE write — one open(), one write(), one close().
+                    iframeDoc.open();
+                    iframeDoc.write(finalDoc);
                     iframeDoc.close();
+
+                    // ── Error relay ──────────────────────────────────────
+                    const errorCollector = [];
+                    const errorListener = (ev) => {
+                        if (!ev.data || !ev.data.__axelr
+                            || ev.data.bridgeId !== BRIDGE_ID) return;
+                        errorCollector.length = 0;
+                        for (const e of ev.data.errors) errorCollector.push(e);
+                        let chip = contentDiv.querySelector(".sandbox-error-chip");
+                        if (!chip) {
+                            chip = document.createElement("button");
+                            chip.className = "sandbox-error-chip";
+                            chip.style.cssText =
+                                "margin-top:10px;padding:8px 14px;border-radius:8px;" +
+                                "background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.35);" +
+                                "color:#fca5a5;font-size:12px;font-weight:600;cursor:pointer;";
+                            contentDiv.appendChild(chip);
+                            chip.onclick = () => {
+                                const err = errorCollector[errorCollector.length - 1];
+                                if (!err) return;
+                                const fixPrompt =
+                                    "The sandbox reported this runtime error:\n\n"
+                                    + err.kind + ": " + err.msg + "\n\n"
+                                    + (err.stack ? "Stack:\n" + err.stack + "\n\n" : "")
+                                    + "Fix the code and return the full corrected HTML "
+                                    + "in a single fenced block.";
+                                if (window.Axelr.promptInput) {
+                                    window.Axelr.promptInput.value = fixPrompt;
+                                    window.Axelr.promptInput.style.height = "auto";
+                                    window.Axelr.promptInput.style.height =
+                                        window.Axelr.promptInput.scrollHeight + "px";
+                                    window.Axelr.promptInput.focus();
+                                    if (window.Axelr.validateSendCommand)
+                                        window.Axelr.validateSendCommand();
+                                }
+                            };
+                        }
+                        chip.textContent = "⚠ " + errorCollector.length
+                            + " runtime error"
+                            + (errorCollector.length > 1 ? "s" : "")
+                            + " — click to fix";
+                    };
+                    window.addEventListener("message", errorListener);
+                    const cleanupObserver = new MutationObserver(() => {
+                        if (!contentDiv.isConnected) {
+                            window.removeEventListener("message", errorListener);
+                            cleanupObserver.disconnect();
+                        }
+                    });
+                    cleanupObserver.observe(document.body, {
+                        childList: true, subtree: true,
+                    });
                     injectDeployButton(contentDiv, rawCode);
                 }
                 appendPayloadDownload(contentDiv);
