@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Pricing & Workspaces — AXELR AI</title>
+<meta name="description" content="Choose your Axelr workspace. Unified Access, Data Ops Heavy, or Design Studio. Transparent tiers, zero hidden infrastructure." />
+<meta name="theme-color" content="#0D0F12" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,600,1,0" rel="stylesheet" />
+
+<style>
+/* ══════════════════════════════════════════════════════════════════
+   AXELR — PRICING & WORKSPACE SELECTION
+   Aesthetic: Deep Obsidian · Emerald · Neon Teal
+   ══════════════════════════════════════════════════════════════════ */
+:root{
+  /* Surfaces */
+  --obsidian:#0D0F12;
+  --obsidian-deep:#08090C;
+  --surface:rgba(20,24,30,.62);
+  --surface-2:rgba(26,31,38,.72);
+  --surface-3:rgba(32,38,46,.82);
+  --input:rgba(14,17,21,.9);
+
+  /* Borders */
+  --border:rgba(255,255,255,.075);
+  --border-strong:rgba(255,255,255,.16);
+  --border-faint:rgba(255,255,255,.045);
+
+  /* Text */
+  --text:#f4f7fb;
+  --text-soft:#c6cfdb;
+  --text-muted:#8b95a5;
+  --text-dim:#5a6473;
+
+  /* Accents */
+  --emerald:#10b981;
+  --emerald-bright:#34d399;
+  --emerald-soft:rgba(16,185,129,.14);
+  --emerald-glow:rgba(16,185,129,.42);
+
+  --teal:#00f2fe;
+  --teal-soft:rgba(0,242,254,.14);
+  --teal-glow:rgba(0,242,254,.42);
+
+  --danger:#ef4444;
+  --success:#10b981;
+
+  /* Geometry */
+  --r-sm:8px;
+  --r-md:12px;
+  --r-lg:18px;
+  --r-xl:24px;
+  --r-pill:999px;
+
+  /* Typography */
+  --font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+
+  --ease:cubic-bezier(.16,1,.3,1);
+  --ease-out:cubic-bezier(.22,1,.36,1);
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{
+  margin:0;background:var(--obsidian);color:var(--text);
+  font-family:var(--font);font-size:16px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+  min-height:100dvh;overflow-x:hidden;position:relative;
+}
+
+/* Ambient background — layered radial washes */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 60% 45% at 15% -5%, rgba(16,185,129,.10), transparent 60%),
+    radial-gradient(ellipse 55% 42% at 88% 4%, rgba(0,242,254,.075), transparent 62%),
+    radial-gradient(ellipse 85% 55% at 50% 108%, rgba(16,185,129,.05), transparent 65%);
+}
+/* Fine grain for premium feel */
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.035;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+img,svg{max-width:100%;display:block}
+button,input,select{font:inherit;color:inherit}
+a{color:inherit}
+
+.material-symbols-rounded{
+  font-family:'Material Symbols Rounded';font-weight:normal;font-style:normal;
+  line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;
+  white-space:nowrap;word-wrap:normal;direction:ltr;
+  font-variation-settings:'FILL' 1,'wght' 600,'GRAD' 0,'opsz' 24;
+  -webkit-font-feature-settings:'liga';font-feature-settings:'liga';
+  -webkit-font-smoothing:antialiased;user-select:none;
+}
+
+:focus-visible{outline:2px solid var(--teal);outline-offset:3px;border-radius:8px}
+.vh{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.skip{position:absolute;left:-9999px;top:0;z-index:100000;padding:12px 20px;background:var(--teal);color:#04121a;font-weight:700;text-decoration:none;border-radius:0 0 12px 0}
+.skip:focus{left:0}
+
+/* ── TOPBAR ───────────────────────────────────────────────────── */
+.topbar{
+  position:sticky;top:0;z-index:900;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:0 clamp(16px,3vw,32px);height:64px;
+  background:rgba(9,11,14,.72);
+  backdrop-filter:blur(22px) saturate(150%);
+  -webkit-backdrop-filter:blur(22px) saturate(150%);
+  border-bottom:1px solid var(--border-faint);
+}
+.brand{
+  display:inline-flex;align-items:center;gap:10px;text-decoration:none;
+  font-family:var(--mono);font-weight:800;font-size:15px;
+  letter-spacing:2.5px;color:var(--text);
+}
+.brand svg{color:var(--teal);filter:drop-shadow(0 0 10px rgba(0,242,254,.35))}
+.brand-chip{
+  font-size:9.5px;font-weight:700;letter-spacing:1.2px;padding:3px 8px;
+  border-radius:5px;background:var(--emerald-soft);color:var(--emerald-bright);
+  border:1px solid rgba(16,185,129,.28);
+}
+.topnav{display:flex;align-items:center;gap:8px}
+.topnav a{
+  text-decoration:none;font-size:13.5px;font-weight:500;color:var(--text-muted);
+  padding:9px 14px;border-radius:9px;transition:color .2s var(--ease),background .2s var(--ease);
+}
+.topnav a:hover{color:var(--text);background:rgba(255,255,255,.04)}
+.topnav a.primary{
+  color:#031014;background:linear-gradient(135deg,var(--emerald-bright),var(--teal));
+  font-weight:700;letter-spacing:.2px;
+  box-shadow:0 8px 24px -10px var(--emerald-glow);
+}
+.topnav a.primary:hover{filter:brightness(1.08);transform:translateY(-1px)}
+
+@media (max-width:640px){
+  .topnav a:not(.primary){display:none}
+}
+
+/* ── SHELL ────────────────────────────────────────────────────── */
+.shell{
+  position:relative;z-index:1;
+  max-width:1240px;margin:0 auto;
+  padding:clamp(48px,7vw,84px) clamp(16px,3vw,32px) clamp(80px,10vw,140px);
+}
+
+/* ── HERO ─────────────────────────────────────────────────────── */
+.hero{text-align:center;max-width:760px;margin:0 auto clamp(48px,6vw,72px)}
+.hero-pill{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:7px 16px;border-radius:var(--r-pill);
+  background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.24);
+  color:var(--emerald-bright);
+  font-family:var(--mono);font-size:10.5px;font-weight:700;
+  letter-spacing:1.6px;text-transform:uppercase;
+  margin-bottom:28px;
+}
+.hero-pill .material-symbols-rounded{font-size:14px}
+.hero h1{
+  font-size:clamp(34px,5.5vw,58px);
+  font-weight:800;line-height:1.05;letter-spacing:-2px;
+  margin:0 0 20px;color:var(--text);
+}
+.hero h1 .grad{
+  background:linear-gradient(135deg,var(--emerald-bright) 0%,var(--teal) 60%,#a7f3d0 100%);
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+.hero p{
+  font-size:clamp(15px,1.6vw,17.5px);
+  color:var(--text-muted);margin:0;line-height:1.65;max-width:600px;margin-inline:auto;
+}
+
+/* ── CONTROLS ROW: cycle + workspace segmented ────────────────── */
+.controls{
+  display:flex;flex-direction:column;align-items:center;gap:26px;
+  margin-bottom:clamp(40px,5vw,60px);
+}
+
+/* Billing cycle toggle */
+.cycle-toggle{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:5px;border-radius:var(--r-pill);
+  background:var(--input);border:1px solid var(--border);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
+}
+.cycle-btn{
+  position:relative;
+  padding:10px 22px;border:0;border-radius:var(--r-pill);cursor:pointer;
+  background:transparent;color:var(--text-muted);
+  font-size:13.5px;font-weight:600;letter-spacing:.1px;
+  display:inline-flex;align-items:center;gap:9px;
+  transition:color .22s var(--ease),background .22s var(--ease);
+}
+.cycle-btn:hover{color:var(--text-soft)}
+.cycle-btn[aria-pressed="true"]{
+  background:linear-gradient(135deg,var(--emerald),#059669);
+  color:#fff;
+  box-shadow:0 8px 22px -8px var(--emerald-glow),inset 0 1px 0 rgba(255,255,255,.15);
+}
+.save-pill{
+  font-size:9.5px;font-weight:800;letter-spacing:.6px;
+  padding:3px 8px;border-radius:var(--r-pill);
+  background:rgba(255,255,255,.14);color:inherit;
+  text-transform:uppercase;
+}
+.cycle-btn[aria-pressed="false"] .save-pill{
+  background:rgba(16,185,129,.15);color:var(--emerald-bright);
+}
+
+/* Workspace segmented control */
+.segmented{
+  position:relative;
+  display:grid;grid-template-columns:repeat(3,1fr);
+  width:min(100%,720px);
+  padding:6px;border-radius:var(--r-pill);
+  background:var(--input);border:1px solid var(--border);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.03),
+    0 12px 40px -20px rgba(0,0,0,.6);
+}
+.seg-indicator{
+  position:absolute;
+  top:6px;left:6px;
+  width:calc((100% - 12px) / 3);
+  height:calc(100% - 12px);
+  border-radius:var(--r-pill);
+  background:linear-gradient(135deg,rgba(16,185,129,.16),rgba(0,242,254,.13));
+  border:1px solid rgba(16,185,129,.3);
+  box-shadow:
+    0 0 24px -4px var(--emerald-glow),
+    inset 0 1px 0 rgba(255,255,255,.06);
+  transform:translateX(calc(var(--idx, 0) * 100%));
+  transition:transform .48s var(--ease);
+  pointer-events:none;
+}
+.seg-btn{
+  position:relative;z-index:1;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  padding:11px 10px;border:0;background:transparent;cursor:pointer;
+  border-radius:var(--r-pill);
+  color:var(--text-muted);
+  font-size:13.5px;font-weight:600;line-height:1.2;
+  transition:color .25s var(--ease);
+  text-align:center;
+}
+.seg-btn small{
+  display:block;font-size:10px;font-weight:500;
+  letter-spacing:.4px;color:var(--text-dim);
+  text-transform:uppercase;
+  transition:color .25s var(--ease);
+}
+.seg-btn:hover{color:var(--text-soft)}
+.seg-btn[aria-pressed="true"]{color:var(--text)}
+.seg-btn[aria-pressed="true"] small{color:var(--emerald-bright)}
+
+@media (max-width:640px){
+  .segmented{width:100%}
+  .seg-btn{padding:10px 6px;font-size:11.5px}
+  .seg-btn small{font-size:8.5px;letter-spacing:.3px}
+  .cycle-btn{padding:9px 16px;font-size:12.5px}
+}
+
+/* ── TIER GRID ────────────────────────────────────────────────── */
+.tier-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:22px;
+  align-items:stretch;
+}
+@media (max-width:1040px){
+  .tier-grid{grid-template-columns:1fr;gap:20px;max-width:520px;margin-inline:auto}
+}
+
+/* ── TIER CARD ────────────────────────────────────────────────── */
+.tier-card{
+  position:relative;
+  display:flex;flex-direction:column;
+  padding:32px 28px 28px;
+  border-radius:var(--r-xl);
+  background:linear-gradient(180deg,rgba(22,27,34,.75) 0%,rgba(15,18,23,.85) 100%);
+  border:1px solid var(--border);
+  box-shadow:
+    0 24px 60px -40px rgba(0,0,0,.9),
+    inset 0 1px 0 rgba(255,255,255,.035);
+  transition:transform .3s var(--ease),border-color .3s var(--ease),box-shadow .3s var(--ease);
+  overflow:hidden;
+  isolation:isolate;
+}
+.tier-card::before{
+  content:'';position:absolute;inset:0;pointer-events:none;opacity:0;
+  transition:opacity .3s var(--ease);
+  background:radial-gradient(ellipse 70% 45% at 50% 0%,rgba(255,255,255,.04),transparent 60%);
+}
+.tier-card:hover{
+  transform:translateY(-4px);
+  border-color:var(--border-strong);
+  box-shadow:
+    0 36px 80px -40px rgba(0,0,0,.95),
+    inset 0 1px 0 rgba(255,255,255,.05);
+}
+.tier-card:hover::before{opacity:1}
+
+/* Recommended tier emphasis */
+.tier-card.recommended{
+  border-color:rgba(16,185,129,.32);
+  box-shadow:
+    0 30px 80px -40px rgba(16,185,129,.35),
+    0 0 0 1px rgba(16,185,129,.08),
+    inset 0 1px 0 rgba(255,255,255,.05);
+}
+.tier-card.recommended::after{
+  content:'';position:absolute;top:0;left:15%;right:15%;height:1.5px;
+  background:linear-gradient(90deg,transparent,var(--emerald-bright),transparent);
+  opacity:.85;
+}
+.tier-card.max-throughput{
+  border-color:rgba(0,242,254,.28);
+  box-shadow:
+    0 30px 80px -40px rgba(0,242,254,.28),
+    0 0 0 1px rgba(0,242,254,.06),
+    inset 0 1px 0 rgba(255,255,255,.05);
+}
+.tier-card.max-throughput::after{
+  content:'';position:absolute;top:0;left:15%;right:15%;height:1.5px;
+  background:linear-gradient(90deg,transparent,var(--teal),transparent);
+  opacity:.8;
+}
+
+/* Badge */
+.tier-badge{
+  display:inline-flex;align-items:center;gap:6px;align-self:flex-start;
+  padding:5px 11px;border-radius:var(--r-pill);
+  font-family:var(--mono);font-size:9.5px;font-weight:700;
+  letter-spacing:1.3px;text-transform:uppercase;
+  background:rgba(255,255,255,.045);color:var(--text-muted);
+  border:1px solid var(--border);
+  margin-bottom:22px;
+}
+.tier-card.recommended .tier-badge{
+  background:rgba(16,185,129,.12);color:var(--emerald-bright);
+  border-color:rgba(16,185,129,.32);
+  box-shadow:0 0 18px -4px var(--emerald-glow);
+}
+.tier-card.max-throughput .tier-badge{
+  background:rgba(0,242,254,.1);color:var(--teal);
+  border-color:rgba(0,242,254,.28);
+  box-shadow:0 0 18px -4px var(--teal-glow);
+}
+.tier-badge .material-symbols-rounded{font-size:12px}
+
+/* Name + tagline */
+.tier-name{
+  font-size:24px;font-weight:800;letter-spacing:-.6px;
+  margin:0 0 6px;color:var(--text);line-height:1.15;
+}
+.tier-tagline{
+  font-size:13.5px;color:var(--text-muted);line-height:1.55;
+  margin:0 0 26px;min-height:42px;
+}
+
+/* Price */
+.tier-price{
+  display:flex;align-items:baseline;gap:5px;margin-bottom:4px;
+  font-family:var(--mono);
+}
+.tier-amount{
+  font-size:44px;font-weight:800;letter-spacing:-2px;line-height:1;
+  color:var(--text);font-variant-numeric:tabular-nums;
+}
+.tier-card.recommended .tier-amount{
+  background:linear-gradient(135deg,var(--text) 20%,var(--emerald-bright) 100%);
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+.tier-card.max-throughput .tier-amount{
+  background:linear-gradient(135deg,var(--text) 20%,var(--teal) 100%);
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+.tier-term{
+  font-size:14px;font-weight:600;color:var(--text-muted);
+  letter-spacing:.2px;
+}
+.tier-price-meta{
+  font-size:12px;color:var(--text-dim);margin-bottom:22px;min-height:17px;
+  font-family:var(--mono);letter-spacing:.1px;
+}
+.tier-price-meta .strike{
+  text-decoration:line-through;opacity:.55;margin-right:6px;
+}
+
+/* Quota pill */
+.tier-quota{
+  display:flex;align-items:center;gap:10px;
+  padding:14px 16px;border-radius:14px;
+  background:rgba(0,0,0,.28);
+  border:1px solid var(--border-faint);
+  margin-bottom:18px;
+  cursor:help;
+  transition:border-color .22s var(--ease),background .22s var(--ease);
+  position:relative;
+}
+.tier-quota:hover{
+  border-color:var(--border-strong);
+  background:rgba(0,0,0,.42);
+}
+.tier-card.recommended .tier-quota{
+  background:rgba(16,185,129,.06);
+  border-color:rgba(16,185,129,.2);
+}
+.tier-card.max-throughput .tier-quota{
+  background:rgba(0,242,254,.05);
+  border-color:rgba(0,242,254,.18);
+}
+.quota-icon{
+  flex-shrink:0;width:34px;height:34px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--border-faint);
+  color:var(--text-muted);
+}
+.tier-card.recommended .quota-icon{
+  background:var(--emerald-soft);color:var(--emerald-bright);
+  border-color:rgba(16,185,129,.28);
+}
+.tier-card.max-throughput .quota-icon{
+  background:var(--teal-soft);color:var(--teal);
+  border-color:rgba(0,242,254,.28);
+}
+.quota-icon .material-symbols-rounded{font-size:18px}
+.quota-body{flex:1;min-width:0;line-height:1.25}
+.quota-value{
+  display:block;font-size:14px;font-weight:700;color:var(--text);
+  letter-spacing:-.15px;
+}
+.quota-unit{
+  display:block;font-size:11px;color:var(--text-dim);
+  font-family:var(--mono);letter-spacing:.4px;margin-top:2px;
+}
+.quota-hint{
+  flex-shrink:0;color:var(--text-dim);font-size:14px;opacity:.7;
+}
+.tier-quota:hover .quota-hint{color:var(--text-muted);opacity:1}
+
+/* Engine block */
+.tier-engine{
+  padding:14px 16px;border-radius:12px;
+  background:rgba(0,0,0,.22);
+  border:1px dashed var(--border-faint);
+  margin-bottom:22px;
+}
+.engine-eyebrow{
+  display:flex;align-items:center;gap:7px;
+  font-family:var(--mono);font-size:9.5px;font-weight:700;
+  letter-spacing:1.4px;text-transform:uppercase;
+  color:var(--text-dim);margin-bottom:7px;
+}
+.engine-eyebrow .material-symbols-rounded{font-size:12px}
+.tier-card.recommended .engine-eyebrow{color:var(--emerald-bright)}
+.tier-card.max-throughput .engine-eyebrow{color:var(--teal)}
+.engine-text{
+  font-size:12.5px;line-height:1.5;color:var(--text-soft);
+  font-weight:500;
+}
+
+/* Features */
+.tier-features{
+  list-style:none;padding:0;margin:0 0 26px;
+  display:flex;flex-direction:column;gap:12px;
+  flex:1;
+}
+.feature{
+  display:flex;align-items:flex-start;gap:10px;
+  font-size:13.5px;line-height:1.5;color:var(--text-soft);
+}
+.feature .ico{
+  flex-shrink:0;width:18px;height:18px;border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;
+  margin-top:1px;
+}
+.feature .ico .material-symbols-rounded{font-size:13px;font-weight:700}
+.feature.on .ico{
+  background:rgba(16,185,129,.15);color:var(--emerald-bright);
+  border:1px solid rgba(16,185,129,.3);
+}
+.tier-card.max-throughput .feature.on .ico{
+  background:rgba(0,242,254,.12);color:var(--teal);
+  border-color:rgba(0,242,254,.3);
+}
+.feature.off{color:var(--text-dim)}
+.feature.off .ico{
+  background:rgba(255,255,255,.03);color:var(--text-dim);
+  border:1px solid var(--border-faint);
+}
+.feature.off .ico .material-symbols-rounded{font-size:11px}
+.feature .feature-text{flex:1;min-width:0}
+.feature .feature-meta{
+  display:block;font-size:11.5px;color:var(--text-dim);
+  margin-top:2px;font-family:var(--mono);letter-spacing:.1px;
+}
+
+/* CTA */
+.tier-cta{
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  width:100%;padding:15px 20px;
+  border-radius:13px;border:0;cursor:pointer;
+  font-size:14.5px;font-weight:700;letter-spacing:.1px;
+  font-family:var(--font);
+  transition:all .22s var(--ease);
+  text-decoration:none;
+  position:relative;overflow:hidden;
+}
+.tier-cta .material-symbols-rounded{font-size:18px}
+
+.tier-cta.current{
+  background:rgba(255,255,255,.045);
+  color:var(--text-muted);
+  border:1px solid var(--border);
+  cursor:default;
+}
+
+.tier-cta.pro-cta{
+  background:linear-gradient(135deg,var(--emerald) 0%,#059669 100%);
+  color:#fff;
+  box-shadow:
+    0 12px 32px -12px var(--emerald-glow),
+    inset 0 1px 0 rgba(255,255,255,.14);
+}
+.tier-cta.pro-cta:hover{
+  transform:translateY(-1px);
+  box-shadow:
+    0 18px 40px -14px var(--emerald-glow),
+    inset 0 1px 0 rgba(255,255,255,.2);
+  filter:brightness(1.06);
+}
+
+.tier-cta.biz-cta{
+  background:linear-gradient(135deg,rgba(0,242,254,.16),rgba(16,185,129,.16));
+  color:var(--teal);
+  border:1px solid rgba(0,242,254,.34);
+  box-shadow:
+    0 12px 32px -14px var(--teal-glow),
+    inset 0 1px 0 rgba(255,255,255,.06);
+}
+.tier-cta.biz-cta:hover{
+  transform:translateY(-1px);
+  background:linear-gradient(135deg,rgba(0,242,254,.22),rgba(16,185,129,.22));
+  border-color:rgba(0,242,254,.5);
+  color:#e6feff;
+  box-shadow:0 18px 40px -14px var(--teal-glow);
+}
+
+.tier-cta:active{transform:translateY(0)}
+
+/* ── TRUST FOOTER ─────────────────────────────────────────────── */
+.trust{
+  margin-top:clamp(48px,6vw,72px);
+  max-width:720px;margin-inline:auto;
+  padding:22px 26px;
+  border-radius:var(--r-lg);
+  background:linear-gradient(180deg,rgba(16,185,129,.05),rgba(16,185,129,.015));
+  border:1px solid rgba(16,185,129,.18);
+  display:flex;align-items:center;gap:14px;
+  box-shadow:0 20px 50px -32px rgba(16,185,129,.4);
+}
+.trust .material-symbols-rounded{
+  flex-shrink:0;font-size:22px;color:var(--emerald-bright);
+  filter:drop-shadow(0 0 10px rgba(16,185,129,.4));
+}
+.trust-text{
+  font-size:13.5px;line-height:1.55;color:var(--text-soft);
+  letter-spacing:.05px;
+}
+.trust-text strong{color:var(--text);font-weight:600}
+
+@media (max-width:520px){
+  .trust{padding:18px 18px;gap:11px}
+  .trust .material-symbols-rounded{font-size:20px}
+  .trust-text{font-size:12.5px}
+}
+
+/* ── TOOLTIP PORTAL ───────────────────────────────────────────── */
+#tooltip{
+  position:fixed;z-index:9999;top:0;left:0;
+  max-width:320px;
+  padding:14px 16px;
+  border-radius:12px;
+  background:rgba(20,24,30,.92);
+  backdrop-filter:blur(20px) saturate(160%);
+  -webkit-backdrop-filter:blur(20px) saturate(160%);
+  border:1px solid rgba(16,185,129,.28);
+  box-shadow:
+    0 24px 60px -20px rgba(0,0,0,.85),
+    0 0 0 1px rgba(255,255,255,.04) inset,
+    0 0 40px -12px var(--emerald-glow);
+  font-size:12.5px;line-height:1.55;color:var(--text-soft);
+  letter-spacing:.05px;
+  opacity:0;visibility:hidden;pointer-events:none;
+  transition:opacity .18s var(--ease),transform .18s var(--ease),visibility .18s;
+  transform:translateY(4px);
+}
+#tooltip.visible{
+  opacity:1;visibility:visible;
+  transform:translateY(0);
+}
+#tooltip::before{
+  content:'';position:absolute;top:0;left:18px;right:18px;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(16,185,129,.6),transparent);
+}
+
+/* ── FOOTER ───────────────────────────────────────────────────── */
+.footer{
+  position:relative;z-index:1;
+  border-top:1px solid var(--border-faint);
+  padding:26px clamp(16px,3vw,32px);
+  text-align:center;font-size:12.5px;color:var(--text-dim);
+}
+.footer a{color:var(--text-muted);text-decoration:none;margin:0 8px;transition:color .2s var(--ease)}
+.footer a:hover{color:var(--text)}
+
+/* ── REDUCED MOTION ───────────────────────────────────────────── */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:.01ms!important;
+    scroll-behavior:auto!important;
+  }
+}
+</style>
+</head>
+
+<body>
+<a class="skip" href="#main">Skip to pricing</a>
+
+<!-- ═══════════════════ TOPBAR ═══════════════════ -->
+<header class="topbar">
+  <a class="brand" href="/">
+    <svg viewBox="0 0 100 100" width="22" height="22" fill="none" aria-hidden="true">
+      <path d="M50 15 L20 32.5 L20 67.5 L50 85" stroke="currentColor" stroke-width="6" stroke-linejoin="bevel" fill="rgba(0,242,254,.08)"/>
+      <path d="M50 15 L80 32.5 L50 50 L80 67.5 L50 85" stroke="currentColor" stroke-width="6" stroke-linejoin="bevel" fill="none"/>
+    </svg>
+    <span>AXELR</span>
+    <span class="brand-chip">PRICING</span>
+  </a>
+  <nav class="topnav" aria-label="Primary">
+    <a href="/Axelr-Frontend/docs.html">Docs</a>
+    <a href="/Axelr-Frontend/pricing.html" class="primary">
+        <a href="#tier-grid" class="primary">
+  <span class="material-symbols-rounded" style="font-size:15px;vertical-align:-3px;margin-right:4px">bolt</span>
+  Choose plan
+</a>
+  </nav>
+</header>
+
+<main class="shell" id="main">
+
+  <!-- ═══════════════════ HERO ═══════════════════ -->
+  <section class="hero">
+    <span class="hero-pill">
+      <span class="material-symbols-rounded" aria-hidden="true">verified</span>
+      Transparent · Zero hidden infrastructure
+    </span>
+    <h1>
+      Choose your <span class="grad">workspace engine</span>.
+    </h1>
+    <p>
+      Pick a workspace specialisation, scale your throughput, and pay only for what you
+      actually execute. No plumbing fees. No provider markups. No surprises.
+    </p>
+  </section>
+
+  <!-- ═══════════════════ CONTROLS ═══════════════════ -->
+  <div class="controls">
+
+    <!-- Billing cycle -->
+    <div class="cycle-toggle" role="group" aria-label="Billing period">
+      <button class="cycle-btn" type="button" data-cycle="monthly" aria-pressed="true">
+        Monthly
+      </button>
+      <button class="cycle-btn" type="button" data-cycle="annual" aria-pressed="false">
+        Annual <span class="save-pill">Save ~20%</span>
+      </button>
+    </div>
+
+    <!-- Workspace segmented control -->
+    <div class="segmented" role="tablist" aria-label="Workspace focus" id="workspace-tabs">
+      <div class="seg-indicator" id="seg-indicator" aria-hidden="true"></div>
+
+      <button class="seg-btn" type="button" role="tab"
+              data-ws="unified" aria-pressed="true" aria-selected="true">
+        Unified Access
+        <small>Full Suite</small>
+      </button>
+
+      <button class="seg-btn" type="button" role="tab"
+              data-ws="data" aria-pressed="false" aria-selected="false">
+        Data Ops Heavy
+        <small>Analytics Focus</small>
+      </button>
+
+      <button class="seg-btn" type="button" role="tab"
+              data-ws="design" aria-pressed="false" aria-selected="false">
+        Design Studio
+        <small>UI/UX Focus</small>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════ TIER GRID ═══════════════════ -->
+  <section class="tier-grid" aria-label="Available plans">
+
+    <!-- ── CARD 1 · EXPLORER ── -->
+    <article class="tier-card" data-tier="explorer">
+      <span class="tier-badge">
+        <span class="material-symbols-rounded" aria-hidden="true">science</span>
+        <span id="x-badge">Baseline Intelligence</span>
+      </span>
+
+      <h2 class="tier-name">Explorer</h2>
+      <p class="tier-tagline" id="x-tagline">
+        Standard processing velocity for testing and simple tasks.
+      </p>
+
+      <div class="tier-price">
+        <span class="tier-amount">$0</span>
+        <span class="tier-term">/mo</span>
+      </div>
+      <div class="tier-price-meta">Free forever. No card required.</div>
+
+      <div class="tier-quota" tabindex="0"
+           data-tooltip="An individual workflow covers single-prompt generations across text, data manipulation, or UI drafting.">
+        <span class="quota-icon"><span class="material-symbols-rounded" aria-hidden="true">bolt</span></span>
+        <span class="quota-body">
+          <span class="quota-value">7 Unified Workflows</span>
+          <span class="quota-unit">PER DAY</span>
+        </span>
+        <span class="quota-hint material-symbols-rounded" aria-hidden="true">info</span>
+      </div>
+
+      <div class="tier-engine">
+        <div class="engine-eyebrow">
+          <span class="material-symbols-rounded" aria-hidden="true">memory</span>
+          Cluster Engine
+        </div>
+        <div class="engine-text">Powered by Axelr Light-Velocity Core (Dual-Provider Layer)</div>
+      </div>
+
+      <ul class="tier-features">
+        <li class="feature on">
+          <span class="ico"><span class="material-symbols-rounded" aria-hidden="true">check</span></span>
+          <span class="feature-text">Simultaneous access to Core, Data &amp; Design environments</span>
+        </li>
+        <li class="feature on">
+          <span class="ico"><span class="material-symbols-rounded" aria-hidden="true">check</span></span>
+          <span class="feature-text">Micro-file processing &amp; extraction
+            <span class="feature-meta">CSV, PDF up to 5MB</span>
+          </span>
+        </li>
+        <li class="feature on">
+          <span class="ico"><span class="material-symbols-rounded" aria-hidden="true">check</span></span>
+          <span class="feature-text">3 Automated Prompt Enhancements
+            <span class="feature-meta">PER MONTH</span>
+          </span>
+        </li>
+        <li class="feature off">
+          <span class="ico"><span class="material-symbols-rounded" aria-hidden="true">close</span></span>
+          <span class="feature-text">Surgical code differential patching &amp; visual debugging</span>
+        </li>
+        <li class="feature off">
+          <span class="ico"><span class="material-symbols-rounded" aria-hidden="true">close</span></span>
+          <span class="feature-text">Long-term workspace contextual memory vault</span>
+        </li>
+      </ul>
+
+      <button class="tier-cta current" type="button" disabled>
+        <span class="material-symbols-rounded" aria-hidden="true">check_circle</span>
+        Current Tier
+      </button>
+    </article>
+
+    <!-- ── CARD 2 · PRO ── -->
+    <article class="tier-card recommended" data-tier="pro" id="card-pro">
+      <span class="tier-badge">
+        <span class="material-symbols-rounded" aria-hidden="true">star</span>
+        <span id="p-badge">Recommended</span>
+      </span>
+
+      <h2 class="tier-name" id="p-name">Pro Architect</h2>
+      <p class="tier-tagline" id="p-tagline">
+        High-velocity execution with zero throttling during peak hours.
+      </p>
+
+      <div class="tier-price">
+        <span class="tier-amount" id="p-amount">$15</span>
+        <span class="tier-term" id="p-term">/mo</span>
+      </div>
+      <div class="tier-price-meta" id="p-meta">Billed monthly. Cancel anytime.</div>
+
+      <div class="tier-quota" tabindex="0" id="p-quota-pill" data-tooltip="">
+        <span class="quota-icon"><span class="material-symbols-rounded" aria-hidden="true" id="p-quota-icon">speed</span></span>
+        <span class="quota-body">
+          <span class="quota-value" id="p-quota-value">50 Priority Compute Cycles</span>
+          <span class="quota-unit" id="p-quota-unit">PER DAY</span>
+        </span>
+        <span class="quota-hint material-symbols-rounded" aria-hidden="true">info</span>
+      </div>
+
+      <div class="tier-engine">
+        <div class="engine-eyebrow">
+          <span class="material-symbols-rounded" aria-hidden="true">memory</span>
+          Cluster Engine
+        </div>
+        <div class="engine-text" id="p-engine">
+          Unlocks Hyper-Flash 3.5 + Cortex Pro Processing Matrix
+        </div>
+      </div>
+
+      <ul class="tier-features" id="p-features">
+        <!-- populated by JS -->
+      </ul>
+
+      <a class="tier-cta pro-cta" id="p-cta" href="/Axelr-Frontend/checkout.html?plan=pro&subtier=full&cycle=monthly">
+        <span class="material-symbols-rounded" aria-hidden="true">rocket_launch</span>
+        <span id="p-cta-label">Upgrade to Pro Architect</span>
+      </a>
+    </article>
+
+    <!-- ── CARD 3 · BUSINESS ── -->
+    <article class="tier-card max-throughput" data-tier="business" id="card-business">
+      <span class="tier-badge">
+        <span class="material-symbols-rounded" aria-hidden="true">rocket_launch</span>
+        <span id="b-badge">Max Throughput</span>
+      </span>
+
+      <h2 class="tier-name" id="b-name">Business System</h2>
+      <p class="tier-tagline" id="b-tagline">
+        Full-throttle concurrent multi-agent automation with server failover protection.
+      </p>
+
+      <div class="tier-price">
+        <span class="tier-amount" id="b-amount">$35</span>
+        <span class="tier-term" id="b-term">/mo</span>
+      </div>
+      <div class="tier-price-meta" id="b-meta">Billed monthly. Cancel anytime.</div>
+
+      <div class="tier-quota" tabindex="0" id="b-quota-pill" data-tooltip="">
+        <span class="quota-icon"><span class="material-symbols-rounded" aria-hidden="true" id="b-quota-icon">rocket</span></span>
+        <span class="quota-body">
+          <span class="quota-value" id="b-quota-value">150 Autonomous Pipelines</span>
+          <span class="quota-unit" id="b-quota-unit">PER DAY</span>
+        </span>
+        <span class="quota-hint material-symbols-rounded" aria-hidden="true">info</span>
+      </div>
+
+      <div class="tier-engine">
+        <div class="engine-eyebrow">
+          <span class="material-symbols-rounded" aria-hidden="true">memory</span>
+          Cluster Engine
+        </div>
+        <div class="engine-text" id="b-engine">
+          Dedicated Enterprise Routing across Omni 5.0 + DeepV3 + LPU Clusters
+        </div>
+      </div>
+
+      <ul class="tier-features" id="b-features">
+        <!-- populated by JS -->
+      </ul>
+
+      <a class="tier-cta biz-cta" id="b-cta" href="/Axelr-Frontend/checkout.html?plan=business&subtier=full&cycle=monthly">
+        <span class="material-symbols-rounded" aria-hidden="true">workspace_premium</span>
+        <span id="b-cta-label">Upgrade to Business</span>
+      </a>
+    </article>
+
+  </section>
+
+  <!-- ═══════════════════ TRUST FOOTER ═══════════════════ -->
+  <div class="trust" role="note">
+    <span class="material-symbols-rounded" aria-hidden="true">lock</span>
+    <span class="trust-text">
+      <strong>🔒 Instant Access via Encrypted UPI Routing.</strong>
+      Verification settles automatically upon UTR payload submission.
+    </span>
+  </div>
+
+</main>
+
+<footer class="footer">
+  <span>© 2026 Axelr AI</span>
+  <a href="/terms.html">Terms</a>
+  <a href="/privacy.html">Privacy</a>
+  <a href="mailto:axelrsupport@gmail.com">Support</a>
+</footer>
+
+<!-- ═══════════════════ TOOLTIP PORTAL ═══════════════════ -->
+<div id="tooltip" role="tooltip" aria-hidden="true"></div>
+
+<!-- ═══════════════════ APPLICATION SCRIPT ═══════════════════ -->
+    <script>
+(function () {
+  'use strict';
+
+  /* ═══════════════════════════════════════════════════════════
+     SINGLE SOURCE OF TRUTH — workspace × tier variant matrix
+     ═══════════════════════════════════════════════════════════ */
+  const VARIANTS = {
+    unified: {
+      pro: {
+        badge:       'Recommended',
+        name:        'Pro Architect',
+        tagline:     'High-velocity execution with zero throttling during peak hours.',
+        quotaValue:  '50 Priority Compute Cycles',
+        quotaUnit:   'PER DAY',
+        quotaIcon:   'speed',
+        quotaTooltip:'Unlocks prioritized queues on specialized models. An action includes complex tasks such as compiling massive database schemas or live code refactoring.',
+        engine:      'Unlocks Hyper-Flash 3.5 + Cortex Pro Processing Matrix',
+        ctaLabel:    'Upgrade to Pro Architect',
+        monthly:     15,
+        annualMo:    12,
+        annualTotal: 144,
+        features: [
+          { on: true, text: 'Expanded multi-file engineering engine',         meta: 'UP TO 50MB PER BATCH' },
+          { on: true, text: 'Surgical Code Diffs with single-click interactive healing' },
+          { on: true, text: 'Production-Ready Deployment Hooks',              meta: 'DIRECT NETLIFY INTEGRATION' },
+          { on: true, text: 'Persistent Knowledge Vault',                      meta: 'RETAINS UP TO 100 DEEP-CONTEXT ITEMS' },
+          { on: true, text: '7 Production-Grade Agentic Enhancements',         meta: 'PER MONTH' }
+        ]
+      },
+      business: {
+        badge:       'Max Throughput',
+        name:        'Business System',
+        tagline:     'Full-throttle concurrent multi-agent automation with server failover protection.',
+        quotaValue:  '150 Autonomous Pipelines',
+        quotaUnit:   'PER DAY',
+        quotaIcon:   'rocket',
+        quotaTooltip:'Each pipeline executes an orchestrated multi-step agentic task in the background. Independent of your interactive quota — pipelines keep running while you sleep.',
+        engine:      'Dedicated Enterprise Routing across Omni 5.0 + DeepV3 + LPU Clusters',
+        ctaLabel:    'Upgrade to Business',
+        monthly:     35,
+        annualMo:    28,
+        annualTotal: 336,
+        features: [
+          { on: true, text: 'Asynchronous Background Orchestrator',             meta: 'RUN CONTINUOUS AUTONOMOUS JOBS' },
+          { on: true, text: 'Visual Live-Mockup Auditor & Real-Time Code Debugger' },
+          { on: true, text: 'Latency-Aware Smart Failover',                     meta: 'ACROSS 40+ POOLED AI MODELS' },
+          { on: true, text: 'Full Zero-Truncation codebase context retention' },
+          { on: true, text: '25 Full-Execution Pipeline Enhancements',          meta: 'PER MONTH' }
+        ]
+      }
+    },
+    data: {
+      pro: {
+        badge:       'Data Specialist',
+        name:        'Data Specialist',
+        tagline:     'Extended data parsing, automated cleaning matrices, and data engine priority.',
+        quotaValue:  '60 Priority Data Cycles',
+        quotaUnit:   'PER DAY',
+        quotaIcon:   'database',
+        quotaTooltip:'Each cycle covers an end-to-end data operation — ingestion, parsing, cleaning, normalisation and structured output. Priority queuing applies to all Data workspace actions.',
+        engine:      'Hyper-Flash Data Matrix + Cortex Pro Analytics Cluster',
+        ctaLabel:    'Upgrade to Data Specialist',
+        monthly:     9,
+        annualMo:    7,
+        annualTotal: 84,
+        features: [
+          { on: true, text: 'Extended parsing matrices',                meta: 'CSV · XLSX · PDF · JSON UP TO 50MB' },
+          { on: true, text: 'Automated data cleaning & normalisation pipelines' },
+          { on: true, text: 'Priority data engine queue',               meta: 'ZERO THROTTLING ON ANALYTICS' },
+          { on: true, text: 'Persistent analytics memory vault',        meta: '100 DEEP-CONTEXT ITEMS' },
+          { on: true, text: '7 Production-Grade Data Automations',      meta: 'PER MONTH' }
+        ]
+      },
+      business: {
+        badge:       'Data Synthesis Engine',
+        name:        'Data Ops Heavy',
+        tagline:     'Massive background pipeline data synthesis with enterprise-grade failover.',
+        quotaValue:  '200 Autonomous Data Pipelines',
+        quotaUnit:   'PER DAY',
+        quotaIcon:   'hub',
+        quotaTooltip:'Each pipeline is a fully-orchestrated data synthesis task that runs continuously in the background. Independent of your interactive quota.',
+        engine:      'Enterprise Omni 5.0 + DeepV3 Analytics Cluster',
+        ctaLabel:    'Upgrade to Data Ops Heavy',
+        monthly:     22,
+        annualMo:    18,
+        annualTotal: 216,
+        features: [
+          { on: true, text: 'Massive background data synthesis orchestrator' },
+          { on: true, text: 'Multi-source ingestion',                          meta: 'ACROSS 40+ POOLED CONNECTORS' },
+          { on: true, text: 'Enterprise-grade failover for continuous pipelines' },
+          { on: true, text: 'Full-retention analytical warehouse',             meta: 'ZERO TRUNCATION' },
+          { on: true, text: '25 Full-Execution Data Pipelines',                meta: 'PER MONTH' }
+        ]
+      }
+    },
+    design: {
+      pro: {
+        badge:       'Design Specialist',
+        name:        'Design Specialist',
+        tagline:     'Full component library access and premium asset rendering at every scale.',
+        quotaValue:  '50 Priority Design Cycles',
+        quotaUnit:   'PER DAY',
+        quotaIcon:   'palette',
+        quotaTooltip:'Each cycle covers a full UI generation pass — component composition, asset rendering, responsive preview, and export. Priority queuing applies to all Design workspace actions.',
+        engine:      'Hyper-Flash UI Matrix + Cortex Pro Design Cluster',
+        ctaLabel:    'Upgrade to Design Specialist',
+        monthly:     10,
+        annualMo:    8,
+        annualTotal: 96,
+        features: [
+          { on: true, text: 'Full component library access',                    meta: 'SHADCN · TAILWIND · RADIX' },
+          { on: true, text: 'Premium asset rendering & live preview pipeline' },
+          { on: true, text: 'Multi-viewport responsive generation engine' },
+          { on: true, text: 'Design system memory vault',                       meta: '100 TOKENS & PATTERNS' },
+          { on: true, text: '7 Production-Grade Design Automations',            meta: 'PER MONTH' }
+        ]
+      },
+      business: {
+        badge:       'Multi-Page Engine',
+        name:        'Design Studio',
+        tagline:     'Multi-page system generation with custom Tailwind theme audits.',
+        quotaValue:  '180 Autonomous Design Pipelines',
+        quotaUnit:   'PER DAY',
+        quotaIcon:   'auto_awesome',
+        quotaTooltip:'Each pipeline generates, audits, and iterates on complete multi-page UI systems. Runs continuously in the background — independent of your interactive quota.',
+        engine:      'Enterprise Omni 5.0 + Design Cluster Routing',
+        ctaLabel:    'Upgrade to Design Studio',
+        monthly:     29,
+        annualMo:    24,
+        annualTotal: 288,
+        features: [
+          { on: true, text: 'Multi-page system generation',                   meta: 'FULL APP SHELLS' },
+          { on: true, text: 'Custom Tailwind theme audits & auto-remediation' },
+          { on: true, text: 'Asynchronous design review orchestrator' },
+          { on: true, text: 'Complete design system memory',                  meta: 'ZERO TRUNCATION' },
+          { on: true, text: '25 Full-Execution Design Pipelines',             meta: 'PER MONTH' }
+        ]
+      }
+    }
+  };
+
+  /* ═══════════════════════════════════════════════════════════
+     STATE
+     ═══════════════════════════════════════════════════════════ */
+  const state = {
+    workspace: 'unified',
+    cycle: 'monthly'
+  };
+
+  /* ═══════════════════════════════════════════════════════════
+     DOM SHORTHAND
+     ═══════════════════════════════════════════════════════════ */
+  const $  = (s, r) => (r || document).querySelector(s);
+  const $$ = (s, r) => Array.prototype.slice.call((r || document).querySelectorAll(s));
+
+  /* ═══════════════════════════════════════════════════════════
+     HELPERS
+     ═══════════════════════════════════════════════════════════ */
+  function moneyFmt(n) { return '$' + n; }
+
+  function makeFeature(f) {
+    const li = document.createElement('li');
+    li.className = 'feature ' + (f.on ? 'on' : 'off');
+
+    const ico = document.createElement('span');
+    ico.className = 'ico';
+    ico.innerHTML = '<span class="material-symbols-rounded" aria-hidden="true">' +
+                    (f.on ? 'check' : 'close') + '</span>';
+
+    const textWrap = document.createElement('span');
+    textWrap.className = 'feature-text';
+    textWrap.appendChild(document.createTextNode(f.text));
+    if (f.meta) {
+      const meta = document.createElement('span');
+      meta.className = 'feature-meta';
+      meta.textContent = f.meta;
+      textWrap.appendChild(meta);
+    }
+
+    li.appendChild(ico);
+    li.appendChild(textWrap);
+    return li;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     RENDER — PRO CARD
+     ═══════════════════════════════════════════════════════════ */
+  function renderPro(v) {
+    $('#p-badge').textContent   = v.badge;
+    $('#p-name').textContent    = v.name;
+    $('#p-tagline').textContent = v.tagline;
+
+    $('#p-quota-value').textContent = v.quotaValue;
+    $('#p-quota-unit').textContent  = v.quotaUnit;
+    $('#p-quota-icon').textContent  = v.quotaIcon;
+
+    $('#p-quota-pill').setAttribute('data-tooltip', v.quotaTooltip);
+    $('#p-engine').textContent = v.engine;
+
+    /* Features */
+    const ul = $('#p-features');
+    ul.textContent = '';
+    v.features.forEach(f => ul.appendChild(makeFeature(f)));
+
+    /* Price */
+    const isAnnual = state.cycle === 'annual';
+    const displayAmount = isAnnual ? v.annualMo : v.monthly;
+    $('#p-amount').textContent = moneyFmt(displayAmount);
+    $('#p-term').textContent   = '/mo';
+
+    if (isAnnual) {
+      const savePct = Math.round((1 - v.annualMo / v.monthly) * 100);
+      $('#p-meta').innerHTML =
+        '<span class="strike">$' + v.monthly + '/mo</span>' +
+        'Billed $' + v.annualTotal + ' / yr · Save ' + savePct + '%';
+    } else {
+      $('#p-meta').textContent = 'Billed monthly. Cancel anytime.';
+    }
+
+    /* CTA */
+    const subtier = state.workspace === 'unified' ? 'full'
+                  : state.workspace === 'data'    ? 'data'
+                  : 'design';
+    $('#p-cta').href = '/Axelr-Frontend/checkout.html?plan=pro&subtier=' +
+                       subtier + '&cycle=' + state.cycle;
+    $('#p-cta-label').textContent = v.ctaLabel;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     RENDER — BUSINESS CARD
+     ═══════════════════════════════════════════════════════════ */
+  function renderBusiness(v) {
+    $('#b-badge').textContent   = v.badge;
+    $('#b-name').textContent    = v.name;
+    $('#b-tagline').textContent = v.tagline;
+
+    $('#b-quota-value').textContent = v.quotaValue;
+    $('#b-quota-unit').textContent  = v.quotaUnit;
+    $('#b-quota-icon').textContent  = v.quotaIcon;
+
+    $('#b-quota-pill').setAttribute('data-tooltip', v.quotaTooltip);
+    $('#b-engine').textContent = v.engine;
+
+    const ul = $('#b-features');
+    ul.textContent = '';
+    v.features.forEach(f => ul.appendChild(makeFeature(f)));
+
+    const isAnnual = state.cycle === 'annual';
+    const displayAmount = isAnnual ? v.annualMo : v.monthly;
+    $('#b-amount').textContent = moneyFmt(displayAmount);
+    $('#b-term').textContent   = '/mo';
+
+    if (isAnnual) {
+      const savePct = Math.round((1 - v.annualMo / v.monthly) * 100);
+      $('#b-meta').innerHTML =
+        '<span class="strike">$' + v.monthly + '/mo</span>' +
+        'Billed $' + v.annualTotal + ' / yr · Save ' + savePct + '%';
+    } else {
+      $('#b-meta').textContent = 'Billed monthly. Cancel anytime.';
+    }
+
+    const subtier = state.workspace === 'unified' ? 'full'
+                  : state.workspace === 'data'    ? 'data'
+                  : 'design';
+    $('#b-cta').href = '/Axelr-Frontend/checkout.html?plan=business&subtier=' +
+                       subtier + '&cycle=' + state.cycle;
+    $('#b-cta-label').textContent = v.ctaLabel;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     RENDER — ALL
+     ═══════════════════════════════════════════════════════════ */
+  function render() {
+    const v = VARIANTS[state.workspace];
+    renderPro(v.pro);
+    renderBusiness(v.business);
+    syncTooltips();
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     SEGMENTED CONTROL
+     ═══════════════════════════════════════════════════════════ */
+  function wireSegmented() {
+    const tabs = $$('.seg-btn', $('#workspace-tabs'));
+    const indicator = $('#seg-indicator');
+
+    function setActive(idx) {
+      indicator.style.setProperty('--idx', idx);
+      tabs.forEach((btn, i) => {
+        const active = i === idx;
+        btn.setAttribute('aria-pressed', String(active));
+        btn.setAttribute('aria-selected', String(active));
+      });
+    }
+
+    tabs.forEach((btn, idx) => {
+      btn.addEventListener('click', () => {
+        const ws = btn.dataset.ws;
+        if (!VARIANTS[ws] || ws === state.workspace) return;
+        state.workspace = ws;
+        setActive(idx);
+        render();
+      });
+    });
+
+    const initialIdx = tabs.findIndex(b => b.dataset.ws === state.workspace);
+    setActive(initialIdx < 0 ? 0 : initialIdx);
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     CYCLE TOGGLE
+     ═══════════════════════════════════════════════════════════ */
+  function wireCycle() {
+    const btns = $$('.cycle-btn');
+    btns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const next = btn.dataset.cycle;
+        if (!next || next === state.cycle) return;
+        state.cycle = next;
+        btns.forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
+        render();
+      });
+    });
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     TOOLTIP SYSTEM
+     ═══════════════════════════════════════════════════════════ */
+  const tooltipEl = $('#tooltip');
+  let currentAnchor = null;
+
+  function showTooltip(anchor) {
+    const text = anchor.getAttribute('data-tooltip');
+    if (!text) return;
+    currentAnchor = anchor;
+    tooltipEl.textContent = text;
+    tooltipEl.setAttribute('aria-hidden', 'false');
+
+    tooltipEl.style.left = '0px';
+    tooltipEl.style.top = '0px';
+    tooltipEl.classList.add('visible');
+
+    const rect = anchor.getBoundingClientRect();
+    const tipRect = tooltipEl.getBoundingClientRect();
+
+    let left = rect.left + rect.width / 2 - tipRect.width / 2;
+    let top  = rect.top - tipRect.height - 12;
+
+    const pad = 12;
+    left = Math.max(pad, Math.min(left, window.innerWidth - tipRect.width - pad));
+    if (top < pad) top = rect.bottom + 12;
+
+    tooltipEl.style.left = left + 'px';
+    tooltipEl.style.top  = top  + 'px';
+  }
+
+  function hideTooltip() {
+    currentAnchor = null;
+    tooltipEl.classList.remove('visible');
+    tooltipEl.setAttribute('aria-hidden', 'true');
+  }
+
+  function syncTooltips() {
+    $$('[data-tooltip]').forEach(el => {
+      if (el.dataset.tooltipBound === '1') return;
+      el.dataset.tooltipBound = '1';
+      el.addEventListener('mouseenter', () => showTooltip(el));
+      el.addEventListener('mouseleave', hideTooltip);
+      el.addEventListener('focus', () => showTooltip(el));
+      el.addEventListener('blur', hideTooltip);
+    });
+  }
+
+  window.addEventListener('scroll', hideTooltip, { passive: true });
+  window.addEventListener('resize', hideTooltip);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && currentAnchor) hideTooltip();
+  });
+
+  /* ═══════════════════════════════════════════════════════════
+     INIT
+     ═══════════════════════════════════════════════════════════ */
+  function init() {
+    wireCycle();
+    wireSegmented();
+    render();
+    syncTooltips();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>
