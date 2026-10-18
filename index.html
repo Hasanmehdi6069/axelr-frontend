@@ -105,16 +105,15 @@
 <body class="workspace-core">
     <!-- Offline Banner -->
     <div id="offline-banner">⚠️ Network Disconnected. Axelr is in standby mode. Data preserved locally.</div>
-
     <!-- Auth Wall -->
     <div id="auth-wall">
         <div class="auth-card">
             <div class="auth-header">
                 <div class="auth-logo">
-           <svg viewBox="0 0 100 100" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 0 12px rgba(123,0,254,0.4));">
-                    <path d="M50 15 L20 32.5 L20 67.5 L50 85" stroke="#ffffff" stroke-width="6" stroke-linejoin="bevel" fill="rgba(255,255,255,0.05)"/>
-                    <path d="M50 15 L80 32.5 L50 50 L80 67.5 L50 85" stroke="var(--accent-glow)" stroke-width="6" stroke-linejoin="bevel" fill="none"/>
-                    <path d="M20 32.5 L50 50 L20 67.5" stroke="#ffffff" stroke-width="3" stroke-linejoin="bevel" opacity="0.5"/>
+                   <svg viewBox="0 0 100 100" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 0 12px rgba(0,242,254,0.4));">
+                        <path d="M50 15 L20 32.5 L20 67.5 L50 85" stroke="var(--logo-stroke-primary)" stroke-width="6" stroke-linejoin="bevel" fill="var(--logo-fill-primary)" />
+                        <path d="M50 15 L80 32.5 L50 50 L80 67.5 L50 85" stroke="currentColor" stroke-width="6" stroke-linejoin="bevel" fill="none" />
+                        <path d="M20 32.5 L50 50 L20 67.5" stroke="var(--logo-stroke-secondary)" stroke-width="3" stroke-linejoin="bevel" opacity="0.5" />
                 </svg>
             <span style="font-weight:900;letter-spacing:4px;font-family:'JetBrains Mono',monospace;">AXELR</span></div>
                 <p class="auth-tagline">The Intelligence Execution Engine</p>
@@ -175,8 +174,7 @@
 
             <!-- Auth wall footer -->
 <p class="auth-terms">
-    By continuing, you agree to our <a href="#" onclick="navigateToPage('/Axelr-Frontend/terms.html'); return false;">Terms</a> and <a href="#" onclick="navigateToPage('/Axelr-Frontend/privacy.html'); return false;">Privacy Policy</a>.
-</p>
+    By continuing, you agree to our <a href="/Axelr-Frontend/terms.html" target="_blank">Terms</a> and <a href="/Axelr-Frontend/privacy.html" target="_blank">Privacy Policy</a>
         </div>
     </div>
 
@@ -193,13 +191,13 @@
     <div id="workspace-selector">
         <h2>Select Workspace</h2>
         <div class="ws-grid">
-            <div class="workspace-card general" onclick="selectWorkspace('core')"></div>
+            <div class="workspace-card general" onclick="selectWorkspace('core')">
     <div class="ws-card-glow general-glow"></div>
     <div class="ws-card-icon">
         <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5">
-    <path d="M12 2a10 10 0 0 0-7.07 17.07L3 21l2.93-1.93A10 10 0 1 0 12 2z" />
-    <path d="M8 9h8M8 13h6M8 17h4" />
-</svg>
+            <path d="M12 2a10 10 0 0 0-7.07 17.07L3 21l2.93-1.93A10 10 0 1 0 12 2z" />
+            <path d="M8 9h8M8 13h6M8 17h4" />
+        </svg>
     </div>
     <div class="ws-card-content">
         <h3 class="ws-title">Axelr Core</h3>
@@ -613,7 +611,7 @@
                     <div style="border-top:1px solid var(--border-muted);margin:5px 0;"></div>
                     <div class="footer-opt" style="padding:8px;" onclick="openProfileModal()"><span class="material-symbols-rounded" style="font-size:18px;">account_circle</span> Profile Settings</div>
                     <div class="footer-opt" style="padding:8px;" onclick="openSubscriptionModal()"><span class="material-symbols-rounded" style="font-size:18px;">credit_card</span> Manage Subscription</div>
-                    <div id="admin-dashboard-btn" class="footer-opt" style="padding:8px;color:var(--accent-glow);display:none;" onclick="openAdminModal()"><span class="material-symbols-rounded" style="font-size:18px;">admin_panel_settings</span> Admin Control Room</div>
+                    <div id="admin-dashboard-btn" class="footer-opt" style="padding:8px;color:var(--accent-glow);display:none;" onclick="window.location.href='/Axelr-Frontend/admin.html'"><span class="material-symbols-rounded" style="font-size:18px;">admin_panel_settings</span> Admin Control Room</div>
                     <button class="logout-btn" onclick="executeGlobalLogout()">Log out</button>
                 </div>
             </div>
@@ -671,10 +669,10 @@
                 <button class="action-btn enhance-btn" id="enhance-trigger" title="Auto-Enhance Prompt" onclick="enhanceUserPrompt()">
                     <span class="material-symbols-rounded">auto_awesome</span>
                 </button>
-                <button class="action-btn mic-btn" id="mic-trigger" title="Voice Input">
+                <button class="action-btn mic-btn" id="mic-trigger" title="Voice Input (grant microphone permissions to use)">
                     <span class="material-symbols-rounded">mic</span>
                 </button>
-                <button class="action-btn send-btn" id="send-trigger" onclick="executeCommand()" disabled>
+                <button class="action-btn send-btn" id="send-trigger" onclick="executeCommand()" title="Send message">
                     <span class="material-symbols-rounded">send</span>
                 </button>
             </div>

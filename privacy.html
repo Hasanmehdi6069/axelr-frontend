@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Privacy Policy — AXELR AI</title>
     <meta name="description" content="Privacy Policy for the AXELR AI Intelligence Execution Platform." />
+    <meta name="theme-color" content="#050508" />
+    <meta name="color-scheme" content="dark light" />
     <link rel="icon" type="image/png" href="/Axelr-Frontend/favicon.png" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,600,1,0" rel="stylesheet" />
@@ -19,11 +21,28 @@
             --legal-text: #f4f8ff;
             --legal-muted: #a1b5cc;
             --legal-dim: #62778f;
+            --legal-topbar: rgba(5, 5, 8, 0.72);
+            --legal-code: rgba(0, 0, 0, 0.35);
+            --legal-fab: #f4f8ff;
+            --legal-fab-text: #050508;
             --legal-mono: 'JetBrains Mono', ui-monospace, monospace;
             --legal-sans: 'Inter', system-ui, -apple-system, sans-serif;
         }
+        body.light-theme {
+            --legal-bg: #f6f8fc;
+            --legal-card: rgba(255, 255, 255, 0.92);
+            --legal-border: rgba(11, 18, 32, 0.10);
+            --legal-border-hover: rgba(11, 18, 32, 0.22);
+            --legal-text: #0b1220;
+            --legal-muted: #465a72;
+            --legal-dim: #7b8ca3;
+            --legal-topbar: rgba(246, 248, 252, 0.82);
+            --legal-code: rgba(11, 18, 32, 0.06);
+            --legal-fab: #0b1220;
+            --legal-fab-text: #f6f8fc;
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        html { scroll-behavior: smooth; }
+        html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
         body {
             background: var(--legal-bg);
             color: var(--legal-text);
@@ -33,6 +52,7 @@
             -webkit-font-smoothing: antialiased;
             position: relative;
             overflow-x: hidden;
+            transition: background .3s ease, color .3s ease;
         }
         body::before {
             content: ''; position: fixed; inset: 0;
@@ -42,6 +62,30 @@
                 radial-gradient(ellipse 80% 50% at 50% 100%, rgba(16, 185, 129, 0.03), transparent 60%);
             pointer-events: none;
             z-index: 0;
+        }
+        body.light-theme::before {
+            background:
+                radial-gradient(ellipse 60% 40% at 80% 0%, rgba(139, 92, 246, 0.07), transparent 60%),
+                radial-gradient(ellipse 60% 40% at 20% 20%, rgba(0, 180, 200, 0.06), transparent 60%),
+                radial-gradient(ellipse 80% 50% at 50% 100%, rgba(16, 185, 129, 0.05), transparent 60%);
+        }
+
+        :focus-visible { outline: 2px solid var(--legal-accent); outline-offset: 3px; border-radius: 8px; }
+        .skip {
+            position: absolute; left: -9999px; top: 0; z-index: 100000;
+            padding: 12px 20px; background: var(--legal-accent); color: #fff;
+            font-weight: 700; text-decoration: none; border-radius: 0 0 12px 0;
+        }
+        .skip:focus { left: 0; }
+
+        .material-symbols-rounded {
+            font-family: 'Material Symbols Rounded';
+            font-weight: normal; font-style: normal; line-height: 1;
+            letter-spacing: normal; text-transform: none; display: inline-block;
+            white-space: nowrap; word-wrap: normal; direction: ltr;
+            font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+            -webkit-font-feature-settings: 'liga'; font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased; user-select: none;
         }
 
         .legal-progress {
@@ -53,22 +97,30 @@
             transition: width 0.08s linear;
         }
 
+        /* ── TOPBAR — two clusters, not four loose items ─────────── */
         .legal-topbar {
-            position: sticky; top: 0; z-index: 900;
-            display: flex; align-items: center; justify-content: space-between;
-            gap: 16px;
-            padding: 14px 32px;
-            background: rgba(5, 5, 8, 0.72);
-            backdrop-filter: blur(24px) saturate(150%);
-            -webkit-backdrop-filter: blur(24px) saturate(150%);
-            border-bottom: 1px solid var(--legal-border);
-        }
+    position: sticky; top: 0; z-index: 900;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 12px;
+    padding: 12px clamp(16px, 3vw, 32px);
+    background: var(--legal-topbar);
+    backdrop-filter: blur(24px) saturate(150%);
+    -webkit-backdrop-filter: blur(24px) saturate(150%);
+    border-bottom: 1px solid var(--legal-border);
+    transition: background .3s ease, border-color .3s ease;
+}
+.legal-brand { justify-self: start; }
+.legal-nav   { justify-self: center; }
+.legal-topbar-actions { justify-self: end; display: flex; align-items: center; gap: 10px; }
+
         .legal-brand {
             display: flex; align-items: center; gap: 10px;
             font-family: var(--legal-mono);
             font-weight: 800; font-size: 15px; letter-spacing: 2px;
             color: var(--legal-text); text-decoration: none;
-            white-space: nowrap;
+            white-space: nowrap; flex-shrink: 0;
         }
         .legal-brand-chip {
             font-size: 10px; font-weight: 700; letter-spacing: 1px;
@@ -77,28 +129,50 @@
             color: var(--legal-accent);
             border: 1px solid rgba(139, 92, 246, 0.22);
         }
-        .legal-nav { display: flex; align-items: center; gap: 4px; }
+        .legal-nav { display: flex; align-items: center; gap: 2px; }
         .legal-nav a {
             display: inline-flex; align-items: center; gap: 6px;
-            padding: 8px 14px; border-radius: 8px;
+            padding: 8px 12px; border-radius: 8px;
             font-size: 13px; font-weight: 500;
             color: var(--legal-muted); text-decoration: none;
-            transition: all 0.2s ease;
+            white-space: nowrap;
+            transition: color 0.2s ease, background 0.2s ease;
         }
-        .legal-nav a:hover { color: var(--legal-text); background: rgba(255, 255, 255, 0.05); }
+        .legal-nav a:hover { color: var(--legal-text); background: rgba(128, 128, 160, 0.10); }
         .legal-nav a.active {
             color: var(--legal-accent);
-            background: rgba(139, 92, 246, 0.08);
+            background: rgba(139, 92, 246, 0.10);
         }
         .legal-nav a .material-symbols-rounded { font-size: 16px; }
+
+        .icon-btn {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 36px; height: 36px; border-radius: 10px; cursor: pointer;
+            background: transparent; border: 1px solid var(--legal-border);
+            color: var(--legal-muted); flex-shrink: 0;
+            transition: color .2s ease, border-color .2s ease, background .2s ease, transform .2s ease;
+        }
+        .icon-btn:hover {
+            color: var(--legal-text);
+            border-color: var(--legal-border-hover);
+            background: rgba(128, 128, 160, 0.10);
+            transform: translateY(-1px);
+        }
+        .icon-btn:active { transform: translateY(0); }
+        .icon-btn .material-symbols-rounded { font-size: 18px; }
+
         .legal-topbar-cta {
             display: inline-flex; align-items: center; gap: 6px;
             padding: 8px 16px; border-radius: 10px;
             background: var(--legal-text); color: var(--legal-bg);
             font-size: 13px; font-weight: 600; text-decoration: none;
+            white-space: nowrap;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
-        .legal-topbar-cta:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(139, 92, 246, 0.15); }
+        .legal-topbar-cta:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(139, 92, 246, 0.18);
+        }
         .legal-topbar-cta .material-symbols-rounded { font-size: 16px; }
 
         .legal-shell {
@@ -118,6 +192,8 @@
             padding: 40px 20px 60px 0;
             max-height: calc(100vh - 100px);
             overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--legal-border) transparent;
         }
         .legal-toc-header {
             font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
@@ -134,10 +210,8 @@
         }
         .legal-toc a .num {
             font-family: var(--legal-mono);
-            font-size: 11px;
-            color: var(--legal-dim);
-            min-width: 18px;
-            transition: color 0.2s;
+            font-size: 11px; color: var(--legal-dim);
+            min-width: 18px; transition: color 0.2s;
         }
         .legal-toc a:hover { color: var(--legal-text); border-left-color: var(--legal-border-hover); }
         .legal-toc a.active {
@@ -178,23 +252,37 @@
         .legal-meta-pill {
             display: inline-flex; align-items: center; gap: 8px;
             padding: 8px 14px; border-radius: 10px;
-            background: rgba(255, 255, 255, 0.02);
+            background: rgba(128, 128, 160, 0.06);
             border: 1px solid var(--legal-border);
             font-size: 12.5px;
             color: var(--legal-muted);
             font-family: var(--legal-mono);
+            transition: border-color .2s ease, transform .2s ease;
         }
+        .legal-meta-pill:hover { border-color: var(--legal-border-hover); transform: translateY(-1px); }
         .legal-meta-pill .material-symbols-rounded { font-size: 16px; color: var(--legal-accent); }
 
         .legal-card {
+            position: relative;
             background: var(--legal-card);
             backdrop-filter: blur(24px) saturate(150%);
             -webkit-backdrop-filter: blur(24px) saturate(150%);
             border: 1px solid var(--legal-border);
             border-radius: 24px;
             padding: 48px 48px 56px;
+            overflow: hidden;
             box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.7),
                         inset 0 1px 0 rgba(255, 255, 255, 0.03);
+            transition: background .3s ease, border-color .3s ease, box-shadow .3s ease;
+        }
+        .legal-card::before {
+            content: ''; position: absolute; top: 0; left: 12%; right: 12%; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--legal-accent), transparent);
+            opacity: 0.5; pointer-events: none;
+        }
+        body.light-theme .legal-card {
+            box-shadow: 0 30px 80px -32px rgba(11, 18, 32, 0.18),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.65);
         }
 
         .legal-section {
@@ -205,10 +293,7 @@
         .legal-section:last-child { border-bottom: none; padding-bottom: 0; }
         .legal-section:first-child { padding-top: 0; }
 
-        .legal-section-header {
-            display: flex; align-items: center; gap: 14px;
-            margin-bottom: 20px;
-        }
+        .legal-section-header { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
         .legal-section-num {
             display: inline-flex; align-items: center; justify-content: center;
             min-width: 36px; height: 36px;
@@ -217,8 +302,7 @@
             border: 1px solid rgba(139, 92, 246, 0.2);
             color: var(--legal-accent);
             font-family: var(--legal-mono);
-            font-weight: 700;
-            font-size: 13px;
+            font-weight: 700; font-size: 13px;
         }
         .legal-section h2 {
             font-size: clamp(20px, 2.6vw, 26px);
@@ -235,25 +319,18 @@
         .legal-section p:last-child { margin-bottom: 0; }
         .legal-section strong { color: var(--legal-text); font-weight: 600; }
         .legal-section em { color: var(--legal-text); font-style: italic; }
-        .legal-section ul {
-            margin: 12px 0 18px;
-            padding-left: 0;
-            list-style: none;
-        }
+        .legal-section ul { margin: 12px 0 18px; padding-left: 0; list-style: none; }
         .legal-section ul li {
             position: relative;
             padding-left: 24px;
-            font-size: 14.5px;
-            line-height: 1.75;
+            font-size: 14.5px; line-height: 1.75;
             color: var(--legal-muted);
             margin-bottom: 10px;
         }
         .legal-section ul li::before {
             content: '';
-            position: absolute;
-            left: 4px; top: 12px;
-            width: 6px; height: 6px;
-            border-radius: 50%;
+            position: absolute; left: 4px; top: 12px;
+            width: 6px; height: 6px; border-radius: 50%;
             background: var(--legal-accent);
             box-shadow: 0 0 8px var(--legal-accent);
         }
@@ -264,9 +341,11 @@
             transition: border-color 0.2s;
         }
         .legal-section a:hover { border-bottom-color: var(--legal-accent-2); }
+        body.light-theme .legal-section a { color: #0891b2; }
+        body.light-theme .legal-section a:hover { border-bottom-color: #0891b2; }
         .legal-section code {
             padding: 2px 7px;
-            background: rgba(0, 0, 0, 0.35);
+            background: var(--legal-code);
             border: 1px solid var(--legal-border);
             border-radius: 5px;
             font-family: var(--legal-mono);
@@ -284,9 +363,7 @@
             font-size: 14px; line-height: 1.65;
             color: var(--legal-text);
         }
-        .legal-callout .material-symbols-rounded {
-            font-size: 22px; color: var(--legal-accent); flex-shrink: 0;
-        }
+        .legal-callout .material-symbols-rounded { font-size: 22px; color: var(--legal-accent); flex-shrink: 0; }
         .legal-callout.success {
             background: rgba(16, 185, 129, 0.05);
             border-color: rgba(16, 185, 129, 0.2);
@@ -319,9 +396,9 @@
             display: flex; align-items: center; justify-content: center;
             width: 44px; height: 44px;
             border-radius: 50%;
-            background: var(--legal-text); color: var(--legal-bg);
+            background: var(--legal-fab); color: var(--legal-fab-text);
             border: none; cursor: pointer;
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
             opacity: 0; visibility: hidden;
             transform: translateY(12px);
             transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -329,27 +406,61 @@
         .legal-fab.show { opacity: 1; visibility: visible; transform: translateY(0); }
         .legal-fab:hover { transform: translateY(-3px) scale(1.05); }
 
+        /* ── Responsive ──────────────────────────────────────────── */
         @media (max-width: 900px) {
             .legal-shell { grid-template-columns: 1fr; padding: 0 20px; }
             .legal-toc {
-                position: static; padding: 20px 0;
+                position: static;
+                display: flex; gap: 8px;
+                padding: 16px 0 18px;
+                margin-bottom: 8px;
                 max-height: none;
+                overflow-x: auto;
                 border-bottom: 1px solid var(--legal-border);
-                margin-bottom: 20px;
+                scrollbar-width: none;
+            }
+            .legal-toc::-webkit-scrollbar { display: none; }
+            .legal-toc-header { display: none; }
+            .legal-toc a {
+                flex: 0 0 auto;
+                padding: 8px 14px;
+                border: 1px solid var(--legal-border);
+                border-left: 1px solid var(--legal-border);
+                border-radius: 999px;
+                font-size: 12px;
+                white-space: nowrap;
+            }
+            .legal-toc a .num { display: none; }
+            .legal-toc a.active {
+                border-color: var(--legal-accent);
+                background: rgba(139, 92, 246, 0.10);
             }
             .legal-main { padding: 24px 0 80px; }
             .legal-card { padding: 32px 24px 40px; border-radius: 20px; }
             .legal-section { padding: 32px 0; }
-            .legal-topbar { padding: 12px 20px; }
-            .legal-nav a span:not(.material-symbols-rounded) { display: none; }
             .legal-footer { padding: 24px 20px; }
         }
+        @media (max-width: 820px) {
+    .legal-topbar { grid-template-columns: auto 1fr auto; }
+    .legal-nav a span:not(.material-symbols-rounded) { display: none; }
+    .legal-nav a { padding: 8px; }
+}
+@media (max-width: 600px) {
+    .legal-topbar {
+        grid-template-columns: 1fr auto;
+        padding: 10px 16px;
+        gap: 8px;
+    }
+    .legal-nav { display: none; }
+    .legal-topbar-cta span:not(.material-symbols-rounded) { display: none; }
+    .legal-topbar-cta { padding: 9px 11px; }
+}
         @media (max-width: 480px) {
             .legal-card { padding: 24px 18px 32px; border-radius: 16px; }
             .legal-hero h1 { font-size: 32px; letter-spacing: -0.8px; }
             .legal-hero .lede { font-size: 15px; }
             .legal-section-num { min-width: 32px; height: 32px; font-size: 12px; }
-            .legal-topbar-cta span:not(.material-symbols-rounded) { display: none; }
+            .legal-brand { font-size: 13px; letter-spacing: 1.5px; }
         }
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
@@ -358,245 +469,303 @@
                 scroll-behavior: auto !important;
             }
         }
+        @media print {
+            .legal-topbar, .legal-toc, .legal-progress, .legal-fab, .legal-footer { display: none !important; }
+            body { background: #fff; color: #000; }
+            .legal-shell { display: block; padding: 0; }
+            .legal-main { padding: 0; }
+            .legal-card { box-shadow: none; border: 0; padding: 0; background: #fff; }
+        }
     </style>
 </head>
 <body>
-    <div class="legal-progress" id="legal-progress"></div>
+<a class="skip" href="#main">Skip to privacy content</a>
+<script>
+    try { if (localStorage.getItem('axelr_theme') === 'light') document.body.classList.add('light-theme'); } catch (e) {}
+</script>
 
-    <header class="legal-topbar">
-        <a href="/Axelr-Frontend/index.html" class="legal-brand">
-            <svg viewBox="0 0 100 100" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M50 15 L20 32.5 L20 67.5 L50 85" stroke="currentColor" stroke-width="6" stroke-linejoin="bevel" fill="rgba(139,92,246,0.08)" />
-                <path d="M50 15 L80 32.5 L50 50 L80 67.5 L50 85" stroke="var(--legal-accent)" stroke-width="6" stroke-linejoin="bevel" fill="none" />
-            </svg>
-            AXELR
-            <span class="legal-brand-chip">PRIVACY</span>
+<div class="legal-progress" id="legal-progress"></div>
+<header class="legal-topbar">
+    <a href="/Axelr-Frontend/index.html" class="legal-brand">
+        <svg viewBox="0 0 100 100" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M50 15 L20 32.5 L20 67.5 L50 85" stroke="#ffffff" stroke-width="6" stroke-linejoin="bevel" fill="rgba(255,255,255,0.05)" />
+            <path d="M50 15 L80 32.5 L50 50 L80 67.5 L50 85" stroke="var(--legal-accent)" stroke-width="6" stroke-linejoin="bevel" fill="none" />
+            <path d="M20 32.5 L50 50 L20 67.5" stroke="#ffffff" stroke-width="3" stroke-linejoin="bevel" opacity="0.5" />
+        </svg>
+        AXELR
+        <span class="legal-brand-chip">PRIVACY</span>
+    </a>
+
+    <nav class="legal-nav" aria-label="Site">
+        <a href="/Axelr-Frontend/docs.html" title="Documentation">
+            <span class="material-symbols-rounded" aria-hidden="true">menu_book</span>
+            <span>Docs</span>
         </a>
+        <a href="/Axelr-Frontend/pricing.html" title="Pricing">
+            <span class="material-symbols-rounded" aria-hidden="true">payments</span>
+            <span>Pricing</span>
+        </a>
+        <a href="/Axelr-Frontend/terms.html" title="Terms">
+            <span class="material-symbols-rounded" aria-hidden="true">gavel</span>
+            <span>Terms</span>
+        </a>
+        <a href="/Axelr-Frontend/privacy.html" class="active" aria-current="page" title="Privacy">
+            <span class="material-symbols-rounded" aria-hidden="true">shield</span>
+            <span>Privacy</span>
+        </a>
+    </nav>
 
-        <nav class="legal-nav">
-            <a href="/Axelr-Frontend/docs.html">
-                <span class="material-symbols-rounded">menu_book</span>
-                <span>Docs</span>
-            </a>
-            <a href="/Axelr-Frontend/terms.html">
-                <span class="material-symbols-rounded">gavel</span>
-                <span>Terms</span>
-            </a>
-            <a href="/Axelr-Frontend/privacy.html" class="active">
-                <span class="material-symbols-rounded">shield</span>
-                <span>Privacy</span>
-            </a>
-        </nav>
-
+    <div class="legal-topbar-actions">
+        <button class="icon-btn" id="theme-toggle" type="button" aria-label="Switch to light theme" aria-pressed="false" title="Toggle theme">
+            <span class="material-symbols-rounded" aria-hidden="true">light_mode</span>
+        </button>
         <a href="/Axelr-Frontend/index.html" class="legal-topbar-cta">
-            <span class="material-symbols-rounded">arrow_back</span>
+            <span class="material-symbols-rounded" aria-hidden="true">arrow_back</span>
             <span>Platform</span>
         </a>
-    </header>
+    </div>
+</header>
+<div class="legal-shell">
+    <aside class="legal-toc" aria-label="On this page">
+        <div class="legal-toc-header">On this page</div>
+        <a href="#collect" data-toc="collect"><span class="num">01</span> Information We Collect</a>
+        <a href="#use" data-toc="use"><span class="num">02</span> How We Use It</a>
+        <a href="#sharing" data-toc="sharing"><span class="num">03</span> Data Sharing</a>
+        <a href="#retention" data-toc="retention"><span class="num">04</span> Data Retention</a>
+        <a href="#security" data-toc="security"><span class="num">05</span> Security</a>
+        <a href="#rights" data-toc="rights"><span class="num">06</span> Your Rights</a>
+        <a href="#children" data-toc="children"><span class="num">07</span> Children's Privacy</a>
+        <a href="#changes" data-toc="changes"><span class="num">08</span> Changes to Policy</a>
+        <a href="#contact" data-toc="contact"><span class="num">09</span> Contact Us</a>
+    </aside>
 
-    <div class="legal-shell">
-        <aside class="legal-toc">
-            <div class="legal-toc-header">On this page</div>
-            <a href="#collect" data-toc="collect"><span class="num">01</span> Information We Collect</a>
-            <a href="#use" data-toc="use"><span class="num">02</span> How We Use It</a>
-            <a href="#sharing" data-toc="sharing"><span class="num">03</span> Data Sharing</a>
-            <a href="#retention" data-toc="retention"><span class="num">04</span> Data Retention</a>
-            <a href="#security" data-toc="security"><span class="num">05</span> Security</a>
-            <a href="#rights" data-toc="rights"><span class="num">06</span> Your Rights</a>
-            <a href="#children" data-toc="children"><span class="num">07</span> Children's Privacy</a>
-            <a href="#changes" data-toc="changes"><span class="num">08</span> Changes to Policy</a>
-            <a href="#contact" data-toc="contact"><span class="num">09</span> Contact Us</a>
-        </aside>
-
-        <main class="legal-main">
-            <div class="legal-hero">
-                <div class="legal-hero-pill">
-                    <span class="material-symbols-rounded">shield</span>
-                    Privacy
+    <main class="legal-main" id="main">
+        <div class="legal-hero">
+            <div class="legal-hero-pill">
+                <span class="material-symbols-rounded" aria-hidden="true">shield</span>
+                Privacy
+            </div>
+            <h1>Privacy Policy</h1>
+            <p class="lede">
+                Your privacy is of utmost importance to us. This policy explains exactly what we collect,
+                why we collect it, and how you can control it.
+            </p>
+            <div class="legal-hero-meta">
+                <div class="legal-meta-pill">
+                    <span class="material-symbols-rounded" aria-hidden="true">schedule</span>
+                    Last updated: 2026-09-02
                 </div>
-                <h1>Privacy Policy</h1>
-                <p class="lede">
-                    Your privacy is of utmost importance to us. This policy explains exactly what we collect,
-                    why we collect it, and how you can control it.
-                </p>
-                <div class="legal-hero-meta">
-                    <div class="legal-meta-pill">
-                        <span class="material-symbols-rounded">schedule</span>
-                        Last updated: 2026-09-02
-                    </div>
-                    <div class="legal-meta-pill">
-                        <span class="material-symbols-rounded">menu_book</span>
-                        9 sections
-                    </div>
-                    <div class="legal-meta-pill">
-                        <span class="material-symbols-rounded">schedule</span>
-                        ~5 min read
-                    </div>
+                <div class="legal-meta-pill">
+                    <span class="material-symbols-rounded" aria-hidden="true">menu_book</span>
+                    9 sections
+                </div>
+                <div class="legal-meta-pill">
+                    <span class="material-symbols-rounded" aria-hidden="true">schedule</span>
+                    ~5 min read
                 </div>
             </div>
-
-            <article class="legal-card">
-                <section id="collect" class="legal-section">
-                    <div class="legal-section-header">
-                        <span class="legal-section-num">01</span>
-                        <h2>Information We Collect</h2>
-                    </div>
-                    <ul>
-                        <li><strong>Account Information:</strong> Email address, name, and authentication tokens (via Google or GitHub).</li>
-                        <li><strong>Usage Data:</strong> Queries, temporary uploaded files, response generations, and usage patterns to improve our AI models and user experience.</li>
-                        <li><strong>Device &amp; Browser Information:</strong> IP address, browser type, operating system, and referring pages — used to diagnose issues and prevent abuse.</li>
-                        <li><strong>Cookies:</strong> Essential cookies to maintain your session and preferences. You can disable cookies, but some features may not function properly.</li>
-                    </ul>
-                </section>
-
-                <section id="use" class="legal-section">
-                    <div class="legal-section-header">
-                        <span class="legal-section-num">02</span>
-                        <h2>How We Use Your Information</h2>
-                    </div>
-                    <ul>
-                        <li>To provide, maintain, and improve the AXELR AI service</li>
-                        <li>To personalise your experience, including workspace and model preferences</li>
-                        <li>To monitor usage patterns, enforce rate limits, and prevent fraudulent or abusive activities</li>
-                        <li>To communicate with you about service updates, security alerts, and support messages</li>
-                        <li>To comply with legal obligations and enforce our Terms of Service</li>
-                    </ul>
-                </section>
-
-                <section id="sharing" class="legal-section">
-                    <div class="legal-section-header">
-                        <span class="legal-section-num">03</span>
-                        <h2>Data Sharing</h2>
-                    </div>
-                    <p>
-                        We do <strong>not</strong> sell, rent, or share your personal data with third parties for their
-                        marketing purposes. We may share your data with:
-                    </p>
-                    <ul>
-                        <li><strong>AI Providers:</strong> Queries may be processed by third-party AI providers (e.g., Google, Groq, OpenRouter) to generate responses. These providers process data only for fulfilling your requests.</li>
-                        <li><strong>Service Providers:</strong> Cloud infrastructure (e.g., MongoDB, Redis) hosting the platform. Limited access solely for operational purposes.</li>
-                        <li><strong>Legal Authorities:</strong> When required by law or in response to valid legal requests.</li>
-                    </ul>
-                </section>
-
-                <section id="retention" class="legal-section">
-                    <div class="legal-section-header">
-                        <span class="legal-section-num">04</span>
-                        <h2>Data Retention</h2>
-                    </div>
-                    <p>
-                        We retain your account information and chat history for as long as your account is active. You
-                        can delete your account at any time, which will permanently remove your data from our systems.
-                        We may retain aggregated, anonymised data for analytical purposes.
-                    </p>
-                </section>
-
-                <section id="security" class="legal-section">
-                    <div class="legal-section-header">
-                        <span class="legal-section-num">05</span>
-                        <h2>Security</h2>
-                    </div>
-                    <p>
-                        We implement industry-standard security measures, including encryption in transit
-                        (<code>TLS 1.3</code>) and at rest (<code>AES-256</code>). However, no method of transmission
-                        over the Internet is 100% secure, and we cannot guarantee absolute security.
-                    </p>
-                    <div class="legal-callout success">
-                        <span class="material-symbols-rounded">verified_user</span>
-                        <div>
-                            <strong>Our commitment:</strong> We never train public models on your private data.
-                            Enterprise plans add zero-retention guarantees.
-                        </div>
-                    </div>
-                </section>
-
-                <section id="rights" class="legal-section">
-                    <div class="legal-section-header">
-                        <span class="legal-section-num">06</span>
-                        <h2>Your Rights</h2>
-                    </div>
-                    <p>
-                        You have the right to access, correct, or delete your personal data. You can manage your account
-                        settings directly or contact us at
-                        <a href="mailto:support@axelr.in">support@axelr.in</a> for assistance. We will respond to your
-                        request within a reasonable timeframe.
-                    </p>
-                </section>
-
-                <section id="children" class="legal-section">
-                    <div class="legal-section-header">
-                        <span class="legal-section-num">07</span>
-                        <h2>Children's Privacy</h2>
-                    </div>
-                    <p>
-                        AXELR AI is not intended for use by individuals under the age of 13. We do not knowingly collect
-                        personal information from children. If we become aware of such data, we will delete it promptly.
-                    </p>
-                </section>
-
-                <section id="changes" class="legal-section">
-                    <div class="legal-section-header">
-                        <span class="legal-section-num">08</span>
-                        <h2>Changes to This Policy</h2>
-                    </div>
-                    <p>
-                        We may update this Privacy Policy from time to time. We will notify you of significant changes
-                        via email or through the platform. Your continued use after changes constitutes acceptance of
-                        the new policy.
-                    </p>
-                </section>
-
-                <section id="contact" class="legal-section">
-                    <div class="legal-section-header">
-                        <span class="legal-section-num">09</span>
-                        <h2>Contact Us</h2>
-                    </div>
-                    <p>
-                        If you have any questions or concerns about this Privacy Policy, please contact us at
-                        <a href="mailto:support@axelr.in">support@axelr.in</a>.
-                    </p>
-                </section>
-            </article>
-        </main>
-    </div>
-
-    <footer class="legal-footer">
-        <div>© 2026 AXELR AI — Intelligence Execution Platform</div>
-        <div class="legal-footer-links">
-            <a href="/Axelr-Frontend/docs.html">Docs</a>
-            <a href="/Axelr-Frontend/terms.html">Terms</a>
-            <a href="/Axelr-Frontend/privacy.html">Privacy</a>
-            <a href="/Axelr-Frontend/index.html">Platform</a>
         </div>
-    </footer>
 
-    <button class="legal-fab" id="legal-fab" aria-label="Back to top">
-        <span class="material-symbols-rounded">arrow_upward</span>
-    </button>
+        <article class="legal-card">
+            <section id="collect" class="legal-section">
+                <div class="legal-section-header">
+                    <span class="legal-section-num">01</span>
+                    <h2>Information We Collect</h2>
+                </div>
+                <ul>
+                    <li><strong>Account Information:</strong> Email address, name, and authentication tokens (via Google or GitHub).</li>
+                    <li><strong>Usage Data:</strong> Queries, temporary uploaded files, response generations, and usage patterns to improve our AI models and user experience.</li>
+                    <li><strong>Device &amp; Browser Information:</strong> IP address, browser type, operating system, and referring pages — used to diagnose issues and prevent abuse.</li>
+                    <li><strong>Cookies:</strong> Essential cookies to maintain your session and preferences. You can disable cookies, but some features may not function properly.</li>
+                </ul>
+            </section>
 
-    <script>
-        const prog = document.getElementById('legal-progress');
-        const fab = document.getElementById('legal-fab');
-        function onScroll() {
-            const h = document.documentElement;
-            const pct = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
-            prog.style.width = pct + '%';
-            fab.classList.toggle('show', h.scrollTop > 400);
-        }
-        window.addEventListener('scroll', onScroll, { passive: true });
-        fab.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+            <section id="use" class="legal-section">
+                <div class="legal-section-header">
+                    <span class="legal-section-num">02</span>
+                    <h2>How We Use Your Information</h2>
+                </div>
+                <ul>
+                    <li>To provide, maintain, and improve the AXELR AI service</li>
+                    <li>To personalise your experience, including workspace and model preferences</li>
+                    <li>To monitor usage patterns, enforce rate limits, and prevent fraudulent or abusive activities</li>
+                    <li>To communicate with you about service updates, security alerts, and support messages</li>
+                    <li>To comply with legal obligations and enforce our Terms of Service</li>
+                </ul>
+            </section>
 
-        const sections = document.querySelectorAll('.legal-section');
-        const tocLinks = document.querySelectorAll('.legal-toc a');
-        const obs = new IntersectionObserver((entries) => {
-            entries.forEach((e) => {
+            <section id="sharing" class="legal-section">
+                <div class="legal-section-header">
+                    <span class="legal-section-num">03</span>
+                    <h2>Data Sharing</h2>
+                </div>
+                <p>
+                    We do <strong>not</strong> sell, rent, or share your personal data with third parties for their
+                    marketing purposes. We may share your data with:
+                </p>
+                <ul>
+                    <li><strong>AI Providers:</strong> Queries may be processed by third-party AI providers (e.g., Google, Groq, OpenRouter) to generate responses. These providers process data only for fulfilling your requests.</li>
+                    <li><strong>Service Providers:</strong> Cloud infrastructure (e.g., MongoDB, Redis) hosting the platform. Limited access solely for operational purposes.</li>
+                    <li><strong>Legal Authorities:</strong> When required by law or in response to valid legal requests.</li>
+                </ul>
+            </section>
+
+            <section id="retention" class="legal-section">
+                <div class="legal-section-header">
+                    <span class="legal-section-num">04</span>
+                    <h2>Data Retention</h2>
+                </div>
+                <p>
+                    We retain your account information and chat history for as long as your account is active. You
+                    can delete your account at any time, which will permanently remove your data from our systems.
+                    We may retain aggregated, anonymised data for analytical purposes.
+                </p>
+            </section>
+
+            <section id="security" class="legal-section">
+                <div class="legal-section-header">
+                    <span class="legal-section-num">05</span>
+                    <h2>Security</h2>
+                </div>
+                <p>
+                    We implement industry-standard security measures, including encryption in transit
+                    (<code>TLS 1.3</code>) and at rest (<code>AES-256</code>). However, no method of transmission
+                    over the Internet is 100% secure, and we cannot guarantee absolute security.
+                </p>
+                <div class="legal-callout success">
+                    <span class="material-symbols-rounded" aria-hidden="true">verified_user</span>
+                    <div>
+                        <strong>Our commitment:</strong> We never train public models on your private data.
+                        Enterprise plans add zero-retention guarantees.
+                    </div>
+                </div>
+            </section>
+
+            <section id="rights" class="legal-section">
+                <div class="legal-section-header">
+                    <span class="legal-section-num">06</span>
+                    <h2>Your Rights</h2>
+                </div>
+                <p>
+                    You have the right to access, correct, or delete your personal data. You can manage your account
+                    settings directly or contact us at
+                    <a href="mailto:support@axelr.in">support@axelr.in</a> for assistance. We will respond to your
+                    request within a reasonable timeframe.
+                </p>
+            </section>
+
+            <section id="children" class="legal-section">
+                <div class="legal-section-header">
+                    <span class="legal-section-num">07</span>
+                    <h2>Children's Privacy</h2>
+                </div>
+                <p>
+                    AXELR AI is not intended for use by individuals under the age of 13. We do not knowingly collect
+                    personal information from children. If we become aware of such data, we will delete it promptly.
+                </p>
+            </section>
+
+            <section id="changes" class="legal-section">
+                <div class="legal-section-header">
+                    <span class="legal-section-num">08</span>
+                    <h2>Changes to This Policy</h2>
+                </div>
+                <p>
+                    We may update this Privacy Policy from time to time. We will notify you of significant changes
+                    via email or through the platform. Your continued use after changes constitutes acceptance of
+                    the new policy.
+                </p>
+            </section>
+
+            <section id="contact" class="legal-section">
+                <div class="legal-section-header">
+                    <span class="legal-section-num">09</span>
+                    <h2>Contact Us</h2>
+                </div>
+                <p>
+                    If you have any questions or concerns about this Privacy Policy, please contact us at
+                    <a href="mailto:support@axelr.in">support@axelr.in</a>.
+                </p>
+            </section>
+        </article>
+    </main>
+</div>
+
+<footer class="legal-footer">
+    <div>© 2026 AXELR AI — Intelligence Execution Platform</div>
+    <div class="legal-footer-links">
+        <a href="/Axelr-Frontend/docs.html">Docs</a>
+        <a href="/Axelr-Frontend/terms.html">Terms</a>
+        <a href="/Axelr-Frontend/privacy.html">Privacy</a>
+        <a href="/Axelr-Frontend/index.html">Platform</a>
+    </div>
+</footer>
+
+<button class="legal-fab" id="legal-fab" aria-label="Back to top">
+    <span class="material-symbols-rounded" aria-hidden="true">arrow_upward</span>
+</button>
+
+<script>
+(function () {
+    'use strict';
+
+    var prog = document.getElementById('legal-progress');
+    var fab = document.getElementById('legal-fab');
+
+    function onScroll() {
+        var h = document.documentElement;
+        var max = h.scrollHeight - h.clientHeight;
+        var pct = max > 0 ? (h.scrollTop / max) * 100 : 0;
+        prog.style.width = pct + '%';
+        fab.classList.toggle('show', h.scrollTop > 400);
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    fab.addEventListener('click', function () {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    /* active TOC */
+    var sections = document.querySelectorAll('.legal-section');
+    var tocLinks = document.querySelectorAll('.legal-toc a');
+    if ('IntersectionObserver' in window) {
+        var obs = new IntersectionObserver(function (entries) {
+            entries.forEach(function (e) {
                 if (e.isIntersecting) {
-                    const id = e.target.id;
-                    tocLinks.forEach(l => l.classList.toggle('active', l.dataset.toc === id));
+                    var id = e.target.id;
+                    tocLinks.forEach(function (l) {
+                        l.classList.toggle('active', l.dataset.toc === id);
+                    });
                 }
             });
         }, { rootMargin: '-30% 0px -60% 0px' });
-        sections.forEach(s => obs.observe(s));
-    </script>
+        sections.forEach(function (s) { obs.observe(s); });
+    }
+
+    /* theme toggle — single shared key across the whole product */
+    var themeToggle = document.getElementById('theme-toggle');
+    var themeIcon = themeToggle.querySelector('.material-symbols-rounded');
+    var meta = document.querySelector('meta[name="theme-color"]');
+
+    function applyTheme(isLight) {
+        document.body.classList.toggle('light-theme', isLight);
+        themeIcon.textContent = isLight ? 'dark_mode' : 'light_mode';
+        themeToggle.setAttribute('aria-pressed', String(isLight));
+        themeToggle.setAttribute('aria-label', isLight ? 'Switch to dark theme' : 'Switch to light theme');
+        if (meta) meta.setAttribute('content', isLight ? '#f6f8fc' : '#050508');
+    }
+
+    var stored = 'dark';
+    try { stored = localStorage.getItem('axelr_theme') || 'dark'; } catch (e) {}
+    applyTheme(stored === 'light');
+
+    themeToggle.addEventListener('click', function () {
+        var next = !document.body.classList.contains('light-theme');
+        applyTheme(next);
+        try { localStorage.setItem('axelr_theme', next ? 'light' : 'dark'); } catch (e) {}
+    });
+})();
+</script>
 </body>
 </html>

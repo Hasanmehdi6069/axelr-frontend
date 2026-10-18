@@ -120,7 +120,7 @@ a{color:inherit}
   font-family:var(--mono);font-weight:800;font-size:15px;
   letter-spacing:2.5px;color:var(--text);
 }
-.brand svg{color:var(--teal);filter:drop-shadow(0 0 10px rgba(0,242,254,.35))}
+.brand svg{filter: drop-shadow(0 0 14px rgba(16,185,129,0.5));}
 .brand-chip{
   font-size:9.5px;font-weight:700;letter-spacing:1.2px;padding:3px 8px;
   border-radius:5px;background:var(--emerald-soft);color:var(--emerald-bright);
@@ -131,7 +131,22 @@ a{color:inherit}
   text-decoration:none;font-size:13.5px;font-weight:500;color:var(--text-muted);
   padding:9px 14px;border-radius:9px;transition:color .2s var(--ease),background .2s var(--ease);
 }
+.topnav a:first-child{ /* Ensure Docs button is first in navigation */
+  margin-right:4px;
+}
 .topnav a:hover{color:var(--text);background:rgba(255,255,255,.04)}
+.topnav a.docs{
+  border:1px solid rgba(0,242,254,0.25);
+  background:rgba(0,242,254,0.08);
+  color:var(--teal);
+  border-radius:999px;
+  box-shadow:0 0 12px rgba(0,242,254,0.2);
+}
+.topnav a.docs:hover{
+  background:rgba(0,242,254,0.12);
+  box-shadow:0 0 18px rgba(0,242,254,0.35);
+  transform:translateY(-1px);
+}
 .topnav a.primary{
   color:#031014;background:linear-gradient(135deg,var(--emerald-bright),var(--teal));
   font-weight:700;letter-spacing:.2px;
@@ -644,16 +659,19 @@ a{color:inherit}
 <header class="topbar">
   <a class="brand" href="/">
     <svg viewBox="0 0 100 100" width="22" height="22" fill="none" aria-hidden="true">
-      <path d="M50 15 L20 32.5 L20 67.5 L50 85" stroke="currentColor" stroke-width="6" stroke-linejoin="bevel" fill="rgba(0,242,254,.08)"/>
-      <path d="M50 15 L80 32.5 L50 50 L80 67.5 L50 85" stroke="currentColor" stroke-width="6" stroke-linejoin="bevel" fill="none"/>
+      <path d="M50 15 L20 32.5 L20 67.5 L50 85" stroke="#ffffff" stroke-width="6" stroke-linejoin="bevel" fill="rgba(16,185,129,.08)"/>
+      <path d="M50 15 L80 32.5 L50 50 L80 67.5 L50 85" stroke="var(--emerald-bright, #34d399)" stroke-width="6" stroke-linejoin="bevel" fill="none"/>
+      <path d="M20 32.5 L50 50 L20 67.5" stroke="#ffffff" stroke-width="3" stroke-linejoin="bevel" opacity="0.5" />
     </svg>
     <span>AXELR</span>
     <span class="brand-chip">PRICING</span>
   </a>
   <nav class="topnav" aria-label="Primary">
-    <a href="/Axelr-Frontend/docs.html">Docs</a>
-    <a href="/Axelr-Frontend/pricing.html" class="primary">
-        <a href="#tier-grid" class="primary">
+    <a href="/Axelr-Frontend/docs.html" class="docs-pill" style="border-radius: 9999px; background: rgba(0,242,254,0.05); border: 1px solid rgba(0,242,254,0.3); color: #00f2fe; padding: 7px 16px; box-shadow: 0 0 15px rgba(0,242,254,0.25), inset 0 0 10px rgba(0,242,254,0.05); transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 5px; font-weight: 500; letter-spacing: 0.2px; white-space: nowrap; height: fit-content;">
+        <span class="material-symbols-rounded" style="font-size: 15px;">menu_book</span>
+        Docs
+    </a>
+    <a href="#tier-grid" class="primary">
   <span class="material-symbols-rounded" style="font-size:15px;vertical-align:-3px;margin-right:4px">bolt</span>
   Choose plan
 </a>
