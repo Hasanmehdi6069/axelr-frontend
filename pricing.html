@@ -27,7 +27,7 @@
     <span class="brand-chip">PRICING</span>
   </a>
   <nav class="topnav" aria-label="Primary">
-    <a href="/Axelr-Frontend/docs.html" class="docs-pill" style="border-radius: 9999px; background: rgba(0,242,254,0.05); border: 1px solid rgba(0,242,254,0.3); color: #00f2fe; padding: 7px 16px; box-shadow: 0 0 15px rgba(0,242,254,0.25), inset 0 0 10px rgba(0,242,254,0.05); transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 5px; font-weight: 500; letter-spacing: 0.2px; white-space: nowrap; height: fit-content;">
+    <a href="https://axelr.in/docs.html" class="docs-pill" style="border-radius: 9999px; background: rgba(0,242,254,0.05); border: 1px solid rgba(0,242,254,0.3); color: #00f2fe; padding: 7px 16px; box-shadow: 0 0 15px rgba(0,242,254,0.25), inset 0 0 10px rgba(0,242,254,0.05); transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 5px; font-weight: 500; letter-spacing: 0.2px; white-space: nowrap; height: fit-content;">
         <span class="material-symbols-rounded" style="font-size: 15px;">menu_book</span>
         Docs
     </a>
@@ -206,7 +206,7 @@
         <!-- populated by JS -->
       </ul>
 
-      <a class="tier-cta pro-cta" id="p-cta" href="/Axelr-Frontend/checkout.html?plan=pro&subtier=full&cycle=monthly">
+      <a class="tier-cta pro-cta" id="p-cta" href="https://axelr.in/checkout.html?plan=pro&subtier=full&cycle=monthly">
         <span class="material-symbols-rounded" aria-hidden="true">rocket_launch</span>
         <span id="p-cta-label">Upgrade to Pro Architect</span>
       </a>
@@ -253,7 +253,7 @@
         <!-- populated by JS -->
       </ul>
 
-      <a class="tier-cta biz-cta" id="b-cta" href="/Axelr-Frontend/checkout.html?plan=business&subtier=full&cycle=monthly">
+      <a class="tier-cta biz-cta" id="b-cta" href="https://axelr.in/checkout.html?plan=business&subtier=full&cycle=monthly">
         <span class="material-symbols-rounded" aria-hidden="true">workspace_premium</span>
         <span id="b-cta-label">Upgrade to Business</span>
       </a>
@@ -507,7 +507,7 @@
     const subtier = state.workspace === 'unified' ? 'full'
                   : state.workspace === 'data'    ? 'data'
                   : 'design';
-    $('#p-cta').href = '/Axelr-Frontend/checkout.html?plan=pro&subtier=' +
+    $('#p-cta').href = 'https://axelr.in/checkout.html?plan=pro&subtier=' +
                        subtier + '&cycle=' + state.cycle;
     $('#p-cta-label').textContent = v.ctaLabel;
   }
@@ -548,7 +548,7 @@
     const subtier = state.workspace === 'unified' ? 'full'
                   : state.workspace === 'data'    ? 'data'
                   : 'design';
-    $('#b-cta').href = '/Axelr-Frontend/checkout.html?plan=business&subtier=' +
+    $('#b-cta').href = 'https://axelr.in/checkout.html?plan=business&subtier=' +
                        subtier + '&cycle=' + state.cycle;
     $('#b-cta-label').textContent = v.ctaLabel;
   }
