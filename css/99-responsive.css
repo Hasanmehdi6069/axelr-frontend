@@ -83,6 +83,14 @@
 .toast.info    { background: rgba(10, 18, 30, 0.92); border: 1px solid rgba(59, 130, 246, 0.35); color: #93c5fd; }
 .toast.info    .toast-icon { color: #3b82f6; }
 
+@media (max-width: 600px) {
+    .toast-container {
+        top: auto !important;
+        bottom: calc(env(safe-area-inset-bottom, 12px) + 96px) !important;
+        padding: 0 12px;
+    }
+    .toast { white-space: normal; font-size: 12.5px; }
+}
 /* ============================================================
    MOBILE KEYBOARD & VIEWPORT ISOLATION — canonical block
    ============================================================ */
@@ -102,68 +110,10 @@
     }
 
     #sidebar-container-node.open {
-        left: 0;
-        box-shadow: 10px 0 30px var(--shadow-color);
+        /* Transform-based animation matches canonical 20-shell.css implementation */
+        transform: translate3d(0, 0, 0);
+        box-shadow: 10px 0 30px var(--shadow-color), 0 0 60px -20px color-mix(in srgb, var(--accent-glow) 15%, transparent);
     }
-
-    #viewport {
-        padding: 80px 15px 140px 15px !important;
-        height: 100dvh;
-    }
-
-    .swipe-handle {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 20px;
-        height: 100%;
-        background: transparent;
-        z-index: var(--z-sidebar-trigger);
-        cursor: ew-resize;
-    }
-
-    .workspace-header { padding-left: 40px !important; }
-    .brand-logo { font-size: 16px; }
-    .chat-bubble { max-width: 95% !important; padding: 12px 14px !important; }
-
-    .hero-text {
-        margin-top: 10vh !important;
-        padding: 0 16px !important;
-        transition: transform 0.2s ease-out;
-    }
-    .hero-text h1 { font-size: 24px !important; }
-    .hero-text p  { font-size: 13px !important; }
-
-    .command-wrapper {
-        position: fixed !important;
-        bottom: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        transform: none !important;
-        padding: 8px 14px calc(env(safe-area-inset-bottom, 10px) + 8px) 14px !important;
-        background: linear-gradient(to top, var(--bg-deep) 80%, transparent) !important;
-        z-index: var(--z-command-bar) !important;
-        max-height: 90vh !important;
-        overflow-y: auto !important;
-        transition: bottom 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .input-row {
-        flex-wrap: nowrap !important;
-        align-items: flex-end !important;
-        gap: 6px !important;
-    }
-
-    textarea {
-        font-size: 16px !important;
-        padding: 6px 4px !important;
-        max-height: 35vh !important;
-        margin-bottom: 0 !important;
-    }
-
-    .action-btn { width: 36px !important; height: 36px !important; }
 
     .input-frame:not(.has-text) #send-trigger:not(.btn-stop-active) { display: none !important; }
     .input-frame.has-text #mic-trigger { display: none !important; }
@@ -218,16 +168,6 @@
     #search-overlay { padding: 60px 20px 20px 20px; }
     #search-overlay .search-input-box { font-size: 18px; }
 
-    .command-wrapper {
-        padding-left: 38px !important;
-        padding-right: 10px !important;
-        padding-bottom: 15px !important;
-    }
-    .input-frame { padding: 6px 8px !important; }
-    .action-btn { width: 32px !important; height: 32px !important; }
-    .hero-text h1 { font-size: 20px !important; }
-    .hero-text p  { font-size: 11px !important; }
-    .workspace-header { padding-left: 35px !important; }
 
     .theme-option { font-size: 10px; padding: 4px 6px; }
 
@@ -291,24 +231,12 @@
 
     #workspace-selector { padding: 16px !important; }
 
-    .command-wrapper {
-        padding-left: 36px !important;
-        padding-right: 8px !important;
-    }
 
     .hero-text h1 { font-size: 18px !important; }
     .hero-text p  { font-size: 10px !important; }
 
     #sidebar-container-node { width: 90% !important; }
 
-    .actions-dropdown-list,
-    #model-dropdown-card,
-    #account-dropdown-card {
-        width: calc(100% - 16px) !important;
-        min-width: 220px !important;
-        right: 8px !important;
-        left: 8px !important;
-    }
 
     .toast-container {
         width: calc(100% - 16px) !important;
@@ -320,8 +248,6 @@
     .workspace-card { flex: 1 1 100%; max-width: 100%; padding: 16px; }
     .ws-title { font-size: 16px; }
     .ws-desc  { font-size: 12px; }
-    .command-wrapper { padding: 0 8px; }
-    .input-frame { padding: 8px; }
 }
 
 /* ============================================================
@@ -401,19 +327,11 @@
 }
 
 @media (max-width: 360px) {
-    .command-wrapper {
-        padding-left: 34px !important;
-        padding-right: 8px !important;
-        width: calc(100% - 12px);
-    }
     .workspace-card  { padding: 14px !important; }
     .workspace-card .ws-desc { font-size: 11px; }
     .tier-cta-btn,
     .modal-submit-btn { font-size: 12px !important; padding: 10px !important; }
     .auth-card { padding: 28px 18px 22px; }
-    .input-frame { padding: 6px; }
-    .input-actions { gap: 0; }
-    .action-btn { width: 31px; height: 31px; flex-basis: 31px; }
     .knowledge-form { grid-template-columns: 1fr; }
     .knowledge-form .modal-submit-btn { width: 100%; }
 }

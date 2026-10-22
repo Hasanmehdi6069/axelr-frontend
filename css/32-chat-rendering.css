@@ -1,0 +1,516 @@
+/* ════════════════════════════════════════════════════════════════
+   CHAT RENDERING — premium message typography + thinking signal
+   New file. Loads after 30-chat.css. Preserves exact visual
+   output while consolidating scattered elite rules.
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── Message bubbles — premium typography ──────────────────── */
+.user-bubble {
+    font-size: 15px !important;
+    line-height: 1.6 !important;
+    font-weight: 500 !important;
+    letter-spacing: -0.005em !important;
+    font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1, 'ss01' 1;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.nexus-bubble {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    font-size: 15px !important;
+    line-height: 1.72 !important;
+    font-weight: 400 !important;
+    letter-spacing: -0.008em !important;
+    color: var(--text-main);
+    font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1, 'ss01' 1, 'cv11' 1;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    hanging-punctuation: first allow-end;
+}
+.nexus-bubble p {
+    margin: 0 0 14px 0 !important;
+    line-height: 1.72 !important;
+    text-wrap: pretty;
+}
+.nexus-bubble p:last-child { margin-bottom: 0 !important; }
+
+/* Heading hierarchy — editorial */
+.nexus-bubble h1,
+.nexus-bubble h2,
+.nexus-bubble h3,
+.nexus-bubble h4,
+.nexus-bubble h5,
+.nexus-bubble h6 {
+    color: var(--text-main);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+    margin: 22px 0 10px;
+    text-wrap: balance;
+}
+.nexus-bubble h1 { font-size: 1.5em;  font-weight: 800; }
+.nexus-bubble h2 { font-size: 1.3em;  font-weight: 700; }
+.nexus-bubble h3 { font-size: 1.15em; font-weight: 700; }
+.nexus-bubble h4 { font-size: 1em;    font-weight: 600; }
+.nexus-bubble h5,
+.nexus-bubble h6 { font-size: 0.95em; font-weight: 600; color: var(--text-muted); }
+
+/* Lists — proper indent + accent markers */
+.nexus-bubble ul,
+.nexus-bubble ol {
+    margin: 10px 0 14px !important;
+    padding-left: 24px !important;
+}
+.nexus-bubble li {
+    margin: 5px 0 !important;
+    line-height: 1.68 !important;
+    padding-left: 4px;
+}
+.nexus-bubble ul li::marker {
+    color: var(--accent-glow);
+    font-size: 0.9em;
+}
+.nexus-bubble ol li::marker {
+    color: var(--accent-glow);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+.nexus-bubble li > ul,
+.nexus-bubble li > ol { margin: 4px 0 !important; }
+
+/* Blockquote — editorial pull-quote */
+.nexus-bubble blockquote {
+    margin: 16px 0 !important;
+    padding: 6px 0 6px 16px !important;
+    border-left: 3px solid var(--accent-glow);
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 0.97em;
+    line-height: 1.7;
+    background: linear-gradient(90deg,
+        color-mix(in srgb, var(--accent-glow) 6%, transparent),
+        transparent 60%);
+    border-radius: 0 6px 6px 0;
+}
+
+/* Inline code — surgical accent tag */
+.nexus-bubble code:not(pre code) {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+    font-size: 0.86em !important;
+    font-weight: 500;
+    padding: 2px 7px !important;
+    border-radius: 5px !important;
+    background: color-mix(in srgb, var(--accent-glow) 8%, transparent) !important;
+    border: 1px solid color-mix(in srgb, var(--accent-glow) 14%, transparent) !important;
+    color: var(--accent-glow) !important;
+    letter-spacing: -0.01em;
+    word-break: break-word;
+}
+
+/* Code blocks — cinematic terminal surface */
+.nexus-bubble pre {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+    font-size: 13px !important;
+    line-height: 1.65 !important;
+    letter-spacing: -0.01em !important;
+    tab-size: 2;
+    hyphens: none;
+}
+.nexus-bubble pre code {
+    font-size: inherit !important;
+    line-height: inherit !important;
+    letter-spacing: inherit !important;
+    color: #e5e7eb;
+    font-weight: 400;
+}
+
+/* Links */
+.nexus-bubble a {
+    color: var(--accent-glow);
+    text-decoration: none;
+    border-bottom: 1px solid color-mix(in srgb, var(--accent-glow) 35%, transparent);
+    padding-bottom: 1px;
+    transition: border-color 180ms ease, color 180ms ease;
+}
+.nexus-bubble a:hover {
+    border-bottom-color: var(--accent-glow);
+    color: color-mix(in srgb, var(--accent-glow) 90%, #fff);
+}
+
+/* Bold / emphasis */
+.nexus-bubble strong,
+.nexus-bubble b {
+    font-weight: 600;
+    color: var(--text-main);
+    letter-spacing: -0.01em;
+}
+.nexus-bubble em,
+.nexus-bubble i {
+    font-style: italic;
+    color: var(--text-main);
+}
+
+/* Horizontal rule */
+.nexus-bubble hr {
+    border: none;
+    height: 1px;
+    margin: 20px 0;
+    background: linear-gradient(90deg,
+        transparent,
+        var(--border-muted) 20%,
+        var(--border-muted) 80%,
+        transparent);
+}
+
+/* Tables */
+.nexus-bubble table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 0.92em;
+}
+.nexus-bubble th,
+.nexus-bubble td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-muted);
+}
+.nexus-bubble th {
+    font-weight: 600;
+    color: var(--text-muted);
+    font-size: 0.85em;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+/* Mobile — tuned for phone reading */
+@media (max-width: 640px) {
+    .nexus-bubble,
+    .user-bubble {
+        font-size: 15.5px !important;
+        line-height: 1.75 !important;
+    }
+    .nexus-bubble pre {
+        font-size: 12.5px !important;
+        padding: 18px !important;
+        border-radius: 10px !important;
+    }
+    .nexus-bubble code:not(pre code) { font-size: 0.84em !important; }
+    .nexus-bubble h1 { font-size: 1.35em; }
+    .nexus-bubble h2 { font-size: 1.2em;  }
+    .nexus-bubble h3 { font-size: 1.08em; }
+}
+
+/* Light theme parity */
+body.light-theme .nexus-bubble code:not(pre code) {
+    background: rgba(14, 165, 233, 0.08) !important;
+    border-color: rgba(14, 165, 233, 0.18) !important;
+    color: #0369a1 !important;
+}
+body.light-theme .nexus-bubble a {
+    color: #0284c7;
+    border-bottom-color: rgba(2, 132, 199, 0.35);
+}
+body.light-theme .nexus-bubble a:hover {
+    border-bottom-color: #0284c7;
+    color: #0369a1;
+}
+
+/* ── Thinking indicator — canonical in-viewport signal ─────── */
+#thinking-indicator {
+    display: none;
+    justify-content: center;
+    padding: 6px 16px 14px 16px !important;
+    margin: 0 !important;
+}
+#thinking-indicator[style*="display: flex"] { display: flex !important; }
+
+.elite-thinking-container {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    padding: 12px 18px !important;
+    margin: 0 auto !important;
+    width: 100% !important;
+    max-width: 560px !important;
+    min-width: 0 !important;
+    background: color-mix(in srgb, var(--bg-card) 90%, transparent) !important;
+    border: 1px solid color-mix(in srgb, var(--accent-glow) 14%, transparent) !important;
+    border-radius: 14px !important;
+    box-shadow:
+        0 1px 0 0 rgba(255, 255, 255, 0.035) inset,
+        0 14px 36px -20px rgba(0, 0, 0, 0.6),
+        0 0 40px -18px color-mix(in srgb, var(--accent-glow) 22%, transparent) !important;
+    backdrop-filter: blur(16px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(16px) saturate(160%) !important;
+}
+
+.elite-thinking-header {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+}
+
+.elite-thinking-logo {
+    width: 26px !important;
+    height: 26px !important;
+    flex-shrink: 0 !important;
+    color: var(--accent-glow) !important;
+    filter: drop-shadow(0 0 10px color-mix(in srgb, var(--accent-glow) 60%, transparent));
+    animation: eliteLogoBreath 2.4s ease-in-out infinite !important;
+}
+
+.elite-thinking-dots {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    flex-shrink: 0;
+}
+.elite-thinking-dots span {
+    width: 5px !important;
+    height: 5px !important;
+    border-radius: 50% !important;
+    background: var(--accent-glow) !important;
+    box-shadow: 0 0 6px var(--accent-glow) !important;
+    animation: eliteDotPulse 1.4s ease-in-out infinite both !important;
+}
+.elite-thinking-dots span:nth-child(1) { animation-delay: 0s !important;    }
+.elite-thinking-dots span:nth-child(2) { animation-delay: 0.18s !important; }
+.elite-thinking-dots span:nth-child(3) { animation-delay: 0.36s !important; }
+
+.elite-thinking-label {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.06em !important;
+    text-transform: uppercase !important;
+    color: var(--text-muted) !important;
+    background: none !important;
+    -webkit-text-fill-color: currentColor !important;
+    animation: none !important;
+    transition: color 0.3s ease !important;
+}
+
+.thinking-steps-list {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+    padding-left: 38px !important;
+}
+.thinking-step {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    font-size: 12px !important;
+    color: var(--text-muted) !important;
+    opacity: 0;
+    animation: eliteStepFade 0.42s cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
+}
+.thinking-step .material-symbols-rounded {
+    font-size: 13px !important;
+    color: var(--accent-glow) !important;
+    flex-shrink: 0 !important;
+    opacity: 0.85;
+}
+.thinking-step.done {
+    opacity: 0.42 !important;
+    text-decoration: none !important;
+}
+.thinking-step.done .material-symbols-rounded {
+    color: #10b981 !important;
+    opacity: 1;
+}
+
+@keyframes eliteLogoBreath {
+    0%, 100% { transform: scale(1);    opacity: 0.85; }
+    50%      { transform: scale(1.08); opacity: 1;    }
+}
+@keyframes eliteDotPulse {
+    0%, 80%, 100% { transform: scale(0.6); opacity: 0.35; }
+    40%           { transform: scale(1.1); opacity: 1;    }
+}
+@keyframes eliteStepFade {
+    from { opacity: 0; transform: translateY(-3px); }
+    to   { opacity: 0.9; transform: translateY(0);  }
+}
+
+/* Thinking — 480 mobile sizing (v6.0 §10) */
+@media (max-width: 480px) {
+    .elite-thinking-container { padding: 10px 14px !important; gap: 8px !important; }
+    .thinking-steps-list { padding-left: 26px !important; gap: 6px !important; }
+    .thinking-step { font-size: 12px !important; }
+}
+
+/* Thinking — light theme */
+body.light-theme .elite-thinking-container { color: #334155; }
+body.light-theme .elite-thinking-label { color: #475569 !important; }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .elite-thinking-logo,
+    .elite-thinking-dots span,
+    .thinking-step,
+    .elite-thinking-label {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+}
+/* ════════════════════════════════════════════════════════════════════
+   CHAT ELITE UPGRADE v1.0
+   Message hover actions, streaming pulse, code block copy-on-hover,
+   empty state suggestion chips, jump-to-bottom. All additive.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ── Message action bar — visible on hover (not on mobile) ───────── */
+@media (hover: hover) and (pointer: fine) {
+    .nexus-bubble .bubble-action-bar {
+        opacity: 0;
+        transform: translateY(-4px);
+        transition:
+            opacity 0.2s ease,
+            transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .nexus-bubble:hover .bubble-action-bar,
+    .nexus-bubble:focus-within .bubble-action-bar {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ── Streaming pulse — vertical shimmer before cursor ────────────── */
+@media (prefers-reduced-motion: no-preference) {
+    .nexus-bubble.streaming::before {
+        content: '';
+        display: inline-block;
+        width: 1px;
+        height: 1.1em;
+        margin-right: 2px;
+        vertical-align: text-bottom;
+        background: linear-gradient(180deg,
+            transparent 0%,
+            color-mix(in srgb, var(--accent-glow) 65%, transparent) 50%,
+            transparent 100%);
+        background-size: 100% 200%;
+        animation: streamPulse 1.4s ease-in-out infinite;
+    }
+    @keyframes streamPulse {
+        0%, 100% { background-position: 0% 0%;   }
+        50%      { background-position: 0% 100%; }
+    }
+}
+
+/* ── Code block copy — reveal on hover ───────────────────────────── */
+.nexus-bubble pre {
+    position: relative;
+}
+.nexus-bubble pre .copy-code-btn,
+.nexus-bubble pre .code-copy {
+    opacity: 0;
+    transform: translateY(-4px);
+    transition:
+        opacity 0.2s ease,
+        transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.nexus-bubble pre:hover .copy-code-btn,
+.nexus-bubble pre:hover .code-copy,
+.nexus-bubble pre .copy-code-btn:focus-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ── Empty state — suggestion chips ──────────────────────────────── */
+#chat-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 32px;
+    max-width: 640px;
+}
+#chat-suggestions .suggestion-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-muted);
+    border-radius: 100px;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+#chat-suggestions .suggestion-chip:hover {
+    background: rgba(0, 242, 254, 0.08);
+    border-color: rgba(0, 242, 254, 0.35);
+    color: var(--text-main);
+    transform: translateY(-2px);
+}
+#chat-suggestions .suggestion-chip .material-symbols-rounded {
+    font-size: 16px;
+    color: var(--accent-glow);
+}
+
+/* ── Jump-to-bottom — floating pill when scrolled up ─────────────── */
+#scroll-to-bottom {
+    position: fixed;
+    bottom: 130px;
+    left: 50%;
+    transform: translate(-50%, 20px);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--bg-card) 96%, transparent);
+    border: 1px solid var(--border-muted);
+    color: var(--text-muted);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 500;
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.05) inset,
+        0 8px 24px -8px rgba(0, 0, 0, 0.6);
+    opacity: 0;
+    pointer-events: none;
+    transition:
+        opacity 0.22s ease,
+        transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+        background 0.18s ease,
+        color 0.18s ease;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+#scroll-to-bottom.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, 0);
+}
+#scroll-to-bottom:hover {
+    background: color-mix(in srgb, var(--bg-card) 96%, transparent);
+    color: var(--accent-glow);
+    border-color: color-mix(in srgb, var(--accent-glow) 45%, transparent);
+}
+#scroll-to-bottom .material-symbols-rounded { font-size: 20px; }
+body.light-theme #scroll-to-bottom {
+    background: #ffffff;
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.9) inset,
+        0 8px 24px -8px rgba(15, 23, 42, 0.18);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    #chat-suggestions .suggestion-chip,
+    #scroll-to-bottom,
+    .nexus-bubble.streaming::before {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+    }
+}

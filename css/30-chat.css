@@ -1,31 +1,4 @@
 /* ============================================================
-   HERO
-   ============================================================ */
-.hero-text {
-    text-align: center;
-    margin-top: 20vh;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-.hero-text h1 {
-    font-size: 32px;
-    font-weight: 700;
-    color: var(--text-main);
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-.hero-text p {
-    color: var(--text-muted);
-    font-size: 14px;
-    max-width: 400px;
-    margin: 0 auto;
-}
-
-/* ============================================================
    CHAT BUBBLES
    ============================================================ */
 .chat-bubble {
@@ -299,111 +272,6 @@
 }
 
 /* ============================================================
-   ELITE THINKING — logo + dots + steps
-   ============================================================ */
-.elite-thinking-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-.elite-thinking-logo {
-    width: 24px;
-    height: 24px;
-    flex-shrink: 0;
-    color: var(--accent-glow);
-    animation: logoBreath 2s ease-in-out infinite;
-}
-@keyframes logoBreath {
-    0%, 100% { transform: scale(1);    opacity: 0.85; }
-    50%      { transform: scale(1.08); opacity: 1;    }
-}
-.elite-thinking-dots {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-}
-.elite-thinking-dots span {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--accent-glow);
-    box-shadow: 0 0 8px var(--accent-glow);
-    animation: dotPulse 1.4s ease-in-out infinite both;
-}
-.elite-thinking-dots span:nth-child(1) { animation-delay: 0s;    }
-.elite-thinking-dots span:nth-child(2) { animation-delay: 0.18s; }
-.elite-thinking-dots span:nth-child(3) { animation-delay: 0.36s; }
-@keyframes dotPulse {
-    0%, 80%, 100% { transform: scale(0.5); opacity: 0.35; }
-    40%           { transform: scale(1.1); opacity: 1;    }
-}
-.elite-thinking-label {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text-muted);
-    letter-spacing: 0.2px;
-    animation: labelFade 2s ease-in-out infinite;
-}
-@keyframes labelFade {
-    0%, 100% { opacity: 0.7; }
-    50%      { opacity: 1;   }
-}
-.thinking-steps-list {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding-left: 36px;
-}
-.thinking-step {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 13px;
-    color: var(--text-muted);
-    opacity: 0;
-    animation: stepFadeIn 0.35s ease forwards;
-}
-@keyframes stepFadeIn {
-    from { opacity: 0; transform: translateY(-4px); }
-    to   { opacity: 1; transform: translateY(0);    }
-}
-.thinking-step .material-symbols-rounded {
-    font-size: 16px;
-    color: var(--accent-glow);
-    flex-shrink: 0;
-}
-.thinking-step.done {
-    color: var(--text-muted);
-    opacity: 0.55;
-    text-decoration: line-through;
-}
-.thinking-step.done .material-symbols-rounded {
-    color: #10b981;
-}
-
-/* Thinking container — consolidated from 50-modals */
-#thinking-indicator {
-    display: none;
-    justify-content: center;
-    padding: 24px 16px;
-    margin: 12px 0;
-}
-#thinking-indicator[style*="display: flex"] { display: flex !important; }
-.elite-thinking-container {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding: 16px 20px;
-    background: rgba(0, 0, 0, 0.25);
-    border: 1px solid var(--border-muted);
-    border-radius: 14px;
-    min-width: 300px;
-    max-width: 520px;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-}
-
-/* ============================================================
    DOWNLOAD BUTTON
    ============================================================ */
 .download-btn-bubble {
@@ -507,6 +375,28 @@ body.workspace-design .ai-avatar-bubble svg path:nth-child(2) {
 }
 .deploy-debug-btn:hover {
     background: rgba(255, 255, 255, 0.05);
+}
+
+/* Thinking indicator (AI loading state) */
+#thinking-indicator {
+    display: none !important;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    color: var(--text-muted);
+    font-size: 14px;
+}
+#thinking-indicator[style*="display: flex"] { display: flex !important; }
+
+/* Light theme support for thinking indicator */
+body.light-theme #thinking-indicator {
+    color: #64748b;
+}
+/* Reduced motion support for accessibility */
+@media (prefers-reduced-motion: reduce) {
+    #thinking-indicator {
+        animation-duration: 0.01ms !important;
+    }
 }
 .deploy-error-details {
     background: var(--bg-input);
@@ -826,25 +716,3 @@ body.workspace-design .ai-avatar-bubble svg path:nth-child(2) {
 }
 
 } /* end @layer elite */
-
-/* ============================================================
-   BUG FIX 1: HERO SECTION CENTERING (Corrected)
-   ============================================================ */
-#viewport {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important; /* Centers the hero horizontally */
-    justify-content: center !important; /* Centers the hero vertically */
-    width: 100% !important;
-    max-width: 880px !important; /* Keeps the chat bounded */
-    margin: 0 auto !important; /* Centers the viewport block itself */
-}
-
-.hero-text {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    text-align: center !important;
-    width: 100% !important;
-    margin: 0 auto !important;
-}

@@ -344,3 +344,22 @@ body.light-theme {
 }
 
 } /* end @layer elite */
+/* ── WORKSPACE STATE TOKENS ────────────────────────────────────── */
+body.workspace-data {
+    --accent-glow: #10b981;
+    --accent-secondary: #059669;
+    --border-muted: rgba(16, 185, 129, 0.3);
+    --theme-surface-glow: radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.06), transparent 70%);
+    --workspace-accent: var(--workspace-data);
+}
+body.workspace-design {
+    --accent-glow: #ef4444;
+    --accent-glow-designer: #ef4444;
+    --accent-secondary: #18ad7b;
+    --border-muted: rgba(239, 68, 68, 0.3);
+    --theme-surface-glow: radial-gradient(circle at 50% 0%, rgba(239, 68, 68, 0.06), transparent 70%);
+    --workspace-accent: var(--workspace-design);
+}
+body.workspace-general {
+    --workspace-accent: var(--workspace-general);
+}

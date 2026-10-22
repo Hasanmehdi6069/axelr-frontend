@@ -498,6 +498,62 @@ input:checked + .slider:before { transform: translateX(16px); }
     background: rgba(255, 255, 255, 0.06);
     color: var(--text-muted);
 }
+
+/* Tier modal light theme and reduced motion support */
+body.light-theme .tier-modal-card {
+    background: #ffffff;
+    border-color: rgba(0, 0, 0, 0.08);
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.25);
+}
+body.light-theme .tier-modal-footer {
+    border-top-color: rgba(0, 0, 0, 0.06);
+}
+/* Accessibility: reduced motion for all modal transitions */
+@media (prefers-reduced-motion: reduce) {
+    .tier-modal-card,
+    .tier-card-modern {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+    }
+}
+
+/* Full light theme support for tier cards and modal */
+body.light-theme .tier-modal-card {
+    background: #f8fafc !important;
+    border-color: rgba(15, 23, 42, 0.08) !important;
+}
+body.light-theme .tier-card-modern {
+    background: #ffffff !important;
+    border-color: rgba(15, 23, 42, 0.08) !important;
+    box-shadow: 0 6px 24px rgba(15, 23, 42, 0.06) !important;
+}
+body.light-theme .tier-card-modern.popular {
+    background: #f8fafc !important;
+    border-color: rgba(0, 242, 254, 0.4) !important;
+    box-shadow: 0 12px 44px -8px rgba(0, 242, 254, 0.15) !important;
+}
+body.light-theme .tier-name,
+body.light-theme .tier-amount { color: #0f172a !important; }
+body.light-theme .tier-summary,
+body.light-theme .tier-term,
+body.light-theme .tier-currency { color: #475569 !important; }
+body.light-theme .limit-chip {
+    background: rgba(0, 0, 0, 0.04) !important;
+    border-color: rgba(15, 23, 42, 0.08) !important;
+    color: #334155 !important;
+}
+body.light-theme .limit-chip.highlight {
+    background: rgba(0, 242, 254, 0.10) !important;
+    border-color: rgba(0, 242, 254, 0.4) !important;
+    color: #0891b2 !important;
+}
+body.light-theme .tier-models-section {
+    background: rgba(0, 0, 0, 0.03) !important;
+    border-color: rgba(15, 23, 42, 0.06) !important;
+}
+body.light-theme .provider-pill { color: #1e293b !important; }
+body.light-theme .subtier-row { color: #0f172a !important; }
+body.light-theme .subtier-desc { color: #64748b !important; }
 .tier-badge-status.highlight {
     background: rgba(0, 242, 254, 0.15);
     color: var(--accent-glow);
@@ -1010,3 +1066,10 @@ input:checked + .slider {
 }
 
 } /* end @layer elite */
+/* ── Subscription modal colors (from 25-workspace) ─────────── */
+#subscription-modal .modal-card .profile-stat-value,
+#subscription-modal .modal-card .sub-plan-name,
+#subscription-modal .modal-card h3 { color: var(--text-main); }
+#free-tier-message { color: var(--text-main); }
+#free-tier-message strong { color: var(--accent-glow); }
+#sub-plan-name { color: var(--text-main); }

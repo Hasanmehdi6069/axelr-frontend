@@ -1,0 +1,247 @@
+/* ============================================================
+   HERO — the empty-state stage + chat handoff
+   Single source of truth for `#viewport` (empty) and hero text.
+   ============================================================ */
+
+#viewport {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    min-height: 100dvh !important;
+    max-width: 880px !important;
+    margin: 0 auto !important;
+    padding: 96px 24px 200px 24px !important;
+    box-sizing: border-box !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain !important;
+    scroll-behavior: smooth !important;
+    scrollbar-gutter: stable !important;
+    transition: padding 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Empty conversation → hero stands alone, centered */
+#viewport:not(:has(.user-bubble, .nexus-bubble, .chat-bubble)) {
+    justify-content: center !important;
+}
+
+/* Any message exists → hero leaves the stage completely */
+#viewport:has(.user-bubble, .nexus-bubble, .chat-bubble) #hero-display {
+    display: none !important;
+}
+
+/* ── Hero text ─────────────────────────────────────────────── */
+.hero-text {
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    width: 100% !important;
+    max-width: 560px !important;
+}
+
+.hero-text .auth-logo svg {
+    width: clamp(38px, 5vw, 46px) !important;
+    height: clamp(38px, 5vw, 46px) !important;
+}
+
+.hero-text h1 {
+    font-size: clamp(24px, 2.6vw, 32px) !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.028em !important;
+    line-height: 1.15 !important;
+    margin: 0 0 12px 0 !important;
+    text-wrap: balance;
+    text-rendering: optimizeLegibility;
+
+    /* ⭐ ELITE: subtle vertical gradient wordmark */
+    background: linear-gradient(180deg,
+        var(--text-main) 0%,
+        color-mix(in srgb, var(--text-main) 82%, var(--text-muted)) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+}
+
+.hero-text p {
+    font-size: clamp(13.5px, 1.15vw, 15.5px) !important;
+    max-width: 46ch !important;      /* ⭐ ELITE: typographic measure */
+    margin: 0 auto !important;
+    line-height: 1.6 !important;
+    color: var(--text-muted) !important;
+    text-wrap: pretty;
+    letter-spacing: -0.005em;
+}
+
+/* ⭐ ELITE: staggered entrance choreography */
+@media (prefers-reduced-motion: no-preference) {
+    .hero-text .auth-logo svg {
+        animation:
+            heroLogoIdle 5s ease-in-out infinite,
+            heroEnter 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+    .hero-text h1 {
+        animation: heroEnter 0.6s 0.08s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+    .hero-text p {
+        animation: heroEnter 0.6s 0.16s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+    @keyframes heroEnter {
+        from { opacity: 0; transform: translateY(8px); }
+        to   { opacity: 1; transform: translateY(0);   }
+    }
+    @keyframes heroLogoIdle {
+        0%, 100% { transform: scale(1);    opacity: 0.9; }
+        50%      { transform: scale(1.04); opacity: 1;   }
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    #viewport        { padding: 84px 18px 170px 18px !important; }
+    .hero-text h1    { font-size: clamp(22px, 4.5vw, 30px) !important; }
+    .hero-text p     { font-size: 14px !important; }
+}
+@media (max-width: 480px) {
+    #viewport        { padding: 76px 14px 160px 14px !important; }
+    .hero-text h1    { font-size: clamp(20px, 4.5vw, 26px) !important; }
+    .hero-text p     { font-size: 13.5px !important; }
+}
+@media (max-width: 340px) {
+    .hero-text h1 { font-size: 18px !important; }
+    .hero-text p  { font-size: 11px !important; }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+    .hero-text { margin-top: 0 !important; }
+    .hero-text .auth-logo svg { width: 32px !important; height: 32px !important; }
+    #viewport { padding: 60px 24px 120px 24px !important; }
+}
+
+/* Light theme */
+body.light-theme .hero-text h1 {
+    background: linear-gradient(180deg, #0b1220 0%, #334155 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+}
+body.light-theme .hero-text p { color: #64748b; }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    #viewport,
+    .hero-text .auth-logo svg,
+    .hero-text h1,
+    .hero-text p { animation: none !important; transition-duration: 0.01ms !important; }
+}
+/* ════════════════════════════════════════════════════════════════════
+   HERO ELITE UPGRADE v1.0
+   Ambient glow drift, CTA suggestion row, subtle grain. All additive.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ── Hero ambient glow — drifting radial wash behind logo ────────── */
+@media (prefers-reduced-motion: no-preference) {
+    #hero-display::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background:
+            radial-gradient(circle at 30% 40%, rgba(0, 242, 254, 0.06), transparent 50%),
+            radial-gradient(circle at 70% 60%, rgba(139, 92, 246, 0.05), transparent 50%);
+        pointer-events: none;
+        animation: heroAmbient 18s ease-in-out infinite;
+        z-index: -1;
+    }
+    @keyframes heroAmbient {
+        0%, 100% { transform: translate(0, 0) scale(1);       opacity: 0.7; }
+        33%      { transform: translate(-2%, 3%) scale(1.05); opacity: 1;   }
+        66%      { transform: translate(2%, -2%) scale(1.03); opacity: 0.85;}
+    }
+}
+#hero-display {
+    position: relative;
+    isolation: isolate;
+}
+
+/* ── Hero suggestion chips — quick start prompts ─────────────────── */
+.hero-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 28px;
+    max-width: 520px;
+}
+.hero-suggestions .suggestion {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 16px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-muted);
+    border-radius: 100px;
+    color: var(--text-muted);
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition:
+        background 0.22s ease,
+        border-color 0.22s ease,
+        color 0.22s ease,
+        transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.hero-suggestions .suggestion:hover {
+    background: rgba(0, 242, 254, 0.08);
+    border-color: rgba(0, 242, 254, 0.30);
+    color: var(--text-main);
+    transform: translateY(-2px);
+}
+.hero-suggestions .suggestion .material-symbols-rounded {
+    font-size: 15px;
+    color: var(--accent-glow);
+}
+
+/* ── Staggered entrance for suggestions ──────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+    .hero-suggestions .suggestion {
+        animation: heroEnter 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+    .hero-suggestions .suggestion:nth-child(1) { animation-delay: 0.24s; }
+    .hero-suggestions .suggestion:nth-child(2) { animation-delay: 0.32s; }
+    .hero-suggestions .suggestion:nth-child(3) { animation-delay: 0.40s; }
+    .hero-suggestions .suggestion:nth-child(4) { animation-delay: 0.48s; }
+}
+
+/* ── Light theme ─────────────────────────────────────────────────── */
+body.light-theme .hero-suggestions .suggestion:hover {
+    background: rgba(14, 165, 233, 0.08);
+    border-color: rgba(14, 165, 233, 0.30);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #hero-display::before,
+    .hero-suggestions .suggestion {
+        animation: none !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+/* ── Chat container + viewport fill (from 95 §1) ─────────────── */
+#viewport {
+    flex: 1;
+    width: 100% !important;
+}
+#chat-container {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 28px !important;
+    align-items: stretch !important;
+}
+#chat-container:empty { display: none !important; }
+@media (max-width: 768px) {
+    #chat-container { gap: 22px !important; }
+}

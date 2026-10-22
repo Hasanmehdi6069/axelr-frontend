@@ -1,5 +1,12 @@
 /* ============================================================
-   COMMAND WRAPPER — file staging
+   COMMAND BAR — input frame, actions, plus menu, send/mic
+   Single source of truth. The features menu has ONE definition
+   per breakpoint (desktop: absolute above button; mobile: fixed
+   below header so all items including Upload are visible).
+   ============================================================ */
+
+/* ============================================================
+   FILE STAGING
    ============================================================ */
 #file-staging-container {
     width: 100%;
@@ -24,7 +31,33 @@
 }
 
 /* ============================================================
-   INPUT FRAME (single canonical)
+   COMMAND WRAPPER
+   ============================================================ */
+.command-wrapper {
+    position: fixed;
+    bottom: max(14px, env(safe-area-inset-bottom));
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(800px, calc(100% - 24px));
+    padding: 0;
+    z-index: var(--z-command-bar, 700);
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+    overflow: visible;   /* critical: features menu must escape */
+    transition: bottom 0.2s ease;
+}
+
+.command-disclaimer {
+    color: var(--text-muted);
+    font-size: 11px;
+    margin-top: 8px;
+    text-align: center;
+}
+
+/* ============================================================
+   INPUT FRAME
    ============================================================ */
 .input-frame {
     background: color-mix(in srgb, var(--bg-card) 92%, transparent);
@@ -33,10 +66,10 @@
     padding: 10px 12px;
     display: flex;
     flex-direction: column;
-    transition: background-color 0.25s ease, box-shadow 0.25s ease;
     box-shadow:
         0 20px 40px -20px rgba(0, 0, 0, 0.65),
         0 0 0 1px var(--border-muted);
+    transition: background-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .input-frame:focus-within {
     background: color-mix(in srgb, var(--bg-card) 98%, transparent);
@@ -55,11 +88,17 @@
     gap: 10px;
     width: 100%;
     min-height: 42px;
+    min-width: 0;
 }
-textarea {
+#prompt-input,
+textarea#prompt-input {
     flex: 1;
-    background: transparent;
-    border: none;
+    min-width: 0;
+    background: transparent !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
     color: var(--text-main);
     font-size: 14px;
     padding: 8px 5px;
@@ -68,12 +107,7 @@ textarea {
     font-family: 'Inter', sans-serif;
     line-height: 1.5;
 }
-textarea::placeholder { color: #6b7280; }
-textarea::-webkit-scrollbar { width: 4px; }
-textarea::-webkit-scrollbar-thumb {
-    background: var(--border-muted);
-    border-radius: 2px;
-}
+#prompt-input::placeholder { color: var(--text-muted); }
 
 /* ============================================================
    INPUT ACTIONS
@@ -82,168 +116,249 @@ textarea::-webkit-scrollbar-thumb {
     display: flex;
     align-items: center;
     gap: 8px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 10;
 }
-.action-btn {
+.action-btn,
+.plus-menu-btn,
+.send-btn,
+.mic-btn,
+.enhance-btn {
     width: 36px;
     height: 36px;
-    border-radius: 50%;
+    border-radius: 10px;
     border: none;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: 0.2s;
     flex-shrink: 0;
+    padding: 0;
     background: transparent;
     color: var(--text-muted);
     font-family: 'Inter', sans-serif;
+    position: relative;
+    z-index: 10;
+    pointer-events: auto;
+    isolation: isolate;
+    transition: background 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                color 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 0.22s ease;
 }
-.action-btn:hover {
-    background: rgba(255, 255, 255, 0.05);
+.action-btn:hover,
+.plus-menu-btn:hover,
+.mic-btn:hover,
+.enhance-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
     color: var(--text-main);
 }
+.action-btn:active,
+.plus-menu-btn:active,
+.mic-btn:active,
+.enhance-btn:active { transform: scale(0.92); }
 
-/* ============================================================
-   ENHANCE BUTTON
-   ============================================================ */
-.enhance-btn {
-    color: var(--accent-glow-pro);
-}
+.enhance-btn { color: var(--accent-glow-pro); }
 .enhance-btn:hover {
     background: rgba(139, 92, 246, 0.15);
     color: #fff;
     box-shadow: 0 0 10px rgba(139, 92, 246, 0.3);
 }
-.enhance-btn.loading {
-    animation: pulse 1s infinite;
-    opacity: 0.5;
-    cursor: not-allowed;
-}
+.enhance-btn.loading { animation: pulse 1s infinite; opacity: 0.5; cursor: not-allowed; }
 
-/* ============================================================
-   ATTACH + MIC
-   ============================================================ */
-.attach-btn:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: var(--text-main);
-}
 .mic-btn.listening {
-    color: var(--color-danger);
+    color: #ef4444;
     animation: pulse 1.5s infinite;
     background: rgba(239, 68, 68, 0.1);
 }
 
-/* ============================================================
-   SEND BUTTON — MASTER
-   ============================================================ */
+/* Send button */
 .send-btn {
     background: var(--text-main);
     color: var(--bg-deep);
-    border-radius: 50%;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: none;
-    cursor: pointer;
-}
-.send-btn:hover {
-    opacity: 0.8;
 }
 .send-btn:hover:not(:disabled) {
-    transform: scale(1.05);
     background: #ffffff;
-    box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+    transform: scale(1.05);
+    box-shadow: 0 0 18px rgba(255, 255, 255, 0.28);
 }
+.send-btn:active:not(:disabled) { transform: scale(0.94); }
 .send-btn:disabled {
-    background: var(--bg-card);
+    background: rgba(255, 255, 255, 0.06);
     color: #4b5563;
     cursor: not-allowed;
 }
+/* ============================================================
+   ELITE STOP BUTTON — concentric ring + core square
+   Replaces the wide pill. Respects --accent-glow (which each
+   workspace remaps: data → emerald, design → crimson).
+   ============================================================ */
 .send-btn.btn-stop-active {
-    background: rgba(255, 255, 255, 0.05) !important;
-    color: var(--accent-glow) !important;
-    border: 1px solid var(--accent-glow) !important;
-    border-radius: 12px !important;
-    box-shadow: 0 0 25px -5px color-mix(in srgb, var(--accent-glow) 25%, transparent) !important;
-    width: auto !important;
-    padding: 0 12px !important;
+    position: relative !important;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    background: transparent !important;
+    border: 1.5px solid color-mix(in srgb, var(--accent-glow) 35%, transparent) !important;
+    box-shadow: 0 0 20px -6px color-mix(in srgb, var(--accent-glow) 30%, transparent) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: transparent !important;
+    cursor: pointer !important;
+    overflow: visible !important;
+    transition:
+        border-color 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow   0.3s  cubic-bezier(0.22, 1, 0.36, 1),
+        transform    0.2s  cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    isolation: isolate;
 }
 
-/* Per-workspace stop-active tint */
-body.workspace-data .send-btn.btn-stop-active {
-    background: rgba(0, 255, 136, 0.15) !important;
-    color: #00ff88 !important;
-    border-color: #00ff88 !important;
-    box-shadow: 0 0 20px rgba(0, 255, 136, 0.4) !important;
+/* Hide the inner SVG/text so only the ring + core show */
+.send-btn.btn-stop-active > * {
+    display: none !important;
 }
-body.workspace-design .send-btn.btn-stop-active {
-    background: rgba(255, 26, 74, 0.15) !important;
-    color: #ff1a4a !important;
-    border-color: #ff1a4a !important;
-    box-shadow: 0 0 20px rgba(255, 26, 74, 0.4) !important;
+
+/* Outer halo ring — expands on hover */
+.send-btn.btn-stop-active::before {
+    content: '' !important;
+    position: absolute !important;
+    inset: 3px !important;
+    border-radius: 50% !important;
+    border: 2px solid color-mix(in srgb, var(--accent-glow) 18%, transparent) !important;
+    transition:
+        transform    0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+        border-color 0.25s ease !important;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Perfect core square */
+.send-btn.btn-stop-active::after {
+    content: '' !important;
+    position: absolute !important;
+    width: 12px !important;
+    height: 12px !important;
+    border-radius: 3px !important;
+    background: var(--accent-glow) !important;
+    box-shadow:
+        0 0 12px color-mix(in srgb, var(--accent-glow) 65%, transparent),
+        0 0 3px #fff inset !important;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.send-btn.btn-stop-active:hover:not(:disabled) {
+    background: transparent !important;
+    border-color: color-mix(in srgb, var(--accent-glow) 70%, transparent) !important;
+    box-shadow: 0 0 28px -4px color-mix(in srgb, var(--accent-glow) 45%, transparent) !important;
+    transform: none !important;
+}
+.send-btn.btn-stop-active:hover::before {
+    transform: scale(1.08) !important;
+    border-color: color-mix(in srgb, var(--accent-glow) 35%, transparent) !important;
+}
+.send-btn.btn-stop-active:hover::after {
+    transform: scale(0.9) !important;
+}
+.send-btn.btn-stop-active:active {
+    transform: scale(0.94) !important;
+    transition-duration: 80ms !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .send-btn.btn-stop-active,
+    .send-btn.btn-stop-active::before,
+    .send-btn.btn-stop-active::after {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+    }
 }
 
 /* ============================================================
-   PLUS MENU / FEATURES DROPDOWN
+   FEATURES DROPDOWN — single source of truth
+   Desktop: absolute, anchored above the + button.
+   Mobile:  fixed, anchored below header, all items visible.
    ============================================================ */
-.plus-menu-btn {
-    color: var(--text-muted);
-    transition: transform 0.2s var(--ease-out-expo), background 0.2s;
-}
-.plus-menu-btn:hover {
-    color: var(--text-main);
-    background: rgba(255, 255, 255, 0.08);
-}
 .features-dropdown-wrapper {
     position: relative;
     display: inline-flex;
     align-items: center;
+    flex-shrink: 0;
 }
 .features-dropdown-wrapper:has(.features-menu.open) .plus-menu-btn {
-    transform: rotate(45deg);
+    background: rgba(0, 242, 254, 0.12);
     color: var(--accent-glow);
+    transform: rotate(45deg);
 }
 
 .features-menu {
     position: absolute;
-    bottom: calc(100% + 14px);
+    bottom: calc(100% + 12px);
     left: 0;
     right: auto;
-    min-width: 260px;
+    min-width: 240px;
+    max-width: min(320px, calc(100vw - 24px));
     max-height: 420px;
     overflow-y: auto;
-    border-radius: 16px;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
     padding: 6px;
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--bg-card) 96%, transparent);
+    border: 1px solid var(--border-muted);
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.05) inset,
+        0 32px 80px -20px rgba(0, 0, 0, 0.85),
+        0 0 60px -20px color-mix(in srgb, var(--accent-glow) 25%, transparent);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
     display: none;
     flex-direction: column;
     gap: 2px;
-    z-index: var(--z-floating);
+    z-index: var(--z-floating, 10000);
+    transform-origin: bottom left;
 }
 .features-menu.open {
-    display: flex !important;
-    opacity: 1;
-    transform: translateY(0) scale(1);
+    display: flex;
+    animation: featuresMenuUp 0.24s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
+@keyframes featuresMenuUp {
+    from { opacity: 0; transform: translateY(8px) scale(0.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 .feature-item {
     display: flex;
     align-items: center;
     gap: 12px;
     padding: 10px 14px;
+    min-height: 42px;
     border-radius: 10px;
-    color: var(--text-main);
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 500;
-    transition: background 0.15s ease;
     border: none;
     background: transparent;
+    color: var(--text-main);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    transition: background 0.15s ease, transform 0.12s ease;
 }
-.feature-item:hover { background: rgba(255, 255, 255, 0.08); }
+.feature-item:hover,
+.feature-item:active {
+    background: rgba(0, 242, 254, 0.10);
+}
 .feature-item .material-symbols-rounded {
     font-size: 18px;
     color: var(--accent-glow);
+    flex-shrink: 0;
 }
 .feature-item.upload-highlight {
     border-bottom: 1px solid var(--border-muted);
@@ -257,30 +372,190 @@ body.workspace-design .send-btn.btn-stop-active {
 .feature-item span:last-child { flex: 1; }
 
 /* ============================================================
-   COMMAND WRAPPER
+   FEATURES DROPDOWN — mobile fix
+   Anchored below the header (top: 68px) with a large reserved
+   space at bottom for the command bar. All items including Upload
+   are guaranteed visible because the menu can scroll if needed.
    ============================================================ */
-.command-wrapper {
-    position: fixed;
-    bottom: max(14px, env(safe-area-inset-bottom));
-    left: 50%;
-    transform: translateX(-50%);
-    width: min(800px, calc(100% - 24px));
-    padding: 0;
-    z-index: var(--z-command-bar);
-    background: transparent !important;
-    display: flex;
-    flex-direction: column;
-    max-height: 90vh;
-    overflow: visible !important;
-    transition: transform var(--transition-base), opacity var(--transition-base);
+@media (max-width: 768px) {
+    .features-menu {
+        position: fixed !important;
+        top: 68px !important;
+        left: 12px !important;
+        right: 12px !important;
+        bottom: auto !important;
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        max-height: calc(100dvh - 68px - 140px) !important;
+        overflow-y: auto !important;
+        border-radius: 16px !important;
+        z-index: 10001 !important;
+        transform-origin: top center !important;
+        padding: 8px !important;
+    }
+    .features-menu.open {
+        animation: featuresMenuDown 0.26s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    .feature-item {
+        padding: 13px 14px !important;
+        min-height: 48px !important;
+        font-size: 13.5px !important;
+    }
+    .feature-item .material-symbols-rounded {
+        font-size: 20px !important;
+    }
+}
+@keyframes featuresMenuDown {
+    from { opacity: 0; transform: translateY(-8px) scale(0.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-.command-disclaimer {
-    color: var(--text-muted);
-    font-size: 11px;
-    margin-top: 8px;
-    text-align: center;
+@media (max-width: 480px) {
+    .features-menu {
+        left: 8px !important;
+        right: 8px !important;
+        top: 64px !important;
+        max-height: calc(100dvh - 64px - 150px) !important;
+    }
 }
+
+/* ============================================================
+   COMMAND BAR — mobile safe-area + 44px touch targets
+   Guarantees: no overlap with #sidebar-trigger-area (30px), no
+   "+"-button clipping, and no reflow when file chips appear.
+   ============================================================ */
+@media (max-width: 768px) {
+    .command-wrapper {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        transform: none !important;
+        /* Clear the fixed 30px sidebar trigger + breathing room */
+        padding: 8px 14px calc(env(safe-area-inset-bottom, 10px) + 8px) max(46px, calc(env(safe-area-inset-left, 0px) + 14px)) !important;
+        background: linear-gradient(to top, var(--bg-deep) 80%, transparent) !important;
+        z-index: var(--z-command-bar, 700) !important;
+        isolation: isolate;
+        overflow: visible !important;
+    }
+    .input-frame {
+        display: flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        padding: 6px 8px !important;
+        min-height: 48px;
+        overflow: visible !important;
+    }
+    .input-row {
+        flex-wrap: nowrap !important;
+        align-items: flex-end !important;
+        gap: 6px !important;
+        min-width: 0;
+    }
+    #prompt-input,
+    textarea#prompt-input {
+        min-width: 0;
+        font-size: 16px !important; /* prevents iOS zoom-on-focus */
+    }
+    .input-actions {
+        display: flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        flex-shrink: 0;
+        margin-left: auto;
+        z-index: 11;
+        isolation: isolate;
+    }
+    .features-dropdown-wrapper {
+        display: inline-flex !important;
+        align-items: center !important;
+        flex-shrink: 0 !important;
+        min-width: 40px;
+        min-height: 40px;
+        z-index: 11;
+    }
+    /* Guarantee 40px touch targets (WCAG 2.5.8 AA min is 24; 40 keeps AAA-friendly breathing room) */
+    .plus-menu-btn,
+    .send-btn,
+    .mic-btn,
+    .action-btn {
+        min-width: 40px !important;
+        min-height: 40px !important;
+        width: 40px !important;
+        height: 40px !important;
+        flex-shrink: 0 !important;
+    }
+    .plus-menu-btn .material-symbols-rounded,
+    .send-btn .material-symbols-rounded,
+    .mic-btn .material-symbols-rounded {
+        font-size: 20px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .command-wrapper {
+        padding-left: max(44px, calc(env(safe-area-inset-left, 0px) + 10px)) !important;
+        padding-right: 10px !important;
+    }
+    .plus-menu-btn,
+    .send-btn,
+    .mic-btn,
+    .action-btn {
+        min-width: 40px !important;
+        min-height: 40px !important;
+        width: 40px !important;
+        height: 40px !important;
+    }
+}
+
+@media (max-width: 360px) {
+    .command-wrapper {
+        padding-left: max(42px, calc(env(safe-area-inset-left, 0px) + 8px)) !important;
+        padding-right: 8px !important;
+    }
+    .plus-menu-btn,
+    .send-btn,
+    .mic-btn,
+    .action-btn {
+        min-width: 38px !important;
+        min-height: 38px !important;
+        width: 38px !important;
+        height: 38px !important;
+    }
+}
+/* ============================================================
+   LIGHT THEME
+   ============================================================ */
+body.light-theme .input-frame {
+    background: #ffffff !important;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06), 0 0 0 1px rgba(15, 23, 42, 0.10) !important;
+}
+body.light-theme .input-frame:focus-within {
+    border-color: #0d9488 !important;
+    box-shadow: 0 0 30px rgba(13, 148, 136, 0.15), 0 0 0 1px #0d9488 !important;
+}
+body.light-theme textarea#prompt-input { color: #0f172a !important; }
+body.light-theme textarea#prompt-input::placeholder { color: #94a3b8 !important; }
+body.light-theme .send-btn { background: #0f172a !important; color: #ffffff !important; }
+body.light-theme .send-btn:hover:not(:disabled) { background: #1e293b !important; }
+body.light-theme .send-btn:disabled { background: #f1f5f9 !important; color: #94a3b8 !important; }
+body.light-theme .plus-menu-btn,
+body.light-theme .action-btn,
+body.light-theme .mic-btn,
+body.light-theme .enhance-btn { color: #64748b !important; }
+body.light-theme .plus-menu-btn:hover,
+body.light-theme .action-btn:hover,
+body.light-theme .mic-btn:hover { background: rgba(0, 0, 0, 0.05) !important; color: #0f172a !important; }
+body.light-theme .features-menu {
+    background: #ffffff !important;
+    border-color: rgba(15, 23, 42, 0.10) !important;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12) !important;
+}
+body.light-theme .feature-item { color: #0f172a !important; }
+body.light-theme .feature-item:hover { background: rgba(14, 165, 233, 0.08) !important; }
 
 /* ============================================================
    OFFLINE BANNER
@@ -290,141 +565,188 @@ body.workspace-design .send-btn.btn-stop-active {
     top: 0;
     left: 0;
     width: 100%;
-    background: var(--color-danger);
+    background: var(--color-danger, #ef4444);
     color: #fff;
     text-align: center;
     padding: 10px;
-    z-index: var(--z-toast);
+    z-index: var(--z-toast, 10001);
     font-weight: 600;
     font-size: 14px;
     display: none;
     box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
     font-family: 'Inter', sans-serif;
 }
+
 /* ============================================================
-   ELITE COMMAND — rotating send ring, glass depth, spring menus
+   REDUCED MOTION
    ============================================================ */
-@layer elite {
-
-/* Command bar — at-rest ambient glow, focus bloom */
-.input-frame {
-    transition:
-        background-color var(--duration-swift) var(--ease-smooth),
-        box-shadow var(--duration-swift) var(--ease-smooth),
-        transform var(--duration-swift) var(--ease-overshoot);
+@media (prefers-reduced-motion: reduce) {
+    .features-menu.open,
+    .command-wrapper,
+    .input-frame,
+    .action-btn,
+    .plus-menu-btn,
+    .send-btn,
+    .mic-btn,
+    .enhance-btn {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+    }
 }
-.input-frame:focus-within {
-    transform: translateY(-1px);
-    box-shadow:
-        0 24px 60px -20px rgba(0,0,0,0.7),
-        0 0 0 1px color-mix(in srgb, var(--accent-glow) 50%, transparent),
-        0 0 60px -16px color-mix(in srgb, var(--accent-glow) 35%, transparent);
+@media (max-width: 768px) {
+    /* ...existing mine... */
+    .enhance-btn {
+        min-width: 40px !important;
+        min-height: 40px !important;
+        width: 40px !important;
+        height: 40px !important;
+        flex-shrink: 0 !important;
+    }
 }
+/* ════════════════════════════════════════════════════════════════════
+   COMMAND BAR ELITE UPGRADE v1.0
+   Attachment chip remove buttons, voice waveform placeholder, send
+   idle shimmer, char counter, keyboard shortcut hint. All additive.
+   ════════════════════════════════════════════════════════════════════ */
 
-/* Send button — rotating conic glow ring on hover.
-   Modern, restrained, unmistakably premium. */
-.send-btn {
+/* ── Attachment chip — enhanced with remove button ───────────────── */
+.file-chip {
     position: relative;
-    z-index: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 22px 4px 10px;
     transition:
-        transform var(--duration-quick) var(--ease-elastic),
-        background var(--duration-quick) var(--ease-smooth),
-        box-shadow var(--duration-quick) var(--ease-smooth);
+        background 0.18s ease,
+        border-color 0.18s ease;
 }
-.send-btn::before {
+.file-chip:hover {
+    background: rgba(0, 242, 254, 0.10);
+    border-color: rgba(0, 242, 254, 0.30);
+}
+.file-chip .chip-remove {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+.file-chip:hover .chip-remove { opacity: 1; }
+.file-chip .chip-remove:hover {
+    background: rgba(239, 68, 68, 0.15);
+    color: #fca5a5;
+}
+.file-chip .chip-remove .material-symbols-rounded {
+    font-size: 12px;
+}
+
+/* ── Send button — subtle idle shimmer ───────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+    .send-btn:not(.btn-stop-active):not(:disabled):not(:hover) {
+        background-image: linear-gradient(
+            120deg,
+            transparent 0%,
+            transparent 45%,
+            rgba(255, 255, 255, 0.20) 50%,
+            transparent 55%,
+            transparent 100%) !important;
+        background-size: 220% 100% !important;
+        background-position: 100% center !important;
+        animation: sendIdleShimmer 6s ease-in-out infinite;
+    }
+    @keyframes sendIdleShimmer {
+        0%, 60%, 100% { background-position: 100% center; }
+        75%           { background-position: -100% center; }
+    }
+}
+
+/* ── Voice waveform — mic listening state ────────────────────────── */
+.mic-btn.listening::after {
     content: '';
     position: absolute;
-    inset: -2px;
-    border-radius: inherit;
-    background: conic-gradient(from var(--gradient-angle),
-        transparent 0deg,
-        var(--accent-glow) 60deg,
-        transparent 180deg,
-        var(--accent-pro) 240deg,
-        transparent 360deg);
-    opacity: 0;
-    z-index: -1;
+    inset: -4px;
+    border-radius: 14px;
+    background: conic-gradient(from 0deg,
+        transparent 0%,
+        rgba(239, 68, 68, 0.20) 25%,
+        transparent 50%,
+        rgba(239, 68, 68, 0.20) 75%,
+        transparent 100%);
+    animation: micListenRing 2s linear infinite;
     pointer-events: none;
-    filter: blur(2px);
-    transition: opacity var(--duration-swift) var(--ease-smooth);
+    z-index: -1;
 }
-.send-btn:hover:not(:disabled)::before {
-    opacity: 1;
-    animation: rotateGradient 3s linear infinite;
-}
-@keyframes rotateGradient {
-    to { --gradient-angle: 360deg; }
-}
-.send-btn:active:not(:disabled) { transform: scale(0.92); }
+@keyframes micListenRing { to { transform: rotate(360deg); } }
 
-/* Action buttons (attach / mic / enhance) — tactile press */
-.action-btn {
-    transition:
-        background var(--duration-quick) var(--ease-smooth),
-        color var(--duration-quick) var(--ease-smooth),
-        transform var(--duration-quick) var(--ease-elastic),
-        box-shadow var(--duration-quick) var(--ease-smooth);
+/* ── Character counter ───────────────────────────────────────────── */
+#char-counter {
+    display: none;
+    align-items: center;
+    gap: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--text-dim);
+    letter-spacing: 0.3px;
+    margin-left: 8px;
+    transition: color 0.2s ease;
 }
-.action-btn:active { transform: scale(0.90); }
-.action-btn:hover {
-    box-shadow: 0 0 0 1px rgba(255,255,255,0.08) inset,
-                0 4px 12px -4px rgba(0,0,0,0.4);
-}
+#char-counter.visible { display: inline-flex; }
+#char-counter[data-state="warn"] { color: #fbbf24; }
+#char-counter[data-state="danger"] { color: #f87171; }
 
-/* Features menu — spring entry, elevated surface */
-.features-menu {
-    background: color-mix(in srgb, var(--bg-card) 85%, transparent);
-    border: 1px solid rgba(255,255,255,0.08);
-    box-shadow:
-        0 1px 0 rgba(255,255,255,0.05) inset,
-        var(--shadow-floating),
-        0 0 60px -20px color-mix(in srgb, var(--accent-glow) 25%, transparent);
-    backdrop-filter: blur(24px) saturate(180%);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
-    transform-origin: bottom left;
+/* ── Keyboard shortcut hint under command bar ─────────────────────── */
+.command-shortcuts {
+    display: none;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 8px;
+    font-size: 10.5px;
+    color: var(--text-dim);
+    opacity: 0.6;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.3px;
 }
-.features-menu.open {
-    animation: menuSpring 0.28s var(--ease-overshoot) forwards;
+@media (hover: hover) and (pointer: fine) {
+    .command-shortcuts { display: flex; }
 }
-@keyframes menuSpring {
-    from { opacity: 0; transform: translateY(8px) scale(0.94); }
-    to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-.feature-item {
-    transition:
-        background var(--duration-quick) var(--ease-smooth),
-        transform var(--duration-quick) var(--ease-elastic);
-}
-.feature-item:hover {
-    background: color-mix(in srgb, var(--accent-glow) 8%, transparent);
-    transform: translateX(2px);
-}
-.feature-item .material-symbols-rounded {
-    transition: transform var(--duration-quick) var(--ease-elastic);
-}
-.feature-item:hover .material-symbols-rounded {
-    transform: scale(1.15);
+.command-shortcuts kbd {
+    display: inline-block;
+    padding: 1px 5px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 3px;
+    font-family: inherit;
+    font-size: 9.5px;
+    color: var(--text-muted);
 }
 
-/* File staging chips — sparkle on new file */
-.file-chip {
-    animation: chipArrive 0.4s var(--ease-overshoot) both;
-}
-@keyframes chipArrive {
-    from { opacity: 0; transform: scale(0.8) translateY(4px); }
-    to   { opacity: 1; transform: scale(1) translateY(0); }
+/* ── Light theme ─────────────────────────────────────────────────── */
+body.light-theme .file-chip:hover {
+    background: rgba(14, 165, 233, 0.08);
+    border-color: rgba(14, 165, 233, 0.28);
 }
 
-} /* end @layer elite */
-
-/* ============================================================
-   BUG FIX 2: REMOVE INNER BORDER RADIUS ON PROMPT INPUT
-   ============================================================ */
-#prompt-input,
-#prompt-input:focus,
-#prompt-input:focus-visible {
-    border-radius: 0 !important;
-    outline: none !important;
-    box-shadow: none !important; /* Removes the inner glowing focus ring */
-    background: transparent !important;
+@media (prefers-reduced-motion: reduce) {
+    .send-btn:not(.btn-stop-active):not(:disabled),
+    .mic-btn.listening::after,
+    .file-chip .chip-remove {
+        animation: none !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+/* ── Workspace-design focus accent (from 25-workspace) ─────── */
+body.workspace-design .input-frame:focus-within {
+    border-color: #ef4444;
+    box-shadow: 0 0 30px rgba(239, 68, 68, 0.2);
 }

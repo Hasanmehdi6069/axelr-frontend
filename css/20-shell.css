@@ -1,6 +1,7 @@
 /* ============================================================
    SIDEBAR
    ============================================================ */
+/* EXACTLY MATCHES STYLE.CSS - NO DEVIATIONS */
 #sidebar-trigger-area {
     position: absolute;
     left: 0;
@@ -16,11 +17,6 @@
     justify-content: center;
     transition: 0.3s;
     pointer-events: auto;
-}
-#sidebar-trigger-area:hover {
-    background: rgba(255, 255, 255, 0.05);
-    width: 40px;
-    box-shadow: 2px 0 15px var(--shadow-color);
 }
 .trigger-text {
     writing-mode: vertical-rl;
@@ -47,30 +43,26 @@ body:has(#sidebar-container-node.open) #sidebar-trigger-area {
 /* ═══════════════════════════════════════════════════════════
    MASTER: #sidebar-container-node — transform-based, final z-index
    ═══════════════════════════════════════════════════════════ */
-#sidebar-container-node {
-    position: fixed;
+   #sidebar-container-node {
+    position: absolute;
     top: 0;
+    bottom: 0;
     left: 0;
-    height: 100%;
-    max-height: 100dvh;
-    width: var(--sidebar-width, 280px);
+    width: var(--sidebar-width);
     background: var(--bg-sidebar);
     display: flex;
     flex-direction: column;
     border-right: 1px solid var(--border-muted);
-    box-shadow: var(--shadow-cosmic);
-    z-index: var(--z-sidebar);
+    height: 100dvh;
     overflow-y: auto;
-    overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch;
-    transform: translate3d(-100%, 0, 0);
-    transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+    touch-action: pan-y;
+    transform: translateX(-100%);
+    transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
     will-change: transform;
-    backface-visibility: hidden;
+    z-index: var(--z-sidebar, 200);
 }
 #sidebar-container-node.open {
-    transform: translate3d(0, 0, 0);
-    box-shadow: 10px 0 30px var(--shadow-color);
+    transform: translateX(0);
 }
 
 /* Backdrop and sidebar layering */
@@ -78,7 +70,271 @@ body:has(#sidebar-container-node.open) #sidebar-trigger-area {
     transition: opacity 0.3s ease;
     z-index: var(--z-backdrop);
 }
+/* ============================================================
+   SIDEBAR TRIGGER — CONTEXT VAULT (canonical)
+   ============================================================ */
 
+#sidebar-trigger-area {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    width: 30px !important;
+    z-index: 199 !important;
+    cursor: pointer !important;
+    background-color: rgba(255, 255, 255, 0.02) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.045) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    transition:
+        background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        border-color     0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        box-shadow       0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Anchor dots — top + bottom */
+#sidebar-trigger-area::before,
+#sidebar-trigger-area::after {
+    content: '' !important;
+    position: absolute !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 3px !important;
+    height: 3px !important;
+    border-radius: 50% !important;
+    background: var(--accent-glow) !important;
+    opacity: 0.32 !important;
+    transition:
+        opacity    0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        transform  0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    pointer-events: none;
+    will-change: opacity, transform;
+}
+#sidebar-trigger-area::before { top: 28px !important; }
+#sidebar-trigger-area::after  { bottom: 28px !important; }
+
+#sidebar-trigger-area:hover {
+    width: 30px !important;
+    background-color: rgba(0, 242, 254, 0.05) !important;
+    border-right-color: rgba(0, 242, 254, 0.28) !important;
+    box-shadow:
+        inset -1px 0 0 0 rgba(0, 242, 254, 0.20),
+        6px 0 28px -12px rgba(0, 242, 254, 0.35),
+        4px 0 20px -8px rgba(0, 0, 0, 0.55) !important;
+}
+
+#sidebar-trigger-area:hover::before,
+#sidebar-trigger-area:hover::after {
+    opacity: 1 !important;
+    box-shadow: 0 0 12px var(--accent-glow), 0 0 3px #ffffff !important;
+    transform: translateX(-50%) scale(1.4) !important;
+}
+
+/* ⭐ ELITE: sequential dot pulse — reads as "signal alive", not static */
+@media (prefers-reduced-motion: no-preference) {
+    #sidebar-trigger-area:hover::before {
+        animation: dotPulseTop 1.6s ease-in-out infinite;
+    }
+    #sidebar-trigger-area:hover::after {
+        animation: dotPulseBottom 1.6s 0.3s ease-in-out infinite;
+    }
+    @keyframes dotPulseTop {
+        0%, 100% { opacity: 1; transform: translateX(-50%) scale(1.4); }
+        50%      { opacity: 0.7; transform: translateX(-50%) scale(1.1); }
+    }
+    @keyframes dotPulseBottom {
+        0%, 100% { opacity: 1; transform: translateX(-50%) scale(1.4); }
+        50%      { opacity: 0.7; transform: translateX(-50%) scale(1.1); }
+    }
+}
+
+/* ── Trigger text — frozen, legible, static ────────────────── */
+#sidebar-trigger-area .trigger-text,
+#sidebar-trigger-area:hover .trigger-text,
+#sidebar-trigger-area:active .trigger-text {
+    writing-mode: vertical-rl !important;
+    transform: rotate(180deg) translateZ(0) !important;
+    letter-spacing: 4.5px !important;
+    text-shadow: none !important;
+    font-size: 10.5px !important;
+    font-weight: 500 !important;
+    color: rgba(161, 181, 204, 0.72) !important;
+    text-transform: uppercase !important;
+    white-space: nowrap !important;
+    user-select: none !important;
+    display: block !important;
+    contain: layout style;
+    will-change: color;
+    transition: color 0.28s cubic-bezier(0.32, 0.72, 0, 1) !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    #sidebar-trigger-area:hover .trigger-text {
+        color: var(--text-main) !important;
+    }
+}
+
+/* Smooth trigger fade when drawer opens */
+body:has(#sidebar-container-node.open) #sidebar-trigger-area {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Touch devices — no hover-driven layout shifts */
+@media (hover: none), (pointer: coarse) {
+    #sidebar-trigger-area:hover .trigger-text,
+    #sidebar-trigger-area:active .trigger-text {
+        letter-spacing: 4.5px !important;
+        text-shadow: none !important;
+        color: rgba(161, 181, 204, 0.55) !important;
+    }
+    #sidebar-trigger-area:active::before,
+    #sidebar-trigger-area:active::after {
+        opacity: 1 !important;
+        box-shadow: 0 0 12px var(--accent-glow), 0 0 3px #ffffff !important;
+        transform: translateX(-50%) scale(1.4) !important;
+    }
+    #sidebar-trigger-area:active {
+        background: linear-gradient(180deg,
+            rgba(0, 242, 254, 0.045) 0%,
+            rgba(0, 242, 254, 0.015) 50%,
+            rgba(0, 242, 254, 0.045) 100%) !important;
+        border-right-color: rgba(0, 242, 254, 0.22) !important;
+    }
+}
+
+body.light-theme #sidebar-trigger-area {
+    background: linear-gradient(180deg,
+        rgba(15, 23, 42, 0.02) 0%,
+        rgba(15, 23, 42, 0.01) 50%,
+        rgba(15, 23, 42, 0.02) 100%) !important;
+    border-right-color: rgba(15, 23, 42, 0.06) !important;
+}
+body.light-theme #sidebar-trigger-area .trigger-text {
+    color: rgba(71, 85, 105, 0.65) !important;
+}
+@media (hover: hover) and (pointer: fine) {
+    body.light-theme #sidebar-trigger-area:hover .trigger-text {
+        color: #0f172a !important;
+    }
+}
+
+/* ============================================================
+   HISTORY ITEM + OPTIONS — canonical (FIX 2)
+   ============================================================ */
+
+.history-item {
+    content-visibility: visible !important;
+    contain-intrinsic-size: auto !important;
+    position: relative !important;
+    min-height: 48px !important;
+    padding: 12px 48px 12px 14px !important;
+    display: flex !important;
+    align-items: center !important;
+    transform: none !important;
+    transition:
+        background   0.2s cubic-bezier(0.22, 1, 0.36, 1),
+        border-color 0.2s cubic-bezier(0.22, 1, 0.36, 1) !important;
+    box-shadow: none !important;
+}
+
+.history-item:hover {
+    background: rgba(255, 255, 255, 0.04) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    transform: none !important;
+}
+
+.history-info,
+.history-title {
+    min-width: 0 !important;
+    overflow: hidden !important;
+}
+.history-title {
+    display: block !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+.history-options-btn {
+    position: absolute !important;
+    top: 50% !important;
+    right: 8px !important;
+    transform: translateY(-50%) !important;
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    z-index: 20 !important;
+    pointer-events: auto !important;
+    opacity: 0;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 8px !important;
+    background: transparent !important;
+    border: none !important;
+    color: var(--text-muted) !important;
+    cursor: pointer !important;
+    transition: opacity 0.18s ease, background 0.18s ease, color 0.18s ease !important;
+}
+
+.history-item:hover .history-options-btn,
+.history-item:focus-within .history-options-btn,
+.history-options-btn:focus-visible {
+    opacity: 1 !important;
+}
+
+.history-options-btn:hover {
+    background: rgba(255, 255, 255, 0.10) !important;
+    color: var(--text-main) !important;
+}
+
+.history-options-btn:active {
+    transform: translateY(-50%) scale(0.92) !important;
+}
+
+/* ⭐ ELITE: subtle press feedback on the row */
+.history-item:active {
+    background: color-mix(in srgb, var(--accent-glow) 8%, transparent) !important;
+    border-color: color-mix(in srgb, var(--accent-glow) 22%, transparent) !important;
+}
+
+@media (hover: none), (pointer: coarse), (max-width: 768px) {
+    .history-options-btn {
+        opacity: 1 !important;
+        background: rgba(255, 255, 255, 0.06) !important;
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px !important;
+    }
+    .history-item { padding-right: 54px !important; }
+}
+
+/* Light theme */
+body.light-theme .history-item:hover {
+    background: rgba(15, 23, 42, 0.04) !important;
+    border-color: rgba(15, 23, 42, 0.10) !important;
+}
+body.light-theme .history-options-btn:hover {
+    background: rgba(0, 0, 0, 0.10);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    #sidebar-trigger-area,
+    #sidebar-trigger-area::before,
+    #sidebar-trigger-area::after,
+    #sidebar-trigger-area .trigger-text,
+    .history-item,
+    .history-options-btn {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+    }
+}
 /* ============================================================
    SIDEBAR HEADER + BRAND
    ============================================================ */
@@ -117,14 +373,14 @@ body.workspace-design .brand-logo {
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
-    transition: 0.2s;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     font-family: 'Inter', sans-serif;
 }
 .new-chat-btn:hover {
-    background: rgba(255, 255, 255, 0.03);
-    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.15);
+    transform: scale(1.08);
 }
-
 /* ============================================================
    SIDEBAR TABS + SEARCH
    ============================================================ */
@@ -240,11 +496,12 @@ body.workspace-design .brand-logo {
     align-items: center;
     gap: 6px;
 }
+/* EXACTLY MATCHES STYLE.CSS - NO DEVIATIONS */
 .history-options-btn {
     background: transparent;
     border: none;
     color: var(--text-muted);
-    opacity: 1;
+    opacity: 0;
     cursor: pointer;
     padding: 5px;
     transition: 0.2s;
@@ -253,64 +510,135 @@ body.workspace-design .brand-logo {
     display: flex;
     align-items: center;
     justify-content: center;
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    z-index: 2;
+}
+.history-options-btn .material-symbols-rounded {
+    font-size: 18px;
+    line-height: 1;
+    pointer-events: none;
+}
+.history-item:hover .history-options-btn {
+    opacity: 1;
 }
 .history-options-btn:hover {
     background: rgba(255, 255, 255, 0.1);
     color: var(--text-main);
 }
+
+/* Touch devices — only add necessary mobile styles without changing base */
+@media (hover: none), (max-width: 768px) {
+    .history-options-btn {
+        opacity: 1;
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+    }
+    .history-item { padding-right: 52px; }
+}
+
+/* Light theme - matches base style */
+body.light-theme .history-options-btn:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+/* ============================================================
+   CHAT ACTIONS DROPDOWN (delete, archive, pin, etc.)
+   ============================================================ */
 .actions-dropdown-list {
     position: absolute;
-    right: 10px;
-    top: 40px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-muted);
-    border-radius: 12px;
+    top: calc(100% + 6px);
+    right: 4px;
+    min-width: 190px;
+    max-width: min(240px, calc(100vw - 40px));
     padding: 6px;
     display: none;
     flex-direction: column;
     gap: 2px;
-    z-index: var(--z-dropdown);
-    box-shadow: 0 10px 30px var(--shadow-color);
-    min-width: 150px;
+    background: color-mix(in srgb, var(--bg-card) 96%, transparent);
+    border: 1px solid var(--border-muted);
+    border-radius: 14px;
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.05) inset,
+        0 20px 50px -12px rgba(0, 0, 0, 0.75),
+        0 0 0 1px rgba(255, 255, 255, 0.03),
+        0 0 40px -16px color-mix(in srgb, var(--accent-glow) 25%, transparent);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    z-index: 500;
+    transform-origin: top right;
 }
 .actions-dropdown-list.active {
     display: flex;
+    animation: dropdownSpring 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+@keyframes dropdownSpring {
+    from { opacity: 0; transform: translateY(-6px) scale(0.94); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 .action-list-item {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 8px 12px;
-    font-size: 13px;
-    color: var(--text-muted);
-    cursor: pointer;
-    border-radius: 6px;
-    transition: 0.2s;
-    border: none;
-    background: transparent;
-    text-align: left;
+    padding: 9px 12px;
+    min-height: 38px;
+    border-radius: 8px;
     font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: left;
     width: 100%;
+    transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+.action-list-item .material-symbols-rounded {
+    font-size: 17px;
+    flex-shrink: 0;
+    color: currentColor;
+    opacity: 0.9;
 }
 .action-list-item:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.06);
     color: var(--text-main);
+    transform: translateX(2px);
 }
+.action-list-item.danger { color: #f87171; }
+.action-list-item.danger .material-symbols-rounded { color: #ef4444; }
 .action-list-item.danger:hover {
-    background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
-}
-.action-list-item .spinner {
-    display: inline-block;
-    width: 14px;
-    height: 14px;
-    border: 2px solid var(--text-muted);
-    border-radius: 50%;
-    border-top-color: transparent;
-    animation: spin 0.6s linear infinite;
-    margin-right: 6px;
+    background: rgba(239, 68, 68, 0.10);
+    color: #fca5a5;
 }
 
+/* When the item is near the bottom of the sidebar, flip the menu upward */
+.history-item.drop-up .actions-dropdown-list {
+    top: auto;
+    bottom: calc(100% + 6px);
+    transform-origin: bottom right;
+}
+.history-item.drop-up .actions-dropdown-list.active {
+    animation: dropdownSpringUp 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes dropdownSpringUp {
+    from { opacity: 0; transform: translateY(6px) scale(0.94); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .actions-dropdown-list.active,
+    .history-item.drop-up .actions-dropdown-list.active { animation: none; }
+    .action-list-item:hover { transform: none; }
+}
 /* ============================================================
    SIDEBAR FOOTER
    ============================================================ */
@@ -622,12 +950,18 @@ body.designer-tier #model-selector .badge {
     color: var(--accent-glow-designer);
     background: rgba(244, 63, 94, 0.1);
 }
-
 #model-dropdown-card {
+    scrollbar-gutter: stable;
     position: absolute;
     top: 45px;
     left: 0;
     width: 280px;
+    max-width: calc(100vw - 24px);
+    max-height: min(60vh, 420px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-muted) transparent;
     background: var(--bg-card);
     border: 1px solid var(--border-muted);
     border-radius: 12px;
@@ -824,12 +1158,7 @@ body.workspace-general { --workspace-accent: var(--workspace-general); }
 
 /* Sidebar right edge — subtle gradient instead of flat 1px line.
    Reads as light catching a bevel. */
-#sidebar-container-node {
-    border-right: none;
-    box-shadow:
-        1px 0 0 0 rgba(255,255,255,0.06),
-        var(--shadow-floating);
-}
+/* Glow effect integrated into main sidebar declaration to avoid duplicates */
 #sidebar-container-node::after {
     content: '';
     position: absolute;
@@ -903,7 +1232,6 @@ body.workspace-general { --workspace-accent: var(--workspace-general); }
         box-shadow var(--duration-swift) var(--ease-smooth);
 }
 .history-item:hover {
-    transform: translateX(2px);
     box-shadow: 0 4px 12px -4px rgba(0,0,0,0.4);
 }
 .history-item:hover::before {
@@ -947,3 +1275,110 @@ body.workspace-general { --workspace-accent: var(--workspace-general); }
 }
 
 } /* end @layer elite */
+/* ════════════════════════════════════════════════════════════════════
+   SIDEBAR + HISTORY ELITE UPGRADE v1.0
+   Pinned chat indicator, search match highlight, empty state. Additive.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ── Pinned chat indicator ──────────────────────────────────────── */
+.history-item[data-pinned="true"]::after {
+    content: '';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent-glow);
+    box-shadow: 0 0 8px var(--accent-glow);
+    pointer-events: none;
+}
+.history-item[data-pinned="true"] .history-title {
+    padding-right: 16px;
+}
+
+/* ── Search match highlight ──────────────────────────────────────── */
+.history-title mark {
+    background: rgba(0, 242, 254, 0.22);
+    color: var(--text-main);
+    padding: 0 2px;
+    border-radius: 2px;
+    font-weight: 600;
+}
+
+/* ── Empty state — no chats ──────────────────────────────────────── */
+#sidebar-content .history-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-dim);
+    font-size: 12.5px;
+    line-height: 1.5;
+}
+#sidebar-content .history-empty .material-symbols-rounded {
+    display: block;
+    font-size: 32px;
+    margin-bottom: 12px;
+    color: rgba(255, 255, 255, 0.12);
+}
+#sidebar-content .history-empty strong {
+    display: block;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+/* ── New chat button — enhanced hover ────────────────────────────── */
+.new-chat-btn {
+    position: relative;
+    overflow: hidden;
+}
+.new-chat-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg,
+        transparent 30%,
+        rgba(0, 242, 254, 0.15) 50%,
+        transparent 70%);
+    transform: translateX(-100%);
+    transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+}
+.new-chat-btn:hover::before { transform: translateX(100%); }
+
+/* ── Sidebar tabs — active indicator slide ──────────────────────── */
+.sidebar-tabs {
+    position: relative;
+}
+
+/* ── Sidebar footer — upgrade pill shine on hover ────────────────── */
+.sidebar-sub-box {
+    position: relative;
+    overflow: hidden;
+}
+.sidebar-sub-box::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg,
+        transparent 30%,
+        rgba(0, 242, 254, 0.08) 50%,
+        transparent 70%);
+    transform: translateX(-100%);
+    transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+}
+.sidebar-sub-box:hover::before { transform: translateX(100%); }
+
+/* ── Light theme ─────────────────────────────────────────────────── */
+body.light-theme .history-title mark {
+    background: rgba(14, 165, 233, 0.15);
+    color: #0f172a;
+}
+body.light-theme #sidebar-content .history-empty .material-symbols-rounded {
+    color: rgba(15, 23, 42, 0.15);
+}
+/* ── Brand logo hover (from 25-workspace) ──────────────────── */
+.brand-logo:hover svg path {
+    animation: logoPulse 2s infinite;
+}

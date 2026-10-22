@@ -121,6 +121,30 @@ body.light-theme .sub-box-desc { color: #64748b !important; }
 body.light-theme .footer-opt { color: #334155; }
 body.light-theme .footer-opt:hover { background: rgba(0,0,0,0.04); color: #0f172a; }
 
+/* ── Sidebar trigger area ───────────────────────────────────────── */
+body.light-theme #sidebar-trigger-area {
+    background: linear-gradient(180deg,
+        rgba(15, 23, 42, 0.02) 0%,
+        rgba(15, 23, 42, 0.01) 50%,
+        rgba(15, 23, 42, 0.02) 100%) !important;
+    border-right-color: rgba(15, 23, 42, 0.06) !important;
+}
+body.light-theme #sidebar-trigger-area .trigger-text {
+    color: rgba(71, 85, 105, 0.65) !important;
+}
+@media (hover: hover) and (pointer: fine) {
+    body.light-theme #sidebar-trigger-area:hover .trigger-text {
+        color: #0f172a !important;
+        text-shadow: 0 0 14px rgba(14, 165, 233, 0.35) !important;
+    }
+}
+
+/* ── Sidebar tabs ───────────────────────────────────────────────── */
+body.light-theme .sidebar-tabs {
+    background: #e5e7eb !important;
+    box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.05);
+}
+
 /* ── History items + action list ─────────────────────────────────── */
 body.light-theme .history-item:hover {
     background: rgba(15, 23, 42, 0.04) !important;
@@ -495,3 +519,153 @@ body.light-theme .modal-submit-btn:focus-visible {
 }
 
 } /* end @layer elite */
+/* ════════════════════════════════════════════════════════════════
+   LIGHT THEME — ELITE REFINEMENTS (consolidated)
+   Appended after existing 70-light rules. Wins by load order.
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── Focus gem — light theme tinted ring ───────────────────── */
+body.light-theme :focus-visible {
+    box-shadow:
+        0 0 0 2px #ffffff,
+        0 0 0 4px color-mix(in srgb, var(--accent-glow) 85%, transparent),
+        0 0 20px -4px color-mix(in srgb, var(--accent-glow) 45%, transparent);
+}
+
+/* ── Search overlay — light theme parity ───────────────────── */
+body.light-theme #search-overlay {
+    background: rgba(248, 250, 252, 0.88);
+}
+body.light-theme #search-overlay .search-input-box {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.10);
+    color: #0f172a;
+}
+body.light-theme #search-overlay .search-result-item {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.08);
+}
+body.light-theme #search-overlay .search-result-item:hover {
+    background: #f8fafc;
+}
+
+/* ── Ultra-narrow (≤340px) — kill non-essential ────────────── */
+@media (max-width: 340px) {
+    .command-disclaimer { font-size: 10px; }
+    .hero-text h1 { font-size: 18px !important; }
+    .hero-text p  { font-size: 11px !important; }
+    .history-item { padding: 10px 44px 10px 12px; }
+    .history-options-btn { width: 30px; height: 30px; min-width: 30px; }
+    .ws-btn { padding: 4px 7px !important; font-size: 10.5px !important; }
+}
+
+/* ── Landscape phones — reclaim vertical space ─────────────── */
+@media (max-height: 500px) and (orientation: landscape) {
+    .command-wrapper { max-height: 70vh; }
+}
+
+/* ── Elite touch feedback — active states feel native ─────── */
+@media (hover: none) {
+    .ws-btn:active,
+    .tab-btn:active,
+    .feature-item:active,
+    .model-option:active,
+    .settings-item:active,
+    .footer-opt:active {
+        background: rgba(255, 255, 255, 0.08) !important;
+        transform: scale(0.985);
+    }
+    body.light-theme .ws-btn:active,
+    body.light-theme .tab-btn:active,
+    body.light-theme .feature-item:active,
+    body.light-theme .model-option:active,
+    body.light-theme .settings-item:active,
+    body.light-theme .footer-opt:active {
+        background: rgba(15, 23, 42, 0.06) !important;
+    }
+}
+
+/* ── Tabs / sidebar-tabs touch sizes ──────────────────────── */
+@media (max-width: 480px) {
+    .sidebar-tabs { margin: 0 12px 6px; }
+    .tab-btn {
+        padding: 8px 6px;
+        font-size: 11.5px;
+        min-height: 34px;
+    }
+}
+/* ════════════════════════════════════════════════════════════════════
+   GLOBAL ELITE POLISH v1.0
+   Toast stagger, selection refinement, skeleton shimmer, loading state.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ── Enhanced text selection ────────────────────────────────────── */
+::selection {
+    background: color-mix(in srgb, var(--accent-glow) 32%, transparent);
+    color: var(--text-main);
+    text-shadow: none;
+}
+body.light-theme ::selection {
+    background: color-mix(in srgb, var(--accent-glow) 24%, transparent);
+    color: #0f172a;
+}
+
+/* ── Toast stagger animation ────────────────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+    .toast.toast-show {
+        animation: toastSlideIn 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+    @keyframes toastSlideIn {
+        from { opacity: 0; transform: translateY(-12px) scale(0.96); }
+        to   { opacity: 1; transform: translateY(0)    scale(1);    }
+    }
+}
+
+/* ── Skeleton loader — for async content ─────────────────────────── */
+.skeleton {
+    position: relative;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 8px;
+    isolation: isolate;
+}
+.skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.06) 45%,
+        rgba(255, 255, 255, 0.10) 50%,
+        rgba(255, 255, 255, 0.06) 55%,
+        transparent 100%);
+    transform: translateX(-100%);
+    animation: skeletonShimmer 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+@keyframes skeletonShimmer { 100% { transform: translateX(100%); } }
+body.light-theme .skeleton { background: rgba(15, 23, 42, 0.06); }
+body.light-theme .skeleton::after {
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(15, 23, 42, 0.06) 50%,
+        transparent 100%);
+}
+
+/* ── High-contrast check for critical UI ─────────────────────────── */
+@media (prefers-contrast: more) {
+    :focus-visible {
+        outline: 3px solid var(--accent-glow) !important;
+        outline-offset: 3px !important;
+    }
+    .modal-overlay { background: rgba(0, 0, 0, 0.85) !important; }
+    body.light-theme .modal-overlay { background: rgba(248, 250, 252, 0.92) !important; }
+}
+
+/* ── Reduced motion overrides ────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+    .toast.toast-show,
+    .skeleton::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+}
