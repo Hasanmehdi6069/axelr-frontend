@@ -6,7 +6,7 @@
 <title>Admin Control Room — AXELR AI</title>
 <meta name="robots" content="noindex, nofollow" />
 <meta name="theme-color" content="#0D0F12" />
-<link rel="icon" type="image/png" href="/Axelr-Frontend/favicon.png" />
+<link rel="icon" type="image/png" href="https://axelr.in/favicon.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -20,7 +20,7 @@
 </script>
 
 <header class="topbar">
-  <a class="brand" href="/Axelr-Frontend/index.html">
+  <a class="brand" href="https://axelr.in/index.html">
     <svg viewBox="0 0 100 100" width="22" height="22" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 0 14px rgba(234,179,8,0.5));">
       <path d="M50 15 L20 32.5 L20 67.5 L50 85" stroke="#ffffff" stroke-width="6" stroke-linejoin="bevel" fill="rgba(234,179,8,0.08)"/>
       <path d="M50 15 L80 32.5 L50 50 L80 67.5 L50 85" stroke="var(--amber, #eab308)" stroke-width="6" stroke-linejoin="bevel" fill="none"/>
@@ -37,7 +37,7 @@
     <button class="icon-btn" id="theme-toggle" type="button" aria-label="Switch to light theme" aria-pressed="false" title="Toggle theme">
       <span class="material-symbols-rounded" aria-hidden="true">light_mode</span>
     </button>
-    <a class="back-link" href="/Axelr-Frontend/index.html">
+    <a class="back-link" href="https://axelr.in/index.html">
       <span class="material-symbols-rounded" aria-hidden="true">arrow_back</span>
       <span>Back to platform</span>
     </a>
@@ -58,7 +58,7 @@
     <span class="material-symbols-rounded" aria-hidden="true">lock</span>
     <h2>Access denied</h2>
     <p>This page is restricted to Axelr administrators. If you believe this is an error, ensure you're signed in as the admin account.</p>
-    <a href="/Axelr-Frontend/index.html">
+    <a href="https://axelr.in/index.html">
       <span class="material-symbols-rounded" aria-hidden="true">arrow_back</span>
       Return to platform
     </a>
@@ -79,7 +79,7 @@
       </button>
     </form>
     <p class="pin-error" id="pin-error" role="alert" hidden></p>
-    <a class="pin-back" href="/Axelr-Frontend/index.html">
+    <a class="pin-back" href="https://axelr.in/index.html">
       <span class="material-symbols-rounded" aria-hidden="true">arrow_back</span>
       Return to platform
     </a>
@@ -589,7 +589,7 @@
       if (attempts <= 0) {
         setError('Too many incorrect attempts. Returning to platform…');
         setTimeout(function () {
-          window.location.href = '/Axelr-Frontend/index.html';
+          window.location.href = 'https://axelr.in/index.html';
         }, 1200);
       } else {
         setError('Incorrect PIN. ' + attempts + ' attempt' + (attempts === 1 ? '' : 's') + ' remaining.');
