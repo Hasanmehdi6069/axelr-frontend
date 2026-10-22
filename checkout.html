@@ -7,7 +7,7 @@
 <meta name="description" content="Complete your Axelr upgrade. Pay via UPI, submit your UTR, done." />
 <meta name="robots" content="noindex, nofollow" />
 <meta name="theme-color" content="#0D0F12" />
-<link rel="icon" type="image/png" href="/Axelr-Frontend/favicon.png" />
+<link rel="icon" type="image/png" href="/favicon.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -18,7 +18,7 @@
 <a class="skip" href="#main">Skip to checkout</a>
 
 <header class="topbar">
-  <a class="brand" href="/Axelr-Frontend/index.html">
+  <a class="brand" href="https://axelr.in/index.html">
     <svg viewBox="0 0 100 100" width="22" height="22" fill="none" aria-hidden="true">
       <path d="M50 15 L20 32.5 L20 67.5 L50 85" stroke="#ffffff" stroke-width="6" stroke-linejoin="bevel" fill="rgba(16,185,129,.08)"/>
       <path d="M50 15 L80 32.5 L50 50 L80 67.5 L50 85" stroke="var(--emerald-bright, #34d399)" stroke-width="6" stroke-linejoin="bevel" fill="none"/>
@@ -31,7 +31,7 @@
     <button class="icon-btn" id="theme-toggle" type="button" aria-label="Switch theme" aria-pressed="false">
       <span class="material-symbols-rounded" aria-hidden="true">light_mode</span>
     </button>
-    <a class="back-link" href="/Axelr-Frontend/pricing.html" id="back-to-pricing">
+    <a class="back-link" href="https://axelr.in/pricing.html" id="back-to-pricing">
       <span class="material-symbols-rounded" aria-hidden="true">arrow_back</span>
       <span>Back to pricing</span>
     </a>
@@ -48,7 +48,7 @@
     </div>
     <h1>Almost there — <span class="grad">complete your upgrade</span></h1>
     <p id="hero-sub">Pay via UPI, submit your 12-digit UTR, done. Access activates on your account within the hour.</p>
-    <a class="change-plan" href="/Axelr-Frontend/pricing.html" id="change-plan-link">
+    <a class="change-plan" href="/pricing.html" id="change-plan-link">
       <span class="material-symbols-rounded" aria-hidden="true">swap_horiz</span>
       Change plan
     </a>
@@ -59,7 +59,7 @@
     <span class="material-symbols-rounded" aria-hidden="true">lock</span>
     <h2>Sign in to continue</h2>
     <p>We tie the subscription to your signed-in account. Sign in, then return here — your selection will be preserved.</p>
-    <a href="/Axelr-Frontend/index.html">
+    <a href="https://axelr.in/index.html">
       <span class="material-symbols-rounded" aria-hidden="true">arrow_back</span>
       Return to app
     </a>
@@ -233,7 +233,7 @@
       <strong id="success-utr">—</strong>
     </div>
     <div class="modal-actions">
-      <a class="modal-btn primary" href="/Axelr-Frontend/index.html">
+      <a class="modal-btn primary" href="https://axelr.in/index.html">
         <span class="material-symbols-rounded" aria-hidden="true">home</span>
         Return to app
       </a>
@@ -437,12 +437,12 @@
        pricing with their current pick highlighted. */
     const changePlan = $('#change-plan-link');
     if (changePlan) {
-      changePlan.href = '/Axelr-Frontend/pricing.html?plan=' + state.plan +
+      changePlan.href = 'https://axelr.in/pricing.html?plan=' + state.plan +
         '&subtier=' + state.subtier + '&cycle=' + state.cycle;
     }
     const back = $('#back-to-pricing');
     if (back) {
-      back.href = '/Axelr-Frontend/pricing.html?plan=' + state.plan +
+      back.href = 'https://axelr.in/pricing.html?plan=' + state.plan +
         '&subtier=' + state.subtier + '&cycle=' + state.cycle;
     }
   }
