@@ -1,0 +1,971 @@
+/* ════════════════════════════════════════════════════════════════════
+   AXELR — 40-command.css (COMMAND BAR v5.0 — META-GRADE MOBILE)
+   Desktop: full command bar. Mobile: 3-element pill (Meta/WhatsApp).
+   Enhance button hides on mobile — accessible via the + menu.
+   ONE definition per selector. Zero duplicates.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════════
+   WRAPPER (Desktop)
+   ═══════════════════════════════════════════════════════════════════ */
+.command-wrapper {
+    position: fixed;
+    bottom: max(28px, env(safe-area-inset-bottom, 0px));
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(820px, calc(100% - 32px));
+    padding: 0;
+    z-index: 700;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+    overflow: visible;
+    transition: bottom 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   INPUT FRAME
+   ═══════════════════════════════════════════════════════════════════ */
+.input-frame {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    flex-direction: column;
+    padding: 10px 12px;
+    border-radius: 20px;
+    background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+    border: 1px solid var(--border-muted);
+    box-shadow:
+        0 20px 44px -18px rgba(0, 0, 0, 0.7),
+        0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    transition:
+        border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+        box-shadow   0.25s cubic-bezier(0.16, 1, 0.3, 1),
+        background   0.25s ease;
+}
+.input-frame::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 15%; right: 15%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.10), transparent);
+    opacity: 0.55;
+    pointer-events: none;
+    transition: opacity 0.4s ease, background 0.4s ease;
+}
+.input-frame:focus-within {
+    border-color: color-mix(in srgb, var(--accent-glow) 45%, transparent);
+    background: color-mix(in srgb, var(--bg-card) 96%, transparent);
+    box-shadow:
+        0 20px 44px -18px rgba(0, 0, 0, 0.7),
+        0 0 0 1px color-mix(in srgb, var(--accent-glow) 32%, transparent),
+        0 0 40px -12px color-mix(in srgb, var(--accent-glow) 28%, transparent);
+}
+.input-frame:focus-within::before {
+    opacity: 1;
+    background: linear-gradient(90deg, transparent,
+        color-mix(in srgb, var(--accent-glow) 40%, transparent), transparent);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   INPUT ROW
+   ═══════════════════════════════════════════════════════════════════ */
+.input-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    width: 100%;
+    min-height: 40px;
+    min-width: 0;
+}
+
+#prompt-input,
+textarea#prompt-input {
+    flex: 1;
+    min-width: 0;
+    background: transparent !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    color: var(--text-main);
+    font-size: 15px;
+    padding: 9px 6px;
+    resize: none;
+    max-height: 180px;
+    font-family: 'Inter', sans-serif;
+    line-height: 1.5;
+    letter-spacing: -0.005em;
+}
+#prompt-input::placeholder,
+textarea#prompt-input::placeholder { color: var(--text-muted); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   ACTION BUTTONS
+   ═══════════════════════════════════════════════════════════════════ */
+.action-btn,
+.plus-menu-btn,
+.mic-btn,
+.enhance-btn {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 0;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: 'Inter', sans-serif;
+    position: relative;
+    z-index: 10;
+    pointer-events: auto;
+    isolation: isolate;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+        background 180ms cubic-bezier(0.16, 1, 0.3, 1),
+        color      180ms cubic-bezier(0.16, 1, 0.3, 1),
+        border-color 180ms cubic-bezier(0.16, 1, 0.3, 1),
+        transform  200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.action-btn:hover,
+.plus-menu-btn:hover,
+.mic-btn:hover,
+.enhance-btn:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-main);
+}
+.action-btn:active,
+.plus-menu-btn:active,
+.mic-btn:active,
+.enhance-btn:active { transform: scale(0.92); transition-duration: 80ms; }
+
+.enhance-btn { color: var(--accent-pro, #8b5cf6); }
+.enhance-btn:hover {
+    background: color-mix(in srgb, var(--accent-pro, #8b5cf6) 15%, transparent);
+    color: #fff;
+}
+.enhance-btn.loading {
+    opacity: 0.55;
+    cursor: not-allowed;
+    pointer-events: none;
+    animation: pulseEnhance 1.2s ease-in-out infinite;
+}
+@keyframes pulseEnhance {
+    0%, 100% { opacity: 0.55; }
+    50%      { opacity: 1; }
+}
+
+.mic-btn.listening {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.10);
+    animation: pulseMic 1.5s ease-in-out infinite;
+}
+.mic-btn.listening::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 14px;
+    background: conic-gradient(from 0deg,
+        transparent 0deg,
+        rgba(239, 68, 68, 0.22) 25%,
+        transparent 50%,
+        rgba(239, 68, 68, 0.22) 75%,
+        transparent 100%);
+    animation: micRing 2s linear infinite;
+    pointer-events: none;
+    z-index: -1;
+}
+@keyframes pulseMic {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.65; }
+}
+@keyframes micRing { to { transform: rotate(360deg); } }
+
+/* Features wrapper */
+.features-dropdown-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    z-index: 10;
+}
+.features-dropdown-wrapper:has(.features-menu.open) .plus-menu-btn {
+    background: color-mix(in srgb, var(--accent-glow) 14%, transparent);
+    color: var(--accent-glow);
+    border-color: color-mix(in srgb, var(--accent-glow) 40%, transparent);
+    transform: rotate(45deg);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   ENHANCE BUTTON RESPONSIVE VISIBILITY
+   ═══════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+    .enhance-btn,
+    #enhance-trigger {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        width: 0 !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+    }
+}
+
+@media (min-width: 769px) {
+    .enhance-btn,
+    #enhance-trigger {
+        display: inline-flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        width: 36px !important;
+        height: 36px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SEND BUTTON
+   ═══════════════════════════════════════════════════════════════════ */
+.send-btn {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 0;
+    background: var(--text-main);
+    color: var(--bg-deep);
+    box-shadow: 0 4px 12px -4px rgba(255, 255, 255, 0.16);
+    transition:
+        transform   200ms cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow  200ms ease,
+        filter      180ms ease;
+}
+.send-btn:hover:not(:disabled) {
+    transform: translateY(-1px) scale(1.03);
+    box-shadow: 0 8px 22px -6px rgba(255, 255, 255, 0.24);
+    filter: brightness(1.06);
+}
+.send-btn:active:not(:disabled) { transform: translateY(0) scale(0.94); }
+.send-btn:disabled {
+    background: rgba(255, 255, 255, 0.06);
+    color: #4b5563;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .send-btn:not(.btn-stop-active):not(:disabled):not(:hover) {
+        background-image: linear-gradient(
+            120deg,
+            transparent 0%, transparent 45%,
+            rgba(255, 255, 255, 0.22) 50%,
+            transparent 55%, transparent 100%);
+        background-size: 220% 100%;
+        background-position: 100% center;
+        animation: sendShimmer 6s ease-in-out infinite;
+    }
+    @keyframes sendShimmer {
+        0%, 60%, 100% { background-position: 100% center; }
+        75%           { background-position: -100% center; }
+    }
+}
+
+/* Stop button — concentric ring */
+.send-btn.btn-stop-active {
+    position: relative !important;
+    width: 36px !important;
+    height: 36px !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    background: transparent !important;
+    border: 1.5px solid color-mix(in srgb, var(--accent-glow) 40%, transparent) !important;
+    box-shadow: 0 0 16px -4px color-mix(in srgb, var(--accent-glow) 35%, transparent) !important;
+    color: transparent !important;
+    cursor: pointer !important;
+    overflow: visible !important;
+    transition: border-color 250ms ease, box-shadow 250ms ease !important;
+}
+.send-btn.btn-stop-active > * { display: none !important; }
+.send-btn.btn-stop-active::before {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border-radius: 50%;
+    border: 2px solid color-mix(in srgb, var(--accent-glow) 18%, transparent);
+    transition: transform 250ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
+}
+.send-btn.btn-stop-active::after {
+    content: '';
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    background: var(--accent-glow);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--accent-glow) 60%, transparent);
+    transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
+}
+.send-btn.btn-stop-active:hover {
+    background: transparent !important;
+    border-color: color-mix(in srgb, var(--accent-glow) 75%, transparent) !important;
+    box-shadow: 0 0 28px -4px color-mix(in srgb, var(--accent-glow) 50%, transparent) !important;
+    transform: none !important;
+}
+.send-btn.btn-stop-active:hover::before { transform: scale(1.10); }
+.send-btn.btn-stop-active:hover::after  { transform: scale(0.9); }
+.send-btn.btn-stop-active:active { transform: scale(0.94) !important; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   INPUT ACTIONS
+   ═══════════════════════════════════════════════════════════════════ */
+.input-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+    margin-left: auto;
+    position: relative;
+    z-index: 10;
+    pointer-events: auto;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   FEATURES MENU
+   ═══════════════════════════════════════════════════════════════════ */
+.features-menu {
+    position: absolute;
+    bottom: calc(100% + 12px);
+    left: 0;
+    right: auto;
+    min-width: 240px;
+    max-width: min(320px, calc(100vw - 24px));
+    max-height: 420px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding: 6px;
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--bg-card) 96%, transparent);
+    border: 1px solid var(--border-muted);
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.05) inset,
+        0 32px 80px -20px rgba(0, 0, 0, 0.85),
+        0 0 60px -20px color-mix(in srgb, var(--accent-glow) 25%, transparent);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    display: none;
+    flex-direction: column;
+    gap: 2px;
+    z-index: 10000;
+    transform-origin: bottom left;
+}
+.features-menu.open {
+    display: flex;
+    animation: featuresMenuUp 0.24s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+@keyframes featuresMenuUp {
+    from { opacity: 0; transform: translateY(8px) scale(0.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    min-height: 42px;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    color: var(--text-main);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    transition: background 0.15s ease;
+}
+.feature-item:hover,
+.feature-item:active { background: color-mix(in srgb, var(--accent-glow) 10%, transparent); }
+.feature-item .material-symbols-rounded {
+    font-size: 18px;
+    color: var(--accent-glow);
+    flex-shrink: 0;
+}
+.feature-item.upload-highlight {
+    border-bottom: 1px solid var(--border-muted);
+    margin-bottom: 4px;
+    padding-bottom: 12px;
+    font-weight: 600;
+}
+.feature-item.upload-highlight .material-symbols-rounded { color: var(--accent-secondary, #0ea5e9); }
+.feature-item span:last-child { flex: 1; min-width: 0; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   DISCLAIMER
+   ═══════════════════════════════════════════════════════════════════ */
+.command-disclaimer {
+    color: var(--text-dim);
+    font-size: 11px;
+    text-align: center;
+    padding: 6px 14px;
+    margin: 10px auto 0;
+    max-width: 480px;
+    letter-spacing: 0.02em;
+    opacity: 0.62;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+.command-disclaimer:hover { opacity: 1; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   OFFLINE BANNER
+   ═══════════════════════════════════════════════════════════════════ */
+#offline-banner {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    background: var(--color-danger, #ef4444);
+    color: #ffffff;
+    text-align: center;
+    padding: 10px;
+    z-index: 100000;
+    font-weight: 600;
+    font-size: 14px;
+    display: none;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+    font-family: 'Inter', sans-serif;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   MOBILE — Meta/WhatsApp-style compact pill
+   Rule: 3 elements max on screen. Enhance hidden. Safe-area aware.
+   ═══════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+    .command-wrapper {
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        transform: none !important;
+        padding:
+            8px 12px
+            calc(env(safe-area-inset-bottom, 8px) + 8px)
+            max(46px, calc(env(safe-area-inset-left, 0px) + 12px)) !important;
+        background: linear-gradient(to top, var(--bg-deep) 82%, transparent) !important;
+    }
+
+    .input-frame {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 4px !important;
+        padding: 4px !important;
+        min-height: 48px !important;
+        border-radius: 24px !important;
+        overflow: visible !important;
+    }
+
+    .input-row {
+        flex-wrap: nowrap !important;
+        align-items: flex-end !important;
+        gap: 4px !important;
+        min-width: 0;
+    }
+
+    #prompt-input,
+    textarea#prompt-input {
+        min-width: 0;
+        font-size: 16px !important;
+        padding: 10px 6px !important;
+    }
+
+    /* 36px touch targets — comfortable, not oversized */
+    .plus-menu-btn,
+    .send-btn,
+    .mic-btn {
+        min-width: 36px !important;
+        min-height: 36px !important;
+        width: 36px !important;
+        height: 36px !important;
+        flex-shrink: 0 !important;
+    }
+
+    /* THE KEY FIX: hide enhance on mobile — it's inside the + menu now */
+    .enhance-btn {
+        display: none !important;
+    }
+
+    .input-actions {
+        gap: 0 !important;
+        padding-right: 2px;
+    }
+
+    .plus-menu-btn .material-symbols-rounded,
+    .send-btn .material-symbols-rounded,
+    .mic-btn .material-symbols-rounded {
+        font-size: 20px !important;
+    }
+
+    .send-btn.btn-stop-active {
+        width: 36px !important;
+        height: 36px !important;
+    }
+
+    .features-dropdown-wrapper {
+        display: inline-flex !important;
+        align-items: center !important;
+        flex-shrink: 0 !important;
+        min-width: 36px;
+        min-height: 36px;
+    }
+
+    /* Features menu anchored below header */
+    .features-menu {
+        position: fixed !important;
+        top: 64px !important;
+        left: 12px !important;
+        right: 12px !important;
+        bottom: auto !important;
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        max-height: calc(100dvh - 64px - 140px) !important;
+        overflow-y: auto !important;
+        border-radius: 16px !important;
+        z-index: 10001 !important;
+        transform-origin: top center !important;
+        padding: 8px !important;
+    }
+    .features-menu.open {
+        animation: featuresMenuDown 0.26s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    .feature-item {
+        padding: 12px 14px !important;
+        min-height: 46px !important;
+        font-size: 13.5px !important;
+    }
+    .feature-item .material-symbols-rounded { font-size: 20px !important; }
+
+    /* Mic/send swap based on state */
+    .input-frame:not(.has-text) #send-trigger:not(.btn-stop-active) { display: none !important; }
+    .input-frame.has-text #mic-trigger { display: none !important; }
+    .input-frame:has(#send-trigger.btn-stop-active) #mic-trigger { display: none !important; }
+    .input-frame:has(#send-trigger.btn-stop-active) #send-trigger { display: inline-flex !important; }
+    .input-frame:not(.has-text):not(:has(#prompt-input:not(:placeholder-shown))) #send-trigger:not(.btn-stop-active) { display: none !important; }
+    .input-frame:not(.has-text):not(:has(#prompt-input:not(:placeholder-shown))) #mic-trigger { display: inline-flex !important; }
+}
+@keyframes featuresMenuDown {
+    from { opacity: 0; transform: translateY(-8px) scale(0.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   ≤ 480px — small mobile
+   ═══════════════════════════════════════════════════════════════════ */
+@media (max-width: 480px) {
+    .command-wrapper {
+        padding-left: max(44px, calc(env(safe-area-inset-left, 0px) + 10px)) !important;
+        padding-right: 10px !important;
+    }
+    .features-menu {
+        top: 60px !important;
+        left: 8px !important;
+        right: 8px !important;
+        max-height: calc(100dvh - 60px - 140px) !important;
+    }
+    .command-disclaimer { display: none !important; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   ≤ 380px — extra small (iPhone SE, ultra-narrow)
+   ═══════════════════════════════════════════════════════════════════ */
+@media (max-width: 380px) {
+    .command-wrapper {
+        padding:
+            6px 8px
+            calc(env(safe-area-inset-bottom, 6px) + 6px)
+            max(40px, calc(env(safe-area-inset-left, 0px) + 8px)) !important;
+    }
+    .input-frame {
+        min-height: 44px !important;
+        padding: 3px !important;
+        border-radius: 22px !important;
+    }
+    .plus-menu-btn,
+    .send-btn,
+    .mic-btn {
+        min-width: 34px !important;
+        min-height: 34px !important;
+        width: 34px !important;
+        height: 34px !important;
+    }
+    .plus-menu-btn .material-symbols-rounded,
+    .send-btn .material-symbols-rounded,
+    .mic-btn .material-symbols-rounded {
+        font-size: 18px !important;
+    }
+    #prompt-input,
+    textarea#prompt-input {
+        font-size: 15px !important;
+        padding: 8px 4px !important;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   ≤ 320px — the 280px class (iPhone 5s, Galaxy Fold outer)
+   ═══════════════════════════════════════════════════════════════════ */
+@media (max-width: 320px) {
+    .command-wrapper {
+        padding:
+            6px 6px
+            calc(env(safe-area-inset-bottom, 6px) + 6px)
+            max(36px, calc(env(safe-area-inset-left, 0px) + 6px)) !important;
+    }
+    .input-frame {
+        min-height: 42px !important;
+        padding: 3px !important;
+        border-radius: 21px !important;
+    }
+    .plus-menu-btn,
+    .send-btn,
+    .mic-btn {
+        min-width: 32px !important;
+        min-height: 32px !important;
+        width: 32px !important;
+        height: 32px !important;
+    }
+    .input-row { gap: 2px !important; }
+    #prompt-input,
+    textarea#prompt-input {
+        font-size: 14.5px !important;
+        padding: 7px 4px !important;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   ≤ 260px — extreme (accessibility-large-text users)
+   ═══════════════════════════════════════════════════════════════════ */
+@media (max-width: 260px) {
+    .command-wrapper {
+        padding:
+            4px 4px
+            calc(env(safe-area-inset-bottom, 4px) + 4px)
+            max(32px, calc(env(safe-area-inset-left, 0px) + 4px)) !important;
+    }
+    .input-frame {
+        min-height: 40px !important;
+        padding: 2px !important;
+        border-radius: 20px !important;
+    }
+    .plus-menu-btn,
+    .send-btn,
+    .mic-btn {
+        min-width: 30px !important;
+        min-height: 30px !important;
+        width: 30px !important;
+        height: 30px !important;
+    }
+    .plus-menu-btn .material-symbols-rounded,
+    .send-btn .material-symbols-rounded,
+    .mic-btn .material-symbols-rounded {
+        font-size: 16px !important;
+    }
+    #prompt-input,
+    textarea#prompt-input {
+        font-size: 14px !important;
+        padding: 6px 3px !important;
+    }
+    .features-menu {
+        left: 4px !important;
+        right: 4px !important;
+        top: 56px !important;
+        max-height: calc(100dvh - 56px - 120px) !important;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Landscape phones
+   ═══════════════════════════════════════════════════════════════════ */
+@media (max-height: 500px) and (orientation: landscape) {
+    .command-wrapper { max-height: 70vh; }
+    .features-menu {
+        position: fixed !important;
+        top: 50% !important;
+        left: 50% !important;
+        right: auto !important;
+        bottom: auto !important;
+        transform: translate(-50%, -50%) !important;
+        width: min(420px, calc(100vw - 32px)) !important;
+        max-height: 78vh !important;
+        transform-origin: center center !important;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Reduced motion
+   ═══════════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+    .features-menu.open,
+    .command-wrapper,
+    .input-frame,
+    .action-btn,
+    .plus-menu-btn,
+    .send-btn,
+    .mic-btn,
+    .enhance-btn,
+    .send-btn.btn-stop-active,
+    .send-btn::after,
+    .mic-btn.listening::after {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+    }
+    .send-btn:not(.btn-stop-active):not(:disabled):not(:hover) {
+        background-image: none !important;
+        animation: none !important;
+    }
+}
+/* ════════════════════════════════════════════════════════════════════
+   40-command.css — APPEND (META BAR FINALIZATION v5.1)
+   Rule: at most 3 visible controls + input on mobile.
+   Enhance is hidden on mobile. Encourage using the + menu.
+   ════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+    /* Wrapper: proper clearance for sidebar trigger + tight padding */
+    .command-wrapper {
+        padding:
+            8px 10px
+            calc(env(safe-area-inset-bottom, 8px) + 8px)
+            max(38px, calc(env(safe-area-inset-left, 0px) + 8px)) !important;
+        background: linear-gradient(
+            to top,
+            var(--bg-deep) 78%,
+            transparent
+        ) !important;
+    }
+
+    /* Input frame: single tight pill */
+    .input-frame {
+        padding: 4px !important;
+        min-height: 46px !important;
+        border-radius: 23px !important;
+        border-width: 1px !important;
+    }
+    .input-row {
+        gap: 2px !important;
+        align-items: center !important;
+        flex-wrap: nowrap !important;
+        min-width: 0 !important;
+    }
+
+    /* Textarea */
+    #prompt-input,
+    textarea#prompt-input {
+        font-size: 16px !important;
+        padding: 10px 6px !important;
+        min-width: 0 !important;
+    }
+
+    /* All action buttons: 36px, uniform, no wrapping */
+    .plus-menu-btn,
+    .send-btn,
+    .mic-btn {
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px !important;
+        min-height: 36px !important;
+        flex-shrink: 0 !important;
+        border-radius: 10px !important;
+    }
+    .plus-menu-btn .material-symbols-rounded,
+    .send-btn .material-symbols-rounded,
+    .mic-btn .material-symbols-rounded {
+        font-size: 20px !important;
+    }
+
+    /* HARD hide enhance — must never take space on mobile */
+    .enhance-btn,
+    #enhance-trigger {
+        display: none !important;
+        visibility: hidden !important;
+        width: 0 !important;
+        min-width: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+    }
+
+    .input-actions {
+        gap: 2px !important;
+        padding-right: 0 !important;
+        flex-shrink: 0;
+    }
+
+    /* Mic ↔ Send swap — force with higher specificity than any JS inline style */
+    .input-frame:not(.has-text) #send-trigger:not(.btn-stop-active) {
+        display: none !important;
+    }
+    .input-frame:not(.has-text) #mic-trigger {
+        display: inline-flex !important;
+    }
+    .input-frame.has-text #mic-trigger {
+        display: none !important;
+    }
+    .input-frame.has-text #send-trigger:not(.btn-stop-active) {
+        display: inline-flex !important;
+    }
+    .input-frame:has(#send-trigger.btn-stop-active) #mic-trigger {
+        display: none !important;
+    }
+    .input-frame:has(#send-trigger.btn-stop-active) #send-trigger {
+        display: inline-flex !important;
+    }
+
+    /* Fallback for browsers without :has() — placeholder-shown swap */
+    @supports not selector(:has(*)) {
+        .input-frame #prompt-input:placeholder-shown ~ .input-actions #send-trigger:not(.btn-stop-active) {
+            display: none !important;
+        }
+        .input-frame #prompt-input:not(:placeholder-shown) ~ .input-actions #mic-trigger {
+            display: none !important;
+        }
+    }
+}
+
+@media (max-width: 480px) {
+    .command-wrapper {
+        padding-left: max(36px, calc(env(safe-area-inset-left, 0px) + 6px)) !important;
+        padding-right: 6px !important;
+    }
+    .input-frame { min-height: 44px !important; padding: 3px !important; border-radius: 22px !important; }
+    .plus-menu-btn,
+    .send-btn,
+    .mic-btn {
+        width: 34px !important;
+        height: 34px !important;
+        min-width: 34px !important;
+        min-height: 34px !important;
+    }
+    .plus-menu-btn .material-symbols-rounded,
+    .send-btn .material-symbols-rounded,
+    .mic-btn .material-symbols-rounded { font-size: 18px !important; }
+    #prompt-input, textarea#prompt-input { font-size: 15px !important; padding: 9px 5px !important; }
+}
+
+@media (max-width: 320px) {
+    .command-wrapper {
+        padding:
+            6px 6px
+            calc(env(safe-area-inset-bottom, 6px) + 6px)
+            max(34px, calc(env(safe-area-inset-left, 0px) + 4px)) !important;
+    }
+    .input-frame { min-height: 42px !important; border-radius: 21px !important; }
+    .plus-menu-btn,
+    .send-btn,
+    .mic-btn {
+        width: 32px !important;
+        height: 32px !important;
+        min-width: 32px !important;
+        min-height: 32px !important;
+    }
+    #prompt-input, textarea#prompt-input { font-size: 14.5px !important; }
+}
+
+@media (max-width: 260px) {
+    .plus-menu-btn,
+    .send-btn,
+    .mic-btn {
+        width: 30px !important;
+        height: 30px !important;
+        min-width: 30px !important;
+        min-height: 30px !important;
+    }
+    .plus-menu-btn .material-symbols-rounded,
+    .send-btn .material-symbols-rounded,
+    .mic-btn .material-symbols-rounded { font-size: 16px !important; }
+}
+/* ════════════════════════════════════════════════════════════════════
+   MODEL PICKER BADGE STYLES
+   ════════════════════════════════════════════════════════════════════ */
+.model-option .badge {
+    background: rgba(0, 242, 254, 0.1);
+    color: var(--accent-glow);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.model-option.pro .badge {
+    background: rgba(139, 92, 246, 0.1);
+    color: var(--accent-glow-pro);
+}
+.model-option.designer .badge {
+    background: rgba(244, 63, 94, 0.1);
+    color: var(--accent-glow-designer);
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   ELITE MICRO-INTERACTIONS & POLISH
+   ════════════════════════════════════════════════════════════════════ */
+/* Elite Send Button Glow on Active Input */
+.input-frame.has-text .send-btn {
+    background: linear-gradient(135deg, var(--accent-glow), var(--accent-secondary, #0ea5e9)) !important;
+    color: #000 !important;
+    box-shadow: 0 0 20px -4px color-mix(in srgb, var(--accent-glow) 50%, transparent) !important;
+    transform: scale(1.02);
+}
+
+/* Spring animation for all dropdowns */
+#model-dropdown-card, #account-dropdown-card, .features-menu {
+    animation: eliteDropdownSpring 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important;
+}
+
+@keyframes eliteDropdownSpring {
+    from { opacity: 0; transform: translateY(-10px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Fix the plus button turning into an X */
+.features-dropdown-wrapper:has(.features-menu.open) .plus-menu-btn {
+    background: color-mix(in srgb, var(--accent-glow) 15%, transparent) !important;
+    color: var(--accent-glow) !important;
+    border-color: color-mix(in srgb, var(--accent-glow) 40%, transparent) !important;
+    transform: rotate(45deg) scale(0.95) !important;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s ease !important;
+}
+
+/* Ensure vertical text trigger is perfectly centered */
+#sidebar-trigger-area .trigger-text {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 100% !important;
+}

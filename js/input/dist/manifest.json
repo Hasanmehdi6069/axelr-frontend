@@ -1,0 +1,115 @@
+{
+  "version": "4.0.0",
+  "builtAt": "2026-11-14T20:12:10.778Z",
+  "hash": "93a648fa607b",
+  "totalBytes": 346964,
+  "totalKB": "338.83",
+  "minified": false,
+  "modules": [
+    {
+      "file": "axelr-core.js",
+      "bytes": 36104,
+      "lines": 717
+    },
+    {
+      "file": "axelr-telemetry.js",
+      "bytes": 17501,
+      "lines": 296
+    },
+    {
+      "file": "axelr-audio.js",
+      "bytes": 18831,
+      "lines": 349
+    },
+    {
+      "file": "axelr-cnn.js",
+      "bytes": 16600,
+      "lines": 358
+    },
+    {
+      "file": "axelr-symspell.js",
+      "bytes": 9915,
+      "lines": 202
+    },
+    {
+      "file": "axelr-phonetic.js",
+      "bytes": 22680,
+      "lines": 494
+    },
+    {
+      "file": "axelr-memory-lru.js",
+      "bytes": 3340,
+      "lines": 90
+    },
+    {
+      "file": "axelr-adaptive-confidence.js",
+      "bytes": 3415,
+      "lines": 81
+    },
+    {
+      "file": "axelr-polish.js",
+      "bytes": 15099,
+      "lines": 316
+    },
+    {
+      "file": "axelr-asr.js",
+      "bytes": 35331,
+      "lines": 575
+    },
+    {
+      "file": "axelr-context.js",
+      "bytes": 14842,
+      "lines": 310
+    },
+    {
+      "file": "axelr-ux.js",
+      "bytes": 18043,
+      "lines": 341
+    },
+    {
+      "file": "axelr-resources.js",
+      "bytes": 12315,
+      "lines": 322
+    },
+    {
+      "file": "axelr-elite-v2.js",
+      "bytes": 29872,
+      "lines": 589
+    },
+    {
+      "file": "axelr-bridge.js",
+      "bytes": 16698,
+      "lines": 386
+    },
+    {
+      "file": "axelr-bridge-elite.js",
+      "bytes": 13403,
+      "lines": 285
+    },
+    {
+      "file": "axelr-setup.js",
+      "bytes": 24235,
+      "lines": 404
+    },
+    {
+      "file": "axelr-runtime-health.js",
+      "bytes": 12580,
+      "lines": 232
+    },
+    {
+      "file": "axelr-orchestrator.js",
+      "bytes": 25857,
+      "lines": 475
+    }
+  ],
+  "isolated": [
+    {
+      "file": "axelr-worker.js",
+      "bytes": 16808
+    },
+    {
+      "file": "axelr-worklet.js",
+      "bytes": 5413
+    }
+  ]
+}

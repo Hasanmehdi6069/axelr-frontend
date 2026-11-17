@@ -1,0 +1,562 @@
+/* ════════════════════════════════════════════════════════════════════
+   AXELR — 95-final-polish.css (TRUE FINAL v9.0)
+   Loaded second-to-last. Only rules that MUST override everything:
+   auth wordmark, error bubble, features menu elite states, badge
+   overflow guards, pointer-event guards, touch targets, reduced
+   motion final pass.
+   Duplicates from previous versions removed entirely.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════════
+   AUTH WORDMARK — canonical
+   ═══════════════════════════════════════════════════════════════════ */
+#auth-wall .auth-logo span,
+#auth-wall .auth-brand span,
+#sidebar-logo-text,
+.brand-logo .axelr-lockup__word {
+    font-size: 30px !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.035em !important;
+    background: linear-gradient(180deg, #ffffff 0%, #cffafe 25%, #22d3ee 55%, #a1b5cc 100%) !important;
+    background-size: 100% 250% !important;
+    -webkit-background-clip: text !important;
+            background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    color: transparent !important;
+    margin: 0 !important;
+    padding-top: 2px !important;
+    font-family: 'Inter', sans-serif !important;
+    text-shadow: none !important;
+    filter: drop-shadow(0 6px 30px rgba(0, 0, 0, 0.4)) !important;
+    transform: translateZ(0) !important;
+    transition: none !important;
+    animation: gradientShift 10s ease-in-out infinite !important;
+}
+
+.brand-logo .axelr-lockup__mark,
+#auth-wall .auth-logo .axelr-lockup__mark {
+    width: clamp(32px, 5vw, 40px) !important;
+    height: clamp(32px, 5vw, 40px) !important;
+    color: var(--accent-glow) !important;
+    filter:
+        drop-shadow(0 0 20px color-mix(in srgb, var(--accent-glow) 50%, transparent))
+        drop-shadow(0 0 40px color-mix(in srgb, var(--accent-glow) 20%, transparent)) !important;
+    animation: logoBreathe 5s ease-in-out infinite !important;
+    transform: translateZ(0) !important;
+}
+
+.brand-logo .axelr-lockup__word {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: auto !important;
+    height: 28px !important;
+    fill: #ffffff !important;
+    filter: drop-shadow(0 6px 30px rgba(0, 0, 0, 0.4)) !important;
+    transform: translateZ(0) !important;
+    transition: none !important;
+}
+
+#auth-wall .auth-logo .axelr-lockup__word {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: auto !important;
+    height: 36px !important;
+    fill: #ffffff !important;
+    filter: drop-shadow(0 6px 30px rgba(0, 0, 0, 0.4)) !important;
+    transform: translateZ(0) !important;
+    transition: none !important;
+}
+
+body.light-theme .brand-logo .axelr-lockup__word,
+body.light-theme #auth-wall .auth-logo .axelr-lockup__word {
+    fill: #0b1220 !important;
+    filter: drop-shadow(0 6px 30px rgba(0, 0, 0, 0.15)) !important;
+}
+
+/* Lock all logos static — no hover movement */
+body.workspace-core .brand-logo svg,
+body.workspace-core .brand-logo:hover svg,
+#auth-wall .auth-logo svg,
+#auth-wall .axelr-wordmark--header svg,
+body.workspace-core #sidebar-logo-text,
+body.workspace-core:hover #sidebar-logo-text {
+    transform: none !important;
+    transition: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .brand-logo .axelr-lockup__mark {
+        animation: none !important;
+    }
+}
+body.workspace-core .brand-logo { color: var(--text-main) !important; }
+body.workspace-core .brand-logo svg path:nth-child(2) { stroke: var(--accent-glow) !important; }
+
+body.light-theme #auth-wall .auth-logo span,
+body.light-theme #auth-wall .auth-brand span,
+body.light-theme #sidebar-logo-text,
+body.light-theme .brand-logo .axelr-lockup__word {
+    font-size: 30px !important;
+    background: linear-gradient(180deg, #020617 0%, #0c4a6e 30%, #0891b2 60%, #334155 100%) !important;
+    background-size: 100% 250% !important;
+    -webkit-background-clip: text !important;
+            background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    filter: drop-shadow(0 6px 30px rgba(0, 0, 0, 0.15)) !important;
+    transform: translateZ(0) !important;
+    transition: none !important;
+    animation: gradientShift 10s ease-in-out infinite !important;
+}
+
+body.light-theme .brand-logo .axelr-lockup__mark {
+    color: var(--accent-glow) !important;
+    filter:
+        drop-shadow(0 4px 20px color-mix(in srgb, var(--accent-glow) 30%, transparent))
+        drop-shadow(0 0 32px color-mix(in srgb, var(--accent-glow) 15%, transparent)) !important;
+}
+
+body.light-theme.workspace-core .brand-logo { color: #0891b2 !important; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   ERROR BUBBLE
+   ═══════════════════════════════════════════════════════════════════ */
+.error-bubble {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+    background: rgba(239, 68, 68, 0.08) !important;
+    border: 1px solid rgba(239, 68, 68, 0.22) !important;
+    border-radius: 12px !important;
+    padding: 14px 18px !important;
+    margin: 12px 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    position: relative;
+    overflow: hidden;
+    animation: errorPulse 0.3s ease-out !important;
+    backdrop-filter: blur(4px) !important;
+}
+.error-bubble * { box-sizing: border-box !important; }
+.error-bubble::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, #ef4444, #dc2626);
+    border-radius: 12px 0 0 12px;
+    box-shadow: none;
+}
+@keyframes errorPulse {
+    0%   { opacity: 0; transform: translateY(-12px) scale(0.98); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.error-bubble .material-symbols-rounded {
+    color: #ef4444;
+    font-size: 22px;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+.error-bubble > div {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.error-bubble strong {
+    color: #fca5a5;
+    font-size: 14.5px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+.error-bubble div:last-child {
+    color: #fecaca;
+    font-size: 13.5px;
+    line-height: 1.6;
+}
+.error-bubble button {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #fca5a5;
+    padding: 9px 15px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 10px;
+    font-family: 'Inter', sans-serif;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    width: fit-content;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+.error-bubble button::before {
+    content: 'refresh';
+    font-family: 'Material Symbols Rounded';
+    font-size: 15px;
+}
+.error-bubble button:hover {
+    background: rgba(239, 68, 68, 0.25);
+    border-color: rgba(239, 68, 68, 0.5);
+    transform: translateY(-1px);
+}
+.error-bubble button:active { transform: translateY(0); }
+
+body.light-theme .error-bubble {
+    background: rgba(239, 68, 68, 0.06) !important;
+    border-color: rgba(239, 68, 68, 0.20) !important;
+}
+body.light-theme .error-bubble::before {
+    background: linear-gradient(180deg, #dc2626, #b91c1c);
+}
+body.light-theme .error-bubble strong { color: #b91c1c; }
+body.light-theme .error-bubble div:last-child { color: #7f1d1d; }
+body.light-theme .error-bubble .material-symbols-rounded { color: #dc2626; }
+body.light-theme .error-bubble button {
+    background: rgba(239, 68, 68, 0.10);
+    border-color: rgba(239, 68, 68, 0.22);
+    color: #b91c1c;
+}
+body.light-theme .error-bubble button:hover { background: rgba(239, 68, 68, 0.18); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   AUTH GUEST BUTTON + CARD HOVER — canonical
+   ═══════════════════════════════════════════════════════════════════ */
+#auth-wall .auth-terms > a {
+    pointer-events: auto !important;
+    z-index: 100 !important;
+    position: relative !important;
+}
+#auth-wall .auth-terms > a[onclick*="continueAsGuest"] {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    margin-top: 4px !important;
+    padding: 8px 14px !important;
+    color: var(--text-muted) !important;
+    font-size: 12.5px !important;
+    font-weight: 500 !important;
+    text-decoration: none !important;
+    border-radius: 10px !important;
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    transition:
+        color        0.28s cubic-bezier(0.22, 1, 0.36, 1),
+        background   0.28s cubic-bezier(0.22, 1, 0.36, 1),
+        border-color 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+        transform    0.28s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+#auth-wall .auth-terms > a[onclick*="continueAsGuest"]:hover {
+    color: var(--text-main) !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    transform: translateY(-1px);
+}
+#auth-wall .auth-terms > a[onclick*="continueAsGuest"]:active {
+    transform: translateY(0) scale(0.985);
+}
+
+#auth-wall .auth-guest-btn::before { display: none !important; }
+#auth-wall .auth-guest-btn {
+    position: relative !important;
+    overflow: hidden !important;
+    width: 100% !important;
+    margin-top: 16px !important;
+    padding: 14px 20px !important;
+    border-radius: 12px !important;
+    border: 1px solid var(--border-muted) !important;
+    background-color: rgba(255, 255, 255, 0.03) !important;
+    color: var(--text-main) !important;
+    font-size: 14.5px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    font-family: 'Inter', sans-serif !important;
+    transform: translateZ(0);
+    transition:
+        background-color 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+        border-color     0.35s cubic-bezier(0.22, 1, 0.36, 1),
+        color            0.3s  ease,
+        transform        0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow       0.45s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+#auth-wall .auth-guest-btn:hover {
+    background-color: color-mix(in srgb, var(--accent-glow) 8%, transparent) !important;
+    border-color: color-mix(in srgb, var(--accent-glow) 55%, transparent) !important;
+    color: #ffffff !important;
+    transform: translateY(-2px) !important;
+    box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--accent-glow) 25%, transparent),
+        0 16px 40px -12px color-mix(in srgb, var(--accent-glow) 45%, transparent),
+        0 6px 18px -6px rgba(0, 0, 0, 0.55) !important;
+}
+#auth-wall .auth-guest-btn:active {
+    transform: translateY(0) scale(0.985) !important;
+    transition-duration: 90ms !important;
+}
+#auth-wall .auth-guest-btn:focus-visible {
+    outline: none !important;
+    box-shadow:
+        0 0 0 2px var(--bg-deep),
+        0 0 0 4px color-mix(in srgb, var(--accent-glow) 70%, transparent),
+        0 0 24px -4px color-mix(in srgb, var(--accent-glow) 55%, transparent) !important;
+}
+
+.auth-card {
+    transition:
+        transform    0.55s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow   0.6s  cubic-bezier(0.22, 1, 0.36, 1),
+        border-color 0.5s  cubic-bezier(0.22, 1, 0.36, 1),
+        opacity      0.4s  ease !important;
+    will-change: transform, box-shadow;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transform: translateZ(0);
+}
+.auth-card:hover {
+    transform: translateY(-6px) scale(1.012) !important;
+    box-shadow:
+        0 1px 0 0 rgba(255, 255, 255, 0.12) inset,
+        0 55px 130px -25px rgba(0, 0, 0, 0.92),
+        0 0 200px -30px color-mix(in srgb, var(--accent-glow) 70%, transparent) !important;
+}
+body.light-theme .auth-card:hover {
+    box-shadow:
+        0 1px 0 0 rgba(255, 255, 255, 0.95) inset,
+        0 55px 130px -25px rgba(15, 23, 42, 0.22),
+        0 0 140px -30px rgba(14, 165, 233, 0.40) !important;
+}
+@media (prefers-reduced-motion: reduce) {
+    .auth-card:hover { transform: none !important; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   BADGE OVERFLOW GUARD
+   ═══════════════════════════════════════════════════════════════════ */
+#sidebar-plan-badge,
+#settings-plan-badge,
+.sidebar-plan-badge,
+.tier-badge,
+[class*="plan-badge"],
+[class*="tier-badge"],
+[class*="status-badge"] {
+    max-width: 100%;
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    text-align: center;
+    line-height: 1.3;
+    padding-inline: 0.6em;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SETTINGS — hide redundant workspace switcher
+   ═══════════════════════════════════════════════════════════════════ */
+.settings-grid > .sidebar-sub-box[onclick*="showWorkspaceSelector"] {
+    display: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   POINTER EVENTS GUARDS
+   ═══════════════════════════════════════════════════════════════════ */
+body::before,
+body::after { pointer-events: none !important; }
+#mic-trigger,
+#send-trigger,
+#attach-trigger,
+#enhance-trigger,
+#system-toggle-trigger {
+    pointer-events: auto !important;
+    touch-action: manipulation;
+}
+.plus-menu-btn,
+.send-btn,
+.action-btn,
+.attach-btn,
+.mic-btn,
+.enhance-btn {
+    position: relative;
+    z-index: 10;
+    pointer-events: auto;
+    cursor: pointer;
+    isolation: isolate;
+    -webkit-tap-highlight-color: transparent;
+}
+.send-btn:disabled { pointer-events: auto !important; cursor: not-allowed !important; }
+.input-actions {
+    position: relative !important;
+    z-index: 10 !important;
+    isolation: isolate;
+    overflow: visible !important;
+    pointer-events: auto !important;
+}
+.input-row,
+.input-frame {
+    position: relative !important;
+    overflow: visible !important;
+}
+.input-row { z-index: 6 !important; }
+.input-frame { z-index: 5 !important; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   FILE CHIP
+   ═══════════════════════════════════════════════════════════════════ */
+.file-chips-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+.file-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: color-mix(in srgb, var(--accent-glow) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent-glow) 16%, transparent);
+    color: var(--text-muted);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    max-width: 240px;
+    transition: background 0.18s ease, border-color 0.18s ease;
+}
+.file-chip:hover {
+    background: color-mix(in srgb, var(--accent-glow) 14%, transparent);
+    border-color: color-mix(in srgb, var(--accent-glow) 30%, transparent);
+}
+.file-chip .chip-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+.file-chip .chip-remove {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: #ef4444;
+    padding: 0;
+    line-height: 1;
+    flex-shrink: 0;
+    font-size: 14px;
+    transition: transform 0.15s ease;
+}
+.file-chip .chip-remove:hover { transform: scale(1.2); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   COPY BUTTON FEEDBACK
+   ═══════════════════════════════════════════════════════════════════ */
+.action-icon-btn[data-copied="true"] {
+    color: #10b981 !important;
+    border-color: rgba(16, 185, 129, 0.4) !important;
+    background: rgba(16, 185, 129, 0.1) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SCROLL-TO-BOTTOM
+   ═══════════════════════════════════════════════════════════════════ */
+#scroll-to-bottom {
+    position: absolute;
+    bottom: 120px;
+    left: 50%;
+    transform: translate(-50%, 20px);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--bg-card);
+    border: 1px solid var(--border-strong);
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+#scroll-to-bottom.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, 0);
+}
+#scroll-to-bottom:hover {
+    background: color-mix(in srgb, var(--accent-glow) 10%, transparent);
+    border-color: var(--accent-glow);
+    color: var(--accent-glow);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SKELETON LOADERS
+   ═══════════════════════════════════════════════════════════════════ */
+.skeleton-loader {
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+}
+.skeleton-loader::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+    transform: translateX(-100%);
+    animation: skeletonShimmer 1.5s infinite;
+}
+@keyframes skeletonShimmer { 100% { transform: translateX(100%); } }
+.skeleton-history-item {
+    height: 48px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   TOAST CONTAINER + SAFE AREAS
+   ═══════════════════════════════════════════════════════════════════ */
+.toast-container {
+    top: 72px !important;
+    z-index: 9999999 !important;
+}
+@supports (padding: max(0px)) {
+    .command-wrapper { padding-bottom: max(14px, env(safe-area-inset-bottom)) !important; }
+    #sidebar-container-node { padding-bottom: env(safe-area-inset-bottom) !important; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   FIX — cancel nexus hover zoom
+   ═══════════════════════════════════════════════════════════════════ */
+.nexus-bubble:hover { transform: none !important; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   CONSOLIDATED REDUCED MOTION — final pass
+   ═══════════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    #auth-wall .auth-guest-btn:hover,
+    #auth-wall .auth-guest-btn::after,
+    .auth-card:hover,
+    .workspace-card:hover,
+    .send-btn:hover:not(:disabled),
+    #model-selector:hover,
+    .history-item:active { transform: none !important; }
+    .hero-text .auth-logo svg,
+    .hero-text h1,
+    .hero-text p,
+    #viewport { animation: none !important; }
+    .reveal { opacity: 1 !important; transform: none !important; }
+}

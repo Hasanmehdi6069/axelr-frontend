@@ -1,0 +1,390 @@
+/* ════════════════════════════════════════════════════════════════════
+   AXELR — 15-hero.css (HERO MASTER v5.0)
+   Enhanced entrance choreography, workspace-tinted mark, complete
+   light theme parity. Single source of truth for the empty state.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════════
+   AMBIENT BACKGROUND GLOW
+   ═══════════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: no-preference) {
+    #hero-display::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: clamp(400px, 60vw, 700px);
+        height: clamp(300px, 45vw, 500px);
+        background: radial-gradient(ellipse at center,
+            color-mix(in srgb, var(--accent-glow) 15%, transparent) 0%,
+            color-mix(in srgb, var(--accent-glow) 8%, transparent) 30%,
+            transparent 70%);
+        filter: blur(60px);
+        animation: ambientGlow 12s ease-in-out infinite;
+        pointer-events: none;
+        z-index: -1;
+    }
+    @keyframes ambientGlow {
+        0%, 100% { transform: translate(-50%, -50%) scale(1);   opacity: 0.8; }
+        50%      { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+    }
+}
+@media (max-width: 768px) {
+    /* Disable heavy ambient glow on mobile for battery + clarity */
+    #hero-display::before { display: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   HERO CONTAINER
+   ═══════════════════════════════════════════════════════════════════ */
+.hero-text {
+    margin: 0 auto !important;
+    padding: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    width: 100% !important;
+    max-width: 680px;
+    animation: heroFloat 8s ease-in-out infinite;
+    transform: translateZ(0);
+    will-change: transform;
+}
+@keyframes heroFloat {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-6px); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .hero-text { animation: none !important; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   STAGGERED ENTRANCE CHOREOGRAPHY
+   ═══════════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: no-preference) {
+    .hero-text .auth-logo {
+        animation: heroLogoIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        animation-delay: 0.05s;
+    }
+    .hero-text h1 {
+        animation: heroHeadlineIn 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
+        animation-delay: 0.2s;
+    }
+    .hero-text p {
+        animation: heroSubIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+        animation-delay: 0.35s;
+    }
+    .hero-quick-actions {
+        animation: heroChipsIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        animation-delay: 0.5s;
+    }
+    @keyframes heroLogoIn {
+        from { opacity: 0; transform: scale(0.6) translateY(-12px); }
+        to   { opacity: 1; transform: scale(1)   translateY(0); }
+    }
+    @keyframes heroHeadlineIn {
+        from { opacity: 0; transform: translateY(14px); filter: blur(4px); }
+        to   { opacity: 1; transform: translateY(0);    filter: blur(0); }
+    }
+    @keyframes heroSubIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes heroChipsIn {
+        from { opacity: 0; transform: translateY(12px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   HERO LOGO
+   ═══════════════════════════════════════════════════════════════════ */
+.hero-text .auth-logo {
+    margin-bottom: clamp(20px, 3.5vh, 32px) !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.hero-text .auth-logo svg {
+    width: clamp(48px, 7vw, 64px) !important;
+    height: clamp(48px, 7vw, 64px) !important;
+    color: var(--accent-glow) !important;
+    filter:
+        drop-shadow(0 0 24px color-mix(in srgb, var(--accent-glow) 55%, transparent))
+        drop-shadow(0 0 48px color-mix(in srgb, var(--accent-glow) 25%, transparent)) !important;
+    animation: logoBreathe 5s ease-in-out infinite;
+    transform: translateZ(0);
+}
+@keyframes logoBreathe {
+    0%, 100% { transform: scale(1);    opacity: 0.95; }
+    50%      { transform: scale(1.06); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .hero-text .auth-logo svg,
+    #auth-wall .auth-logo .axelr-lockup__mark { animation: none !important; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   HERO HEADLINE
+   ═══════════════════════════════════════════════════════════════════ */
+.hero-text h1 {
+    font-size: clamp(32px, 6.5vw, 62px) !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.055em !important;
+    line-height: 1.02 !important;
+    margin: 0 0 clamp(16px, 2.5vh, 24px) 0 !important;
+    background: linear-gradient(180deg, #ffffff 0%, #cffafe 25%, #22d3ee 55%, #a1b5cc 100%) !important;
+    background-size: 100% 250% !important;
+    -webkit-background-clip: text !important;
+            background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    color: transparent !important;
+    text-wrap: balance;
+    animation: gradientShift 10s ease-in-out infinite !important;
+    filter: drop-shadow(0 6px 30px rgba(0, 0, 0, 0.35)) !important;
+    transform: translateZ(0);
+}
+@keyframes gradientShift {
+    0%, 100% { background-position: 0% 0%; }
+    50%      { background-position: 0% 100%; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   HERO SUBHEAD
+   ═══════════════════════════════════════════════════════════════════ */
+.hero-text p {
+    font-size: clamp(15px, 2vw, 19px) !important;
+    color: var(--text-muted) !important;
+    font-weight: 400 !important;
+    letter-spacing: -0.015em !important;
+    max-width: 520px;
+    margin: 0 auto !important;
+    line-height: 1.7 !important;
+    text-wrap: pretty;
+    transform: translateZ(0);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   QUICK ACTION CHIPS
+   ═══════════════════════════════════════════════════════════════════ */
+.hero-quick-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: clamp(28px, 4.5vh, 40px);
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+    position: relative;
+    z-index: 10;
+}
+.quick-action-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+    border: 1px solid var(--border-muted);
+    border-radius: 100px;
+    padding: 9px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 4px 12px -4px rgba(0, 0, 0, 0.25);
+    transition:
+        background 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+        border-color 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+        color 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.quick-action-chip .material-symbols-rounded {
+    font-size: 16px;
+    color: var(--accent-glow);
+    opacity: 0.85;
+    transition: opacity 0.22s ease, transform 0.22s ease;
+}
+.quick-action-chip:hover {
+    background: color-mix(in srgb, var(--bg-card) 98%, transparent);
+    border-color: color-mix(in srgb, var(--accent-glow) 40%, transparent);
+    color: var(--text-main);
+    transform: translateY(-2px);
+    box-shadow:
+        0 8px 24px -6px color-mix(in srgb, var(--accent-glow) 22%, transparent),
+        0 2px 8px -2px rgba(0, 0, 0, 0.35);
+}
+.quick-action-chip:hover .material-symbols-rounded {
+    opacity: 1;
+    transform: scale(1.08);
+}
+.quick-action-chip:active { transform: translateY(-1px) scale(0.98); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   LIGHT THEME — full hero parity
+   ═══════════════════════════════════════════════════════════════════ */
+body.light-theme .hero-text h1 {
+    background: linear-gradient(180deg, #0b1220 0%, #0c4a6e 35%, #0891b2 70%, #334155 100%) !important;
+    background-size: 100% 250% !important;
+    -webkit-background-clip: text !important;
+            background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    color: transparent !important;
+    filter: drop-shadow(0 4px 20px rgba(15, 23, 42, 0.10)) !important;
+}
+body.light-theme .hero-text p {
+    color: #475569 !important;
+}
+body.light-theme .hero-text .auth-logo svg {
+    color: var(--accent-glow) !important;
+    filter:
+        drop-shadow(0 4px 20px color-mix(in srgb, var(--accent-glow) 30%, transparent))
+        drop-shadow(0 0 32px color-mix(in srgb, var(--accent-glow) 15%, transparent)) !important;
+}
+body.light-theme .quick-action-chip {
+    background: #ffffff !important;
+    border-color: rgba(15, 23, 42, 0.10) !important;
+    color: #334155 !important;
+    box-shadow:
+        0 2px 8px -2px rgba(15, 23, 42, 0.08),
+        0 1px 0 rgba(255, 255, 255, 1) inset !important;
+}
+body.light-theme .quick-action-chip .material-symbols-rounded {
+    color: var(--accent-glow) !important;
+    opacity: 1 !important;
+}
+body.light-theme .quick-action-chip:hover {
+    background: #ffffff !important;
+    border-color: color-mix(in srgb, var(--accent-glow) 50%, transparent) !important;
+    color: #0b1220 !important;
+    box-shadow:
+        0 8px 24px -8px color-mix(in srgb, var(--accent-glow) 28%, transparent),
+        0 2px 6px -2px rgba(15, 23, 42, 0.10) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   MOBILE
+   ═══════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+    .hero-text { max-width: 100%; }
+    .hero-text h1 { font-size: clamp(24px, 7vw, 34px) !important; }
+    .hero-text p  { font-size: clamp(13px, 3.4vw, 15px) !important; max-width: 340px !important; }
+    .hero-text .auth-logo svg { width: clamp(40px, 6vw, 48px) !important; height: clamp(40px, 6vw, 48px) !important; }
+    .hero-quick-actions { gap: 8px !important; margin-top: 22px !important; }
+    .quick-action-chip { padding: 8px 14px !important; font-size: 12.5px !important; }
+}
+
+@media (max-width: 380px) {
+    .hero-text h1 { font-size: 20px !important; letter-spacing: -0.04em !important; }
+    .hero-text p  { font-size: 12px !important; max-width: 260px !important; }
+    .hero-text .auth-logo svg { width: 32px !important; height: 32px !important; }
+    .hero-quick-actions { gap: 6px !important; margin-top: 18px !important; }
+    .quick-action-chip {
+        padding: 7px 12px !important;
+        font-size: 11.5px !important;
+        gap: 6px !important;
+    }
+    .quick-action-chip .material-symbols-rounded { font-size: 14px !important; }
+}
+
+@media (max-width: 320px) {
+    .hero-text h1 { font-size: 18px !important; }
+    .hero-text p  { font-size: 11px !important; max-width: 220px !important; }
+    .hero-text .auth-logo svg { width: 28px !important; height: 28px !important; }
+    .hero-quick-actions { display: none !important; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   REDUCED MOTION
+   ═══════════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+    #hero-display::before,
+    .hero-text,
+    .hero-text .auth-logo,
+    .hero-text .auth-logo svg,
+    .hero-text h1,
+    .hero-text p,
+    .quick-action-chip {
+        animation: none !important;
+        transition: none !important;
+    }
+    .hero-text, .hero-text h1, .hero-text p { transform: none !important; }
+}
+/* ════════════════════════════════════════════════════════════════════
+   15-hero.css — APPEND (SIZE FIX v5.1)
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ─── Tighten hero headline to Linear/Stripe tier (48px max) ──────── */
+.hero-text h1 {
+    font-size: clamp(28px, 4.5vw, 48px) !important;
+    line-height: 1.08 !important;
+    letter-spacing: -0.045em !important;
+    margin-bottom: clamp(12px, 2vh, 18px) !important;
+}
+
+/* Tighter subhead */
+.hero-text p {
+    font-size: clamp(14px, 1.6vw, 17px) !important;
+    line-height: 1.65 !important;
+    max-width: 480px !important;
+}
+
+/* Tighter logo → headline rhythm */
+.hero-text .auth-logo {
+    margin-bottom: clamp(16px, 2.5vh, 24px) !important;
+}
+.hero-text .auth-logo svg,
+#auth-wall .auth-logo .axelr-lockup__mark {
+    width: clamp(40px, 5vw, 52px) !important;
+    height: clamp(40px, 5vw, 52px) !important;
+    color: var(--accent-glow) !important;
+    filter:
+        drop-shadow(0 0 20px color-mix(in srgb, var(--accent-glow) 50%, transparent))
+        drop-shadow(0 0 40px color-mix(in srgb, var(--accent-glow) 20%, transparent)) !important;
+    animation: logoBreathe 5s ease-in-out infinite;
+}
+
+/* Tighter chips below */
+.hero-quick-actions {
+    margin-top: clamp(22px, 3.5vh, 32px) !important;
+    gap: 8px !important;
+}
+
+/* ─── Mobile (768 and below) ────────────────────────────────────── */
+@media (max-width: 768px) {
+    .hero-text h1 {
+        font-size: clamp(24px, 6.5vw, 32px) !important;
+        letter-spacing: -0.03em !important;
+    }
+    .hero-text p {
+        font-size: clamp(13px, 3.2vw, 15px) !important;
+        max-width: 340px !important;
+    }
+    .hero-text .auth-logo svg {
+        width: clamp(36px, 5vw, 44px) !important;
+        height: clamp(36px, 5vw, 44px) !important;
+    }
+    .hero-quick-actions { gap: 6px !important; margin-top: 20px !important; }
+    .quick-action-chip {
+        padding: 8px 13px !important;
+        font-size: 12px !important;
+    }
+}
+
+@media (max-width: 380px) {
+    .hero-text h1 {
+        font-size: 22px !important;
+        letter-spacing: -0.025em !important;
+    }
+    .hero-text p  { font-size: 12.5px !important; max-width: 260px !important; }
+    .hero-text .auth-logo svg { width: 32px !important; height: 32px !important; }
+    .hero-quick-actions { margin-top: 16px !important; }
+    .quick-action-chip { padding: 7px 11px !important; font-size: 11px !important; }
+}
+@media (max-width: 320px) {
+    .hero-text h1 { font-size: 20px !important; }
+    .hero-text p  { font-size: 11.5px !important; }
+}

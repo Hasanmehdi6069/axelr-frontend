@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Pricing & Workspaces — AXELR AI</title>
+<meta name="description" content="Choose your Axelr workspace. Unified Access, Data Ops Heavy, or Design Studio. Transparent tiers, zero hidden infrastructure." />
+<meta name="theme-color" content="#0D0F12" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,600,1,0" rel="stylesheet" />
+<link rel="stylesheet" href="css/pricing.css" />
+<link rel="stylesheet" href="css/95-final-polish.css" />
+<link rel="stylesheet" href="css/98-elite-final.css" />
+<link rel="stylesheet" href="css/99-wordmark-fix.css" />
+
+</head>
+
+<body>
+<a class="skip" href="#main">Skip to pricing</a>
+<!-- ═══════════════════ TOPBAR ═══════════════════ -->
+<header class="topbar">
+  <div class="brand-container">
+    <a class="brand axelr-lockup" href="/" aria-label="AXELR — home">
+      <!-- ✦ viewBox tightened to real path bounds: x 20→80, y 15→85 (+2px pad) -->
+      <svg class="axelr-lockup__mark"
+           viewBox="18 13 64 74" fill="none" aria-hidden="true"
+           xmlns="http://www.w3.org/2000/svg">
+        <path d="M50 15 L20 32.5 L20 67.5 L50 85"
+              stroke="var(--logo-stroke-primary)"
+              stroke-width="6" stroke-linejoin="bevel"
+              fill="var(--logo-fill-primary)"/>
+        <path d="M50 15 L80 32.5 L50 50 L80 67.5 L50 85"
+              stroke="currentColor" stroke-width="6" stroke-linejoin="bevel" fill="none"/>
+        <path d="M20 32.5 L50 50 L20 67.5"
+              stroke="var(--logo-stroke-secondary)"
+              stroke-width="3" stroke-linejoin="bevel" opacity="0.5"/>
+      </svg>
+      <!-- ✦ viewBox tightened: x 87.3→679.7, y 12.2→213.3 (+2px pad). Removes the phantom gap. -->
+      <svg class="axelr-lockup__word"
+           xmlns="http://www.w3.org/2000/svg"
+           viewBox="85 10 597 206"
+           role="img" aria-label="AXELR">
+        <g fill="currentColor" fill-rule="evenodd">
+          <path d="M369.1,126.7 L370.4,141.1 L510.3,139.3 L507.4,109.7 L495.8,86.3 L477.3,70.1 L449.7,61.1 L415.7,64.1 L393.7,76.1 L375.8,100.0 Z M514.7,12.7 L518.7,27.0 L518.9,211.6 L559.6,212.5 L560.5,13.7 Z M166.6,34.9 L96.6,200.7 L87.3,212.5 L134.3,212.6 L188.7,89.0 Z M166.6,12.2 L223.6,138.9 L273.0,139.6 L214.3,12.8 Z M568.2,62.7 L573.3,79.7 L573.3,199.0 L567.9,212.3 L611.6,212.5 L612.5,63.4 Z M370.0,153.0 L376.8,175.3 L393.3,197.2 L415.3,209.4 L439.3,213.3 L464.7,209.5 L485.0,198.3 L500.8,178.7 L508.4,156.4 L471.0,155.1 L459.7,174.3 L439.3,179.7 L421.1,172.2 L410.6,151.6 Z M296.1,139.4 L339.8,212.1 L392.5,212.3 L381.3,200.3 L344.2,139.6 Z M159.7,188.4 L246.3,188.7 L272.2,150.3 L175.7,149.9 Z M247.5,61.9 L259.6,75.7 L290.8,127.1 L339.9,127.3 L299.9,62.2 Z M679.7,62.4 L635.3,70.2 L622.4,75.7 L620.9,79.6 L624.3,81.0 L624.3,124.5 L635.0,110.9 L679.7,100.8 Z M287.5,148.3 L253.4,200.7 L242.1,212.3 L290.7,212.3 L294.8,210.0 L310.3,185.3 Z M393.4,61.9 L343.7,61.7 L340.7,63.3 L327.7,85.7 L350.0,122.0 L380.9,75.3 Z M410.6,123.7 L412.9,112.3 L417.8,102.7 L427.0,95.2 L436.7,92.7 L451.3,94.2 L459.7,99.4 L465.9,108.3 L469.0,123.0 L468.4,125.4 L413.0,126.0 Z"/>
+        </g>
+      </svg>
+    </a>
+    <!-- ✦ brand chip REMOVED — page title + URL already establish context -->
+  </div>
+  <nav class="topnav" aria-label="Primary">
+    <a href="https://axelr.in/docs.html" class="docs-pill" style="border-radius: 9999px; background: rgba(0,242,254,0.05); border: 1px solid rgba(0,242,254,0.3); color: #00f2fe; padding: 7px 16px; box-shadow: 0 0 15px rgba(0,242,254,0.25), inset 0 0 10px rgba(0,242,254,0.05); transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 5px; font-weight: 500; letter-spacing: 0.2px; white-space: nowrap; height: fit-content;">
+        <span class="material-symbols-rounded" style="font-size: 15px;">menu_book</span>
+        Docs
+    </a>
+    <a href="#tier-grid" class="primary">
+  <span class="material-symbols-rounded" style="font-size:15px;vertical-align:-3px;margin-right:4px">bolt</span>
+  Choose plan
+</a>
+  </nav>
+</header>
+
+<main class="shell" id="main">
+
+  <!-- ═══════════════════ HERO ═══════════════════ -->
+  <section class="hero">
+    <span class="hero-pill">
+      <span class="material-symbols-rounded" aria-hidden="true">verified</span>
+      Transparent · Zero hidden infrastructure
+    </span>
+    <h1>
+      Choose your <span class="grad">workspace engine</span>.
+    </h1>
+    <p>
+      Pick a workspace specialisation, scale your throughput, and pay only for what you
+      actually execute. No plumbing fees. No provider markups. No surprises.
+    </p>
+  </section>
+
+  <!-- ═══════════════════ VALUE PROPOSITION BANNER ═══════════════════ -->
+  <div class="value-banner">
+    <span class="banner-icon material-symbols-rounded">auto_awesome</span>
+    <strong>2-3x cheaper than competitors. Just $15-17/month — a single subscription unlocks everything you need.</strong>
+    <span class="banner-sub">Claude 3.5 Sonnet costs $20/month. Get more power, more access, and zero hidden fees with Axelr.</span>
+  </div>
+
+  <!-- ═══════════════════ CONTROLS ═══════════════════ -->
+  <div class="controls">
+
+    <!-- Billing cycle -->
+    <div class="cycle-toggle" role="group" aria-label="Billing period">
+      <button class="cycle-btn" type="button" data-cycle="monthly" aria-pressed="true">
+        Monthly
+      </button>
+      <button class="cycle-btn" type="button" data-cycle="annual" aria-pressed="false">
+        Annual <span class="save-pill">Save ~20%</span>
+      </button>
+    </div>
+
+    <!-- Workspace segmented control -->
+    <div class="segmented" role="tablist" aria-label="Workspace focus" id="workspace-tabs">
+      <div class="seg-indicator" id="seg-indicator" aria-hidden="true"></div>
+
+      <button class="seg-btn" type="button" role="tab"
+              data-ws="unified" aria-pressed="true" aria-selected="true">
+        Unified Access
+        <small>Full Suite</small>
+      </button>
+
+      <button class="seg-btn" type="button" role="tab"
+              data-ws="data" aria-pressed="false" aria-selected="false">
+        Data Ops Heavy
+        <small>Analytics Focus</small>
+      </button>
+
+      <button class="seg-btn" type="button" role="tab"
+              data-ws="design" aria-pressed="false" aria-selected="false">
+        Design Studio
+        <small>UI/UX Focus</small>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════ TIER GRID ═══════════════════ -->
+  <section class="tier-grid" aria-label="Available plans">
+
+    <!-- ── CARD 1 · EXPLORER ── -->
+    <article class="tier-card" data-tier="explorer">
+      <span class="tier-badge">
+        <span class="material-symbols-rounded" aria-hidden="true">science</span>
+        <span id="x-badge">Baseline Intelligence</span>
+      </span>
+
+      <h2 class="tier-name">Explorer</h2>
+      <p class="tier-tagline" id="x-tagline">
+        Standard processing velocity for testing and simple tasks.
+      </p>
+
+      <div class="tier-price">
+        <span class="tier-amount">$0</span>
+        <span class="tier-term">/mo</span>
+      </div>
+      <div class="tier-price-meta">Free forever. No card required.</div>
+
+      <div class="tier-quota" tabindex="0"
+           data-tooltip="An individual workflow covers single-prompt generations across text, data manipulation, or UI drafting.">
+        <span class="quota-icon"><span class="material-symbols-rounded" aria-hidden="true">bolt</span></span>
+        <span class="quota-body">
+          <span class="quota-value">7 Unified Workflows</span>
+          <span class="quota-unit">PER DAY</span>
+        </span>
+        <span class="quota-hint material-symbols-rounded" aria-hidden="true">info</span>
+      </div>
+
+      <div class="tier-engine">
+        <div class="engine-eyebrow">
+          <span class="material-symbols-rounded" aria-hidden="true">memory</span>
+          Cluster Engine
+        </div>
+        <div class="engine-text">Powered by Axelr Light-Velocity Core (Dual-Provider Layer)</div>
+      </div>
+
+      <ul class="tier-features">
+        <li class="feature on">
+          <span class="ico"><span class="material-symbols-rounded" aria-hidden="true">check</span></span>
+          <span class="feature-text">Simultaneous access to Core, Data &amp; Design environments</span>
+        </li>
+        <li class="feature on">
+          <span class="ico"><span class="material-symbols-rounded" aria-hidden="true">check</span></span>
+          <span class="feature-text">Nexus Flow - Elite Workflow Automation
+            <span class="feature-meta">1 FREE WORKFLOW PER DAY</span>
+          </span>
+        </li>
+        <li class="feature on">
+          <span class="ico"><span class="material-symbols-rounded" aria-hidden="true">check</span></span>
+          <span class="feature-text">Micro-file processing &amp; extraction
+            <span class="feature-meta">CSV, PDF up to 5MB</span>
+          </span>
+        </li>
+        <li class="feature on">
+          <span class="ico"><span class="material-symbols-rounded" aria-hidden="true">check</span></span>
+          <span class="feature-text">3 Automated Prompt Enhancements
+            <span class="feature-meta">PER MONTH</span>
+          </span>
+        </li>
+        <li class="feature off">
+          <span class="ico"><span class="material-symbols-rounded" aria-hidden="true">close</span></span>
+          <span class="feature-text">Surgical code differential patching &amp; visual debugging</span>
+        </li>
+        <li class="feature off">
+          <span class="ico"><span class="material-symbols-rounded" aria-hidden="true">close</span></span>
+          <span class="feature-text">Long-term workspace contextual memory vault</span>
+        </li>
+      </ul>
+
+      <button class="tier-cta current" type="button" disabled>
+        <span class="material-symbols-rounded" aria-hidden="true">check_circle</span>
+        Current Tier
+      </button>
+    </article>
+
+    <!-- ── CARD 2 · PRO ── -->
+    <article class="tier-card recommended" data-tier="pro" id="card-pro">
+      <span class="tier-badge">
+        <span class="material-symbols-rounded" aria-hidden="true">star</span>
+        <span id="p-badge">Recommended</span>
+      </span>
+
+      <h2 class="tier-name" id="p-name">Pro Architect</h2>
+      <p class="tier-tagline" id="p-tagline">
+        High-velocity execution with zero throttling during peak hours.
+      </p>
+
+      <div class="tier-price">
+        <span class="tier-amount" id="p-amount">$19</span>
+        <span class="tier-term" id="p-term">/mo</span>
+      </div>
+      <div class="tier-price-meta" id="p-meta">Billed monthly. Cancel anytime.</div>
+
+      <div class="tier-quota" tabindex="0" id="p-quota-pill" data-tooltip="">
+        <span class="quota-icon"><span class="material-symbols-rounded" aria-hidden="true" id="p-quota-icon">speed</span></span>
+        <span class="quota-body">
+          <span class="quota-value" id="p-quota-value">50 Priority Compute Cycles</span>
+          <span class="quota-unit" id="p-quota-unit">PER DAY</span>
+        </span>
+        <span class="quota-hint material-symbols-rounded" aria-hidden="true">info</span>
+      </div>
+
+      <div class="tier-engine">
+        <div class="engine-eyebrow">
+          <span class="material-symbols-rounded" aria-hidden="true">memory</span>
+          Cluster Engine
+        </div>
+        <div class="engine-text" id="p-engine">
+          Unlocks Hyper-Flash 3.5 + Cortex Pro Processing Matrix
+        </div>
+      </div>
+
+      <ul class="tier-features" id="p-features">
+        <!-- populated by JS -->
+      </ul>
+
+      <a class="tier-cta pro-cta" id="p-cta" href="https://axelr.in/checkout.html?plan=pro&subtier=full&cycle=monthly">
+        <span class="material-symbols-rounded" aria-hidden="true">rocket_launch</span>
+        <span id="p-cta-label">Upgrade to Pro Architect</span>
+      </a>
+    </article>
+
+    <!-- ── CARD 3 · BUSINESS ── -->
+    <article class="tier-card max-throughput" data-tier="business" id="card-business">
+      <span class="tier-badge">
+        <span class="material-symbols-rounded" aria-hidden="true">rocket_launch</span>
+        <span id="b-badge">Max Throughput</span>
+      </span>
+
+      <h2 class="tier-name" id="b-name">Business System</h2>
+      <p class="tier-tagline" id="b-tagline">
+        Full-throttle concurrent multi-agent automation with server failover protection.
+      </p>
+
+      <div class="tier-price">
+        <span class="tier-amount" id="b-amount">$39</span>
+        <span class="tier-term" id="b-term">/mo</span>
+      </div>
+      <div class="tier-price-meta" id="b-meta">Billed monthly. Cancel anytime.</div>
+
+      <div class="tier-quota" tabindex="0" id="b-quota-pill" data-tooltip="">
+        <span class="quota-icon"><span class="material-symbols-rounded" aria-hidden="true" id="b-quota-icon">rocket</span></span>
+        <span class="quota-body">
+          <span class="quota-value" id="b-quota-value">150 Autonomous Pipelines</span>
+          <span class="quota-unit" id="b-quota-unit">PER DAY</span>
+        </span>
+        <span class="quota-hint material-symbols-rounded" aria-hidden="true">info</span>
+      </div>
+
+      <div class="tier-engine">
+        <div class="engine-eyebrow">
+          <span class="material-symbols-rounded" aria-hidden="true">memory</span>
+          Cluster Engine
+        </div>
+        <div class="engine-text" id="b-engine">
+          Dedicated Enterprise Routing across Omni 5.0 + DeepV3 + LPU Clusters
+        </div>
+      </div>
+
+      <ul class="tier-features" id="b-features">
+        <!-- populated by JS -->
+      </ul>
+
+      <a class="tier-cta biz-cta" id="b-cta" href="https://axelr.in/checkout.html?plan=business&subtier=full&cycle=monthly">
+        <span class="material-symbols-rounded" aria-hidden="true">workspace_premium</span>
+        <span id="b-cta-label">Upgrade to Business</span>
+      </a>
+    </article>
+
+  </section>
+
+  <!-- ═══════════════════ TRUST FOOTER ═══════════════════ -->
+  <div class="trust" role="note">
+    <span class="material-symbols-rounded" aria-hidden="true">lock</span>
+    <span class="trust-text">
+      <strong>🔒 Instant Access via Encrypted UPI Routing.</strong>
+      Verification settles automatically upon UTR payload submission.
+    </span>
+  </div>
+
+</main>
+
+<footer class="footer">
+  <span>© 2026 Axelr AI</span>
+  <a href="https://axelr.in/terms.html">Terms</a>
+  <a href="https://axelr.in/privacy.html">Privacy</a>
+  <a href="mailto:axelrsupport@gmail.com">Support</a>
+</footer>
+
+<!-- ═══════════════════ TOOLTIP PORTAL ═══════════════════ -->
+<div id="tooltip" role="tooltip" aria-hidden="true"></div>
+
+<!-- ═══════════════════ APPLICATION SCRIPT ═══════════════════ -->
+    <script>
+(function () {
+  'use strict';
+
+  /* ═══════════════════════════════════════════════════════════
+     SINGLE SOURCE OF TRUTH — workspace × tier variant matrix
+     ═══════════════════════════════════════════════════════════ */
+  const VARIANTS = {
+    unified: {
+      pro: {
+        badge:       'Recommended',
+        name:        'Pro Architect',
+        tagline:     'High-velocity execution with zero throttling during peak hours + Nexus Flow workflow automation.',
+        quotaValue:  '75 Priority Compute Cycles',
+        quotaUnit:   'PER DAY',
+        quotaIcon:   'speed',
+        quotaTooltip:'Unlocks prioritized queues on specialized models. An action includes complex tasks such as compiling massive database schemas or live code refactoring. Includes 10 Nexus Flow workflows per day to automate your repetitive tasks.',
+        engine:      'Unlocks Hyper-Flash 3.5 + Cortex Pro Processing Matrix',
+        ctaLabel:    'Upgrade to Pro Architect',
+        monthly:     17,
+        annualMo:    14,
+        annualTotal: 168,
+        features: [
+          { on: true, text: '⚡ Nexus Flow - Elite Workflow Orchestration',      meta: 'PREMIUM FEATURE' },
+          { on: true, text: 'Unlimited Nexus Flow Workflows',                   meta: 'AUTOMATE ALL YOUR REPETITIVE TASKS' },
+          { on: true, text: 'Expanded multi-file engineering engine',         meta: 'UP TO 50MB PER BATCH' },
+          { on: true, text: 'Surgical Code Diffs with single-click interactive healing' },
+          { on: true, text: 'Production-Ready Deployment Hooks',              meta: 'DIRECT NETLIFY, VERCEL, AWS INTEGRATION' },
+          { on: true, text: 'Persistent Knowledge Vault',                      meta: 'RETAINS UP TO 500 DEEP-CONTEXT ITEMS' },
+          { on: true, text: 'Unlimited Agentic Enhancements',                   meta: 'ALWAYS AVAILABLE' }
+        ]
+      },
+      business: {
+        badge:       'Elite Intelligence',
+        name:        'Business System',
+        tagline:     'Full-throttle concurrent multi-agent automation with Nexus Flow elite orchestration.',
+        quotaValue:  '200 Autonomous Pipelines',
+        quotaUnit:   'PER DAY',
+        quotaIcon:   'rocket',
+        quotaTooltip:'Each pipeline executes an orchestrated multi-step agentic task in the background. Independent of your interactive quota — pipelines keep running while you sleep. Includes UNLIMITED Nexus Flow access, our flagship workflow automation engine.',
+        engine:      'Dedicated Enterprise Routing across Omni 5.0 + DeepV3 + LPU Clusters',
+        ctaLabel:    'Upgrade to Business',
+        monthly:     39,
+        annualMo:    32,
+        annualTotal: 384,
+        features: [
+          { on: true, text: '⚡ Nexus Flow - Elite Workflow Orchestration',      meta: 'FLAGSHIP TOP-TIER FEATURE' },
+          { on: true, text: 'UNLIMITED Nexus Flow Workflows',                    meta: 'RUN HUNDREDS OF AUTOMATED PIPELINES' },
+          { on: true, text: 'Asynchronous Background Orchestrator',             meta: 'RUN CONTINUOUS AUTONOMOUS JOBS' },
+          { on: true, text: 'Visual Live-Mockup Auditor & Real-Time Code Debugger' },
+          { on: true, text: 'Latency-Aware Smart Failover',                     meta: 'ACROSS 80+ POOLED AI MODELS (GPT-4o, Claude 3.5, Gemini)' },
+          { on: true, text: 'Full Zero-Truncation codebase context retention',   meta: 'UNLIMITED STORAGE' },
+          { on: true, text: 'Unlimited Full-Execution Pipeline Enhancements',   meta: 'ALWAYS AVAILABLE' }
+        ]
+      }
+    },
+    data: {
+      pro: {
+        badge:       'Data Specialist',
+        name:        'Data Specialist',
+        tagline:     'Extended data parsing, automated cleaning matrices, and data engine priority.',
+        quotaValue:  '60 Priority Data Cycles',
+        quotaUnit:   'PER DAY',
+        quotaIcon:   'database',
+        quotaTooltip:'Each cycle covers an end-to-end data operation — ingestion, parsing, cleaning, normalisation and structured output. Priority queuing applies to all Data workspace actions.',
+        engine:      'Hyper-Flash Data Matrix + Cortex Pro Analytics Cluster',
+        ctaLabel:    'Upgrade to Data Specialist',
+        monthly:     15,
+        annualMo:    12,
+        annualTotal: 144,
+        features: [
+          { on: true, text: 'Extended parsing matrices',                meta: 'CSV · XLSX · PDF · JSON · PARQUET UP TO 200MB' },
+          { on: true, text: 'Automated data cleaning & normalisation pipelines' },
+          { on: true, text: 'Priority data engine queue',               meta: 'ZERO THROTTLING ON ANALYTICS' },
+          { on: true, text: 'Persistent analytics memory vault',        meta: '500 DEEP-CONTEXT ITEMS' },
+          { on: true, text: 'Unlimited Data Automations',               meta: 'ALWAYS AVAILABLE' }
+        ]
+      },
+      business: {
+        badge:       'Elite Data Engine',
+        name:        'Data Ops Heavy',
+        tagline:     'Massive background pipeline data synthesis with Nexus Flow elite orchestration.',
+        quotaValue:  '250 Autonomous Data Pipelines',
+        quotaUnit:   'PER DAY',
+        quotaIcon:   'hub',
+        quotaTooltip:'Each pipeline is a fully-orchestrated data synthesis task that runs continuously in the background. Independent of your interactive quota. Includes UNLIMITED Nexus Flow access, our flagship workflow automation engine.',
+        engine:      'Enterprise Omni 5.0 + DeepV3 Analytics Cluster',
+        ctaLabel:    'Upgrade to Data Ops Heavy',
+        monthly:     35,
+        annualMo:    29,
+        annualTotal: 348,
+        features: [
+          { on: true, text: '⚡ Nexus Flow - Elite Workflow Orchestration',      meta: 'FLAGSHIP TOP-TIER FEATURE' },
+          { on: true, text: 'UNLIMITED Nexus Flow Workflows',                    meta: 'AUTOMATE ALL YOUR DATA PIPELINES' },
+          { on: true, text: 'Massive background data synthesis orchestrator' },
+          { on: true, text: 'Multi-source ingestion',                          meta: 'ACROSS 60+ POOLED CONNECTORS (Snowflake, BigQuery, S3)' },
+          { on: true, text: 'Enterprise-grade failover for continuous pipelines' },
+          { on: true, text: 'Full-retention analytical warehouse',             meta: 'ZERO TRUNCATION, UNLIMITED STORAGE' },
+          { on: true, text: 'Unlimited Full-Execution Data Pipelines',          meta: 'ALWAYS AVAILABLE' }
+        ]
+      }
+    },
+    design: {
+      pro: {
+        badge:       'Design Specialist',
+        name:        'Design Specialist',
+        tagline:     'Full component library access and premium asset rendering at every scale + Nexus Flow workflow automation.',
+        quotaValue:  '70 Priority Design Cycles',
+        quotaUnit:   'PER DAY',
+        quotaIcon:   'palette',
+        quotaTooltip:'Each cycle covers a full UI generation pass — component composition, asset rendering, responsive preview, and export. Priority queuing applies to all Design workspace actions. Includes 10 Nexus Flow workflows per day to automate your UI/UX tasks.',
+        engine:      'Hyper-Flash UI Matrix + Cortex Pro Design Cluster',
+        ctaLabel:    'Upgrade to Design Specialist',
+        monthly:     17,
+        annualMo:    14,
+        annualTotal: 168,
+        features: [
+          { on: true, text: '⚡ Nexus Flow - Elite Workflow Orchestration',      meta: 'PREMIUM FEATURE' },
+          { on: true, text: 'Unlimited Nexus Flow Workflows',                   meta: 'AUTOMATE ALL YOUR UI/UX TASKS' },
+          { on: true, text: 'Full component library access',                    meta: 'SHADCN · TAILWIND · RADIX · MUI' },
+          { on: true, text: 'Premium asset rendering & live preview pipeline' },
+          { on: true, text: 'Multi-viewport responsive generation engine' },
+          { on: true, text: 'Design system memory vault',                       meta: '500+ TOKENS & PATTERNS' },
+          { on: true, text: 'Unlimited Design Automations',                     meta: 'ALWAYS AVAILABLE' }
+        ]
+      },
+      business: {
+        badge:       'Elite Design Engine',
+        name:        'Design Studio Elite',
+        tagline:     'Multi-page system generation with custom Tailwind theme audits + Nexus Flow elite workflow orchestration.',
+        quotaValue:  '220 Autonomous Design Pipelines',
+        quotaUnit:   'PER DAY',
+        quotaIcon:   'auto_awesome',
+        quotaTooltip:'Exclusive UNLIMITED access to Nexus Flow to automate UI/UX workflows. Each pipeline generates, audits, and iterates on complete multi-page UI systems, running continuously in the background.',
+        engine:      'Enterprise Omni 5.0 + Design Cluster Routing + Nexus Flow Orchestrator',
+        ctaLabel:    'Upgrade to Design Studio Elite',
+        monthly:     39,
+        annualMo:    32,
+        annualTotal: 384,
+        features: [
+          { on: true, text: '⚡ Nexus Flow - Elite Workflow Orchestration',      meta: 'FLAGSHIP TOP-TIER FEATURE' },
+          { on: true, text: 'UNLIMITED Nexus Flow Workflows',                    meta: 'AUTOMATE YOUR ENTIRE DESIGN PIPELINE' },
+          { on: true, text: 'Multi-page system generation',                   meta: 'FULL APP SHELLS' },
+          { on: true, text: 'Custom Tailwind theme audits & auto-remediation' },
+          { on: true, text: 'Asynchronous design review orchestrator' },
+          { on: true, text: 'Complete design system memory',                  meta: 'ZERO TRUNCATION, UNLIMITED STORAGE' },
+          { on: true, text: 'Unlimited Full-Execution Design Pipelines',      meta: 'ALWAYS AVAILABLE' }
+        ]
+      }
+    }
+  };
+
+  /* ═══════════════════════════════════════════════════════════
+     STATE
+     ═══════════════════════════════════════════════════════════ */
+  const state = {
+    workspace: 'unified',
+    cycle: 'monthly'
+  };
+
+  /* ═══════════════════════════════════════════════════════════
+     DOM SHORTHAND
+     ═══════════════════════════════════════════════════════════ */
+  const $  = (s, r) => (r || document).querySelector(s);
+  const $$ = (s, r) => Array.prototype.slice.call((r || document).querySelectorAll(s));
+
+  /* ═══════════════════════════════════════════════════════════
+     HELPERS
+     ═══════════════════════════════════════════════════════════ */
+  function moneyFmt(n) { return '$' + n; }
+
+  function makeFeature(f) {
+    const li = document.createElement('li');
+    li.className = 'feature ' + (f.on ? 'on' : 'off');
+
+    const ico = document.createElement('span');
+    ico.className = 'ico';
+    ico.innerHTML = '<span class="material-symbols-rounded" aria-hidden="true">' +
+                    (f.on ? 'check' : 'close') + '</span>';
+
+    const textWrap = document.createElement('span');
+    textWrap.className = 'feature-text';
+    textWrap.appendChild(document.createTextNode(f.text));
+    if (f.meta) {
+      const meta = document.createElement('span');
+      meta.className = 'feature-meta';
+      meta.textContent = f.meta;
+      textWrap.appendChild(meta);
+    }
+
+    li.appendChild(ico);
+    li.appendChild(textWrap);
+    return li;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     RENDER — PRO CARD
+     ═══════════════════════════════════════════════════════════ */
+  function renderPro(v) {
+    $('#p-badge').textContent   = v.badge;
+    $('#p-name').textContent    = v.name;
+    $('#p-tagline').textContent = v.tagline;
+
+    $('#p-quota-value').textContent = v.quotaValue;
+    $('#p-quota-unit').textContent  = v.quotaUnit;
+    $('#p-quota-icon').textContent  = v.quotaIcon;
+
+    $('#p-quota-pill').setAttribute('data-tooltip', v.quotaTooltip);
+    $('#p-engine').textContent = v.engine;
+
+    /* Features */
+    const ul = $('#p-features');
+    ul.textContent = '';
+    v.features.forEach(f => ul.appendChild(makeFeature(f)));
+
+    /* Price */
+    const isAnnual = state.cycle === 'annual';
+    const displayAmount = isAnnual ? v.annualMo : v.monthly;
+    $('#p-amount').textContent = moneyFmt(displayAmount);
+    $('#p-term').textContent   = '/mo';
+
+    if (isAnnual) {
+      const savePct = Math.round((1 - v.annualMo / v.monthly) * 100);
+      $('#p-meta').innerHTML =
+        '<span class="strike">$' + v.monthly + '/mo</span>' +
+        'Billed $' + v.annualTotal + ' / yr · Save ' + savePct + '%';
+    } else {
+      $('#p-meta').textContent = 'Billed monthly. Cancel anytime.';
+    }
+
+    /* CTA */
+    const subtier = state.workspace === 'unified' ? 'full'
+                  : state.workspace === 'data'    ? 'data'
+                  : 'design';
+    $('#p-cta').href = 'https://axelr.in/checkout.html?plan=pro&subtier=' +
+                       subtier + '&cycle=' + state.cycle;
+    $('#p-cta-label').textContent = v.ctaLabel;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     RENDER — BUSINESS CARD
+     ═══════════════════════════════════════════════════════════ */
+  function renderBusiness(v) {
+    $('#b-badge').textContent   = v.badge;
+    $('#b-name').textContent    = v.name;
+    $('#b-tagline').textContent = v.tagline;
+
+    $('#b-quota-value').textContent = v.quotaValue;
+    $('#b-quota-unit').textContent  = v.quotaUnit;
+    $('#b-quota-icon').textContent  = v.quotaIcon;
+
+    $('#b-quota-pill').setAttribute('data-tooltip', v.quotaTooltip);
+    $('#b-engine').textContent = v.engine;
+
+    const ul = $('#b-features');
+    ul.textContent = '';
+    v.features.forEach(f => ul.appendChild(makeFeature(f)));
+
+    const isAnnual = state.cycle === 'annual';
+    const displayAmount = isAnnual ? v.annualMo : v.monthly;
+    $('#b-amount').textContent = moneyFmt(displayAmount);
+    $('#b-term').textContent   = '/mo';
+
+    if (isAnnual) {
+      const savePct = Math.round((1 - v.annualMo / v.monthly) * 100);
+      $('#b-meta').innerHTML =
+        '<span class="strike">$' + v.monthly + '/mo</span>' +
+        'Billed $' + v.annualTotal + ' / yr · Save ' + savePct + '%';
+    } else {
+      $('#b-meta').textContent = 'Billed monthly. Cancel anytime.';
+    }
+
+    const subtier = state.workspace === 'unified' ? 'full'
+                  : state.workspace === 'data'    ? 'data'
+                  : 'design';
+    $('#b-cta').href = 'https://axelr.in/checkout.html?plan=business&subtier=' +
+                       subtier + '&cycle=' + state.cycle;
+    $('#b-cta-label').textContent = v.ctaLabel;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     RENDER — ALL
+     ═══════════════════════════════════════════════════════════ */
+  function render() {
+    const v = VARIANTS[state.workspace];
+    renderPro(v.pro);
+    renderBusiness(v.business);
+    syncTooltips();
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     SEGMENTED CONTROL
+     ═══════════════════════════════════════════════════════════ */
+  function wireSegmented() {
+    const tabs = $$('.seg-btn', $('#workspace-tabs'));
+    const indicator = $('#seg-indicator');
+
+    function setActive(idx) {
+      indicator.style.setProperty('--idx', idx);
+      tabs.forEach((btn, i) => {
+        const active = i === idx;
+        btn.setAttribute('aria-pressed', String(active));
+        btn.setAttribute('aria-selected', String(active));
+      });
+    }
+
+    tabs.forEach((btn, idx) => {
+      btn.addEventListener('click', () => {
+        const ws = btn.dataset.ws;
+        if (!VARIANTS[ws] || ws === state.workspace) return;
+        state.workspace = ws;
+        setActive(idx);
+        render();
+      });
+    });
+
+    const initialIdx = tabs.findIndex(b => b.dataset.ws === state.workspace);
+    setActive(initialIdx < 0 ? 0 : initialIdx);
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     CYCLE TOGGLE
+     ═══════════════════════════════════════════════════════════ */
+  function wireCycle() {
+    const btns = $$('.cycle-btn');
+    btns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const next = btn.dataset.cycle;
+        if (!next || next === state.cycle) return;
+        state.cycle = next;
+        btns.forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
+        render();
+      });
+    });
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     TOOLTIP SYSTEM
+     ═══════════════════════════════════════════════════════════ */
+  const tooltipEl = $('#tooltip');
+  let currentAnchor = null;
+
+  function showTooltip(anchor) {
+    const text = anchor.getAttribute('data-tooltip');
+    if (!text) return;
+    currentAnchor = anchor;
+    tooltipEl.textContent = text;
+    tooltipEl.setAttribute('aria-hidden', 'false');
+
+    tooltipEl.style.left = '0px';
+    tooltipEl.style.top = '0px';
+    tooltipEl.classList.add('visible');
+
+    const rect = anchor.getBoundingClientRect();
+    const tipRect = tooltipEl.getBoundingClientRect();
+
+    let left = rect.left + rect.width / 2 - tipRect.width / 2;
+    let top  = rect.top - tipRect.height - 12;
+
+    const pad = 12;
+    left = Math.max(pad, Math.min(left, window.innerWidth - tipRect.width - pad));
+    if (top < pad) top = rect.bottom + 12;
+
+    tooltipEl.style.left = left + 'px';
+    tooltipEl.style.top  = top  + 'px';
+  }
+
+  function hideTooltip() {
+    currentAnchor = null;
+    tooltipEl.classList.remove('visible');
+    tooltipEl.setAttribute('aria-hidden', 'true');
+  }
+
+  function syncTooltips() {
+    $$('[data-tooltip]').forEach(el => {
+      if (el.dataset.tooltipBound === '1') return;
+      el.dataset.tooltipBound = '1';
+      el.addEventListener('mouseenter', () => showTooltip(el));
+      el.addEventListener('mouseleave', hideTooltip);
+      el.addEventListener('focus', () => showTooltip(el));
+      el.addEventListener('blur', hideTooltip);
+    });
+  }
+
+  window.addEventListener('scroll', hideTooltip, { passive: true });
+  window.addEventListener('resize', hideTooltip);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && currentAnchor) hideTooltip();
+  });
+
+  /* ═══════════════════════════════════════════════════════════
+     INIT
+     ═══════════════════════════════════════════════════════════ */
+  function init() {
+    wireCycle();
+    wireSegmented();
+    render();
+    syncTooltips();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>

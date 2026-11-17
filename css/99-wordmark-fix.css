@@ -1,0 +1,253 @@
+/* ════════════════════════════════════════════════════════════════════
+   AXELR — 99-wordmark-fix.css (FINAL WORDMARK VISIBILITY GUARANTEE)
+   Ensures wordmark SVG is always visible across all breakpoints and themes.
+   Load LAST after all other CSS files.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ─── GLOBAL WORDMARK VISIBILITY ──────────────────────────────────── */
+.axelr-lockup__word {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: auto !important;
+    height: var(--axelr-word-size, 28px) !important;
+    fill: #ffffff !important;
+    color: #ffffff !important;
+    background: none !important;
+    -webkit-background-clip: unset !important;
+    background-clip: unset !important;
+    -webkit-text-fill-color: unset !important;
+    text-shadow: none !important;
+    filter: drop-shadow(0 6px 30px rgba(0, 0, 0, 0.4)) !important;
+    transform: translateZ(0) !important;
+    transition: none !important;
+    flex-shrink: 0 !important;
+    min-width: auto !important;
+}
+
+body.light-theme .axelr-lockup__word {
+    fill: #0b1220 !important;
+    color: #0b1220 !important;
+    filter: drop-shadow(0 6px 30px rgba(0, 0, 0, 0.15)) !important;
+}
+
+/* ─── SIDEBAR WORDMARK ─────────────────────────────────────────────── */
+.sidebar-header .brand-logo .axelr-lockup__word,
+.sidebar-header .axelr-lockup .axelr-lockup__word {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: auto !important;
+    height: 28px !important;
+    fill: #ffffff !important;
+    color: #ffffff !important;
+    background: none !important;
+    -webkit-background-clip: unset !important;
+    background-clip: unset !important;
+    -webkit-text-fill-color: unset !important;
+    filter: drop-shadow(0 6px 30px rgba(0, 0, 0, 0.4)) !important;
+    transform: translateZ(0) !important;
+    transition: none !important;
+    min-width: 120px !important;
+    flex-shrink: 0 !important;
+}
+
+body.light-theme .sidebar-header .brand-logo .axelr-lockup__word,
+body.light-theme .sidebar-header .axelr-lockup .axelr-lockup__word {
+    fill: #0b1220 !important;
+    color: #0b1220 !important;
+    filter: drop-shadow(0 6px 30px rgba(0, 0, 0, 0.15)) !important;
+}
+
+/* ─── HEADER/TOPBAR WORDMARK ──────────────────────────────────────── */
+.topbar .axelr-lockup__word,
+.brand.axelr-lockup .axelr-lockup__word,
+.docs-topbar .axelr-lockup__word,
+.legal-topbar .axelr-lockup__word {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: auto !important;
+    height: 26px !important;
+    fill: #ffffff !important;
+    color: #ffffff !important;
+    background: none !important;
+    -webkit-background-clip: unset !important;
+    background-clip: unset !important;
+    -webkit-text-fill-color: unset !important;
+    filter: drop-shadow(0 6px 30px rgba(0, 0, 0, 0.4)) !important;
+    transform: translateZ(0) !important;
+    transition: none !important;
+    min-width: 110px !important;
+    flex-shrink: 0 !important;
+}
+
+body.light-theme .topbar .axelr-lockup__word,
+body.light-theme .brand.axelr-lockup .axelr-lockup__word,
+body.light-theme .docs-topbar .axelr-lockup__word,
+body.light-theme .legal-topbar .axelr-lockup__word {
+    fill: #0b1220 !important;
+    color: #0b1220 !important;
+    filter: drop-shadow(0 6px 30px rgba(0, 0, 0, 0.15)) !important;
+}
+
+/* ─── AUTH WALL WORDMARK ───────────────────────────────────────────── */
+#auth-wall .auth-logo .axelr-lockup__word {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: auto !important;
+    height: 36px !important;
+    fill: #ffffff !important;
+    color: #ffffff !important;
+    background: none !important;
+    -webkit-background-clip: unset !important;
+    background-clip: unset !important;
+    -webkit-text-fill-color: unset !important;
+    filter: drop-shadow(0 6px 30px rgba(0, 0, 0, 0.4)) !important;
+    transform: translateZ(0) !important;
+    transition: none !important;
+    flex-shrink: 0 !important;
+}
+
+body.light-theme #auth-wall .auth-logo .axelr-lockup__word {
+    fill: #0b1220 !important;
+    color: #0b1220 !important;
+    filter: drop-shadow(0 6px 30px rgba(0, 0, 0, 0.15)) !important;
+}
+
+/* ─── LOCKUP CONTAINER ─────────────────────────────────────────────── */
+.axelr-lockup {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    text-decoration: none !important;
+    color: inherit !important;
+    line-height: 1 !important;
+    flex-shrink: 0 !important;
+}
+
+/* ─── BRAND CHIP DISTANCE ──────────────────────────────────────────── */
+.brand-chip,
+.docs-brand-chip,
+.legal-brand-chip {
+    margin-left: 6px !important;
+}
+
+/* ─── MARK SVG (ICON) ──────────────────────────────────────────────── */
+.axelr-lockup__mark {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: auto !important;
+    height: var(--axelr-mark-size, 28px) !important;
+    flex-shrink: 0 !important;
+    color: #00f2fe !important;
+    filter: drop-shadow(0 0 32px rgba(0, 242, 254, 0.6)) 
+            drop-shadow(0 0 64px rgba(0, 242, 254, 0.3)) !important;
+    transition: filter 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    transform: translateZ(0) !important;
+    animation: logoBreathe 5s ease-in-out infinite !important;
+}
+
+body.light-theme .axelr-lockup__mark {
+    color: #0891b2 !important;
+    filter: drop-shadow(0 4px 20px color-mix(in srgb, var(--accent-glow) 30%, transparent))
+            drop-shadow(0 0 32px color-mix(in srgb, var(--accent-glow) 15%, transparent)) !important;
+}
+
+/* ─── OVERRIDE RESPONSIVE HIDING ───────────────────────────────────── */
+@media (max-width: 768px) {
+    .axelr-lockup__word,
+    .sidebar-header .axelr-lockup__word,
+    .topbar .axelr-lockup__word,
+    .brand.axelr-lockup .axelr-lockup__word,
+    .docs-topbar .axelr-lockup__word,
+    .legal-topbar .axelr-lockup__word {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        width: auto !important;
+        height: calc(var(--axelr-word-size, 28px) * 0.85) !important;
+        min-width: auto !important;
+    }
+    
+    .axelr-lockup {
+        gap: 3.2px !important;
+    }
+    
+    .brand-chip,
+    .docs-brand-chip,
+    .legal-brand-chip {
+        margin-left: 5px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .axelr-lockup__word,
+    .sidebar-header .axelr-lockup__word,
+    .topbar .axelr-lockup__word,
+    .brand.axelr-lockup .axelr-lockup__word,
+    .docs-topbar .axelr-lockup__word,
+    .legal-topbar .axelr-lockup__word {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        width: auto !important;
+        height: calc(var(--axelr-word-size, 28px) * 0.75) !important;
+        min-width: auto !important;
+    }
+    
+    .axelr-lockup {
+        gap: 2.8px !important;
+    }
+    
+    .brand-chip,
+    .docs-brand-chip,
+    .legal-brand-chip {
+        margin-left: 4px !important;
+    }
+}
+
+@media (max-width: 360px) {
+    .axelr-lockup__word,
+    .sidebar-header .axelr-lockup__word,
+    .topbar .axelr-lockup__word,
+    .brand.axelr-lockup .axelr-lockup__word,
+    .docs-topbar .axelr-lockup__word,
+    .legal-topbar .axelr-lockup__word {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        width: auto !important;
+        height: calc(var(--axelr-word-size, 28px) * 0.65) !important;
+        min-width: auto !important;
+    }
+    
+    .axelr-lockup {
+        gap: 2.4px !important;
+    }
+    
+    .brand-chip,
+    .docs-brand-chip,
+    .legal-brand-chip {
+        margin-left: 3px !important;
+    }
+}
+
+@media (max-width: 260px) {
+    .axelr-lockup__word,
+    #auth-wall .auth-logo .axelr-lockup__word {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        width: auto !important;
+        height: calc(var(--axelr-word-size, 28px) * 0.55) !important;
+        min-width: auto !important;
+    }
+    
+    .axelr-lockup {
+        gap: 2px !important;
+    }
+}

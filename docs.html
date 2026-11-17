@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Documentation — AXELR AI</title>
+<meta name="description" content="How AXELR AI actually works — the request pipeline, the three workspaces, the anti-hallucination engine, semantic cache, Touch-Fix, Deep-Think, Search, and the full tier matrix." />
+<meta name="theme-color" content="#050508" />
+<link rel="canonical" href="https://axelr.in/docs.html" />
+<meta property="og:title" content="AXELR AI Documentation" />
+<meta property="og:description" content="The pipeline, the workspaces, and the provider cascade — documented without marketing haze." />
+<meta property="og:url" content="https://axelr.in/docs.html" />
+<meta property="og:type" content="website" />
+<link rel="icon" type="image/png" href="/Axelr-Frontend/favicon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,600,1,0" rel="stylesheet" />
+<link rel="stylesheet" href="css/docs.css" />
+<link rel="stylesheet" href="css/95-final-polish.css" />
+<link rel="stylesheet" href="css/98-elite-final.css" />
+<link rel="stylesheet" href="css/99-wordmark-fix.css" />
+</head>
+
+<body>
+<a class="skip" href="#main">Skip to documentation content</a>
+<div class="docs-progress" id="progress" role="presentation"></div>
+
+<header class="docs-topbar">
+  <div class="docs-topbar-left brand-container">
+    <button class="icon-btn docs-menu-toggle" id="menu-toggle"
+            aria-label="Open navigation menu" aria-expanded="false" aria-controls="sidebar">
+      <span class="material-symbols-rounded">menu</span>
+    </button>
+    <a class="docs-brand axelr-lockup" href="/Axelr-Frontend/index.html" aria-label="AXELR — home">
+      <!-- ✦ viewBox tightened to real path bounds: x 20→80, y 15→85 (+2px pad) -->
+      <svg class="axelr-lockup__mark" viewBox="18 13 64 74" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+        <path d="M50 15 L20 32.5 L20 67.5 L50 85" stroke="currentColor" stroke-width="6" stroke-linejoin="bevel" fill="none"/>
+        <path d="M50 15 L80 32.5 L50 50 L80 67.5 L50 85" stroke="currentColor" stroke-width="6" stroke-linejoin="bevel" fill="none"/>
+        <path d="M20 32.5 L50 50 L20 67.5" stroke="currentColor" stroke-width="3" stroke-linejoin="bevel" opacity="0.5"/>
+      </svg>
+      <!-- ✦ viewBox tightened: x 87.3→679.7, y 12.2→213.3 (+2px pad). Removes the phantom gap. -->
+      <svg class="axelr-lockup__word" xmlns="http://www.w3.org/2000/svg" viewBox="85 10 597 206" role="img" aria-label="AXELR">
+        <g fill="currentColor" fill-rule="evenodd">
+          <path d="M369.1,126.7 L370.4,141.1 L510.3,139.3 L507.4,109.7 L495.8,86.3 L477.3,70.1 L449.7,61.1 L415.7,64.1 L393.7,76.1 L375.8,100.0 Z M514.7,12.7 L518.7,27.0 L518.9,211.6 L559.6,212.5 L560.5,13.7 Z M166.6,34.9 L96.6,200.7 L87.3,212.5 L134.3,212.6 L188.7,89.0 Z M166.6,12.2 L223.6,138.9 L273.0,139.6 L214.3,12.8 Z M568.2,62.7 L573.3,79.7 L573.3,199.0 L567.9,212.3 L611.6,212.5 L612.5,63.4 Z M370.0,153.0 L376.8,175.3 L393.3,197.2 L415.3,209.4 L439.3,213.3 L464.7,209.5 L485.0,198.3 L500.8,178.7 L508.4,156.4 L471.0,155.1 L459.7,174.3 L439.3,179.7 L421.1,172.2 L410.6,151.6 Z M296.1,139.4 L339.8,212.1 L392.5,212.3 L381.3,200.3 L344.2,139.6 Z M159.7,188.4 L246.3,188.7 L272.2,150.3 L175.7,149.9 Z M247.5,61.9 L259.6,75.7 L290.8,127.1 L339.9,127.3 L299.9,62.2 Z M679.7,62.4 L635.3,70.2 L622.4,75.7 L620.9,79.6 L624.3,81.0 L624.3,124.5 L635.0,110.9 L679.7,100.8 Z M287.5,148.3 L253.4,200.7 L242.1,212.3 L290.7,212.3 L294.8,210.0 L310.3,185.3 Z M393.4,61.9 L343.7,61.7 L340.7,63.3 L327.7,85.7 L350.0,122.0 L380.9,75.3 Z M410.6,123.7 L412.9,112.3 L417.8,102.7 L427.0,95.2 L436.7,92.7 L451.3,94.2 L459.7,99.4 L465.9,108.3 L469.0,123.0 L468.4,125.4 L413.0,126.0 Z"/>
+        </g>
+      </svg>
+    </a>
+    <!-- ✦ brand chip REMOVED — page title + URL already establish context -->
+  </div>
+
+
+  <nav class="docs-nav-links" aria-label="Section shortcuts">
+    <a href="#how-it-works" data-nav="how-it-works">
+      <span class="material-symbols-rounded" aria-hidden="true">account_tree</span><span>Pipeline</span>
+    </a>
+    <a href="#workspaces" data-nav="workspaces">
+      <span class="material-symbols-rounded" aria-hidden="true">grid_view</span><span>Workspaces</span>
+    </a>
+    <a href="#pricing" data-nav="pricing">
+      <span class="material-symbols-rounded" aria-hidden="true">payments</span><span>Pricing</span>
+    </a>
+  </nav>
+
+  <div class="docs-topbar-actions">
+    <button class="icon-btn" id="theme-toggle" aria-label="Switch to light theme" aria-pressed="false">
+      <span class="material-symbols-rounded" aria-hidden="true">light_mode</span>
+    </button>
+    <a class="docs-topbar-cta" href="/Axelr-Frontend/index.html">
+      <span class="material-symbols-rounded" aria-hidden="true">arrow_back</span>
+      <span>Back to Platform</span>
+    </a>
+  </div>
+</header>
+
+<div class="backdrop" id="backdrop" hidden></div>
+
+<div class="docs-shell">
+  <!-- ── SIDEBAR ──────────────────────────────────────────────── -->
+  <nav class="docs-sidebar" id="sidebar" aria-label="Documentation sections">
+    <div class="docs-nav-group">
+      <div class="docs-nav-group-header" id="grp-overview">Overview</div>
+      <button class="docs-nav-item" data-section="how-it-works" aria-current="true">
+        <span class="material-symbols-rounded" aria-hidden="true">account_tree</span>How Axelr works
+      </button>
+      <button class="docs-nav-item" data-section="workspaces">
+        <span class="material-symbols-rounded" aria-hidden="true">grid_view</span>The three workspaces
+      </button>
+    </div>
+
+    <div class="docs-nav-group">
+      <div class="docs-nav-group-header">Details</div>
+      <button class="docs-nav-item" data-section="differentiators">
+        <span class="material-symbols-rounded" aria-hidden="true">bolt</span>What's different
+      </button>
+      <button class="docs-nav-item" data-section="nexus-flow">
+        <span class="material-symbols-rounded" aria-hidden="true">auto_awesome</span>Nexus Flow
+      </button>
+      <button class="docs-nav-item" data-section="pricing">
+        <span class="material-symbols-rounded" aria-hidden="true">payments</span>Pricing &amp; tiers
+      </button>
+      <button class="docs-nav-item" data-section="vs-chatgpt">
+        <span class="material-symbols-rounded" aria-hidden="true">compare_arrows</span>Axelr vs ChatGPT
+      </button>
+    </div>
+
+    <div class="docs-nav-group">
+      <div class="docs-nav-group-header">More</div>
+      <button class="docs-nav-item" data-section="faq">
+        <span class="material-symbols-rounded" aria-hidden="true">help</span>FAQ
+      </button>
+      <button class="docs-nav-item" data-section="legal">
+        <span class="material-symbols-rounded" aria-hidden="true">gavel</span>Terms &amp; Privacy
+      </button>
+      <a class="docs-nav-item" href="/Axelr-Frontend/pricing.html">
+        <span class="material-symbols-rounded" aria-hidden="true">rocket_launch</span>Upgrade plan
+      </a>
+    </div>
+  </nav>
+
+  <!-- ── MAIN ─────────────────────────────────────────────────── -->
+  <main class="docs-main" id="main" tabindex="-1">
+
+    <div class="docs-hero">
+      <div class="docs-hero-pill">
+        <span class="material-symbols-rounded" aria-hidden="true">auto_awesome</span>
+        Documentation · v24.3
+      </div>
+      <h1>How <span class="gradient">AXELR AI</span> actually works</h1>
+      <p>
+        No marketing haze, no fabricated endpoints. This page describes the pipeline that runs on
+        every request, the three workspaces, the five differentiators that aren't rebranded
+        ChatGPT, and the honest limits of each tier.
+      </p>
+      <div class="docs-hero-meta">
+        <span class="docs-hero-meta-item"><span class="material-symbols-rounded" aria-hidden="true">route</span>9+ provider cascade</span>
+        <span class="docs-hero-meta-item"><span class="material-symbols-rounded" aria-hidden="true">memory</span>Context-aware semantic cache</span>
+        <span class="docs-hero-meta-item"><span class="material-symbols-rounded" aria-hidden="true">offline_bolt</span>Local Twin fallback</span>
+      </div>
+    </div>
+
+    <!-- ══ 01 ══════════════════════════════════════════════════ -->
+    <section class="docs-section reveal" id="how-it-works">
+      <div class="docs-section-eyebrow">01 — Under the hood</div>
+      <h2>How Axelr works <a class="anchor" href="#how-it-works" aria-label="Link to this section">#</a></h2>
+      <p>
+        Every request flows through the same six-stage pipeline. The order is load-bearing —
+        semantic caching runs <em>before</em> memory recall, and memory recall runs before any
+        provider is contacted. That is why a repeat prompt returns in roughly 14&nbsp;ms without
+        ever touching a language model.
+      </p>
+
+      <figure class="code">
+        <figcaption class="code-bar">
+          <span class="code-bar-left">
+            <span class="code-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="code-lang">text · request lifecycle</span>
+          </span>
+          <button class="code-copy" type="button" data-copy>
+            <span class="material-symbols-rounded" aria-hidden="true">content_copy</span>
+            <span class="code-copy-label">Copy</span>
+          </button>
+        </figcaption>
+<pre tabindex="0"><code><span class="tk-com"># every inbound request — order is load-bearing</span>
+request
+  │
+  ├─▶ <span class="tk-num">1</span>  ingress         <span class="tk-fn">sanitize_input</span>() · <span class="tk-fn">detect_manipulation</span>() · <span class="tk-fn">contains_explicit</span>()
+  │                   └─ rejected ─▶ { <span class="tk-prop">"success"</span>: <span class="tk-kw">false</span>, <span class="tk-prop">"provider"</span>: <span class="tk-str">"security"</span> }
+  │
+  ├─▶ <span class="tk-num">2</span>  semantic cache  key = workspace : task_type : prompt : last2 : context_hash
+  │                   └─ HIT ─▶ ~<span class="tk-num">14</span> ms   <span class="tk-prop">provider</span>=<span class="tk-str">"semantic_cache"</span>
+  │
+  ├─▶ <span class="tk-num">3</span>  context         memory recall · workspace addenda · schema discovery
+  │                   (CSV / XLSX headers injected as structured context)
+  │
+  ├─▶ <span class="tk-num">4</span>  provider cascade rank = circuit_breaker_state + tier_allow_list
+  │                   ├─ primary    TTFT budget <span class="tk-num">400</span> ms
+  │                   └─ fallbacks  <span class="tk-num">0.5</span> s → <span class="tk-num">1.0</span> s → <span class="tk-num">2.0</span> s (jittered)
+  │                        └─ success ─▶ <span class="tk-fn">sanitize_ai_output</span>() ─▶ cache write ─▶ return
+  │
+  ├─▶ <span class="tk-num">5</span>  local Twin      offline inference · hot-swap weights
+  │                   └─ success ─▶ return   <span class="tk-prop">provider</span>=<span class="tk-str">"local_hot_swap"</span>
+  │
+  └─▶ <span class="tk-num">6</span>  stub            marked <span class="tk-str">"[stub]"</span> — never a fabricated answer
+                      └─ return   <span class="tk-prop">provider</span>=<span class="tk-str">"local_stub"</span></code></pre>
+      </figure>
+
+      <div class="callout">
+        <span class="material-symbols-rounded" aria-hidden="true">info</span>
+        <div>
+          <strong>Providers currently wired:</strong> Groq, Google Gemini, Cloudflare Workers AI,
+          OpenRouter, Mistral, HuggingFace, GitHub Models, NRouter, TextCortex. Rank is recomputed
+          at runtime from per-provider latency percentiles held in Redis.
+        </div>
+      </div>
+
+      <h3>Circuit breakers, not retry storms</h3>
+      <ul>
+        <li>Every provider <em>and</em> every <code>(provider, model)</code> pair owns an independent breaker.</li>
+        <li>Rate-limit failures (HTTP&nbsp;429 / 402) open the breaker for 30 minutes.</li>
+        <li>Ordinary failures open it for 60 seconds after three consecutive errors.</li>
+        <li>The winner is always the least-recently-<em>failed</em> provider, not the least-recently-used.</li>
+      </ul>
+    </section>
+
+    <!-- ══ 02 ══════════════════════════════════════════════════ -->
+    <section class="docs-section reveal" id="workspaces">
+      <div class="docs-section-eyebrow">02 — Workspaces</div>
+      <h2>The three workspaces <a class="anchor" href="#workspaces" aria-label="Link to this section">#</a></h2>
+      <p>
+        A workspace is not a skin. It rewrites the system prompt, the default task type, the file
+        types accepted, the provider allow-list for your tier, and the daily quota counter it
+        debits. Auto-detection exists — upload a CSV in Core and Axelr offers to switch you to
+        Data. You can pin the workspace in Settings if you'd rather it never did that.
+      </p>
+
+      <figure class="code">
+        <figcaption class="code-bar">
+          <span class="code-bar-left">
+            <span class="code-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="code-lang">text · workspace contract</span>
+          </span>
+          <button class="code-copy" type="button" data-copy>
+            <span class="material-symbols-rounded" aria-hidden="true">content_copy</span>
+            <span class="code-copy-label">Copy</span>
+          </button>
+        </figcaption>
+<pre tabindex="0"><code><span class="tk-com">workspace   task_type        accepts                          default route</span>
+─────────   ──────────────   ──────────────────────────────   ─────────────────
+<span class="tk-prop">data</span>        <span class="tk-str">"extraction"</span>     .csv .xls .xlsx .pdf              <span class="tk-fn">/api/extract</span>
+                             .png .jpg .txt .doc .docx
+
+<span class="tk-prop">design</span>      <span class="tk-str">"frontend"</span>       .html .css .js .ts .jsx          <span class="tk-fn">/api/extract</span>
+                             .py .go .rs .md .svg
+                             .png .jpg  <span class="tk-com">(mockups)</span>
+
+<span class="tk-prop">core</span>        <span class="tk-str">"structuring"</span>    anything small-text              <span class="tk-fn">/api/extract</span>
+                             .txt .md</code></pre>
+      </figure>
+
+      <h3>What actually changes per workspace</h3>
+      <ul>
+        <li><strong>System prompt</strong> — Data gets an analyst prompt, Design gets a senior frontend engineer prompt, Core gets a generalist prompt.</li>
+        <li><strong>Sampling</strong> — temperature and <code>max_tokens</code> come from <code>WORKSPACE_LLM_CONFIG</code>. Data runs cooler, Design runs warmer.</li>
+        <li><strong>Critic pass</strong> — code-bearing responses pass through <code>code_guard</code>; on a syntax or score failure <code>self_healer</code> re-rolls exactly once.</li>
+        <li><strong>Structured output</strong> — Data can emit <code>[JSON-DATA]…[/JSON-DATA]</code> blocks that the UI renders as a table or chart and offers as CSV.</li>
+      </ul>
+    </section>
+
+    <!-- ══ 03 ══════════════════════════════════════════════════ -->
+    <section class="docs-section reveal" id="differentiators">
+      <div class="docs-section-eyebrow">03 — Differentiators</div>
+      <h2>What's different <a class="anchor" href="#differentiators" aria-label="Link to this section">#</a></h2>
+
+      <h3>1 · AHE — Anti-Hallucination Engine</h3>
+      <p>
+        When structured extraction is requested, AHE builds a deterministic verifier DAG over the
+        retrieved fields. If a field cannot be proven from the source document it is returned as
+        <code>null</code> with a machine-readable reason — never invented. AHE failures serialise as
+        structured objects, not as HTTP 500s.
+      </p>
+
+      <figure class="code">
+        <figcaption class="code-bar">
+          <span class="code-bar-left">
+            <span class="code-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="code-lang">json · AHE failure envelope</span>
+          </span>
+          <button class="code-copy" type="button" data-copy>
+            <span class="material-symbols-rounded" aria-hidden="true">content_copy</span>
+            <span class="code-copy-label">Copy</span>
+          </button>
+        </figcaption>
+<pre tabindex="0"><code>{
+  <span class="tk-prop">"field"</span>: <span class="tk-str">"invoice_total"</span>,
+  <span class="tk-prop">"value"</span>: <span class="tk-kw">null</span>,
+  <span class="tk-prop">"proven"</span>: <span class="tk-kw">false</span>,
+  <span class="tk-prop">"code"</span>: <span class="tk-str">"NO_SOURCE_SPAN"</span>,
+  <span class="tk-prop">"doc_id"</span>: <span class="tk-str">"doc_8f21c"</span>,
+  <span class="tk-prop">"reason"</span>: <span class="tk-str">"no numeric token within ±3 lines of the label"</span>,
+  <span class="tk-prop">"candidates"</span>: [<span class="tk-num">1200</span>, <span class="tk-num">1200.00</span>]   <span class="tk-com">// ambiguous → refused</span>
+}</code></pre>
+      </figure>
+
+      <h3>2 · Context-aware semantic cache</h3>
+      <p>
+        Most caches key on the raw prompt string. Ours keys on the <em>meaning</em> of the prompt in
+        context. The same question asked after a different conversation will not hit the cache,
+        because the last two turns changed — which is exactly why we can cache aggressively without
+        ever returning a stale answer.
+      </p>
+
+      <figure class="code">
+        <figcaption class="code-bar">
+          <span class="code-bar-left">
+            <span class="code-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="code-lang">python · cache key construction</span>
+          </span>
+          <button class="code-copy" type="button" data-copy>
+            <span class="material-symbols-rounded" aria-hidden="true">content_copy</span>
+            <span class="code-copy-label">Copy</span>
+          </button>
+        </figcaption>
+<pre tabindex="0"><code><span class="tk-kw">def</span> <span class="tk-fn">cache_key</span>(workspace, task_type, prompt, turns, ctx):
+    <span class="tk-com"># turns = the last 2 user/assistant pairs, verbatim</span>
+    window = <span class="tk-str">"␟"</span>.join(t[<span class="tk-str">"content"</span>] <span class="tk-kw">for</span> t <span class="tk-kw">in</span> turns[-<span class="tk-num">4</span>:])
+    ctx_hash = <span class="tk-fn">sha256</span>(ctx.get(<span class="tk-str">"schema"</span>, <span class="tk-str">""</span>))[:<span class="tk-num">12</span>]
+    raw = <span class="tk-str">f"{workspace}:{task_type}:{prompt}:{window}:{ctx_hash}"</span>
+    <span class="tk-kw">return</span> <span class="tk-str">"sc:"</span> + <span class="tk-fn">sha256</span>(raw.encode())[:<span class="tk-num">32</span>]</code></pre>
+      </figure>
+
+      <h3>3 · Touch-Fix</h3>
+      <p>
+        Paste an error message next to a generated code block and <code>TouchFixEngine</code> returns
+        a patched version. It replays the prompt that produced the code, injects the error as
+        context, and routes the result back through the critic pass. If the fix still doesn't
+        compile it is reported as a failure — never silently shipped.
+      </p>
+
+      <h3>4 · Deep-Think</h3>
+      <p>
+        Deep-Think expands a request into an explicit reasoning plan before any provider is
+        contacted. The plan is streamed into the thinking panel so you can watch the shape of the
+        answer form, then collapsed into a single response. It costs more tokens and is therefore
+        counted as one action — the same as a normal turn — but it does not bypass tier quotas.
+      </p>
+
+      <h3>5 · Search</h3>
+      <p>
+        Search runs an explicit retrieval pass before generation when the prompt references
+        something time-sensitive or externally verifiable. Retrieved spans are attached to the
+        context block with their source URLs, and AHE treats them as first-class evidence — a
+        claim without a retrieved span is refused the same way an unsupported field is.
+      </p>
+
+    <!-- ══ 03a ══════════════════════════════════════════════════ -->
+    <section class="docs-section reveal" id="nexus-flow">
+      <div class="docs-section-eyebrow">03a — Elite Feature</div>
+      <h2>Nexus Flow — Elite Workflow Orchestration <a class="anchor" href="#nexus-flow" aria-label="Link to this section">#</a></h2>
+      <h3>6 · Nexus Flow — Elite Workflow Orchestration</h3>
+      <p>
+        Our flagship top-tier feature, Nexus Flow is an AI-native workflow orchestrator that transforms natural language descriptions into production-ready, multi-step automated pipelines. Unlike generic automation tools, Nexus Flow understands context from your entire workspace, chains together core Axelr capabilities (extraction, reasoning, generation), and runs autonomously with built-in failure detection and self-healing. It represents the pinnacle of intelligent automation, turning complex, multi-stage tasks into simple natural language prompts that execute with enterprise-grade reliability.
+      </p>
+
+      <figure class="code">
+        <figcaption class="code-bar">
+          <span class="code-bar-left">
+            <span class="code-dots" aria-hidden="true"><i></i><i></i><i></span>
+            <span class="code-lang">text · Nexus Flow pipeline example</span>
+          </span>
+          <button class="code-copy" type="button" data-copy>
+            <span class="material-symbols-rounded" aria-hidden="true">content_copy</span>
+            <span class="code-copy-label">Copy</span>
+          </button>
+        </figcaption>
+<pre tabindex="0"><code><span class="tk-com"># Customer feedback processing workflow generated from natural language</span>
+nexus_flow
+  │
+  ├─▶ <span class="tk-num">1</span>  Ingestion       batch import CSV feedback from S3
+  ├─▶ <span class="tk-num">2</span>  Sentiment       run LLM sentiment analysis on every response
+  ├─▶ <span class="tk-num">3</span>  Aggregation     group by product category, calculate NPS
+  ├─▶ <span class="tk-num">4</span>  Alerting        flag negative feedback (< 3/5) to Slack
+  └─▶ <span class="tk-num">5</span>  Reporting       generate PDF executive summary and email
+                      └─▶ cache results, schedule next run</code></pre>
+      </figure>
+
+      <div class="callout success">
+        <span class="material-symbols-rounded" aria-hidden="true">auto_awesome</span>
+        <div>
+          <strong>Exclusive to Professional & Business tiers:</strong> Nexus Flow is our elite offering, available to paid plan subscribers with enhanced capabilities at higher tiers. It runs as a client-side orchestrator to keep server memory usage low (<450MB total server footprint), and can execute workflows that run for hours without blocking your main session. Free users get access to 1 simple Nexus Flow workflow per day to experience the power of intelligent automation.
+        </div>
+      </div>
+
+      <div class="callout warn">
+        <span class="material-symbols-rounded" aria-hidden="true">warning</span>
+        <div>
+          <strong>Not on this list:</strong> a public webhook API. It exists internally and mounts
+          at startup when available, but it is <em>not</em> a stable public contract — no API keys,
+          no rate-limit SLA, no versioning promise. We won't write docs for something we can't
+          support.
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ 04 ══════════════════════════════════════════════════ -->
+    <section class="docs-section reveal" id="pricing">
+      <div class="docs-section-eyebrow">04 — Pricing</div>
+      <h2>Pricing &amp; tier matrix <a class="anchor" href="#pricing" aria-label="Link to this section">#</a></h2>
+      <p>
+        Limits are enforced per user, per UTC day. Counters live in Redis
+        (<code>check_and_update_quota</code>); MongoDB only tracks cumulative tokens and storage.
+        Prices below are rendered from the <strong>same JSON matrix the checkout page uses</strong>,
+        so the two can never drift.
+      </p>
+
+      <div class="cycle-toggle" role="group" aria-label="Billing period">
+        <button class="cycle-btn" type="button" data-cycle="monthly" aria-pressed="true">Monthly</button>
+        <button class="cycle-btn" type="button" data-cycle="annual" aria-pressed="false">
+          Annual <span class="save-pill">SAVE ~20%</span>
+        </button>
+      </div>
+
+      <div class="table-wrap" tabindex="0" role="region" aria-labelledby="matrix-caption">
+        <table class="matrix" id="pricing-matrix">
+          <caption id="matrix-caption">Tier matrix — daily action limits, USD pricing and INR equivalent at $1 = ₹84.</caption>
+          <thead>
+            <tr>
+              <th scope="col">Tier / specialisation</th>
+              <th scope="col">Data / day</th>
+              <th scope="col">Design / day</th>
+              <th scope="col">Core / day</th>
+              <th scope="col">Price</th>
+              <th scope="col">Provider pool</th>
+            </tr>
+          </thead>
+          <tbody id="pricing-body">
+            <tr><td colspan="6" style="padding:20px 16px;color:var(--text-dim)">Loading tier matrix…</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <noscript>
+        <div class="callout warn">
+          <span class="material-symbols-rounded" aria-hidden="true">warning</span>
+          <div>
+            <strong>JavaScript is off.</strong> The live matrix needs JS to stay in sync with
+            checkout. Headline numbers: <strong>Explorer</strong> $0 — 5 data / 3 design / 10 core
+            per day. <strong>Pro</strong> from $9/mo — 15–25 data, 15–20 design, 20 core per day.
+            <strong>Business</strong> from $22/mo — 50–70 data, 40–60 design, 60 core per day.
+            All limits reset at 00:00 UTC.
+          </div>
+        </div>
+      </noscript>
+
+      <h3>Rate limits (separate from daily quota)</h3>
+      <ul>
+        <li><code>/api/chat</code> — 30 requests / minute</li>
+        <li><code>/api/extract</code> — 100 requests / minute</li>
+        <li><code>/api/extract_stream</code> — 5 requests / minute</li>
+      </ul>
+
+      <h3>Upload limits</h3>
+      <ul>
+        <li><strong>Explorer</strong> — max 2 files, 5&nbsp;MB each, 5&nbsp;MB total</li>
+        <li><strong>Pro</strong> — max 5 files, 20&nbsp;MB each</li>
+        <li><strong>Business</strong> — max 5 files, 50&nbsp;MB each</li>
+        <li>Backend hard cap regardless of tier: 5 files per request, 10&nbsp;MB per file, 50&nbsp;MB total</li>
+      </ul>
+
+      <div class="callout success">
+        <span class="material-symbols-rounded" aria-hidden="true">verified_user</span>
+        <div>
+          <strong>Quota errors are structured.</strong> A violation returns
+          <code>{"code":"LIMIT_REACHED","usage":n,"limit":m}</code>, so the UI can show your exact
+          number instead of a generic upgrade nudge.
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ 05 ══════════════════════════════════════════════════ -->
+    <section class="docs-section reveal" id="vs-chatgpt">
+      <div class="docs-section-eyebrow">05 — Comparison</div>
+      <h2>Axelr vs ChatGPT <a class="anchor" href="#vs-chatgpt" aria-label="Link to this section">#</a></h2>
+
+      <h3>1 · A cascade, not a single backend</h3>
+      <p>
+        ChatGPT serves from one backend. Axelr routes across nine-plus providers with per-provider
+        and per-<code>(provider, model)</code> circuit breakers. When Groq is rate-limited, Gemini
+        is already warm. When Gemini errors, OpenRouter is next. A single provider outage never
+        becomes a product outage.
+      </p>
+
+      <h3>2 · Local Twin fallback, honestly labelled</h3>
+      <p>
+        When every remote provider is down — all breakers open, keys missing, or TTFT thresholds
+        tripped — Axelr can still answer from the local Twin Engine. If the engine isn't loaded
+        either, the pipeline returns a response explicitly marked <code>[stub]</code>. It will
+        <em>never</em> fabricate an answer, and downstream code treats a stub as a hard failure
+        rather than rendering it as a normal reply.
+      </p>
+
+      <h3>3 · Workspace-specialised prompts and task types</h3>
+      <p>
+        A Data request is <code>task_type="extraction"</code> with an analyst prompt and a critic
+        pass that verifies every extracted field. A Design request is
+        <code>task_type="frontend"</code> with a senior-engineer prompt, <code>code_guard</code>
+        syntax scanning, and an optional <code>self_healer</code> re-roll. There is no generic
+        assistant mode glossing over the task.
+      </p>
+
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Feature comparison between Axelr and ChatGPT">
+        <table class="matrix">
+          <thead>
+            <tr><th scope="col">Aspect</th><th scope="col">Axelr</th><th scope="col">ChatGPT</th></tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row">Provider redundancy</th><td class="yes">9+ providers, circuit-broken</td><td class="no">Single backend</td></tr>
+            <tr><th scope="row">Full outage behaviour</th><td class="partial">Local Twin, else marked <code>[stub]</code></td><td class="no">Hard fail</td></tr>
+            <tr><th scope="row">Task specialisation</th><td class="yes">Per-workspace prompts + task types</td><td class="no">One generic model</td></tr>
+            <tr><th scope="row">Structured extraction</th><td class="yes">JSON-DATA blocks → table + CSV</td><td class="partial">Prompt-dependent</td></tr>
+            <tr><th scope="row">Anti-hallucination verification</th><td class="yes">AHE verifier DAG, nulls over guesses</td><td class="no">Not exposed</td></tr>
+            <tr><th scope="row">Public API</th><td class="no">Not shipped</td><td class="yes">Yes</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ══ 06 ══════════════════════════════════════════════════ -->
+    <section class="docs-section reveal" id="faq">
+      <div class="docs-section-eyebrow">06 — FAQ</div>
+      <h2>Frequently asked questions <a class="anchor" href="#faq" aria-label="Link to this section">#</a></h2>
+
+      <div class="faq">
+        <details>
+          <summary>Do you offer a public API?</summary>
+          <div class="faq-body">
+            <p>
+              Not yet. Internally the routers exist (<code>routes_core.py</code>,
+              <code>routes_agents.py</code>, <code>routes_billing.py</code>,
+              <code>routes_admin.py</code>) and a webhook pipeline mounts at startup when available.
+              But there is no public key system, no published rate-limit SLA, and no versioning
+              guarantee.
+            </p>
+            <p>When a public API ships, this page will say so and there will be a real reference for it.</p>
+          </div>
+        </details>
+
+        <details>
+          <summary>Why do I have to pick a workspace?</summary>
+          <div class="faq-body">
+            <p>
+              Because each workspace changes real behaviour: system prompt, default
+              <code>task_type</code>, accepted file types, provider allow-list for your tier, and
+              which daily quota counter gets debited.
+            </p>
+            <p>
+              Auto-detection exists — upload a CSV in Core and Axelr offers to switch you to Data.
+              If you'd rather it never did that, pin the workspace in Settings.
+            </p>
+          </div>
+        </details>
+
+        <details>
+          <summary>What's the real difference between Explorer, Pro and Business?</summary>
+          <div class="faq-body">
+            <p>
+              Explorer gives you 5 data / 3 design / 10 core actions per day against the
+              free-eligible provider pool. Pro unlocks the extended pool and roughly triples the
+              allowance. Business unlocks the full pool, the multi-agent orchestrator, and the
+              largest file limits.
+            </p>
+            <p>The full matrix is above — it is generated from the same JSON the checkout page bills from.</p>
+          </div>
+        </details>
+
+        <details>
+          <summary>Is my data used for training?</summary>
+          <div class="faq-body">
+            <p>
+              No. Sessions are stored per-user and keyed by your user id. The semantic cache key is
+              derived from your prompt, workspace, task type and the last two turns of
+              <em>your own</em> conversation — it never crosses users.
+            </p>
+            <p>
+              When a provider is called the request goes directly from our server to that provider.
+              We don't insert a middle-man training layer, and we never send your history to a
+              provider that isn't handling your current request.
+            </p>
+          </div>
+        </details>
+
+        <details>
+          <summary>What is the Twin Engine and why does it matter?</summary>
+          <div class="faq-body">
+            <p>
+              The Twin Engine is a local inference engine that takes over when every remote provider
+              has failed — all breakers open, no keys configured, or TTFT thresholds tripped on the
+              whole fallback chain.
+            </p>
+            <p>
+              If the engine itself isn't available (weights not loaded, host out of memory) the
+              pipeline returns a stub explicitly marked <code>[stub]</code>. Downstream code treats
+              that as a hard failure and surfaces it — it never renders as a normal answer.
+            </p>
+          </div>
+        </details>
+
+        <details>
+          <summary>How do I upgrade, and how fast is activation?</summary>
+          <div class="faq-body">
+            <p>
+              Upgrades are manual UPI. You pick a tier, scan the QR (or open your UPI app), pay, and
+              submit the 12-digit UTR on the checkout page. A human verifies it, typically inside an
+              hour, and access is applied to your account automatically.
+            </p>
+            <p>
+              If verification takes longer than an hour, email
+              <a href="mailto:axelrsupport@gmail.com">axelrsupport@gmail.com</a> with your UTR.
+            </p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- ══ 07 ══════════════════════════════════════════════════ -->
+    <section class="docs-section reveal" id="legal">
+      <div class="docs-section-eyebrow">07 — Legal</div>
+      <h2>Terms &amp; Privacy <a class="anchor" href="#legal" aria-label="Link to this section">#</a></h2>
+      <p>Two documents govern your use of Axelr. Both are written to be read, not skimmed past.</p>
+
+      <div class="legal-grid">
+        <a class="legal-card" href="/Axelr-Frontend/terms.html">
+          <span class="material-symbols-rounded" aria-hidden="true">gavel</span>
+          <span class="legal-title">Terms of Service</span>
+          <span class="legal-desc">Acceptable use, quotas, billing and refunds, IP ownership of generated output, and termination.</span>
+          <span class="legal-cta">Read terms →</span>
+        </a>
+        <a class="legal-card" href="/Axelr-Frontend/privacy.html">
+          <span class="material-symbols-rounded" aria-hidden="true">shield</span>
+          <span class="legal-title">Privacy Policy</span>
+          <span class="legal-desc">What we store, what we never store, sub-processor list, retention windows and how to delete everything.</span>
+          <span class="legal-cta">Read policy →</span>
+        </a>
+      </div>
+    </section>
+
+    <nav class="docs-nav-footer" aria-label="Documentation pagination">
+      <a href="/Axelr-Frontend/index.html">
+        <span class="label">← Back to</span>
+        <span class="title">AXELR Platform</span>
+      </a>
+      <a class="next" href="#workspaces">
+        <span class="label">Next →</span>
+        <span class="title">The three workspaces</span>
+      </a>
+    </nav>
+  </main>
+
+  <!-- ── RIGHT TOC ────────────────────────────────────────────── -->
+  <nav class="docs-toc" aria-label="On this page">
+    <div class="docs-toc-header">On this page</div>
+    <a href="#how-it-works" data-toc="how-it-works" aria-current="true">How Axelr works</a>
+    <a href="#workspaces" data-toc="workspaces">The three workspaces</a>
+    <a href="#differentiators" data-toc="differentiators">What's different</a>
+    <a href="#nexus-flow" data-toc="nexus-flow">Nexus Flow - Elite Workflow Automation</a>
+    <a href="#pricing" data-toc="pricing">Pricing &amp; tiers</a>
+    <a href="#vs-chatgpt" data-toc="vs-chatgpt">Axelr vs ChatGPT</a>
+    <a href="#faq" data-toc="faq">FAQ</a>
+    <a href="#legal" data-toc="legal">Terms & Privacy</a>
+  </nav>
+</div>
+
+<footer class="docs-footer">
+  <div>© 2026 AXELR AI — Intelligence Execution Platform</div>
+  <div class="docs-footer-links">
+    <a href="/Axelr-Frontend/docs.html">Docs</a>
+    <a href="/Axelr-Frontend/terms.html">Terms</a>
+    <a href="/Axelr-Frontend/privacy.html">Privacy</a>
+    <a href="/Axelr-Frontend/pricing.html">Upgrade</a>
+    <a href="/Axelr-Frontend/index.html">Platform</a>
+  </div>
+</footer>
+
+<button class="fab" id="fab" type="button" aria-label="Back to top">
+  <span class="material-symbols-rounded" aria-hidden="true">arrow_upward</span>
+</button>
+
+<div class="vh" id="live-region" role="status" aria-live="polite"></div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SINGLE SOURCE OF TRUTH — identical shape to checkout.html's
+     PRICE_MATRIX. Change it in one place, change it in both.
+     ══════════════════════════════════════════════════════════════ -->
+<script type="application/json" id="axelr-pricing">
+{
+  "usdToInr": 84,
+  "revision": "2026-02",
+  "tiers": [
+    {
+      "id": "free",
+      "name": "Explorer",
+      "blurb": "Baseline intelligence across all three workspaces.",
+      "subtiers": [
+        { "id": "free", "name": "Explorer", "data": 5, "design": 3, "core": 10,
+          "monthly": 0, "annualMo": 0, "annualTotal": 0, "providers": "Free-eligible pool" }
+      ]
+    },
+    {
+      "id": "pro",
+      "name": "Pro Architect",
+      "blurb": "Extended throughput with dual-engine routing.",
+      "subtiers": [
+        { "id": "full",   "name": "Full Stack",         "data": 15, "design": 15, "core": 20,
+          "monthly": 15, "annualMo": 12, "annualTotal": 144, "providers": "Extended pool" },
+        { "id": "data",   "name": "Data Specialist",    "data": 25, "design": 0,  "core": 20,
+          "monthly": 9,  "annualMo": 7,  "annualTotal": 84,  "providers": "Extended pool" },
+        { "id": "design", "name": "Design Specialist",  "data": 0,  "design": 20, "core": 20,
+          "monthly": 10, "annualMo": 8,  "annualTotal": 96,  "providers": "Extended pool" }
+      ]
+    },
+    {
+      "id": "business",
+      "name": "Business Collective",
+      "blurb": "Autonomous multi-agent pipelines and failover routing.",
+      "subtiers": [
+        { "id": "full",   "name": "Full Collective", "data": 50, "design": 40, "core": 60,
+          "monthly": 35, "annualMo": 28, "annualTotal": 336, "providers": "Full pool" },
+        { "id": "data",   "name": "Data Ops Heavy",  "data": 70, "design": 0,  "core": 60,
+          "monthly": 22, "annualMo": 18, "annualTotal": 216, "providers": "Full pool" },
+        { "id": "design", "name": "Design Studio",   "data": 0,  "design": 60, "core": 60,
+          "monthly": 24, "annualMo": 19, "annualTotal": 228, "providers": "Full pool" }
+      ]
+    },
+    {
+      "id": "enterprise",
+      "name": "Enterprise",
+      "blurb": "Dedicated instances and isolated routing.",
+      "subtiers": [
+        { "id": "custom", "name": "Custom", "data": null, "design": null, "core": null,
+          "monthly": null, "annualMo": null, "annualTotal": null, "providers": "Isolated VPC cluster" }
+      ]
+    }
+  ]
+}
+</script>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ── tiny helpers ─────────────────────────────────────────── */
+  const $  = (s, r) => (r || document).querySelector(s);
+  const $$ = (s, r) => Array.prototype.slice.call((r || document).querySelectorAll(s));
+  const inr = n => '₹' + Math.round(n).toLocaleString('en-IN');
+  const say = msg => { const el = $('#live-region'); if (el) el.textContent = msg; };
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ── 1. reading progress + back-to-top ────────────────────── */
+  const progress = $('#progress');
+  const fab = $('#fab');
+  let ticking = false;
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function () {
+      ticking = false;
+      const h = document.documentElement;
+      const max = h.scrollHeight - h.clientHeight;
+      const pct = max > 0 ? (h.scrollTop / max) * 100 : 0;
+      progress.style.width = pct + '%';
+      fab.classList.toggle('show', h.scrollTop > 420);
+    });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+  fab.addEventListener('click', function () {
+    window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
+  });
+
+  /* ── 2. theme ─────────────────────────────────────────────── */
+  const themeBtn = $('#theme-toggle');
+  function applyTheme(theme) {
+    const light = theme === 'light';
+    document.body.classList.toggle('light-theme', light);
+    themeBtn.setAttribute('aria-pressed', String(light));
+    themeBtn.setAttribute('aria-label', light ? 'Switch to dark theme' : 'Switch to light theme');
+    themeBtn.querySelector('.material-symbols-rounded').textContent = light ? 'dark_mode' : 'light_mode';
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', light ? '#f6f8fc' : '#050508');
+  }
+  let stored = 'dark';
+  try { stored = localStorage.getItem('axelr_theme') || 'dark'; } catch (e) {}
+  applyTheme(stored);
+  themeBtn.addEventListener('click', function () {
+    const next = document.body.classList.contains('light-theme') ? 'dark' : 'light';
+    applyTheme(next);
+    try { localStorage.setItem('axelr_theme', next); } catch (e) {}
+  });
+
+  /* ── 3. reveal on scroll ──────────────────────────────────── */
+  const reveals = $$('.reveal');
+  if (reduced || !('IntersectionObserver' in window)) {
+    reveals.forEach(el => el.classList.add('in'));
+  } else {
+    const revealObs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { e.target.classList.add('in'); revealObs.unobserve(e.target); }
+      });
+    }, { threshold: 0.06, rootMargin: '0px 0px -40px 0px' });
+    reveals.forEach(el => revealObs.observe(el));
+  }
+
+  /* ── 4. active section tracking ───────────────────────────── */
+  const sections   = $$('.docs-section');
+  const navItems   = $$('.docs-nav-item[data-section]');
+  const tocLinks   = $$('.docs-toc a[data-toc]');
+  const topbarLink = $$('.docs-nav-links a[data-nav]');
+
+  function markActive(id) {
+    navItems.forEach(n => n.setAttribute('aria-current', String(n.dataset.section === id)));
+    tocLinks.forEach(l => l.setAttribute('aria-current', String(l.dataset.toc === id)));
+    topbarLink.forEach(l => l.setAttribute('aria-current', String(l.dataset.nav === id)));
+  }
+  if ('IntersectionObserver' in window) {
+    const activeObs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) markActive(entry.target.id);
+      });
+    }, { rootMargin: '-25% 0px -65% 0px', threshold: 0 });
+    sections.forEach(s => activeObs.observe(s));
+  }
+
+  /* ── 5. sidebar nav (buttons scroll, links navigate) ──────── */
+  navItems.forEach(function (item) {
+    item.addEventListener('click', function () {
+      const id = item.dataset.section;
+      const target = id && document.getElementById(id);
+      if (!target) return;
+      target.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+      target.setAttribute('tabindex', '-1');
+      target.focus({ preventScroll: true });
+      closeNav();
+    });
+  });
+
+  /* ── 6. copy buttons ──────────────────────────────────────── */
+  $$('[data-copy]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const code = btn.closest('.code').querySelector('pre code');
+      if (!code) return;
+      const text = code.innerText;
+      const label = btn.querySelector('.code-copy-label');
+      const icon  = btn.querySelector('.material-symbols-rounded');
+
+      function ok() {
+        btn.dataset.state = 'ok';
+        icon.textContent = 'check';
+        label.textContent = 'Copied';
+        say('Code block copied to clipboard.');
+        setTimeout(function () {
+          delete btn.dataset.state;
+          icon.textContent = 'content_copy';
+          label.textContent = 'Copy';
+        }, 2000);
+      }
+      function fail() {
+        label.textContent = 'Press Ctrl+C';
+        say('Clipboard unavailable. Select the code and copy manually.');
+        setTimeout(function () { label.textContent = 'Copy'; }, 2500);
+      }
+
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(ok).catch(fail);
+      } else {
+        const range = document.createRange();
+        range.selectNodeContents(code);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        fail();
+      }
+    });
+  });
+
+  /* ── 7. mobile sidebar ────────────────────────────────────── */
+  const menuToggle = $('#menu-toggle');
+  const sidebar = $('#sidebar');
+  const backdrop = $('#backdrop');
+
+  function openNav() {
+    sidebar.classList.add('open');
+    backdrop.hidden = false;
+    requestAnimationFrame(() => backdrop.classList.add('show'));
+    menuToggle.setAttribute('aria-expanded', 'true');
+    menuToggle.setAttribute('aria-label', 'Close navigation menu');
+    const first = sidebar.querySelector('.docs-nav-item');
+    if (first) first.focus();
+  }
+  function closeNav() {
+    if (!sidebar.classList.contains('open')) return;
+    sidebar.classList.remove('open');
+    backdrop.classList.remove('show');
+    menuToggle.setAttribute('aria-expanded', 'false');
+    menuToggle.setAttribute('aria-label', 'Open navigation menu');
+    setTimeout(function () { backdrop.hidden = true; }, 220);
+  }
+  menuToggle.addEventListener('click', function () {
+    sidebar.classList.contains('open') ? closeNav() : openNav();
+  });
+  backdrop.addEventListener('click', function () {
+    closeNav();
+    menuToggle.focus();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeNav();
+  });
+  window.addEventListener('resize', function () {
+    if (window.innerWidth > 900) closeNav();
+  });
+
+  /* ── 8. pricing matrix from shared JSON ───────────────────── */
+  const matrixNode = $('#axelr-pricing');
+  let MATRIX = null;
+  try { MATRIX = JSON.parse(matrixNode.textContent); } catch (e) { MATRIX = null; }
+
+  let cycle = 'monthly';
+  const tbody = $('#pricing-body');
+
+  function renderMatrix() {
+    if (!MATRIX || !tbody) return;
+    const rate = MATRIX.usdToInr || 84;
+    const annual = cycle === 'annual';
+    const frag = document.createDocumentFragment();
+
+    MATRIX.tiers.forEach(function (tier) {
+      tier.subtiers.forEach(function (sub) {
+        const tr = document.createElement('tr');
+
+        const th = document.createElement('th');
+        th.scope = 'row';
+        th.className = 'tier-cell';
+        th.innerHTML = tier.name + '<small>' + sub.name + '</small>';
+        tr.appendChild(th);
+
+        ['data', 'design', 'core'].forEach(function (key) {
+          const td = document.createElement('td');
+          const v = sub[key];
+          if (v === null || v === undefined) {
+            td.className = 'dash';
+            td.textContent = '—';
+          } else {
+            td.textContent = v;
+            if (v === 0) td.className = 'no';
+          }
+          tr.appendChild(td);
+        });
+
+        const price = document.createElement('td');
+        price.className = 'price-cell';
+        if (sub.monthly === null) {
+          price.innerHTML = 'Custom<small>Contact architect</small>';
+        } else if (sub.monthly === 0) {
+          price.innerHTML = '$0<small>Free forever</small>';
+        } else {
+          const usdMo = annual ? sub.annualMo : sub.monthly;
+          const total = annual ? sub.annualTotal : sub.monthly;
+          const inrMo = Math.round(usdMo * rate);
+          price.innerHTML =
+            '$' + usdMo + '/mo' +
+            '<small>' + (annual ? 'billed $' + total + '/yr · ' : '') +
+            inr(inrMo) + '/mo</small>';
+        }
+        tr.appendChild(price);
+
+        const prov = document.createElement('td');
+        prov.textContent = sub.providers;
+        tr.appendChild(prov);
+
+        frag.appendChild(tr);
+      });
+    });
+
+    tbody.textContent = '';
+    tbody.appendChild(frag);
+
+    const cap = $('#matrix-caption');
+    if (cap) {
+      cap.textContent =
+        'Tier matrix — daily action limits, ' +
+        (annual ? 'annual' : 'monthly') +
+        ' USD pricing and INR equivalent at $1 = ₹' + rate + '. Revision ' + MATRIX.revision + '.';
+    }
+  }
+
+  $$('.cycle-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      cycle = btn.dataset.cycle;
+      $$('.cycle-btn').forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
+      renderMatrix();
+      say('Showing ' + cycle + ' pricing.');
+    });
+  });
+
+  renderMatrix();
+
+  /* ── 9. deep link on load ─────────────────────────────────── */
+  if (window.location.hash) {
+    const id = window.location.hash.slice(1);
+    requestAnimationFrame(function () {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: 'auto', block: 'start' });
+    });
+  }
+})();
+</script>
+</body>
+</html>

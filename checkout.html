@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Secure Checkout — AXELR AI</title>
+<meta name="description" content="Complete your Axelr upgrade. Pay via UPI, submit your UTR, done." />
+<meta name="robots" content="noindex, nofollow" />
+<meta name="theme-color" content="#0D0F12" />
+<link rel="icon" type="image/png" href="/favicon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,600,1,0" rel="stylesheet" />
+<link rel="stylesheet" href="css/checkout.css" />
+<link rel="stylesheet" href="css/95-final-polish.css" />
+<link rel="stylesheet" href="css/98-elite-final.css" />
+<link rel="stylesheet" href="css/99-wordmark-fix.css" />
+</head>
+
+<body>
+<a class="skip" href="#main">Skip to checkout</a>
+
+<header class="topbar">
+  <div class="brand-container">
+    <a class="brand axelr-lockup" href="https://axelr.in/index.html" aria-label="AXELR — home">
+      <svg class="axelr-lockup__mark"
+           viewBox="0 0 100 100" fill="none" aria-hidden="true"
+           xmlns="http://www.w3.org/2000/svg">
+        <path d="M50 15 L20 32.5 L20 67.5 L50 85"
+              stroke="var(--logo-stroke-primary, #ffffff)"
+              stroke-width="6" stroke-linejoin="bevel"
+              fill="var(--logo-fill-primary, rgba(255,255,255,0.05))"/>
+        <path d="M50 15 L80 32.5 L50 50 L80 67.5 L50 85"
+              stroke="currentColor" stroke-width="6" stroke-linejoin="bevel" fill="none"/>
+        <path d="M20 32.5 L50 50 L20 67.5"
+              stroke="var(--logo-stroke-secondary, #ffffff)"
+              stroke-width="3" stroke-linejoin="bevel" opacity="0.5"/>
+      </svg>
+      <svg class="axelr-lockup__word"
+           xmlns="http://www.w3.org/2000/svg"
+           viewBox="0 0 765.0 285.0"
+           role="img" aria-label="AXELR">
+        <g fill="currentColor" fill-rule="evenodd">
+          <path d="M369.1,126.7 L370.4,141.1 L510.3,139.3 L507.4,109.7 L495.8,86.3 L477.3,70.1 L449.7,61.1 L415.7,64.1 L393.7,76.1 L375.8,100.0 Z M514.7,12.7 L518.7,27.0 L518.9,211.6 L559.6,212.5 L560.5,13.7 Z M166.6,34.9 L96.6,200.7 L87.3,212.5 L134.3,212.6 L188.7,89.0 Z M166.6,12.2 L223.6,138.9 L273.0,139.6 L214.3,12.8 Z M568.2,62.7 L573.3,79.7 L573.3,199.0 L567.9,212.3 L611.6,212.5 L612.5,63.4 Z M370.0,153.0 L376.8,175.3 L393.3,197.2 L415.3,209.4 L439.3,213.3 L464.7,209.5 L485.0,198.3 L500.8,178.7 L508.4,156.4 L471.0,155.1 L459.7,174.3 L439.3,179.7 L421.1,172.2 L410.6,151.6 Z M296.1,139.4 L339.8,212.1 L392.5,212.3 L381.3,200.3 L344.2,139.6 Z M159.7,188.4 L246.3,188.7 L272.2,150.3 L175.7,149.9 Z M247.5,61.9 L259.6,75.7 L290.8,127.1 L339.9,127.3 L299.9,62.2 Z M679.7,62.4 L635.3,70.2 L622.4,75.7 L620.9,79.6 L624.3,81.0 L624.3,124.5 L635.0,110.9 L679.7,100.8 Z M287.5,148.3 L253.4,200.7 L242.1,212.3 L290.7,212.3 L294.8,210.0 L310.3,185.3 Z M393.4,61.9 L343.7,61.7 L340.7,63.3 L327.7,85.7 L350.0,122.0 L380.9,75.3 Z M410.6,123.7 L412.9,112.3 L417.8,102.7 L427.0,95.2 L436.7,92.7 L451.3,94.2 L459.7,99.4 L465.9,108.3 L469.0,123.0 L468.4,125.4 L413.0,126.0 Z"/>
+        </g>
+      </svg>
+    </a>
+    <span class="brand-chip">CHECKOUT</span>
+  </div>
+  <div class="topbar-actions">
+    <button class="icon-btn" id="theme-toggle" type="button" aria-label="Switch theme" aria-pressed="false">
+      <span class="material-symbols-rounded" aria-hidden="true">light_mode</span>
+    </button>
+    <a class="back-link" href="https://axelr.in/pricing.html" id="back-to-pricing">
+      <span class="material-symbols-rounded" aria-hidden="true">arrow_back</span>
+      <span>Back to pricing</span>
+    </a>
+  </div>
+</header>
+
+<main class="shell" id="main" tabindex="-1">
+
+  <!-- ═══════════════ HERO ═══════════════ -->
+  <div class="hero">
+    <div class="hero-pill">
+      <span class="material-symbols-rounded" aria-hidden="true">verified_user</span>
+      Secure checkout
+    </div>
+    <h1>Almost there — <span class="grad">complete your upgrade</span></h1>
+    <p id="hero-sub">Pay via UPI, submit your 12-digit UTR, done. Access activates on your account within the hour.</p>
+    <a class="change-plan" href="/pricing.html" id="change-plan-link">
+      <span class="material-symbols-rounded" aria-hidden="true">swap_horiz</span>
+      Change plan
+    </a>
+  </div>
+
+  <!-- ═══════════════ AUTH GATE ═══════════════ -->
+  <div id="auth-gate" role="alert">
+    <span class="material-symbols-rounded" aria-hidden="true">lock</span>
+    <h2>Sign in to continue</h2>
+    <p>We tie the subscription to your signed-in account. Sign in, then return here — your selection will be preserved.</p>
+    <a href="https://axelr.in/index.html">
+      <span class="material-symbols-rounded" aria-hidden="true">arrow_back</span>
+      Return to app
+    </a>
+  </div>
+
+  <!-- ═══════════════ CHECKOUT ═══════════════ -->
+  <div class="layout" id="checkout-root" hidden>
+
+    <div class="checkout-main">
+
+      <!-- ─── STEP 01 · PAY ─── -->
+      <section class="step recommended" aria-labelledby="step-1-title">
+        <div class="step-head">
+          <span class="step-num">01</span>
+          <span class="step-label">Pay <strong>· UPI only</strong></span>
+        </div>
+        <h2 class="step-title" id="step-1-title">Send the exact amount</h2>
+        <p class="step-desc">Open any UPI app — Paytm, PhonePe, GPay, BHIM — scan the QR or tap the mobile button. Pay <strong>exactly</strong> the amount below.</p>
+
+        <div class="amount-hero">
+          <span class="amount-label">Amount due today</span>
+          <span class="amount-value" id="pay-amount">
+            <span class="currency">₹</span><span id="pay-amount-num">0</span>
+          </span>
+          <span class="amount-meta" id="pay-amount-meta">—</span>
+        </div>
+
+        <div class="pay-block">
+          <div class="qr-frame">
+            <img id="qr-image" src="" alt="UPI QR code — scan to pay" width="184" height="184" />
+          </div>
+          <div class="pay-details">
+            <div class="pay-apps" aria-label="Supported UPI apps">
+              <span>Paytm</span><span>PhonePe</span><span>GPay</span><span>BHIM</span><span>Any UPI</span>
+            </div>
+
+            <div class="upi-row">
+              <span class="upi-row-label">UPI ID</span>
+              <span class="upi-id" id="upi-id-text">hasan-825@ptyes</span>
+              <button class="copy-btn" type="button" id="copy-upi" data-copy-target="hasan-825@ptyes">
+                <span class="material-symbols-rounded" aria-hidden="true">content_copy</span>
+                <span class="copy-label">Copy</span>
+              </button>
+            </div>
+
+            <a class="upi-app-btn" id="mobile-upi-link" href="#" rel="noopener">
+              <span class="material-symbols-rounded" aria-hidden="true">smartphone</span>
+              <span id="mobile-upi-label">Open in UPI app</span>
+            </a>
+          </div>
+        </div>
+
+        <p class="pay-hint">
+          <span class="material-symbols-rounded" aria-hidden="true">warning</span>
+          <span>Rounded or partial payments will be rejected during verification.</span>
+        </p>
+      </section>
+
+      <!-- ─── STEP 02 · VERIFY ─── -->
+      <section class="step" aria-labelledby="step-2-title">
+        <div class="step-head">
+          <span class="step-num">02</span>
+          <span class="step-label">Verify <strong>· Submit UTR</strong></span>
+        </div>
+        <h2 class="step-title" id="step-2-title">Prove your payment</h2>
+        <p class="step-desc">Find the 12-digit UTR in your UPI app under <strong>Transaction History → View Details</strong>. Manual verification completes within one hour.</p>
+
+        <form id="verify-form" novalidate>
+
+          <div class="field">
+            <label class="field-label" for="email">
+              <span>Account email</span>
+              <span class="field-counter" id="email-counter"></span>
+            </label>
+            <div class="field-input-wrap">
+              <input type="email" id="email" name="email" placeholder="you@example.com" autocomplete="email" required />
+              <span class="material-symbols-rounded field-input-icon" aria-hidden="true">mail</span>
+            </div>
+            <p class="field-hint" id="email-hint">The plan activates on this account.</p>
+            <p class="field-error" id="email-error" hidden>
+              <span class="material-symbols-rounded" aria-hidden="true">error</span>
+              <span class="field-error-text"></span>
+            </p>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="utr">
+              <span>12-digit UTR / Transaction ID</span>
+              <span class="field-counter" id="utr-counter" data-state="warn">0 / 12</span>
+            </label>
+            <div class="field-input-wrap">
+              <input type="text" id="utr" name="utr" placeholder="123456789012"
+                     inputmode="numeric" autocomplete="off" maxlength="12"
+                     pattern="[0-9]{12}" required />
+              <span class="material-symbols-rounded field-input-icon" aria-hidden="true">tag</span>
+            </div>
+            <div class="utr-progress" id="utr-progress" aria-hidden="true"></div>
+            <p class="field-hint">Exactly 12 digits, no spaces or dashes.</p>
+            <p class="field-error" id="utr-error" hidden>
+              <span class="material-symbols-rounded" aria-hidden="true">error</span>
+              <span class="field-error-text"></span>
+            </p>
+          </div>
+
+          <button class="submit" type="submit" id="submit-btn" disabled>
+            <span class="material-symbols-rounded" aria-hidden="true">check_circle</span>
+            <span id="submit-label">Submit verification</span>
+          </button>
+
+          <p class="support-footer">
+            Something not working? Email
+            <a href="mailto:axelrsupport@gmail.com?subject=Checkout%20help">axelrsupport@gmail.com</a>
+          </p>
+        </form>
+      </section>
+
+    </div>
+
+    <!-- ─── STICKY ASIDE ─── -->
+    <aside class="aside-rail" aria-label="Order summary">
+      <div class="summary">
+        <div class="summary-title">
+          <span class="material-symbols-rounded" aria-hidden="true">receipt_long</span>
+          Order summary
+        </div>
+
+        <div class="summary-row"><span class="label">Plan</span><span class="value" id="s-plan">—</span></div>
+        <div class="summary-row"><span class="label">Workspace</span><span class="value" id="s-subtier">—</span></div>
+        <div class="summary-row"><span class="label">Cycle</span><span class="value" id="s-cycle">—</span></div>
+        <div class="summary-row"><span class="label">Per month</span><span class="value mono" id="s-permo">—</span></div>
+
+        <div class="summary-total">
+          <span class="label">Due today</span>
+          <span class="value" id="s-total">—</span>
+        </div>
+
+        <div class="summary-note">
+          <span class="material-symbols-rounded" aria-hidden="true">schedule</span>
+          <span>Manual UPI verification. Access activates within 1 hour of submission.</span>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- ═══════════════ TRUST FOOTER ═══════════════ -->
+  <div class="trust" role="note">
+    <span class="material-symbols-rounded" aria-hidden="true">lock</span>
+    <span class="trust-text">
+      <strong>🔒 Instant Access via Encrypted UPI Routing.</strong>
+      Verification settles automatically upon UTR payload submission.
+    </span>
+  </div>
+
+</main>
+
+<!-- ═══════════════ SUCCESS MODAL ═══════════════ -->
+<div class="modal-overlay" id="success-modal" role="dialog" aria-modal="true" aria-labelledby="success-title" aria-hidden="true">
+  <div class="modal-card" role="document">
+    <div class="modal-icon">
+      <span class="material-symbols-rounded" aria-hidden="true">check_circle</span>
+    </div>
+    <h2 class="modal-title" id="success-title">Payment submitted</h2>
+    <p class="modal-message">
+      Our team will verify your transaction within <strong>1 hour</strong>.
+      Your account will upgrade automatically — no further action required.
+    </p>
+    <div class="modal-utr">
+      <span class="material-symbols-rounded" aria-hidden="true">tag</span>
+      <span>UTR</span>
+      <strong id="success-utr">—</strong>
+    </div>
+    <div class="modal-actions">
+      <a class="modal-btn primary" href="https://axelr.in/index.html">
+        <span class="material-symbols-rounded" aria-hidden="true">home</span>
+        Return to app
+      </a>
+      <button class="modal-btn secondary" type="button" id="close-modal">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="vh" id="live-region" role="status" aria-live="polite"></div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SINGLE SOURCE OF TRUTH — identical to pricing.html
+     ══════════════════════════════════════════════════════════════ -->
+<script type="application/json" id="axelr-pricing">
+{
+  "usdToInr": 84,
+  "revision": "2026-02",
+  "plans": {
+    "pro": {
+      "name": "Pro Architect",
+      "subtiers": {
+        "full":   { "name": "Full Stack",        "monthly": 15, "annualMo": 12, "annualTotal": 144 },
+        "data":   { "name": "Data Specialist",   "monthly": 9,  "annualMo": 7,  "annualTotal": 84  },
+        "design": { "name": "Design Specialist", "monthly": 10, "annualMo": 8,  "annualTotal": 96  }
+      }
+    },
+    "business": {
+      "name": "Business System",
+      "subtiers": {
+        "full":   { "name": "Full Collective", "monthly": 35, "annualMo": 28, "annualTotal": 336 },
+        "data":   { "name": "Data Ops Heavy",  "monthly": 22, "annualMo": 18, "annualTotal": 216 },
+        "design": { "name": "Design Studio",   "monthly": 24, "annualMo": 19, "annualTotal": 228 }
+      }
+    }
+  }
+}
+</script>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ═══════════════════════════════════════════════════════════
+     CONSTANTS
+     ═══════════════════════════════════════════════════════════ */
+  const UPI_ID = 'hasan-825@ptyes';
+  const MERCHANT_NAME = 'Axelr';
+  const FALLBACK_USD_TO_INR = 84;
+
+  const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:8000'
+    : 'https://axelr-backend.onrender.com';
+
+  /* ═══════════════════════════════════════════════════════════
+     HELPERS
+     ═══════════════════════════════════════════════════════════ */
+  const $  = (s, r) => (r || document).querySelector(s);
+  const $$ = (s, r) => Array.prototype.slice.call((r || document).querySelectorAll(s));
+  const inr = n => '₹' + Math.round(n).toLocaleString('en-IN');
+  const say = msg => { const el = $('#live-region'); if (el) el.textContent = msg; };
+
+  function money(n) { return Math.round(n).toLocaleString('en-IN'); }
+  function validEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v || '').trim()); }
+  function digitsOnly(v) { return String(v || '').replace(/\D/g, ''); }
+
+  function decodeJWT(token) {
+    try {
+      const payload = token.split('.')[1];
+      return JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+    } catch (e) { return null; }
+  }
+  function getAuthToken() {
+    const keys = ['google_auth_token', 'auth_token', 'axelr_auth_token'];
+    for (let i = 0; i < keys.length; i++) {
+      try { const v = localStorage.getItem(keys[i]); if (v) return v; } catch (e) {}
+    }
+    return '';
+  }
+  function getAuthEmail() {
+    const keys = ['axelr_user_email', 'user_email', 'google_user_email', 'auth_email'];
+    for (let i = 0; i < keys.length; i++) {
+      try { const v = localStorage.getItem(keys[i]); if (v && v.indexOf('@') > -1) return v; } catch (e) {}
+    }
+    const token = getAuthToken();
+    if (!token) return '';
+    const payload = decodeJWT(token);
+    return (payload && (payload.email || payload.user_email)) || '';
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     PRICING MATRIX
+     ═══════════════════════════════════════════════════════════ */
+  let MATRIX = null;
+  try { MATRIX = JSON.parse($('#axelr-pricing').textContent); }
+  catch (e) { MATRIX = { usdToInr: FALLBACK_USD_TO_INR, plans: {} }; }
+  const USD_TO_INR = MATRIX.usdToInr || FALLBACK_USD_TO_INR;
+
+  /* ═══════════════════════════════════════════════════════════
+     STATE — everything comes from the URL, nothing is chosen here
+     ═══════════════════════════════════════════════════════════ */
+  const state = {
+    plan: 'pro',
+    subtier: 'full',
+    cycle: 'monthly',
+    authToken: '',
+    authEmail: '',
+    submitting: false,
+    utrValid: false,
+    emailValid: false
+  };
+
+  /* ═══════════════════════════════════════════════════════════
+     PRICE MATH
+     ═══════════════════════════════════════════════════════════ */
+  function subtierConfig(plan, subtier) {
+    const p = MATRIX.plans[plan];
+    return (p && p.subtiers && p.subtiers[subtier]) || null;
+  }
+  function monthlyUSD(plan, subtier, cycle) {
+    const cfg = subtierConfig(plan, subtier);
+    if (!cfg) return 0;
+    return cycle === 'annual' ? cfg.annualMo : cfg.monthly;
+  }
+  function amountUSD(plan, subtier, cycle) {
+    const cfg = subtierConfig(plan, subtier);
+    if (!cfg) return 0;
+    return cycle === 'annual' ? cfg.annualTotal : cfg.monthly;
+  }
+  function amountINR(plan, subtier, cycle) {
+    return Math.round(amountUSD(plan, subtier, cycle) * USD_TO_INR);
+  }
+  function perMonthINR(plan, subtier, cycle) {
+    return Math.round(monthlyUSD(plan, subtier, cycle) * USD_TO_INR);
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     RENDER — everything on the page reflects URL params
+     ═══════════════════════════════════════════════════════════ */
+  function render() {
+    const amount     = amountINR(state.plan, state.subtier, state.cycle);
+    const amountUS   = amountUSD(state.plan, state.subtier, state.cycle);
+    const perMoUS    = monthlyUSD(state.plan, state.subtier, state.cycle);
+    const perMoINR   = perMonthINR(state.plan, state.subtier, state.cycle);
+    const cfg        = subtierConfig(state.plan, state.subtier);
+    const planName   = MATRIX.plans[state.plan] ? MATRIX.plans[state.plan].name : '—';
+    const subName    = cfg ? cfg.name : '—';
+    const cycleLabel = state.cycle === 'annual' ? 'Annual (save ~20%)' : 'Monthly';
+    const isAnnual   = state.cycle === 'annual';
+
+    /* Hero sub-copy */
+    const heroSub = $('#hero-sub');
+    if (heroSub) {
+      heroSub.textContent = isAnnual
+        ? 'Pay once via UPI — your annual plan activates on your account within the hour.'
+        : 'Pay via UPI, submit your 12-digit UTR, done. Access activates on your account within the hour.';
+    }
+
+    /* Amount hero */
+    const numEl = $('#pay-amount-num');
+    if (numEl) numEl.textContent = money(amount);
+
+    const metaEl = $('#pay-amount-meta');
+    if (metaEl) {
+      if (isAnnual) {
+        metaEl.innerHTML = '≈ <strong>$' + amountUS + ' USD</strong> · ' +
+          planName + ' · ' + subName + ' · billed annually ($' + perMoUS + '/mo)';
+      } else {
+        metaEl.innerHTML = '≈ <strong>$' + amountUS + ' USD</strong> · ' +
+          planName + ' · ' + subName + ' · monthly';
+      }
+    }
+
+    /* UPI deep link + QR */
+    const note = 'Axelr ' + state.plan + ' ' + state.subtier + ' ' + state.cycle;
+    const upiLink = 'upi://pay?pa=' + encodeURIComponent(UPI_ID) +
+                    '&pn=' + encodeURIComponent(MERCHANT_NAME) +
+                    '&am=' + amount +
+                    '&cu=INR' +
+                    '&tn=' + encodeURIComponent(note);
+    const qrSrc = 'https://api.qrserver.com/v1/create-qr-code/?size=400x400&margin=8&data=' +
+                  encodeURIComponent(upiLink);
+
+    const qr = $('#qr-image');
+    if (qr && qr.src !== qrSrc) qr.src = qrSrc;
+
+    const link = $('#mobile-upi-link');
+    if (link) link.href = upiLink;
+
+    const label = $('#mobile-upi-label');
+    if (label) label.textContent = 'Open ' + inr(amount) + ' in UPI app';
+
+    /* Summary aside */
+    const setText = (id, txt) => { const el = $(id); if (el) el.textContent = txt; };
+    setText('#s-plan',   planName);
+    setText('#s-subtier', subName);
+    setText('#s-cycle',  cycleLabel);
+    setText('#s-permo',  '$' + perMoUS + '/mo · ' + inr(perMoINR));
+    setText('#s-total',  inr(amount));
+
+    /* Preserve the selection on the "Change plan" link so users return to
+       pricing with their current pick highlighted. */
+    const changePlan = $('#change-plan-link');
+    if (changePlan) {
+      changePlan.href = 'https://axelr.in/pricing.html?plan=' + state.plan +
+        '&subtier=' + state.subtier + '&cycle=' + state.cycle;
+    }
+    const back = $('#back-to-pricing');
+    if (back) {
+      back.href = 'https://axelr.in/pricing.html?plan=' + state.plan +
+        '&subtier=' + state.subtier + '&cycle=' + state.cycle;
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     UTR PROGRESS DOTS
+     ═══════════════════════════════════════════════════════════ */
+  function buildUTRProgress() {
+    const container = $('#utr-progress');
+    if (!container || container.children.length === 12) return;
+    container.textContent = '';
+    for (let i = 0; i < 12; i++) {
+      const dot = document.createElement('span');
+      dot.className = 'utr-progress-dot';
+      container.appendChild(dot);
+    }
+  }
+  function updateUTRProgress(count) {
+    const container = $('#utr-progress');
+    if (!container) return;
+    Array.prototype.forEach.call(container.children, function (dot, i) {
+      dot.classList.toggle('filled', i < count);
+    });
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     VALIDATION
+     ═══════════════════════════════════════════════════════════ */
+  const UTR_ERRORS = {
+    empty: 'Enter the 12-digit UTR from your UPI app\u2019s transaction history.',
+    short: function (n) { return 'UTR must be exactly 12 digits — you have ' + n + '. ' + (12 - n) + ' more to go.'; },
+    nonDigits: 'UTR must contain only digits — remove any spaces, dashes or letters.',
+    duplicate: 'This UTR has already been submitted. Check your transaction history, or email support if this is an error.'
+  };
+
+  function setFieldError(fieldId, msg) {
+    const err = document.getElementById(fieldId + '-error');
+    const input = document.getElementById(fieldId);
+    if (!err || !input) return;
+    if (msg) {
+      err.querySelector('.field-error-text').textContent = msg;
+      err.hidden = false;
+      input.setAttribute('data-state', 'err');
+      input.setAttribute('aria-invalid', 'true');
+    } else {
+      err.hidden = true;
+      input.removeAttribute('data-state');
+      input.removeAttribute('aria-invalid');
+    }
+  }
+
+  function updateUTRState(opts) {
+    const input = $('#utr');
+    const counter = $('#utr-counter');
+    if (!input || !counter) return;
+
+    const raw = input.value;
+    const digits = digitsOnly(raw);
+    const trimmed = raw.trim();
+
+    counter.textContent = digits.length + ' / 12';
+    updateUTRProgress(digits.length);
+
+    if (!trimmed) {
+      counter.dataset.state = 'warn';
+      state.utrValid = false;
+      setFieldError('utr', null);
+      input.removeAttribute('data-state');
+      updateSubmitState();
+      return;
+    }
+    if (!/^\d+$/.test(trimmed)) {
+      counter.dataset.state = 'warn';
+      state.utrValid = false;
+      setFieldError('utr', (opts && opts.blur) ? UTR_ERRORS.nonDigits : null);
+      updateSubmitState();
+      return;
+    }
+    if (digits.length < 12) {
+      counter.dataset.state = 'warn';
+      state.utrValid = false;
+      setFieldError('utr', null);
+      input.removeAttribute('data-state');
+      updateSubmitState();
+      return;
+    }
+
+    counter.dataset.state = 'ok';
+    state.utrValid = true;
+    setFieldError('utr', null);
+    input.setAttribute('data-state', 'ok');
+    updateSubmitState();
+  }
+
+  function updateEmailState(opts) {
+    const input = $('#email');
+    const counter = $('#email-counter');
+    if (!input) return;
+
+    const v = input.value.trim();
+    if (counter) {
+      counter.textContent = v ? (validEmail(v) ? '\u2713 valid' : 'invalid') : '';
+      counter.dataset.state = validEmail(v) ? 'ok' : '';
+    }
+    if (!v) {
+      state.emailValid = false;
+      setFieldError('email', null);
+      input.removeAttribute('data-state');
+      updateSubmitState();
+      return;
+    }
+    if (!validEmail(v)) {
+      state.emailValid = false;
+      setFieldError('email', (opts && opts.blur) ? 'Enter a valid email — e.g. you@domain.com.' : null);
+      updateSubmitState();
+      return;
+    }
+    state.emailValid = true;
+    setFieldError('email', null);
+    input.setAttribute('data-state', 'ok');
+    updateSubmitState();
+  }
+
+  function updateSubmitState() {
+    const btn = $('#submit-btn');
+    if (!btn) return;
+    btn.disabled = !(state.emailValid && state.utrValid && !state.submitting);
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     COPY UPI
+     ═══════════════════════════════════════════════════════════ */
+  function wireCopy() {
+    const btn = $('#copy-upi');
+    if (!btn) return;
+    const label = btn.querySelector('.copy-label');
+    const icon = btn.querySelector('.material-symbols-rounded');
+
+    btn.addEventListener('click', async function () {
+      const text = btn.dataset.copyTarget || UPI_ID;
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          const ta = document.createElement('textarea');
+          ta.value = text; ta.setAttribute('readonly', '');
+          ta.style.position = 'fixed'; ta.style.opacity = '0';
+          document.body.appendChild(ta); ta.select();
+          const ok = document.execCommand('copy');
+          document.body.removeChild(ta);
+          if (!ok) throw new Error('copy failed');
+        }
+        btn.dataset.state = 'ok';
+        icon.textContent = 'check';
+        label.textContent = 'Copied';
+        say('UPI ID copied to clipboard.');
+        setTimeout(() => {
+          delete btn.dataset.state;
+          icon.textContent = 'content_copy';
+          label.textContent = 'Copy';
+        }, 2000);
+      } catch (err) {
+        btn.dataset.state = 'err';
+        icon.textContent = 'error';
+        label.textContent = 'Copy failed';
+        say('Clipboard unavailable. Select the UPI ID manually.');
+        setTimeout(() => {
+          delete btn.dataset.state;
+          icon.textContent = 'content_copy';
+          label.textContent = 'Copy';
+        }, 2400);
+      }
+    });
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     SUBMIT
+     ═══════════════════════════════════════════════════════════ */
+  function setSubmitStatus(status, labelOverride) {
+    const btn = $('#submit-btn');
+    if (!btn) return;
+    const iconMap = { idle: 'check_circle', loading: null, success: 'check_circle', error: 'error' };
+    if (status === 'idle') btn.removeAttribute('data-state');
+    else btn.dataset.state = status;
+
+    if (status === 'loading') {
+      btn.innerHTML = '<span class="spinner" aria-hidden="true"></span><span id="submit-label">' +
+        (labelOverride || 'Verifying…') + '</span>';
+    } else {
+      const icon = iconMap[status] || 'check_circle';
+      btn.innerHTML = '<span class="material-symbols-rounded" aria-hidden="true">' + icon +
+        '</span><span id="submit-label">' + (labelOverride || 'Submit verification') + '</span>';
+    }
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (state.submitting) return;
+
+    updateEmailState({ blur: true });
+    updateUTRState({ blur: true });
+
+    if (!state.emailValid || !state.utrValid) {
+      say('Please fix the highlighted fields before submitting.');
+      const firstErr = $('input[data-state="err"]');
+      if (firstErr) firstErr.focus();
+      return;
+    }
+
+    const email = $('#email').value.trim();
+    const utr = digitsOnly($('#utr').value);
+
+    const payload = {
+      plan: state.plan,
+      subtier: state.subtier,
+      cycle: state.cycle,
+      amountUSD: amountUSD(state.plan, state.subtier, state.cycle),
+      amountINR: amountINR(state.plan, state.subtier, state.cycle),
+      email: email,
+      utr: utr
+    };
+
+    state.submitting = true;
+    setSubmitStatus('loading', 'Verifying…');
+    say('Submitting verification.');
+
+    try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (state.authToken) headers['Authorization'] = 'Bearer ' + state.authToken;
+
+      const res = await fetch(API_BASE + '/api/billing/verify-upi', {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        let msg;
+        if (res.status === 409) {
+          msg = data.detail || UTR_ERRORS.duplicate;
+          setFieldError('utr', msg);
+        } else if (res.status === 422) {
+          msg = data.detail || 'Server rejected the submission. Double-check the amount you paid matches exactly.';
+          setFieldError('utr', msg);
+        } else if (res.status === 401 || res.status === 403) {
+          msg = 'Session expired. Sign in again from the app, then return here.';
+        } else if (res.status >= 500) {
+          msg = 'Verification service is temporarily unavailable. Try again in a few minutes.';
+        } else {
+          msg = data.detail || ('Unexpected server response (' + res.status + ').');
+        }
+        throw new Error(msg);
+      }
+
+      state.submitting = false;
+      setSubmitStatus('success', 'Submitted');
+      showSuccess(utr);
+      say('Payment submitted. Verification completes within one hour.');
+
+      const utrInput = $('#utr');
+      utrInput.value = '';
+      utrInput.removeAttribute('data-state');
+      state.utrValid = false;
+      updateUTRState();
+      const counter = $('#utr-counter');
+      if (counter) { counter.textContent = '0 / 12'; counter.dataset.state = 'warn'; }
+      updateUTRProgress(0);
+
+      setTimeout(() => {
+        setSubmitStatus('idle', 'Submit verification');
+        updateSubmitState();
+      }, 2200);
+
+    } catch (err) {
+      state.submitting = false;
+      const msg = (err && err.message) || 'Network error — check your connection and try again.';
+      if (/email/i.test(msg)) setFieldError('email', msg);
+      else setFieldError('utr', msg);
+      setSubmitStatus('error', 'Try again');
+      say('Submission failed. ' + msg);
+      setTimeout(() => {
+        setSubmitStatus('idle', 'Submit verification');
+        updateSubmitState();
+      }, 2400);
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     SUCCESS MODAL
+     ═══════════════════════════════════════════════════════════ */
+  let lastFocused = null;
+
+  function showSuccess(utr) {
+    const modal = $('#success-modal');
+    if (!modal) return;
+    const utrEl = $('#success-utr');
+    if (utrEl) utrEl.textContent = utr;
+    lastFocused = document.activeElement;
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    requestAnimationFrame(() => {
+      const p = modal.querySelector('.modal-btn.primary');
+      if (p) p.focus();
+    });
+  }
+  function closeSuccess() {
+    const modal = $('#success-modal');
+    if (!modal) return;
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    if (lastFocused && typeof lastFocused.focus === 'function') lastFocused.focus();
+  }
+  function wireModal() {
+    const modal = $('#success-modal');
+    if (!modal) return;
+    const closeBtn = $('#close-modal');
+    if (closeBtn) closeBtn.addEventListener('click', closeSuccess);
+    modal.addEventListener('click', e => { if (e.target === modal) closeSuccess(); });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && modal.getAttribute('aria-hidden') === 'false') closeSuccess();
+    });
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     THEME
+     ═══════════════════════════════════════════════════════════ */
+  function wireTheme() {
+    const btn = $('#theme-toggle');
+    if (!btn) return;
+    function apply(theme) {
+      const light = theme === 'light';
+      document.body.classList.toggle('light-theme', light);
+      btn.setAttribute('aria-pressed', String(light));
+      btn.setAttribute('aria-label', light ? 'Switch to dark theme' : 'Switch to light theme');
+      btn.querySelector('.material-symbols-rounded').textContent = light ? 'dark_mode' : 'light_mode';
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', light ? '#f6f8fc' : '#0D0F12');
+    }
+    let stored = 'dark';
+    try { stored = localStorage.getItem('axelr_theme') || 'dark'; } catch (e) {}
+    apply(stored);
+    btn.addEventListener('click', () => {
+      const next = document.body.classList.contains('light-theme') ? 'dark' : 'light';
+      apply(next);
+      try { localStorage.setItem('axelr_theme', next); } catch (e) {}
+    });
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     INIT
+     ═══════════════════════════════════════════════════════════ */
+  function init() {
+    buildUTRProgress();
+    wireTheme();
+    wireModal();
+    wireCopy();
+
+    /* Parse URL params — plan, subtier, cycle are already chosen */
+    const params = new URLSearchParams(window.location.search);
+    const planParam  = params.get('plan');
+    const subParam   = params.get('subtier');
+    const cycleParam = params.get('cycle');
+
+    if (planParam && MATRIX.plans[planParam]) state.plan = planParam;
+    if (cycleParam === 'annual' || cycleParam === 'monthly') state.cycle = cycleParam;
+    if (subParam && ['full', 'data', 'design'].indexOf(subParam) > -1) state.subtier = subParam;
+
+    /* Sanity: if the subtier doesn't exist on the chosen plan, fall back to 'full' */
+    if (!subtierConfig(state.plan, state.subtier)) state.subtier = 'full';
+
+    /* Auth check */
+    state.authToken = getAuthToken();
+    state.authEmail = getAuthEmail();
+
+    const gate = $('#auth-gate');
+    const root = $('#checkout-root');
+
+    if (!state.authToken) {
+      gate.style.display = 'block';
+      root.hidden = true;
+      return;
+    }
+
+    gate.style.display = 'none';
+    root.hidden = false;
+
+    /* Prefill + lock email when signed in */
+    const emailInput = $('#email');
+    if (state.authEmail) {
+      emailInput.value = state.authEmail;
+      emailInput.setAttribute('readonly', 'readonly');
+      emailInput.setAttribute('aria-readonly', 'true');
+      const hint = $('#email-hint');
+      if (hint) hint.textContent = 'Locked to your signed-in account.';
+      state.emailValid = true;
+      updateEmailState();
+    } else {
+      state.emailValid = false;
+      emailInput.addEventListener('input', () => updateEmailState());
+      emailInput.addEventListener('blur', () => updateEmailState({ blur: true }));
+    }
+
+    /* UTR input */
+    const utrInput = $('#utr');
+    utrInput.addEventListener('input', () => {
+      const cleaned = digitsOnly(utrInput.value).slice(0, 12);
+      if (cleaned !== utrInput.value) utrInput.value = cleaned;
+      updateUTRState();
+    });
+    utrInput.addEventListener('blur', () => updateUTRState({ blur: true }));
+
+    /* Submit */
+    $('#verify-form').addEventListener('submit', handleSubmit);
+
+    /* Render everything */
+    render();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>

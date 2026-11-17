@@ -1,0 +1,124 @@
+/* ════════════════════════════════════════════════════════════════════
+   AXELR — 99-sidebar-fix.css (FINAL SIDEBAR WORDMARK FIX)
+   Ensures sidebar wordmark is always visible and properly styled.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* Sidebar wordmark - absolute visibility guarantee */
+.sidebar-header .brand-logo .axelr-lockup__word,
+.sidebar-header .axelr-lockup .axelr-lockup__word {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: auto !important;
+    height: 28px !important;
+    fill: #ffffff !important;
+    color: #ffffff !important;
+    filter: drop-shadow(0 6px 30px rgba(0, 0, 0, 0.4)) !important;
+    transform: translateZ(0) !important;
+    transition: none !important;
+    min-width: 120px !important;
+    flex-shrink: 0 !important;
+}
+
+body.light-theme .sidebar-header .brand-logo .axelr-lockup__word,
+body.light-theme .sidebar-header .axelr-lockup .axelr-lockup__word {
+    fill: #0b1220 !important;
+    color: #0b1220 !important;
+    filter: drop-shadow(0 6px 30px rgba(0, 0, 0, 0.15)) !important;
+}
+
+/* Context vault trigger text - absolute positioning fix */
+#sidebar-trigger-area .trigger-text,
+#sidebar-trigger-area:hover .trigger-text,
+#sidebar-trigger-area:active .trigger-text {
+    writing-mode: vertical-rl !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) rotate(180deg) !important;
+    letter-spacing: 4.5px !important;
+    font-size: 10.5px !important;
+    font-weight: 500 !important;
+    color: rgba(161, 181, 204, 0.72) !important;
+    text-transform: uppercase !important;
+    white-space: nowrap !important;
+    user-select: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    contain: none !important;
+    will-change: color;
+    transition: color 0.28s cubic-bezier(0.32, 0.72, 0, 1) !important;
+    font-family: 'Inter', sans-serif !important;
+}
+
+/* Enhance button responsive visibility - absolute guarantee */
+@media (max-width: 768px) {
+    .enhance-btn,
+    #enhance-trigger,
+    .input-actions .enhance-btn,
+    .input-actions #enhance-trigger {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        width: 0 !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+        position: absolute !important;
+        left: -9999px !important;
+        top: -9999px !important;
+    }
+}
+
+@media (min-width: 769px) {
+    .enhance-btn,
+    #enhance-trigger,
+    .input-actions .enhance-btn,
+    .input-actions #enhance-trigger {
+        display: inline-flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        width: 36px !important;
+        height: 36px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        position: relative !important;
+        left: auto !important;
+        top: auto !important;
+    }
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   SIDEBAR WORDMARK BULLETPROOF FIX
+   ════════════════════════════════════════════════════════════════════ */
+.sidebar-header .brand-logo {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+    flex-shrink: 0 !important;
+}
+
+.sidebar-header .brand-logo .axelr-lockup__word {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: auto !important;
+    height: 24px !important;
+    min-width: 90px !important;
+    flex-shrink: 0 !important;
+    fill: #ffffff !important;
+    color: #ffffff !important;
+}
+
+body.light-theme .sidebar-header .brand-logo .axelr-lockup__word {
+    fill: #0b1220 !important;
+    color: #0b1220 !important;
+}

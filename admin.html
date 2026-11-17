@@ -1,0 +1,1566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Admin Control Room — AXELR AI</title>
+<meta name="robots" content="noindex, nofollow" />
+<meta name="theme-color" content="#0D0F12" />
+<link rel="icon" type="image/png" href="https://axelr.in/favicon.png" />
+<!-- Resource preloading for elite performance -->
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+<link rel="dns-prefetch" href="https://axelr-backend.onrender.com" />
+<!-- Preload critical fonts -->
+<link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" as="style" />
+<link rel="preload" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,600,1,0" as="style" />
+<link rel="preload" href="css/00-tokens.css" as="style" />
+<link rel="preload" href="css/70-light.css" as="style" />
+<link rel="preload" href="css/admin.css" as="style" />
+<link rel="preload" href="css/98-elite-final.css" as="style" />
+<link rel="preload" href="css/99-wordmark-fix.css" as="style" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,600,1,0" rel="stylesheet" />
+<link rel="stylesheet" href="css/00-tokens.css" />
+<link rel="stylesheet" href="css/70-light.css" />
+<link rel="stylesheet" href="css/admin.css" />
+<link rel="stylesheet" href="css/95-final-polish.css" />
+<link rel="stylesheet" href="css/98-elite-final.css" />
+<link rel="stylesheet" href="css/99-wordmark-fix.css" />
+<style>
+  /* Elite loading screen optimizations */
+  #loading {
+    opacity: 1;
+    transition: opacity 0.5s ease;
+  }
+  #dashboard {
+    opacity: 0;
+    transition: opacity 0.8s ease;
+  }
+  #dashboard.visible {
+    opacity: 1;
+  }
+  /* Progressive reveal animations */
+  .kpi-card {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .kpi-card.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .panel {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .panel.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .hero {
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  .hero.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+</style>
+</head>
+
+<body>
+<a class="skip" href="#main">Skip to admin content</a>
+<script>
+  try { if (localStorage.getItem('axelr_theme') === 'light') document.body.classList.add('light-theme'); } catch (e) {}
+</script>
+
+<header class="topbar">
+  <div class="brand-container">
+    <a class="brand axelr-lockup" href="https://axelr.in/index.html" aria-label="AXELR — home">
+      <svg class="axelr-lockup__mark"
+           viewBox="0 0 100 100" fill="none" aria-hidden="true"
+           xmlns="http://www.w3.org/2000/svg">
+        <path d="M50 15 L20 32.5 L20 67.5 L50 85"
+              stroke="var(--logo-stroke-primary)"
+              stroke-width="6" stroke-linejoin="bevel"
+              fill="var(--logo-fill-primary)"/>
+        <path d="M50 15 L80 32.5 L50 50 L80 67.5 L50 85"
+              stroke="currentColor" stroke-width="6" stroke-linejoin="bevel" fill="none"/>
+        <path d="M20 32.5 L50 50 L20 67.5"
+              stroke="var(--logo-stroke-secondary)"
+              stroke-width="3" stroke-linejoin="bevel" opacity="0.5"/>
+      </svg>
+      <svg class="axelr-lockup__word"
+           xmlns="http://www.w3.org/2000/svg"
+           viewBox="0 0 765.0 285.0"
+           role="img" aria-label="AXELR">
+        <g fill="currentColor" fill-rule="evenodd">
+          <path d="M369.1,126.7 L370.4,141.1 L510.3,139.3 L507.4,109.7 L495.8,86.3 L477.3,70.1 L449.7,61.1 L415.7,64.1 L393.7,76.1 L375.8,100.0 Z M514.7,12.7 L518.7,27.0 L518.9,211.6 L559.6,212.5 L560.5,13.7 Z M166.6,34.9 L96.6,200.7 L87.3,212.5 L134.3,212.6 L188.7,89.0 Z M166.6,12.2 L223.6,138.9 L273.0,139.6 L214.3,12.8 Z M568.2,62.7 L573.3,79.7 L573.3,199.0 L567.9,212.3 L611.6,212.5 L612.5,63.4 Z M370.0,153.0 L376.8,175.3 L393.3,197.2 L415.3,209.4 L439.3,213.3 L464.7,209.5 L485.0,198.3 L500.8,178.7 L508.4,156.4 L471.0,155.1 L459.7,174.3 L439.3,179.7 L421.1,172.2 L410.6,151.6 Z M296.1,139.4 L339.8,212.1 L392.5,212.3 L381.3,200.3 L344.2,139.6 Z M159.7,188.4 L246.3,188.7 L272.2,150.3 L175.7,149.9 Z M247.5,61.9 L259.6,75.7 L290.8,127.1 L339.9,127.3 L299.9,62.2 Z M679.7,62.4 L635.3,70.2 L622.4,75.7 L620.9,79.6 L624.3,81.0 L624.3,124.5 L635.0,110.9 L679.7,100.8 Z M287.5,148.3 L253.4,200.7 L242.1,212.3 L290.7,212.3 L294.8,210.0 L310.3,185.3 Z M393.4,61.9 L343.7,61.7 L340.7,63.3 L327.7,85.7 L350.0,122.0 L380.9,75.3 Z M410.6,123.7 L412.9,112.3 L417.8,102.7 L427.0,95.2 L436.7,92.7 L451.3,94.2 L459.7,99.4 L465.9,108.3 L469.0,123.0 L468.4,125.4 L413.0,126.0 Z"/>
+        </g>
+      </svg>
+    </a>
+    <span class="brand-chip">ADMIN</span>
+  </div>
+  <div class="topbar-actions">
+    <span class="admin-email" id="admin-email">—</span>
+    <button class="icon-btn" id="unlock-system-btn" type="button" aria-label="Unlock advanced system controls" aria-pressed="false" title="Unlock system-wide advanced controls">
+      <span class="material-symbols-rounded" aria-hidden="true">lock</span>
+    </button>
+    <button class="icon-btn" id="refresh-btn" type="button" aria-label="Refresh metrics" aria-pressed="false" title="Refresh all dashboard data">
+      <span class="material-symbols-rounded" aria-hidden="true">refresh</span>
+    </button>
+    <button class="icon-btn" id="theme-toggle" type="button" aria-label="Switch to light theme" aria-pressed="false" title="Toggle theme">
+      <span class="material-symbols-rounded" aria-hidden="true">light_mode</span>
+    </button>
+  </div>
+</header>
+
+<main class="shell" id="main">
+
+  <!-- LOADING -->
+  <div class="state-card" id="loading">
+    <div class="spinner" aria-hidden="true"></div>
+    <h2>Verifying access</h2>
+    <p>Confirming administrator credentials…</p>
+  </div>
+
+  <!-- DENIED -->
+  <div class="state-card" id="denied" hidden>
+    <span class="material-symbols-rounded" aria-hidden="true">lock</span>
+    <h2>Access denied</h2>
+    <p>This page is restricted to Axelr administrators. If you believe this is an error, ensure you're signed in as the admin account.</p>
+    <a href="https://axelr.in/index.html">
+      <span class="material-symbols-rounded" aria-hidden="true">arrow_back</span>
+      Return to platform
+    </a>
+  </div>
+
+  <!-- PIN GATE -->
+  <div class="state-card pin-card" id="pin-gate" hidden>
+    <span class="material-symbols-rounded pin-icon" aria-hidden="true">lock_person</span>
+    <h2>Admin PIN required</h2>
+    <p>Enter the 4-digit PIN to unlock the control room.<br />You have <strong id="pin-attempts">3</strong> attempts.</p>
+    <form id="pin-form" class="pin-form" novalidate autocomplete="off">
+      <label class="vh" for="pin-input">Admin PIN</label>
+      <input class="pin-input" id="pin-input" type="password" inputmode="numeric"
+             autocomplete="one-time-code" maxlength="4" placeholder="••••" />
+      <button class="pin-submit" type="submit">
+        <span class="material-symbols-rounded" aria-hidden="true">lock_open</span>
+        Unlock
+      </button>
+    </form>
+    <p class="pin-error" id="pin-error" role="alert" hidden></p>
+    <a class="pin-back" href="https://axelr.in/index.html">
+      <span class="material-symbols-rounded" aria-hidden="true">arrow_back</span>
+      Return to platform
+    </a>
+  </div>
+
+  <!-- Advanced System Unlock Modal (World-Class Production Grade) -->
+  <div id="system-unlock-modal" class="state-card pin-card" hidden>
+    <div class="system-unlock-card">
+      <button class="modal-close-btn" id="close-unlock-modal" type="button" aria-label="Close unlock modal">
+        <span class="material-symbols-rounded">close</span>
+      </button>
+      <span class="material-symbols-rounded pin-icon" aria-hidden="true">security</span>
+      <h2>Unlock Advanced System Controls</h2>
+      <p class="modal-subtitle">Re-authenticate to access destructive system operations and global configuration.</p>
+      <div class="unlock-features-list">
+        <div class="feature-item">
+          <span class="material-symbols-rounded check">check_circle</span>
+          <span>Global infrastructure management & scaling controls</span>
+        </div>
+        <div class="feature-item">
+          <span class="material-symbols-rounded check">check_circle</span>
+          <span>User data exports & GDPR compliance tools</span>
+        </div>
+        <div class="feature-item">
+          <span class="material-symbols-rounded check">check_circle</span>
+          <span>Billing & payment processing configuration</span>
+        </div>
+        <div class="feature-item">
+          <span class="material-symbols-rounded check">check_circle</span>
+          <span>Emergency system shutdown & maintenance mode</span>
+        </div>
+      </div>
+      <form id="unlock-pin-form" class="pin-form" novalidate autocomplete="off">
+        <label class="vh" for="unlock-pin-input">System PIN</label>
+        <input class="pin-input" id="unlock-pin-input" type="password" inputmode="numeric"
+               autocomplete="one-time-code" maxlength="4" placeholder="••••" />
+        <p class="pin-error" id="unlock-pin-error" role="alert" hidden></p>
+        <div class="attempts-remaining">Attempts remaining: <span id="unlock-pin-attempts">2</span></div>
+        <button class="pin-submit unlock-submit" type="submit">
+          <span class="material-symbols-rounded" aria-hidden="true">lock_open</span>
+          Unlock Advanced Controls
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard" hidden>
+
+    <section class="hero">
+      <div class="hero-pill">
+        <span class="material-symbols-rounded" aria-hidden="true">admin_panel_settings</span>
+        Live telemetry
+      </div>
+      <h1>Admin <span class="grad">Control Room</span></h1>
+      <p>Every number below is fetched live from the Axelr backend. Use the refresh button in the top bar to pull fresh data at any time.</p>
+      <div class="hero-meta">
+        <span class="hero-meta-item">
+          <span class="material-symbols-rounded" aria-hidden="true">schedule</span>
+          <span id="last-updated">—</span>
+        </span>
+        <span class="hero-meta-item">
+          <span class="material-symbols-rounded" aria-hidden="true">route</span>
+          <span id="provider-count">—</span>
+        </span>
+      </div>
+    </section>
+
+    <section class="kpi-grid" aria-label="Key metrics">
+      <article class="kpi-card">
+        <div class="kpi-icon"><span class="material-symbols-rounded" aria-hidden="true">group</span></div>
+        <div class="kpi-label">Total Users</div>
+        <div class="kpi-value accent" id="kpi-total-users">—</div>
+        <div class="kpi-trend" id="trend-total-users">+0% from last week</div>
+      </article>
+      <article class="kpi-card">
+        <div class="kpi-icon"><span class="material-symbols-rounded" aria-hidden="true">workspace_premium</span></div>
+        <div class="kpi-label">Pro Subscribers</div>
+        <div class="kpi-value accent" id="kpi-pro-users">—</div>
+        <div class="kpi-trend" id="trend-pro-users">+0% from last week</div>
+      </article>
+      <article class="kpi-card">
+        <div class="kpi-icon"><span class="material-symbols-rounded" aria-hidden="true">domain</span></div>
+        <div class="kpi-label">Business Subs</div>
+        <div class="kpi-value accent" id="kpi-business-users">—</div>
+        <div class="kpi-trend" id="trend-business-users">+0% from last week</div>
+      </article>
+      <article class="kpi-card">
+        <div class="kpi-icon"><span class="material-symbols-rounded" aria-hidden="true">forum</span></div>
+        <div class="kpi-label">Total Chats</div>
+        <div class="kpi-value" id="kpi-total-chats">—</div>
+        <div class="kpi-trend" id="trend-total-chats">+0% from last week</div>
+      </article>
+      <article class="kpi-card">
+        <div class="kpi-icon"><span class="material-symbols-rounded" aria-hidden="true">bolt</span></div>
+        <div class="kpi-label">Today's Queries</div>
+        <div class="kpi-value" id="kpi-daily-queries">—</div>
+        <div class="kpi-trend positive" id="trend-daily-queries">实时活跃</div>
+      </article>
+      <article class="kpi-card">
+        <div class="kpi-icon"><span class="material-symbols-rounded" aria-hidden="true">database</span></div>
+        <div class="kpi-label">Storage Used</div>
+        <div class="kpi-value" id="kpi-storage">—</div>
+        <div class="kpi-trend" id="trend-storage">of total allocated</div>
+      </article>
+      <article class="kpi-card">
+        <div class="kpi-icon" style="background:var(--teal-soft);color:var(--teal)"><span class="material-symbols-rounded" aria-hidden="true">visibility</span></div>
+        <div class="kpi-label">Current Online</div>
+        <div class="kpi-value accent" id="kpi-current-online">—</div>
+        <div class="kpi-trend positive">Currently active</div>
+      </article>
+      <article class="kpi-card">
+        <div class="kpi-icon" style="background:var(--amber-soft);color:var(--amber)"><span class="material-symbols-rounded" aria-hidden="true">chat</span></div>
+        <div class="kpi-label">Active Chats</div>
+        <div class="kpi-value" id="kpi-active-chats">—</div>
+        <div class="kpi-trend" id="trend-active-chats">正在处理中</div>
+      </article>
+      <article class="kpi-card">
+        <div class="kpi-icon" style="background:rgba(59, 130, 246, 0.14);color:#3b82f6"><span class="material-symbols-rounded" aria-hidden="true">speed</span></div>
+        <div class="kpi-label">Avg Response Time</div>
+        <div class="kpi-value" id="kpi-avg-response">—</div>
+        <div class="kpi-trend">milliseconds</div>
+      </article>
+      <article class="kpi-card">
+        <div class="kpi-icon" style="background:rgba(168, 85, 247, 0.14);color:#a855f7"><span class="material-symbols-rounded" aria-hidden="true">payments</span></div>
+        <div class="kpi-label">MRR</div>
+        <div class="kpi-value accent" id="kpi-mrr">—</div>
+        <div class="kpi-trend" id="trend-mrr">Monthly Recurring Revenue</div>
+      </article>
+      <article class="kpi-card">
+        <div class="kpi-icon" style="background:rgba(236, 72, 153, 0.14);color:#ec4899"><span class="material-symbols-rounded" aria-hidden="true">trending_up</span></div>
+        <div class="kpi-label">Today's Revenue</div>
+        <div class="kpi-value" id="kpi-daily-revenue">—</div>
+        <div class="kpi-trend positive" id="trend-daily-revenue">收入今日</div>
+      </article>
+      <article class="kpi-card">
+        <div class="kpi-icon" style="background:rgba(34, 211, 238, 0.14);color:#22d3ee"><span class="material-symbols-rounded" aria-hidden="true">person_add</span></div>
+        <div class="kpi-label">New Signups (7d)</div>
+        <div class="kpi-value" id="kpi-new-signups">—</div>
+        <div class="kpi-trend" id="trend-new-signups">vs previous week</div>
+      </article>
+    </section>
+
+    <section class="panel" aria-labelledby="providers-title">
+      <div class="panel-head">
+        <h2 id="providers-title">AI Provider Health</h2>
+        <span class="panel-sub">Sorted by current status · refresh to re-poll</span>
+      </div>
+      <div class="provider-table-wrap">
+        <table class="provider-table">
+          <thead>
+            <tr>
+              <th scope="col">Provider</th>
+              <th scope="col">Status</th>
+              <th scope="col">Daily Usage</th>
+              <th scope="col">Total Usage</th>
+              <th scope="col">Capacity</th>
+            </tr>
+          </thead>
+          <tbody id="provider-tbody">
+            <tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-dim)">Loading provider data…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="infra-title">
+      <div class="panel-head">
+        <h2 id="infra-title">Infrastructure Health</h2>
+        <span class="panel-sub">Server resources · real-time monitoring</span>
+      </div>
+      <div class="infra-grid">
+        <div class="infra-card">
+          <div class="infra-header">
+            <span class="material-symbols-rounded" style="color:var(--teal)">memory</span>
+            <span class="infra-label">Memory Usage</span>
+          </div>
+          <div class="infra-value" id="infra-memory">—</div>
+          <div class="infra-bar"><div class="infra-fill" id="infra-memory-fill" style="width:0%"></div></div>
+        </div>
+        <div class="infra-card">
+          <div class="infra-header">
+            <span class="material-symbols-rounded" style="color:var(--amber)">cpu</span>
+            <span class="infra-label">CPU Load</span>
+          </div>
+          <div class="infra-value" id="infra-cpu">—</div>
+          <div class="infra-bar"><div class="infra-fill" id="infra-cpu-fill" style="width:0%"></div></div>
+        </div>
+        <div class="infra-card">
+          <div class="infra-header">
+            <span class="material-symbols-rounded" style="color:var(--emerald)">storage</span>
+            <span class="infra-label">Disk Usage</span>
+          </div>
+          <div class="infra-value" id="infra-disk">—</div>
+          <div class="infra-bar"><div class="infra-fill" id="infra-disk-fill" style="width:0%"></div></div>
+        </div>
+        <div class="infra-card">
+          <div class="infra-header">
+            <span class="material-symbols-rounded" style="color:#a855f7">network_ping</span>
+            <span class="infra-label">Network I/O</span>
+          </div>
+          <div class="infra-value" id="infra-network">—</div>
+          <div class="infra-stats" id="infra-network-stats">↑ 0 MB/s ↓ 0 MB/s</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="activity-title">
+      <div class="panel-head">
+        <h2 id="activity-title">Recent Activity</h2>
+        <span class="panel-sub">Live user actions · last 24 hours</span>
+      </div>
+      <div class="activity-feed" id="activity-feed">
+        <div class="activity-loading">Loading recent activity...</div>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="errors-title">
+      <div class="panel-head">
+        <h2 id="errors-title">Error Tracking &amp; Alerts</h2>
+        <span class="panel-sub">System errors · exceptions · warnings</span>
+      </div>
+      <div class="errors-grid">
+        <div class="error-stat">
+          <div class="error-count" id="error-critical">0</div>
+          <div class="error-label critical">Critical Errors</div>
+        </div>
+        <div class="error-stat">
+          <div class="error-count" id="error-warnings">0</div>
+          <div class="error-label warning">Warnings</div>
+        </div>
+        <div class="error-stat">
+          <div class="error-count" id="error-api">0</div>
+          <div class="error-label api">API Failures</div>
+        </div>
+        <div class="error-stat">
+          <div class="error-count" id="error-rate-limits">0</div>
+          <div class="error-label rate">Rate Limits Hit</div>
+        </div>
+      </div>
+      <div class="errors-list" id="errors-list">
+        <div class="error-item" style="text-align:center;padding:16px;color:var(--text-dim)">No recent errors</div>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="sessions-title">
+      <div class="panel-head">
+        <h2 id="sessions-title">Active User Sessions</h2>
+        <span class="panel-sub">Currently connected users · real-time</span>
+      </div>
+      <div class="sessions-table-wrap">
+        <table class="sessions-table">
+          <thead>
+            <tr>
+              <th scope="col">User</th>
+              <th scope="col">Plan</th>
+              <th scope="col">Session Duration</th>
+              <th scope="col">Current Action</th>
+              <th scope="col">Location</th>
+              <th scope="col">Connected Since</th>
+            </tr>
+          </thead>
+          <tbody id="sessions-tbody">
+            <tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-dim)">Loading active sessions...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TIER MANAGEMENT PANEL -->
+    <section class="panel" aria-labelledby="tier-title">
+      <div class="panel-head">
+        <h2 id="tier-title">Tier Management</h2>
+        <span class="panel-sub">World-class tier provisioning · user preview switching · manual access granting</span>
+      </div>
+      
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:24px;padding:24px;">
+        <!-- PREVIEW TIER SWITCHER -->
+        <div class="tier-card" style="background:var(--surface-2);border-radius:12px;padding:24px;border:1px solid var(--border)">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+            <span class="material-symbols-rounded" style="color:var(--amber);font-size:28px;">visibility</span>
+            <h3 style="margin:0;font-size:18px;">Preview User Experience</h3>
+          </div>
+          <p style="color:var(--text-dim);margin:0 0 20px;font-size:14px;line-height:1.5;">Switch tiers to see exactly what users will experience with each plan. This only affects your current view.</p>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <select id="preview-tier-select" style="padding:12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:14px;">
+              <option value="free">Free Tier (Founder/Basic Access)</option>
+              <option value="pro">Pro Tier</option>
+              <option value="business">Business Tier</option>
+            </select>
+            <button id="switch-preview-tier-btn" class="pin-submit" style="width:100%;justify-content:center;display:flex;align-items:center;gap:8px;">
+              <span class="material-symbols-rounded" style="font-size:18px;">switch_account</span>
+              Switch Preview Tier
+            </button>
+            <div id="preview-status" style="font-size:13px;color:var(--text-dim);text-align:center;padding:8px;"></div>
+          </div>
+        </div>
+
+        <!-- GRANT TIER TO USER -->
+        <div class="tier-card" style="background:var(--surface-2);border-radius:12px;padding:24px;border:1px solid var(--border)">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+            <span class="material-symbols-rounded" style="color:var(--emerald);font-size:28px;">admin_panel_settings</span>
+            <h3 style="margin:0;font-size:18px;">Grant Tier to User</h3>
+          </div>
+          <p style="color:var(--text-dim);margin:0 0 20px;font-size:14px;line-height:1.5;">Manually provision Pro or Business access to any user for testing, marketing, or enterprise purposes.</p>
+          <form id="grant-tier-form" style="display:flex;flex-direction:column;gap:12px;">
+            <input type="email" id="grant-user-email" placeholder="user@example.com" required style="padding:12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:14px;" />
+            <select id="grant-tier-select" required style="padding:12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:14px;">
+              <option value="">Select Tier</option>
+              <option value="pro">Pro Tier</option>
+              <option value="business">Business Tier</option>
+              <option value="free">Reset to Free Tier</option>
+            </select>
+            <input type="text" id="grant-reason" placeholder="Reason (optional: e.g., Beta tester, Marketing campaign)" style="padding:12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:14px;" />
+            <input type="datetime-local" id="grant-expires-at" placeholder="Expires at (optional)" style="padding:12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:14px;" />
+            <button type="submit" class="pin-submit" style="width:100%;justify-content:center;display:flex;align-items:center;gap:8px;background:var(--emerald);">
+              <span class="material-symbols-rounded" style="font-size:18px;">workspace_premium</span>
+              Grant Tier Access
+            </button>
+            <div id="grant-status" style="font-size:13px;color:var(--text-dim);text-align:center;padding:8px;"></div>
+          </form>
+        </div>
+      </div>
+
+      <!-- MANAGED USERS LIST -->
+      <div style="padding:0 24px 24px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <h3 style="margin:0;font-size:16px;">Users with Manually Provisioned Tiers</h3>
+          <button id="refresh-users-btn" class="icon-btn" style="width:36px;height:36px;" title="Refresh user list">
+            <span class="material-symbols-rounded">refresh</span>
+          </button>
+        </div>
+        <div class="sessions-table-wrap">
+          <table class="sessions-table">
+            <thead>
+              <tr>
+                <th scope="col">User Email</th>
+                <th scope="col">Current Tier</th>
+                <th scope="col">Provisioned By</th>
+                <th scope="col">Provisioned At</th>
+                <th scope="col">Expires At</th>
+                <th scope="col">Reason</th>
+              </tr>
+            </thead>
+            <tbody id="managed-users-tbody">
+              <tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-dim)">Loading managed users...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer-note">
+      <span id="revision">Axelr Admin · v24.3</span>
+    </div>
+
+  </div>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  var API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:8000'
+    : 'https://axelr-backend.onrender.com';
+
+  /* NOTE: the previous value was missing the "@" — that is why the admin
+     account was being denied even with isAdmin: true. */
+  var ADMIN_EMAIL = 'shanh1346@gmail.com';
+  var ADMIN_PIN = '2009';
+
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+
+  function getAuthToken() {
+    var keys = ['google_auth_token', 'auth_token', 'axelr_auth_token'];
+    for (var i = 0; i < keys.length; i++) {
+      try { var v = localStorage.getItem(keys[i]); if (v) return v; } catch (e) {}
+    }
+    return '';
+  }
+
+  async function fetchJSON(path, token, options = {}) {
+    var headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+    
+    var fetchOptions = { 
+      headers: headers,
+      method: options.method || 'GET'
+    };
+    
+    if (options.body) {
+      fetchOptions.body = JSON.stringify(options.body);
+    }
+    
+    var res = await fetch(API_BASE + path, fetchOptions);
+    if (!res.ok) {
+      var err = new Error('HTTP ' + res.status);
+      err.status = res.status;
+      throw err;
+    }
+    return res.json();
+  }
+
+  function formatNumber(n) {
+    if (n === null || n === undefined) return '—';
+    return Number(n).toLocaleString('en-IN');
+  }
+  function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
+  function statusClass(status) {
+    if (!status) return 'unknown';
+    var s = String(status).toLowerCase();
+    if (s === 'healthy' || s === 'ok' || s === 'up' || s === 'active') return 'healthy';
+    if (s === 'degraded' || s === 'warning' || s === 'slow' || s === 'limited') return 'degraded';
+    if (s === 'down' || s === 'error' || s === 'offline' || s === 'failed') return 'down';
+    return 'unknown';
+  }
+
+  function renderKPIs(data) {
+    // Core user metrics
+    animateValue($('#kpi-total-users'), data.totalUsers || 0);
+    animateValue($('#kpi-pro-users'), data.proUsers || 0);
+    animateValue($('#kpi-business-users'), data.businessUsers || 0);
+    animateValue($('#kpi-total-chats'), data.totalChats || 0);
+    animateValue($('#kpi-daily-queries'), data.dailyQueries || 0);
+
+    // Storage used
+    var storageMB = data.metrics && data.metrics.totalBytesMB;
+    var storageEl = $('#kpi-storage');
+    if (storageMB !== undefined && storageMB !== null) {
+      storageEl.textContent = Number(storageMB).toFixed(1) + ' MB';
+    } else {
+      storageEl.textContent = '—';
+    }
+
+    // Current online users
+    animateValue($('#kpi-current-online'), data.currentOnlineUsers || 0);
+    
+    // Active chats
+    animateValue($('#kpi-active-chats'), data.activeChats || 0);
+    
+    // Average response time
+    var avgResp = data.avgResponseMs || 0;
+    $('#kpi-avg-response').textContent = formatNumber(avgResp);
+    
+    // MRR (Monthly Recurring Revenue)
+    $('#kpi-mrr').textContent = '$' + formatNumber(data.mrr || 0);
+    
+    // Today's revenue
+    $('#kpi-daily-revenue').textContent = '$' + formatNumber(data.dailyRevenue || 0);
+    
+    // New signups
+    animateValue($('#kpi-new-signups'), data.newSignups7d || 0);
+  }
+
+  // Smooth number animation for elite visual experience
+  function animateValue(el, endValue, duration = 1000) {
+    if (!el) return;
+    const start = 0;
+    const startTime = performance.now();
+    
+    function update(currentTime) {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease out cubic for smooth animation
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = Math.floor(start + (endValue - start) * eased);
+      el.textContent = formatNumber(current);
+      
+      if (progress < 1) {
+        requestAnimationFrame(update);
+      } else {
+        el.textContent = formatNumber(endValue);
+      }
+    }
+    
+    requestAnimationFrame(update);
+  }
+
+  function renderInfraMetrics(data) {
+    if (!data.infra) return;
+    
+    // Memory usage
+    const memoryPct = data.infra.memory || 0;
+    $('#infra-memory').textContent = memoryPct.toFixed(1) + '%';
+    $('#infra-memory-fill').style.width = memoryPct + '%';
+    
+    // CPU load
+    const cpuPct = data.infra.cpu || 0;
+    $('#infra-cpu').textContent = cpuPct.toFixed(1) + '%';
+    $('#infra-cpu-fill').style.width = cpuPct + '%';
+    
+    // Disk usage
+    const diskPct = data.infra.disk || 0;
+    $('#infra-disk').textContent = diskPct.toFixed(1) + '%';
+    $('#infra-disk-fill').style.width = diskPct + '%';
+    
+    // Network I/O
+    const networkUp = data.infra.networkUp || 0;
+    const networkDown = data.infra.networkDown || 0;
+    $('#infra-network').textContent = (networkUp + networkDown).toFixed(1) + ' MB/s';
+    $('#infra-network-stats').textContent = `↑ ${networkUp.toFixed(2)} MB/s ↓ ${networkDown.toFixed(2)} MB/s`;
+  }
+
+  function renderActivityFeed(data) {
+    const feed = $('#activity-feed');
+    if (!data.recentActivity || data.recentActivity.length === 0) {
+      feed.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-dim)">No recent activity</div>';
+      return;
+    }
+
+    const frag = document.createDocumentFragment();
+    data.recentActivity.slice(0, 50).forEach(function(activity) {
+      const item = document.createElement('div');
+      item.className = 'activity-item';
+      
+      const iconClass = activity.type === 'user' ? 'user' : 
+                        activity.type === 'chat' ? 'chat' :
+                        activity.type === 'payment' ? 'payment' : 'system';
+      
+      item.innerHTML = `
+        <div class="activity-icon ${iconClass}"><span class="material-symbols-rounded">${getIconForActivity(activity.type)}</span></div>
+        <div class="activity-content">
+          <div class="activity-title">${escapeHtml(activity.title)}</div>
+          <div class="activity-time">${formatTimeAgo(activity.timestamp)}</div>
+        </div>
+      `;
+      frag.appendChild(item);
+    });
+    
+    feed.innerHTML = '';
+    feed.appendChild(frag);
+  }
+
+  function renderErrorTracking(data) {
+    if (!data.errors) return;
+    
+    // Update error counts
+    animateValue($('#error-critical'), data.errors.critical || 0, 500);
+    animateValue($('#error-warnings'), data.errors.warnings || 0, 500);
+    animateValue($('#error-api'), data.errors.apiFailures || 0, 500);
+    animateValue($('#error-rate-limits'), data.errors.rateLimits || 0, 500);
+    
+    // Render error list
+    const list = $('#errors-list');
+    if (!data.errors.recent || data.errors.recent.length === 0) {
+      list.innerHTML = '<div class="error-item" style="text-align:center;padding:16px;color:var(--text-dim)">No recent errors</div>';
+      return;
+    }
+
+    const frag = document.createDocumentFragment();
+    data.errors.recent.slice(0, 20).forEach(function(err) {
+      const item = document.createElement('div');
+      item.className = 'error-item';
+      
+      const severityClass = err.severity === 'critical' ? 'critical' : 
+                           err.severity === 'warning' ? 'warning' : '';
+      
+      item.innerHTML = `
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <span class="status-dot" style="background:${err.severity === 'critical' ? 'var(--red)' : 'var(--amber)'}"></span>
+            <span style="font-weight:600">${escapeHtml(err.message)}</span>
+          </div>
+          <div style="font-size:12px;color:var(--text-dim)">${escapeHtml(err.context)} · ${formatTimeAgo(err.timestamp)}</div>
+        </div>
+      `;
+      frag.appendChild(item);
+    });
+    
+    list.innerHTML = '';
+    list.appendChild(frag);
+  }
+
+  function renderActiveSessions(data) {
+    const tbody = $('#sessions-tbody');
+    if (!data.activeSessions || data.activeSessions.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-dim)">No active sessions</td></tr>';
+      return;
+    }
+
+    const frag = document.createDocumentFragment();
+    data.activeSessions.slice(0, 100).forEach(function(session) {
+      const tr = document.createElement('tr');
+      
+      tr.innerHTML = `
+        <td>${escapeHtml(session.userEmail || '—')}</td>
+        <td><span class="plan-badge ${session.plan || 'free'}">${capitalize(session.plan || 'free')}</span></td>
+        <td>${formatDuration(session.duration || 0)}</td>
+        <td>${escapeHtml(session.currentAction || 'Idle')}</td>
+        <td>${escapeHtml(session.location || 'Unknown')}</td>
+        <td>${formatTimeAgo(session.connectedSince)}</td>
+      `;
+      frag.appendChild(tr);
+    });
+    
+    tbody.innerHTML = '';
+    tbody.appendChild(frag);
+  }
+
+  // Helper functions for enhanced data rendering
+  function getIconForActivity(type) {
+    const icons = {
+      user: 'person_add',
+      chat: 'chat',
+      payment: 'payments',
+      system: 'settings',
+      default: 'info'
+    };
+    return icons[type] || icons.default;
+  }
+
+  function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  function formatTimeAgo(timestamp) {
+    if (!timestamp) return '—';
+    const now = Date.now();
+    const past = new Date(timestamp).getTime();
+    const diffMs = now - past;
+    const diffSec = Math.floor(diffMs / 1000);
+    const diffMin = Math.floor(diffSec / 60);
+    const diffHr = Math.floor(diffMin / 60);
+    const diffDay = Math.floor(diffHr / 24);
+
+    if (diffSec < 60) return 'Just now';
+    if (diffMin < 60) return `${diffMin}m ago`;
+    if (diffHr < 24) return `${diffHr}h ago`;
+    if (diffDay < 7) return `${diffDay}d ago`;
+    return new Date(timestamp).toLocaleDateString();
+  }
+
+  function formatDuration(ms) {
+    if (!ms) return '—';
+    const seconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    
+    if (hours > 0) return `${hours}h ${minutes % 60}m`;
+    if (minutes > 0) return `${minutes}m ${seconds % 60}s`;
+    return `${seconds}s`;
+  }
+
+  function renderProviders(data) {
+    var tbody = $('#provider-tbody');
+    var statusMap = data.providerStatus || {};
+    var quota = data.aiQuota || {};
+    var providers = Object.entries(statusMap);
+
+    if (providers.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-dim)">No providers reported.</td></tr>';
+      $('#provider-count').textContent = '0 providers';
+      return;
+    }
+
+    var order = { healthy: 0, degraded: 1, down: 2, unknown: 3 };
+    providers.sort(function (a, b) {
+      var sa = order[statusClass(a[1] && a[1].status)] || 9;
+      var sb = order[statusClass(b[1] && b[1].status)] || 9;
+      return sa - sb || a[0].localeCompare(b[0]);
+    });
+
+    var frag = document.createDocumentFragment();
+
+    providers.forEach(function (entry) {
+      var name = entry[0];
+      var status = entry[1] && entry[1].status;
+      var capName = capitalize(name);
+
+      var daily = quota['daily' + capName] || 0;
+      var total = quota[name] || 0;
+      var limit = quota[name + 'Limit'] || 0;
+
+      var pct = limit > 0 ? Math.min(100, (daily / limit) * 100) : 0;
+      var barClass = '';
+      if (pct > 85) barClass = ' danger';
+      else if (pct > 60) barClass = ' warn';
+
+      var tr = document.createElement('tr');
+
+      var tdName = document.createElement('td');
+      tdName.innerHTML = '<span class="provider-name">' + name + '</span>';
+      tr.appendChild(tdName);
+
+      var tdStatus = document.createElement('td');
+      var cls = statusClass(status);
+      tdStatus.innerHTML = '<span class="status-pill ' + cls + '">' + (status || 'unknown') + '</span>';
+      tr.appendChild(tdStatus);
+
+      var tdDaily = document.createElement('td');
+      tdDaily.innerHTML = '<span class="provider-num">' + formatNumber(daily) + '</span>';
+      tr.appendChild(tdDaily);
+
+      var tdTotal = document.createElement('td');
+      tdTotal.innerHTML = '<span class="provider-num">' + formatNumber(total) + '</span>';
+      tr.appendChild(tdTotal);
+
+      var tdCap = document.createElement('td');
+      if (limit > 0) {
+        tdCap.innerHTML =
+          '<div class="capacity">' +
+            '<div class="capacity-bar"><div class="capacity-fill' + barClass + '" style="width:' + pct.toFixed(1) + '%"></div></div>' +
+            '<span class="capacity-label">' + Math.round(pct) + '% of ' + formatNumber(limit) + '/day</span>' +
+          '</div>';
+      } else {
+        tdCap.innerHTML = '<span class="capacity-label" style="color:var(--text-dim)">no cap</span>';
+      }
+      tr.appendChild(tdCap);
+
+      frag.appendChild(tr);
+    });
+
+    tbody.innerHTML = '';
+    tbody.appendChild(frag);
+
+    $('#provider-count').textContent = providers.length + ' provider' + (providers.length === 1 ? '' : 's');
+  }
+
+  var autoRefreshInterval = null;
+  async function loadMetrics(token) {
+    var refreshBtn = $('#refresh-btn');
+    if (refreshBtn) refreshBtn.classList.add('spinning');
+
+    try {
+      var data = await fetchJSON('/api/admin/metrics', token);
+      renderKPIs(data);
+      renderProviders(data);
+      renderInfraMetrics(data);
+      renderActivityFeed(data);
+      renderErrorTracking(data);
+      renderActiveSessions(data);
+
+      if (data.timestamp) {
+        var d = new Date(data.timestamp);
+        $('#last-updated').textContent = 'Updated ' + d.toLocaleTimeString();
+      } else {
+        $('#last-updated').textContent = 'Updated just now';
+      }
+
+      $('#revision').textContent = 'Axelr Admin · v24.3 · ' + (data.revision || 'live');
+    } catch (err) {
+      console.error('[Admin] metrics fetch failed:', err);
+      var tbody = $('#provider-tbody');
+      if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:#f87171">Failed to load metrics — check your connection. Retrying...</td></tr>';
+      }
+    } finally {
+      if (refreshBtn) refreshBtn.classList.remove('spinning');
+    }
+  }
+
+  function startAutoRefresh(token) {
+    // Clear any existing interval to prevent duplicates
+    if (autoRefreshInterval) {
+      clearInterval(autoRefreshInterval);
+    }
+    
+    // Refresh metrics every 30 seconds for real-time updates
+    autoRefreshInterval = setInterval(function() {
+      loadMetrics(token);
+    }, 30000);
+    
+    // Initial load
+    loadMetrics(token);
+  }
+
+  // Tier management functionality
+  async function loadManagedUsers(token) {
+    var tbody = $('#managed-users-tbody');
+    try {
+      var users = await fetchJSON('/api/admin/users/list', token);
+      if (!users || users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-dim)">No users with manually provisioned tiers yet.</td></tr>';
+        return;
+      }
+
+      var frag = document.createDocumentFragment();
+      users.forEach(function(user) {
+        var tr = document.createElement('tr');
+        
+        var tdEmail = document.createElement('td');
+        tdEmail.textContent = user.email || '—';
+        tr.appendChild(tdEmail);
+
+        var tdTier = document.createElement('td');
+        tdTier.innerHTML = `<span class="status-pill ${user.tier === 'business' ? 'healthy' : user.tier === 'pro' ? 'degraded' : ''}">${user.tier ? user.tier.charAt(0).toUpperCase() + user.tier.slice(1) : 'Free'}</span>`;
+        tr.appendChild(tdTier);
+
+        var tdProvisionedBy = document.createElement('td');
+        tdProvisionedBy.textContent = user.provisioned_by || '—';
+        tr.appendChild(tdProvisionedBy);
+
+        var tdProvisionedAt = document.createElement('td');
+        tdProvisionedAt.textContent = user.provisioned_at ? new Date(user.provisioned_at).toLocaleString() : '—';
+        tr.appendChild(tdProvisionedAt);
+
+        var tdExpiresAt = document.createElement('td');
+        tdExpiresAt.textContent = user.tier_expires_at ? new Date(user.tier_expires_at).toLocaleString() : 'Never';
+        tr.appendChild(tdExpiresAt);
+
+        var tdReason = document.createElement('td');
+        tdReason.textContent = user.provision_reason || '—';
+        tr.appendChild(tdReason);
+
+        frag.appendChild(tr);
+      });
+
+      tbody.innerHTML = '';
+      tbody.appendChild(frag);
+    } catch (err) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:#f87171">Failed to load users: ' + err.message + '</td></tr>';
+    }
+  }
+
+  function initTierManagement(token) {
+    // Wire preview tier buttons
+    document.querySelectorAll('.tier-preview-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        // Remove active class from all tier cards
+        document.querySelectorAll('.tier-card').forEach(card => card.classList.remove('active'));
+        // Add active class to parent card
+        this.closest('.tier-card').classList.add('active');
+      });
+    });
+
+    // Wire grant tier form
+    var grantForm = $('#grant-tier-form');
+    if (grantForm) {
+      grantForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        var statusEl = $('#grant-status');
+        statusEl.textContent = 'Processing...';
+        
+        try {
+          var email = $('#grant-email').value;
+          var tier = $('#grant-tier').value;
+          var reason = $('#grant-reason').value;
+          var expiresAt = $('#grant-expires-at').value;
+          
+          if (!email || !tier) {
+            statusEl.textContent = 'Error: Email and tier are required';
+            return;
+          }
+
+          await fetchJSON('/api/admin/users/grant-tier', token, {
+            method: 'POST',
+            body: JSON.stringify({ email, tier, reason, expiresAt })
+          });
+          
+          statusEl.textContent = 'Tier granted successfully!';
+          grantForm.reset();
+          loadManagedUsers(token); // Refresh user list
+        } catch (err) {
+          statusEl.textContent = 'Failed to grant tier: ' + err.message;
+        }
+      });
+    }
+
+    // Wire refresh users button
+    var refreshUsersBtn = $('#refresh-users-btn');
+    if (refreshUsersBtn) {
+      refreshUsersBtn.addEventListener('click', function() {
+        loadManagedUsers(token);
+      });
+    }
+
+    // Initial load
+    loadManagedUsers(token);
+  }
+
+  // Initialize everything with graceful error handling
+  async function safeInit(token) {
+    try {
+      await loadMetrics(token);
+      startAutoRefresh(token);
+      initTierManagement(token);
+    } catch (e) {
+      console.error('[Admin] Failed to initialize dashboard:', e);
+      // Retry initialization after 5 seconds
+      setTimeout(function() {
+        safeInit(token);
+      }, 5000);
+    }
+  }
+
+  function wireTheme() {
+    var btn = $('#theme-toggle');
+    if (!btn) return;
+    var icon = btn.querySelector('.material-symbols-rounded');
+    var meta = document.querySelector('meta[name="theme-color"]');
+    function apply(isLight) {
+      document.body.classList.toggle('light-theme', isLight);
+      icon.textContent = isLight ? 'dark_mode' : 'light_mode';
+      btn.setAttribute('aria-pressed', String(isLight));
+      btn.setAttribute('aria-label', isLight ? 'Switch to dark theme' : 'Switch to light theme');
+      if (meta) meta.setAttribute('content', isLight ? '#f6f8fc' : '#0D0F12');
+    }
+    var stored = 'dark';
+    try { stored = localStorage.getItem('axelr_theme') || 'dark'; } catch (e) {}
+    apply(stored === 'light');
+    btn.addEventListener('click', function () {
+      var next = !document.body.classList.contains('light-theme');
+      apply(next);
+      try { localStorage.setItem('axelr_theme', next ? 'light' : 'dark'); } catch (e) {}
+    });
+  }
+
+  function showLoading() {
+    $('#loading').hidden = false;
+    $('#denied').hidden = true;
+    $('#pin-gate').hidden = true;
+    $('#dashboard').hidden = true;
+  }
+  function showDenied() {
+    $('#loading').hidden = true;
+    $('#denied').hidden = false;
+    $('#pin-gate').hidden = true;
+    $('#dashboard').hidden = true;
+  }
+  function showDashboard() {
+    $('#loading').hidden = true;
+    $('#denied').hidden = true;
+    $('#pin-gate').hidden = true;
+    $('#dashboard').hidden = false;
+    
+    // Trigger progressive reveal animation
+    setTimeout(() => {
+      $('#dashboard').classList.add('visible');
+      progressiveReveal();
+    }, 50);
+  }
+
+  // World-class progressive content reveal for elite user experience
+  function progressiveReveal() {
+    // Reveal hero first
+    const hero = document.querySelector('.hero');
+    if (hero) hero.classList.add('visible');
+
+    // Stagger KPI cards
+    const kpiCards = document.querySelectorAll('.kpi-card');
+    kpiCards.forEach((card, index) => {
+      setTimeout(() => {
+        card.classList.add('visible');
+      }, 150 * (index + 1));
+    });
+
+    // Stagger panels
+    const panels = document.querySelectorAll('.panel');
+    panels.forEach((panel, index) => {
+      setTimeout(() => {
+        panel.classList.add('visible');
+      }, 300 + (200 * index));
+    });
+  }
+
+  // GLOBAL UNLOCK SYSTEM STATE - PREVENTS INTERMITTENT ISSUES (ONLY ONE DECLARATION)
+  let refreshWired = false;
+  let unlockWired = false;
+  let systemUnlocked = false;
+  const ADMIN_PIN = '2009'; // Matches the single source of truth in line 550
+
+  function wireRefresh(token) {
+    if (refreshWired) return;
+    refreshWired = true;
+    $('#refresh-btn').addEventListener('click', function () {
+      loadMetrics(token);
+    });
+  }
+
+  function wireUnlockSystem(token) {
+    // Clean up any existing event listeners first to prevent duplicates
+    if (unlockWired) {
+      const unlockBtn = $('#unlock-system-btn');
+      if (unlockBtn) {
+        const newUnlockBtn = unlockBtn.cloneNode(true);
+        unlockBtn.parentNode.replaceChild(newUnlockBtn, unlockBtn);
+      }
+      unlockWired = false;
+    }
+    // GUARANTEE: unlockWired is always set to true after this function runs
+    unlockWired = true;
+    console.log('[Admin] Unlock system successfully wired - unlock button is now active');
+    
+    // FINAL SAFETY: If unlock button is hidden for any reason, force it visible
+    const unlockBtn = $('#unlock-system-btn');
+    if (unlockBtn) {
+      unlockBtn.style.display = 'flex';
+      unlockBtn.hidden = false;
+    }
+    
+    const unlockBtn = $('#unlock-system-btn');
+    const unlockModal = $('#system-unlock-modal');
+    const closeModalBtn = $('#close-unlock-modal');
+    const unlockForm = $('#unlock-pin-form');
+    const unlockInput = $('#unlock-pin-input');
+    const unlockError = $('#unlock-pin-error');
+    const unlockAttemptsEl = $('#unlock-pin-attempts');
+    
+    // Validate all required elements exist to prevent null errors
+    if (!unlockBtn || !unlockModal || !closeModalBtn || !unlockForm || !unlockInput) {
+      console.error('❌ Unlock system: Missing required DOM elements');
+      return;
+    }
+    
+    let unlockAttempts = 3; // Increased attempts for better UX
+    
+    // Update button state based on system lock status - always show UNLOCK, never return to platform
+    function updateUnlockButton() {
+      if (systemUnlocked) {
+        unlockBtn.querySelector('.material-symbols-rounded').textContent = 'lock_open';
+        unlockBtn.setAttribute('aria-pressed', 'true');
+        unlockBtn.title = 'System controls unlocked - click to relock for security';
+      } else {
+        unlockBtn.querySelector('.material-symbols-rounded').textContent = 'lock';
+        unlockBtn.setAttribute('aria-pressed', 'false');
+        unlockBtn.title = 'Unlock advanced system controls (requires admin PIN)';
+      }
+    }
+
+    // Reset unlock form state
+    function resetUnlockForm() {
+      unlockInput.value = '';
+      unlockError.hidden = true;
+      unlockAttempts = 3;
+      unlockAttemptsEl.textContent = String(unlockAttempts);
+    }
+
+    // Show unlock modal
+    function showUnlockModal() {
+      if (systemUnlocked) {
+        // If already unlocked, toggle lock
+        systemUnlocked = false;
+        updateUnlockButton();
+        return;
+      }
+      resetUnlockForm();
+      unlockModal.hidden = false;
+      // Focus input after modal opens
+      requestAnimationFrame(() => {
+        try { unlockInput.focus({ preventScroll: true }); } catch(e) { unlockInput.focus(); }
+      });
+    }
+
+    // Hide unlock modal
+    function hideUnlockModal() {
+      unlockModal.hidden = true;
+      resetUnlockForm();
+    }
+
+    // Set error message
+    function setUnlockError(msg) {
+      if (!msg) { unlockError.hidden = true; unlockError.textContent = ''; return; }
+      unlockError.textContent = msg;
+      unlockError.hidden = false;
+    }
+
+    // Wire up event listeners
+    unlockBtn.addEventListener('click', showUnlockModal);
+    closeModalBtn.addEventListener('click', hideUnlockModal);
+
+    // Close modal when clicking outside
+    unlockModal.addEventListener('click', function(e) {
+      if (e.target === unlockModal) hideUnlockModal();
+    });
+
+    // Handle form submission
+    unlockForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const value = String(unlockInput.value || '').replace(/\D/g, '').slice(0, 4);
+
+      if (!/^\d{4}$/.test(value)) {
+        setUnlockError('Please enter a valid 4-digit PIN.');
+        return;
+      }
+
+      if (value === ADMIN_PIN) {
+        setUnlockError(null);
+        systemUnlocked = true;
+        updateUnlockButton();
+        hideUnlockModal();
+        // Enable advanced controls across the dashboard
+        document.querySelectorAll('.advanced-control').forEach(el => el.classList.add('enabled'));
+        return;
+      }
+
+      // Handle incorrect PIN
+      unlockAttempts -= 1;
+      unlockAttemptsEl.textContent = String(Math.max(unlockAttempts, 0));
+      unlockInput.value = '';
+      unlockInput.focus();
+
+      // Shake animation for feedback
+      const unlockCard = unlockModal.querySelector('.system-unlock-card');
+      if (unlockCard) {
+        unlockCard.classList.remove('shake');
+        void unlockCard.offsetWidth;
+        unlockCard.classList.add('shake');
+      }
+
+      if (unlockAttempts <= 0) {
+        // NEVER return to platform - instead reset and let user try again (enhanced security UX)
+        setUnlockError('Too many incorrect attempts. Resetting unlock system...');
+        setTimeout(() => {
+          hideUnlockModal();
+          resetUnlockForm();
+          // Add a cooldown period to prevent brute force
+          unlockBtn.disabled = true;
+          setTimeout(() => {
+            unlockBtn.disabled = false;
+            setUnlockError(null);
+          }, 30000); // 30 second cooldown
+        }, 1500);
+      } else {
+        setUnlockError(`Incorrect PIN. ${unlockAttempts} attempt${unlockAttempts === 1 ? '' : 's'} remaining.`);
+      }
+    });
+
+    // ESC key to close modal
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && !unlockModal.hidden) {
+        hideUnlockModal();
+      }
+    });
+
+    updateUnlockButton();
+  }
+  
+  function showPinGate(token) {
+    $('#loading').hidden = true;
+    $('#denied').hidden = true;
+    $('#dashboard').hidden = true;
+
+    var gate = $('#pin-gate');
+    var form = $('#pin-form');
+    var input = $('#pin-input');
+    var errorEl = $('#pin-error');
+    var attemptsEl = $('#pin-attempts');
+    var attempts = 5; // Increased initial gate attempts for better UX
+
+    // Reset unlock state every time pin gate is shown to prevent stale state - GLOBAL STATE MANAGEMENT
+    unlockWired = false;
+    systemUnlocked = false;
+    refreshWired = false;
+    
+    gate.hidden = false;
+    input.value = '';
+    errorEl.hidden = true;
+    attemptsEl.textContent = String(attempts);
+
+    requestAnimationFrame(function () {
+      try { input.focus({ preventScroll: true }); } catch (e) { input.focus(); }
+    });
+
+    function setError(msg) {
+      if (!msg) { errorEl.hidden = true; errorEl.textContent = ''; return; }
+      errorEl.textContent = msg;
+      errorEl.hidden = false;
+    }
+
+    // Clean up any existing form listeners to prevent duplicates
+    const oldForm = form.cloneNode(true);
+    form.parentNode.replaceChild(oldForm, form);
+    const newForm = oldForm;
+
+    newForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var value = String(input.value || '').replace(/\D/g, '').slice(0, 4);
+
+      if (!/^\d{4}$/.test(value)) {
+        setError('Enter the 4-digit admin PIN.');
+        return;
+      }
+
+      if (value === ADMIN_PIN) {
+        setError(null);
+        showDashboard();
+        // Initialize core systems in CORRECT ORDER to prevent race conditions
+        wireTheme(); // Re-apply theme to ensure it's set
+        wireRefresh(token);
+        wireUnlockSystem(token);
+        initTierManagement(token);
+        safeInit(token);
+        // FALLBACK GUARANTEE: If unlock system never wired, retry after 1s to ensure it's always visible
+        setTimeout(() => {
+          if (!unlockWired) {
+            console.warn('[Admin] Unlock system fallback triggered - re-wiring to guarantee visibility');
+            wireUnlockSystem(token);
+          }
+        }, 1000);
+        return;
+      }
+
+      attempts -= 1;
+      attemptsEl.textContent = String(Math.max(attempts, 0));
+      input.value = '';
+      input.focus();
+
+      gate.classList.remove('shake');
+      void gate.offsetWidth;
+      gate.classList.add('shake');
+
+      if (attempts <= 0) {
+        // NEVER return to platform - add cooldown instead of redirecting (enhanced UX)
+        setError('Too many incorrect attempts. Please wait 60 seconds before trying again.');
+        // Disable all inputs during cooldown
+        input.disabled = true;
+        newForm.querySelector('button[type="submit"]').disabled = true;
+        setTimeout(function () {
+          // Reset everything after cooldown
+          attempts = 5;
+          attemptsEl.textContent = String(attempts);
+          input.disabled = false;
+          newForm.querySelector('button[type="submit"]').disabled = false;
+          input.value = '';
+          setError(null);
+          input.focus();
+        }, 60000); // 60 second cooldown
+      } else {
+        setError('Incorrect PIN. ' + attempts + ' attempt' + (attempts === 1 ? '' : 's') + ' remaining.');
+      }
+    });
+  }
+
+  async function init() {
+    wireTheme();
+    showLoading();
+
+    var token = getAuthToken();
+    if (!token) { showDenied(); return; }
+
+    var user;
+    try {
+      user = await fetchJSON('/api/user/profile', token);
+    } catch (err) {
+      console.error('[Admin] Profile fetch failed:', err);
+      showDenied();
+      return;
+    }
+
+    var email = String(user.email || '').toLowerCase();
+    var isAdmin = user.isAdmin === true && email === ADMIN_EMAIL;
+
+    if (!isAdmin) { 
+      console.error('[Admin] User not authorized as admin:', email);
+      showDenied(); 
+      return; 
+    }
+
+    $('#admin-email').textContent = user.email || ADMIN_EMAIL;
+    // GUARANTEE unlock system is always wired - prevents intermittent failures
+    unlockWired = false;
+    systemUnlocked = false;
+    refreshWired = false;
+    showPinGate(token);
+  }
+
+  // TIER MANAGEMENT FUNCTIONALITY - WORLD-CLASS SYSTEM
+  function initTierManagement(token) {
+    var currentPreviewTier = localStorage.getItem('axelr_preview_tier') || 'free';
+    $('#preview-tier-select').value = currentPreviewTier;
+    updatePreviewStatus();
+
+    // Load managed users list
+    loadManagedUsers(token);
+
+    // Switch preview tier button handler
+    $('#switch-preview-tier-btn').addEventListener('click', async function() {
+      var selectedTier = $('#preview-tier-select').value;
+      try {
+        await fetchJSON('/api/admin/switch-view-tier', token, { tier: selectedTier });
+        localStorage.setItem('axelr_preview_tier', selectedTier);
+        currentPreviewTier = selectedTier;
+        updatePreviewStatus();
+        // Refresh the page to apply new tier view
+        setTimeout(() => window.location.reload(), 500);
+      } catch (err) {
+        $('#preview-status').textContent = 'Failed to switch tier: ' + err.message;
+        $('#preview-status').style.color = 'var(--red)';
+      }
+    });
+
+    // Grant tier form handler
+    $('#grant-tier-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      var email = $('#grant-user-email').value.trim();
+      var tier = $('#grant-tier-select').value;
+      var reason = $('#grant-reason').value.trim() || null;
+      var expiresAt = $('#grant-expires-at').value || null;
+
+      if (!email || !tier) {
+        $('#grant-status').textContent = 'Please fill in all required fields';
+        $('#grant-status').style.color = 'var(--red)';
+        return;
+      }
+
+      try {
+        var result = await fetchJSON('/api/admin/users/grant-tier', token, {
+          email: email,
+          tier: tier,
+          reason: reason,
+          expires_at: expiresAt ? new Date(expiresAt).toISOString() : null
+        });
+
+        $('#grant-status').textContent = result.message;
+        $('#grant-status').style.color = 'var(--emerald)';
+        
+        // Reset form
+        $('#grant-tier-form').reset();
+        
+        // Refresh managed users list
+        loadManagedUsers(token);
+      } catch (err) {
+        $('#grant-status').textContent = 'Failed to grant tier: ' + err.message;
+        $('#grant-status').style.color = 'var(--red)';
+      }
+    });
+
+    // Refresh users button handler
+    $('#refresh-users-btn').addEventListener('click', function() {
+      loadManagedUsers(token);
+    });
+
+    function updatePreviewStatus() {
+      $('#preview-status').textContent = `Currently previewing: ${currentPreviewTier.charAt(0).toUpperCase() + currentPreviewTier.slice(1)} Tier`;
+      $('#preview-status').style.color = 'var(--amber)';
+    }
+
+    async function loadManagedUsers(token) {
+      var tbody = $('#managed-users-tbody');
+      try {
+        var users = await fetchJSON('/api/admin/users/list', token);
+        if (!users || users.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-dim)">No users with manually provisioned tiers yet.</td></tr>';
+          return;
+        }
+
+        var frag = document.createDocumentFragment();
+        users.forEach(function(user) {
+          var tr = document.createElement('tr');
+          
+          var tdEmail = document.createElement('td');
+          tdEmail.textContent = user.email || '—';
+          tr.appendChild(tdEmail);
+
+          var tdTier = document.createElement('td');
+          tdTier.innerHTML = `<span class="status-pill ${user.tier === 'business' ? 'healthy' : user.tier === 'pro' ? 'degraded' : ''}">${user.tier ? user.tier.charAt(0).toUpperCase() + user.tier.slice(1) : 'Free'}</span>`;
+          tr.appendChild(tdTier);
+
+          var tdProvisionedBy = document.createElement('td');
+          tdProvisionedBy.textContent = user.provisioned_by || '—';
+          tr.appendChild(tdProvisionedBy);
+
+          var tdProvisionedAt = document.createElement('td');
+          tdProvisionedAt.textContent = user.provisioned_at ? new Date(user.provisioned_at).toLocaleString() : '—';
+          tr.appendChild(tdProvisionedAt);
+
+          var tdExpiresAt = document.createElement('td');
+          tdExpiresAt.textContent = user.tier_expires_at ? new Date(user.tier_expires_at).toLocaleString() : 'Never';
+          tr.appendChild(tdExpiresAt);
+
+          var tdReason = document.createElement('td');
+          tdReason.textContent = user.provision_reason || '—';
+          tr.appendChild(tdReason);
+
+          frag.appendChild(tr);
+        });
+
+        tbody.innerHTML = '';
+        tbody.appendChild(frag);
+      } catch (err) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:#f87171">Failed to load users: ' + err.message + '</td></tr>';
+      }
+    }
+  }
+
+  // Enhanced fetchJSON that accepts body parameter
+  async function fetchJSON(path, token, body) {
+    var headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+    
+    var options = { headers: headers };
+    if (body) {
+      options.method = 'POST';
+      options.body = JSON.stringify(body);
+    }
+    
+    var res = await fetch(API_BASE + path, options);
+    if (!res.ok) {
+      var errText = await res.text();
+      var err = new Error('HTTP ' + res.status + ': ' + errText);
+      err.status = res.status;
+      throw err;
+    }
+    return res.json();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>

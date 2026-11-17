@@ -1,0 +1,7 @@
+# Playwright reports and cache
+playwright-report/
+test-results/
+.last-run.json
+tests/frontend/node_modules/
+tests/frontend/playwright-report/
+tests/frontend/test-results/

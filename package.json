@@ -1,0 +1,31 @@
+{
+  "name": "axelr-frontend",
+  "version": "1.0.0",
+  "description": "AXELR unified speech recognition frontend engine",
+  "main": "index.html",
+  "scripts": {
+    "build": "node scripts/build.js",
+    "dev": "node scripts/dev-server.js",
+    "test": "node --test tests/**/*.js",
+    "lint": "eslint js/input/*.js",
+    "verify-manifest": "node scripts/verify-manifest.js"
+  },
+  "dependencies": {
+    "whisper.cpp": "^1.5.2",
+    "@webassemblyjs/wasm-parser": "^1.11.6"
+  },
+  "devDependencies": {
+    "eslint": "^8.56.0",
+    "http-server": "^14.1.1",
+    "esbuild": "^0.19.11",
+    "puppeteer": "^21.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/axelr-ai/axelr-engine"
+  },
+  "keywords": ["speech-recognition", "asr", "whisper", "offline"]
+}

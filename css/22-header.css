@@ -1,0 +1,602 @@
+/* ════════════════════════════════════════════════════════════════════
+   AXELR — 22-header.css (HEADER MASTER v4.0)
+   Owns ALL header controls: workspace switcher pill, model hub,
+   account hub, both dropdowns, tier badge, logout.
+   Base .workspace-header positioning lives in 20-shell.css — this
+   file adds controls only.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════════
+   WORKSPACE HEADER — visual base (positioning in 20-shell)
+   ═══════════════════════════════════════════════════════════════════ */
+.workspace-header {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 16px;
+    padding: 0 20px 0 50px;
+    z-index: var(--z-header, 150);
+    background: rgba(5, 5, 5, 0.72);
+    border-bottom: 1px solid var(--border-muted);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+.header-left-group {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+    flex: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   WORKSPACE SWITCHER PILL
+   ═══════════════════════════════════════════════════════════════════ */
+.workspace-switcher-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 3px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-muted);
+    border-radius: 10px;
+    flex-shrink: 0;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.20),
+        0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+    transition: box-shadow 0.24s ease, background 0.24s ease;
+}
+.workspace-switcher-pill:hover {
+    box-shadow:
+        0 2px 6px rgba(0, 0, 0, 0.25),
+        0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+        0 0 32px -10px color-mix(in srgb, var(--accent-glow) 30%, transparent);
+}
+.ws-btn {
+    appearance: none;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    padding: 6px 12px;
+    border-radius: 7px;
+    cursor: pointer;
+    white-space: nowrap;
+    line-height: 1;
+    position: relative;
+    transition:
+        background 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+        color 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+        box-shadow 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.15s cubic-bezier(0.4, 0, 0.6, 1);
+}
+.ws-btn:hover {
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.05);
+}
+.ws-btn:active { transform: scale(0.94); }
+.ws-btn.active {
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.10);
+    box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.25),
+        0 0 0 1px color-mix(in srgb, var(--accent-glow) 25%, transparent),
+        0 0 20px -6px color-mix(in srgb, var(--accent-glow) 40%, transparent);
+}
+body.workspace-data   .ws-btn.active { color: #10b981; }
+body.workspace-design .ws-btn.active { color: #ef4444; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   MODEL HUB
+   ═══════════════════════════════════════════════════════════════════ */
+.model-hub { position: relative; flex-shrink: 0; margin-right: 8px; order: 1; }
+.header-left-group { order: 2; }
+.account-hub { order: 3; }
+
+#model-selector {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 12px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-muted);
+    color: var(--text-main);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    max-width: 100%;
+    overflow: hidden;
+    transition:
+        background 0.2s cubic-bezier(0.22, 0.61, 0.36, 1),
+        border-color 0.2s cubic-bezier(0.22, 0.61, 0.36, 1),
+        box-shadow 0.2s cubic-bezier(0.22, 0.61, 0.36, 1),
+        transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+#model-selector:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.14);
+    box-shadow: 0 4px 14px -4px rgba(0, 0, 0, 0.4);
+    transform: translateY(-1px);
+}
+#model-selector:active { transform: translateY(0) scale(0.98); }
+#model-selector:focus-visible {
+    outline: none;
+    box-shadow:
+        0 0 0 2px var(--bg-deep),
+        0 0 0 4px color-mix(in srgb, var(--accent-glow) 55%, transparent);
+}
+
+#model-text-display {
+    max-width: clamp(60px, 22vw, 180px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#model-selector .badge {
+    position: relative;
+    overflow: hidden;
+    color: var(--accent-glow);
+    font-size: 10px;
+    font-weight: 700;
+    background: color-mix(in srgb, var(--accent-glow) 12%, transparent);
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 0.22s ease;
+}
+#model-selector:hover .badge {
+    transform: translateY(-1px);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--accent-glow) 35%, transparent);
+}
+#model-selector .badge::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.25) 50%,
+        transparent 100%);
+    transform: translateX(-100%);
+    transition: transform 0.6s cubic-bezier(0.32, 0.72, 0, 1);
+    pointer-events: none;
+}
+#model-selector:hover .badge::after { transform: translateX(100%); }
+
+body.pro-tier #model-selector .badge {
+    color: var(--accent-glow-pro, #8b5cf6);
+    background: rgba(139, 92, 246, 0.12);
+}
+body.designer-tier #model-selector .badge {
+    color: var(--accent-glow-designer, #f43f5e);
+    background: rgba(244, 63, 94, 0.12);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   MODEL DROPDOWN
+   ═══════════════════════════════════════════════════════════════════ */
+#model-dropdown-card {
+    scrollbar-gutter: stable;
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: auto;
+    width: 280px;
+    max-width: calc(100vw - 24px);
+    max-height: min(60vh, 420px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-muted) transparent;
+    background: var(--bg-card);
+    border: 1px solid var(--border-muted);
+    border-radius: 12px;
+    padding: 8px;
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+    z-index: var(--z-dropdown, 600);
+    box-shadow: 0 10px 30px var(--shadow-color);
+    transform-origin: top left;
+}
+#model-dropdown-card[style*="display: flex"],
+#model-dropdown-card[style*="display:flex"] {
+    animation: modelDropdownIn 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes modelDropdownIn {
+    from { opacity: 0; transform: translateY(-4px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.model-option {
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    border: 1px solid transparent;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+.model-option:hover { background: rgba(255, 255, 255, 0.03); }
+.model-option.active {
+    background: color-mix(in srgb, var(--accent-glow) 5%, transparent);
+    border-color: color-mix(in srgb, var(--accent-glow) 20%, transparent);
+}
+.model-option.pro {
+    background: rgba(139, 92, 246, 0.05);
+    border-color: rgba(139, 92, 246, 0.20);
+}
+.model-option.pro:hover { background: rgba(139, 92, 246, 0.10); }
+.model-option.designer {
+    background: rgba(244, 63, 94, 0.05);
+    border-color: rgba(244, 63, 94, 0.20);
+}
+.model-option.designer:hover { background: rgba(244, 63, 94, 0.10); }
+.model-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.model-option.designer .model-title span {
+    font-size: 8px !important;
+    padding: 2px 5px !important;
+    white-space: nowrap;
+    line-height: 1.4;
+}
+.model-desc { font-size: 11px; color: var(--text-muted); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   ACCOUNT HUB
+   ═══════════════════════════════════════════════════════════════════ */
+.account-hub {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: auto;
+    flex-shrink: 0;
+    position: relative;
+}
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid var(--border-muted);
+    cursor: pointer;
+    display: none;
+    object-fit: cover;
+    transition: border-color 0.2s ease, transform 0.2s ease;
+}
+.user-avatar:hover {
+    border-color: var(--accent-glow);
+    transform: scale(1.05);
+}
+
+#account-dropdown-card {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 260px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-muted);
+    border-radius: 16px;
+    padding: 15px;
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    z-index: var(--z-dropdown, 600);
+    box-shadow: 0 10px 30px var(--shadow-color);
+}
+#account-dropdown-card[style*="display: flex"],
+#account-dropdown-card[style*="display:flex"] {
+    animation: modelDropdownIn 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.dropdown-email {
+    color: var(--text-muted);
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.tier-badge {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-on-accent, #000);
+    background: var(--text-muted);
+    padding: 3px 8px;
+    border-radius: 4px;
+    align-self: flex-start;
+}
+.logout-btn {
+    background: transparent;
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 5px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.2s ease;
+}
+.logout-btn:hover {
+    background: rgba(239, 68, 68, 0.08);
+    border-color: rgba(239, 68, 68, 0.4);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+    #model-selector { padding: 6px 10px; }
+    #model-text-display { max-width: 150px; }
+    .workspace-switcher-pill { display: none; }
+}
+@media (max-width: 640px) {
+    .workspace-header {
+        padding-left: 44px;
+        padding-right: 12px;
+        gap: 6px;
+        height: 56px;
+    }
+    #model-selector { padding: 5px 9px; font-size: 12.5px; }
+    #model-text-display { max-width: 110px; }
+    #model-selector .badge { font-size: 10px; padding: 2px 5px; }
+    .header-left-group { gap: 8px; }
+}
+@media (max-width: 480px) {
+    #model-text-display { max-width: 82px; }
+}
+@media (max-width: 380px) {
+    #model-text-display { max-width: 68px; }
+    #model-selector .badge { display: none; }
+}
+@media (max-width: 320px) {
+    .workspace-header { height: 52px; padding-left: 40px; padding-right: 8px; }
+    #model-text-display { display: none; }
+    #model-selector { padding: 6px 8px; }
+    #model-selector .material-symbols-rounded { font-size: 16px; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   LIGHT THEME
+   ═══════════════════════════════════════════════════════════════════ */
+body.light-theme .workspace-header {
+    background: rgba(248, 250, 252, 0.88);
+    border-bottom-color: rgba(15, 23, 42, 0.08);
+}
+body.light-theme .workspace-switcher-pill {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.10);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+body.light-theme .ws-btn { color: #475569; }
+body.light-theme .ws-btn:hover { color: #0b1220; background: rgba(15, 23, 42, 0.04); }
+body.light-theme .ws-btn.active {
+    background: #0b1220;
+    color: #ffffff;
+    box-shadow: 0 2px 6px -2px rgba(15, 23, 42, 0.25);
+}
+body.light-theme.workspace-data   .ws-btn.active { color: #34d399; }
+body.light-theme.workspace-design .ws-btn.active { color: #f87171; }
+
+body.light-theme #model-selector {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.10);
+    color: #0b1220;
+}
+body.light-theme #model-selector:hover {
+    background: #f8fafc;
+    border-color: rgba(15, 23, 42, 0.16);
+    box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.08);
+}
+body.light-theme #model-selector .badge {
+    color: color-mix(in srgb, var(--accent-glow) 70%, #0b1220);
+    background: color-mix(in srgb, var(--accent-glow) 12%, transparent);
+}
+body.light-theme.pro-tier #model-selector .badge {
+    color: #6d28d9;
+    background: rgba(139, 92, 246, 0.12);
+}
+body.light-theme.designer-tier #model-selector .badge {
+    color: #be123c;
+    background: rgba(244, 63, 94, 0.12);
+}
+
+body.light-theme #model-dropdown-card,
+body.light-theme #account-dropdown-card {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.10);
+    box-shadow: 0 16px 40px -10px rgba(15, 23, 42, 0.14);
+}
+body.light-theme .model-option { color: #0b1220; }
+body.light-theme .model-option:hover { background: rgba(15, 23, 42, 0.03); }
+body.light-theme .model-option.active {
+    background: color-mix(in srgb, var(--accent-glow) 8%, transparent);
+    border-color: color-mix(in srgb, var(--accent-glow) 30%, transparent);
+}
+body.light-theme .model-option.pro {
+    background: rgba(139, 92, 246, 0.05);
+    border-color: rgba(139, 92, 246, 0.20);
+}
+body.light-theme .model-option.designer {
+    background: rgba(244, 63, 94, 0.05);
+    border-color: rgba(244, 63, 94, 0.20);
+}
+body.light-theme .model-title { color: #0b1220; }
+body.light-theme .model-desc { color: #64748b; }
+body.light-theme .dropdown-email { color: #64748b; }
+body.light-theme .tier-badge {
+    background: rgba(15, 23, 42, 0.08);
+    color: #0b1220;
+}
+body.light-theme .user-avatar { border-color: rgba(15, 23, 42, 0.12); }
+body.light-theme .user-avatar:hover { border-color: var(--accent-glow); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   REDUCED MOTION
+   ═══════════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+    #model-selector,
+    #model-selector .badge,
+    #model-selector .badge::after,
+    #model-dropdown-card,
+    #account-dropdown-card,
+    .ws-btn,
+    .user-avatar {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+    }
+    #model-selector:hover { transform: none !important; }
+    .user-avatar:hover { transform: none !important; }
+}
+/* ════════════════════════════════════════════════════════════════════
+   22-header.css — APPEND (FIX PASS v5.1)
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ─── 1. HEADER BACKGROUND — translucent glass, NOT black ─────────── */
+.workspace-header {
+    background: color-mix(in srgb, var(--bg-deep) 55%, transparent) !important;
+    backdrop-filter: blur(24px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+    border-bottom: 1px solid color-mix(in srgb, var(--border-muted) 60%, transparent) !important;
+    box-shadow:
+        0 1px 0 0 rgba(255, 255, 255, 0.04) inset,
+        0 8px 32px -16px rgba(0, 0, 0, 0.35) !important;
+}
+body.light-theme .workspace-header {
+    background: color-mix(in srgb, #ffffff 72%, transparent) !important;
+    border-bottom-color: rgba(15, 23, 42, 0.08) !important;
+    box-shadow:
+        0 1px 0 0 rgba(255, 255, 255, 0.9) inset,
+        0 4px 16px -8px rgba(15, 23, 42, 0.06) !important;
+}
+
+/* ─── 2. ACCOUNT HUB — always show something usable ──────────────── */
+.account-hub {
+    min-width: 32px;
+    min-height: 32px;
+}
+
+/* Fallback avatar — visible even if img has no src */
+.user-avatar {
+    display: block !important;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 50% !important;
+    border: 2px solid var(--border-muted) !important;
+    cursor: pointer;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, var(--accent-glow), var(--accent-secondary, #0ea5e9)) !important;
+    color: transparent;
+    font-size: 0;
+    transition:
+        border-color 180ms ease,
+        transform 180ms ease,
+        box-shadow 180ms ease !important;
+}
+.user-avatar:hover {
+    border-color: var(--accent-glow) !important;
+    transform: scale(1.06);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-glow) 18%, transparent);
+}
+.user-avatar[src=""],
+.user-avatar:not([src]) {
+    /* Hide the broken-image glyph but keep the colored circle */
+    background-image: linear-gradient(135deg, var(--accent-glow), var(--accent-secondary, #0ea5e9)) !important;
+}
+
+/* ─── 3. MODEL + ACCOUNT DROPDOWNS — true fixed full-width on mobile */
+@media (max-width: 768px) {
+    #model-dropdown-card,
+    #account-dropdown-card {
+        position: fixed !important;
+        top: 60px !important;
+        left: 8px !important;
+        right: 8px !important;
+        bottom: auto !important;
+        width: auto !important;
+        max-width: none !important;
+        max-height: calc(100dvh - 72px) !important;
+        overflow-y: auto !important;
+        border-radius: 14px !important;
+        z-index: 10000 !important;
+        transform-origin: top center !important;
+    }
+    body.light-theme #model-dropdown-card,
+    body.light-theme #account-dropdown-card {
+        background: #ffffff !important;
+        border-color: rgba(15, 23, 42, 0.10) !important;
+        box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.14) !important;
+    }
+
+    /* Model options get bigger tap targets */
+    .model-option {
+        padding: 14px 16px !important;
+        min-height: 64px;
+    }
+    .model-title { font-size: 14.5px !important; }
+    .model-desc  { font-size: 12px !important; }
+}
+
+@media (max-width: 380px) {
+    #model-dropdown-card,
+    #account-dropdown-card {
+        top: 56px !important;
+        left: 6px !important;
+        right: 6px !important;
+        max-height: calc(100dvh - 64px) !important;
+    }
+}
+
+/* ─── 4. MODEL SELECTOR — tighter on mobile, no horizontal overflow ─ */
+@media (max-width: 768px) {
+    .workspace-header {
+        gap: 8px !important;
+        padding-left: 44px !important;
+        padding-right: 12px !important;
+    }
+    .model-hub { margin-right: 4px !important; }
+    #model-selector {
+        padding: 6px 10px !important;
+        font-size: 12.5px !important;
+        max-width: calc(100vw - 130px) !important;
+    }
+    #model-text-display { max-width: clamp(60px, 20vw, 120px) !important; }
+    #model-selector .badge { font-size: 9.5px !important; padding: 2px 5px !important; }
+}
+@media (max-width: 380px) {
+    #model-text-display { max-width: 62px !important; }
+    #model-selector .badge { display: none !important; }
+}
+@media (max-width: 320px) {
+    #model-text-display { display: none !important; }
+    #model-selector { padding: 6px 8px !important; }
+}
+
+/* ─── 5. GUEST MODE — hide account controls for unauthenticated users ─ */
+body.guest-mode #account-dropdown-card,
+body.guest-mode .user-avatar {
+    display: none !important;
+}
+body.guest-mode .account-hub {
+    display: none !important;
+}
